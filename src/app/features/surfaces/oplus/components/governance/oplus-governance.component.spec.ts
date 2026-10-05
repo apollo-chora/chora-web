@@ -158,7 +158,7 @@ describe('OplusGovernanceComponent', () => {
 
     it('renders no deep-link when the BFF supplies no cloud_trace_url', () => {
       // The frontend never composes a console.cloud.google.com URL itself
-      // (that would hard-code a GCP project into the bundle) — a trace the
+      // (that would hard-code a cloud project into the bundle) — a trace the
       // BFF does not deep-link renders as plain text.
       stub.setGovernance(
         liveState({
@@ -674,7 +674,7 @@ describe('OplusGovernanceComponent', () => {
 
     it('renders no deep-link when the BFF supplies neither cloud_trace_url nor a usable one', () => {
       // The frontend never composes a console.cloud.google.com URL itself
-      // (that would hard-code a GCP project into the bundle) — a trace the
+      // (that would hard-code a cloud project into the bundle) — a trace the
       // BFF does not deep-link renders as plain text.
       stub.setGovernance(
         liveState({

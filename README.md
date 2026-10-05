@@ -1,7 +1,7 @@
 # Chora Web
 
 > Angular 21+ tablet-first frontend for the Chora platform. Standalone,
-> GCP-free: username/password auth against the chora-gateway BFF, no
+> Cloud-neutral: username/password auth against the chora-gateway BFF, no
 > Firebase / Cloud Run / Secret Manager dependency anywhere in the build.
 
 ## UI Mandate

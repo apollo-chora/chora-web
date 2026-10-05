@@ -189,7 +189,7 @@ export interface GovernanceDecision {
   readonly timestamp: string;
   /** OTLP trace_id — drives "View in Cloud Trace ↗". */
   readonly trace_id: string | null;
-  /** Pre-formatted GCP Console URL (if BFF chose to template it). */
+  /** Pre-formatted trace-console URL (if BFF chose to template it). */
   readonly cloud_trace_url?: string | null;
   /**
    * The agent's OWN rationale for this decision (= qgen critic_notes) — the

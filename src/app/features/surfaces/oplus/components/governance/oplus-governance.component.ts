@@ -6,7 +6,7 @@
  *     Each row gets a "View in Cloud Trace ↗" button when the BFF supplies a
  *     pre-formatted `cloud_trace_url`; rows without one render the trace id
  *     as plain text (the frontend never composes a console.cloud.google.com
- *     URL — that would hard-code a GCP project into the bundle).
+ *     URL — that would hard-code a cloud project into the bundle).
  *   - Human Oversight: real `hitl_pending` queue. Approve/Reject POST to
  *     the BFF (`/bff/oplus/governance/hitl/{id}/approve` | `/reject`) with
  *     the current operator GCID, then optimistically drop the actioned
@@ -48,7 +48,7 @@ interface HitlVerdictRequest {
 
 /**
  * The trace deep-link, when the BFF supplies one. The frontend never builds
- * a console.cloud.google.com URL itself — that would hard-code a GCP project
+ * a console.cloud.google.com URL itself — that would hard-code a cloud project
  * into the bundle (the pre-extraction behaviour), so a trace the BFF does not
  * deep-link renders as plain text instead of a link into someone else's
  * project.
