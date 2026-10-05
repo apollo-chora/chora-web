@@ -6,7 +6,7 @@ import {
   withViewTransitions,
 } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideServiceWorker } from '@angular/service-worker';
+import { provideServiceWorker, SwUpdate } from '@angular/service-worker';
 import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
@@ -41,6 +41,19 @@ export const appConfig: ApplicationConfig = {
     }),
     provideAppInitializer(() => {
       const authService = inject(AuthService);
+      // When a new deployment is ready, reload so the tab picks up the new
+      // bundle instead of keep serving the stale precached shell. Without
+      // this, an already-open tab keeps running the old version indefinitely.
+      const swUpdate = inject(SwUpdate);
+      if (swUpdate.isEnabled) {
+        swUpdate.versionUpdates.subscribe((event) => {
+          if (event.type === 'VERSION_READY') {
+            document.location.reload();
+          }
+        });
+        // A tab left open for days should still converge on the latest deploy.
+        setInterval(() => swUpdate.checkForUpdate(), 60 * 60 * 1000);
+      }
       return firstValueFrom(authService.initialize());
     }),
   ],
