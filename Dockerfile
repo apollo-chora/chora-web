@@ -27,9 +27,14 @@ WORKDIR /src
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
-# Build the production bundle (angular.json defaultConfiguration).
+# Build the bundle. Defaults to the production configuration; the local
+# compose stack passes BUILD_CONFIGURATION=local, which swaps in
+# environment.local.ts and points the SPA at the host-published gateway
+# (http://localhost:8093) instead of https://api.chora.site.
+ARG BUILD_CONFIGURATION=production
+
 COPY . .
-RUN npm run build
+RUN npm run build -- --configuration=${BUILD_CONFIGURATION}
 
 ############################
 # Stage 2 — runtime
