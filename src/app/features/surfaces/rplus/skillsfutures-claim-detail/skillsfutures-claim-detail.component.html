@@ -1,0 +1,193 @@
+<section
+  class="surface-rplus skillsfutures-claim-detail"
+  data-testid="rplus-skillsfutures-claim-detail"
+  role="region"
+  aria-labelledby="rplus-skillsfutures-claim-detail-heading">
+  <header class="skillsfutures-claim-detail__header glass-panel">
+    <nav
+      class="skillsfutures-claim-detail__breadcrumb"
+      [attr.aria-label]="'rplus.skillsfuturesClaimDetail.breadcrumb_aria' | translate">
+      <a
+        class="skillsfutures-claim-detail__breadcrumb-link"
+        data-testid="skillsfutures-claim-detail-back-link"
+        routerLink="/r/skillsfutures-claims">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        {{ 'rplus.skillsfuturesClaimDetail.breadcrumb_root' | translate }}
+      </a>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.skillsfuturesClaimDetail.breadcrumb_leaf' | translate }}
+      </span>
+    </nav>
+
+    <div class="skillsfutures-claim-detail__title-row">
+      <h1
+        id="rplus-skillsfutures-claim-detail-heading"
+        class="skillsfutures-claim-detail__title"
+        data-testid="skillsfutures-claim-detail-title">
+        {{ 'rplus.skillsfuturesClaimDetail.title' | translate }}
+      </h1>
+      <span class="skillsfutures-claim-detail__sf-pill">
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        {{ 'rplus.skillsfuturesClaimDetail.sf_aligned' | translate }}
+      </span>
+    </div>
+    <code
+      class="skillsfutures-claim-detail__claim-id"
+      data-testid="skillsfutures-claim-detail-id">
+      {{ id() }}
+    </code>
+  </header>
+
+  @if (isLoading()) {
+    <p
+      class="skillsfutures-claim-detail__loading glass-panel"
+      data-testid="skillsfutures-claim-detail-loading"
+      role="status"
+      aria-busy="true">
+      {{ 'rplus.skillsfuturesClaimDetail.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div
+      class="skillsfutures-claim-detail__error glass-panel"
+      data-testid="skillsfutures-claim-detail-error"
+      role="alert">
+      <p class="skillsfutures-claim-detail__error-message">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        {{ errorKey() | translate }}
+      </p>
+      <button
+        type="button"
+        class="btn btn-ghost skillsfutures-claim-detail__retry"
+        data-testid="skillsfutures-claim-detail-retry"
+        (click)="retry()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        {{ 'rplus.skillsfuturesClaimDetail.retry' | translate }}
+      </button>
+    </div>
+  } @else if (claim(); as c) {
+    <article
+      class="skillsfutures-claim-detail__panel glass-panel"
+      [attr.data-testid]="'skillsfutures-claim-detail-panel-' + c.id">
+      <div class="skillsfutures-claim-detail__panel-head">
+        <span
+          class="badge"
+          [class]="'badge ' + badge(c.state)"
+          [attr.data-testid]="'skillsfutures-claim-detail-state-' + c.id">
+          {{ 'rplus.skillsfuturesClaims.state.' + c.state | translate }}
+        </span>
+      </div>
+
+      <dl class="skillsfutures-claim-detail__fields">
+        <div class="skillsfutures-claim-detail__field">
+          <dt>{{ 'rplus.skillsfuturesClaimDetail.col.learner' | translate }}</dt>
+          <dd data-testid="skillsfutures-claim-detail-learner">{{ c.gcid }}</dd>
+        </div>
+        <div class="skillsfutures-claim-detail__field">
+          <dt>{{ 'rplus.skillsfuturesClaimDetail.col.course' | translate }}</dt>
+          <dd data-testid="skillsfutures-claim-detail-course">{{ c.courseId }}</dd>
+        </div>
+        <div class="skillsfutures-claim-detail__field">
+          <dt>{{ 'rplus.skillsfuturesClaimDetail.col.nric_hash' | translate }}</dt>
+          <dd>
+            <code
+              class="skillsfutures-claim-detail__nric"
+              data-testid="skillsfutures-claim-detail-nric"
+              [attr.title]="c.nricHash"
+              [attr.aria-label]="'rplus.skillsfuturesClaimDetail.nric_aria' | translate">
+              {{ nric(c.nricHash) }}
+            </code>
+          </dd>
+        </div>
+        <div class="skillsfutures-claim-detail__field">
+          <dt>{{ 'rplus.skillsfuturesClaimDetail.col.requested' | translate }}</dt>
+          <dd>
+            <strong data-testid="skillsfutures-claim-detail-requested">
+              {{ sgd(c.requestedAmountSGDCents) }}
+            </strong>
+          </dd>
+        </div>
+        <div class="skillsfutures-claim-detail__field">
+          <dt>{{ 'rplus.skillsfuturesClaimDetail.col.approved' | translate }}</dt>
+          <dd>
+            @if (c.state === 'APPROVED' || c.state === 'DISBURSED') {
+              <strong data-testid="skillsfutures-claim-detail-approved">
+                {{ sgd(c.approvedAmountSGDCents) }}
+              </strong>
+            } @else {
+              <span class="skillsfutures-claim-detail__muted">-</span>
+            }
+          </dd>
+        </div>
+        <div class="skillsfutures-claim-detail__field">
+          <dt>{{ 'rplus.skillsfuturesClaimDetail.col.submitted_at' | translate }}</dt>
+          <dd>
+            <time
+              data-testid="skillsfutures-claim-detail-submitted"
+              [attr.datetime]="c.submittedAt">{{ c.submittedAt }}</time>
+          </dd>
+        </div>
+        @if (c.decidedAt) {
+          <div class="skillsfutures-claim-detail__field">
+            <dt>{{ 'rplus.skillsfuturesClaimDetail.col.decided_at' | translate }}</dt>
+            <dd>
+              <time
+                data-testid="skillsfutures-claim-detail-decided-at"
+                [attr.datetime]="c.decidedAt">{{ c.decidedAt }}</time>
+            </dd>
+          </div>
+        }
+        @if (c.decidedByGCID) {
+          <div class="skillsfutures-claim-detail__field">
+            <dt>{{ 'rplus.skillsfuturesClaimDetail.col.decided_by' | translate }}</dt>
+            <dd data-testid="skillsfutures-claim-detail-decided-by">{{ c.decidedByGCID }}</dd>
+          </div>
+        }
+        @if (c.rejectionReason) {
+          <div class="skillsfutures-claim-detail__field skillsfutures-claim-detail__field--wide">
+            <dt>{{ 'rplus.skillsfuturesClaimDetail.col.rejection_reason' | translate }}</dt>
+            <dd
+              class="skillsfutures-claim-detail__reason"
+              data-testid="skillsfutures-claim-detail-reason">
+              {{ c.rejectionReason }}
+            </dd>
+          </div>
+        }
+      </dl>
+
+      <footer class="skillsfutures-claim-detail__panel-foot">
+        <a
+          class="btn btn-ghost skillsfutures-claim-detail__back-cta"
+          data-testid="skillsfutures-claim-detail-back-cta"
+          routerLink="/r/skillsfutures-claims">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          {{ 'rplus.skillsfuturesClaimDetail.back_cta' | translate }}
+        </a>
+        @if (canDecide()) {
+          <div class="skillsfutures-claim-detail__actions">
+            <button
+              type="button"
+              class="btn btn-primary skillsfutures-claim-detail__action"
+              data-testid="skillsfutures-claim-detail-approve"
+              [disabled]="isWritePending()"
+              (click)="approve()"
+              [attr.aria-label]="'rplus.skillsfuturesClaimDetail.approve_aria' | translate">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              {{ 'rplus.skillsfuturesClaimDetail.approve_cta' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-ghost skillsfutures-claim-detail__action"
+              data-testid="skillsfutures-claim-detail-reject"
+              [disabled]="isWritePending()"
+              (click)="reject()"
+              [attr.aria-label]="'rplus.skillsfuturesClaimDetail.reject_aria' | translate">
+              <i class="fa-solid fa-ban" aria-hidden="true"></i>
+              {{ 'rplus.skillsfuturesClaimDetail.reject_cta' | translate }}
+            </button>
+          </div>
+        }
+      </footer>
+    </article>
+  }
+</section>

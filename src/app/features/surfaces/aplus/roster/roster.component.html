@@ -1,0 +1,179 @@
+<section class="roster" aria-labelledby="roster-heading">
+  <header class="roster__head">
+    <div>
+      <p class="roster__eyebrow">{{ 'familiar_roster.eyebrow' | translate }}</p>
+      <h1 id="roster-heading" class="roster__title">
+        {{ 'familiar_roster.title' | translate }}
+      </h1>
+      <p class="roster__sub">{{ 'familiar_roster.lede' | translate }}</p>
+    </div>
+    <!--
+      A COUNT, not a fraction. The effective cap reads from tenant_entitlements
+      server-side and is absent from this wire, so a denominator here would be
+      one the SPA invented. `rosterCap` is wired for C1a and the chip grows a
+      denominator only once it is actually served.
+    -->
+    <span class="roster__chip" data-testid="roster-count">
+      @if (rosterCap(); as cap) {
+        {{
+          'familiar_roster.count_of_cap'
+            | translate: { count: companions().length, cap: cap }
+        }}
+      } @else {
+        {{ 'familiar_roster.count' | translate: { count: companions().length } }}
+      }
+    </span>
+  </header>
+
+  @if (loading()) {
+    <p class="roster__status" role="status" data-testid="roster-loading">
+      {{ 'familiar_roster.loading' | translate }}
+    </p>
+  } @else if (errored()) {
+    <div class="roster__error" role="alert" data-testid="roster-error">
+      <p>{{ 'familiar_roster.error' | translate }}</p>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        data-testid="roster-retry"
+        (click)="reload()"
+      >
+        {{ 'familiar_roster.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    @if (isEmpty()) {
+      <p class="roster__empty" data-testid="roster-empty">
+        {{ 'familiar_roster.empty' | translate }}
+      </p>
+    }
+
+    <div class="roster__grid">
+      @for (c of companions(); track c.familiarId) {
+        <article
+          class="roster-card"
+          [attr.data-testid]="'roster-card-' + c.familiarId"
+        >
+          <h2 class="roster-card__name">{{ c.displayName }}</h2>
+          <!--
+            ⚠ No `mind` clause. The mockup renders the LLM tier here and
+            CHO-2047 puts model tier behind O+, so the line stops at the stage
+            name. The wire carries effectiveLlmTier; this deliberately does not.
+          -->
+          <p class="roster-card__meta">
+            {{ c.species }}
+            @if (c.stageName) {
+              · {{ c.stageName }}
+            }
+            @if (c.subject) {
+              · {{ c.subject }}
+            }
+          </p>
+
+          @let station = stationOf(c.familiarId);
+          <p
+            class="roster-card__station"
+            [attr.data-testid]="'roster-station-' + c.familiarId"
+          >
+            @if (station.kind === 'stationed') {
+              <a [routerLink]="['/a/knowledge', station.goalId]">
+                {{
+                  'familiar_roster.stationed'
+                    | translate: { map: station.mapTitle }
+                }}
+              </a>
+            } @else if (station.kind === 'unstationed') {
+              {{ 'familiar_roster.unstationed' | translate }}
+            } @else {
+              <!--
+                The third state the mockup has no words for. Saying "not on a
+                map" here would tell a learner their companion is resting when
+                it may be marching; the screen only knows that it does not know.
+              -->
+              <span class="roster-card__station-unknown">
+                {{ 'familiar_roster.station_unknown' | translate }}
+              </span>
+            }
+          </p>
+
+          <div class="roster-card__xp">
+            <div class="roster-card__bar">
+              <span
+                class="roster-card__bar-fill"
+                [style.width.%]="
+                  c.expNextThreshold > 0
+                    ? (c.expCurrent / c.expNextThreshold) * 100
+                    : 0
+                "
+              ></span>
+            </div>
+            <span class="roster-card__xp-label">
+              {{
+                'familiar_roster.xp'
+                  | translate: { current: c.expCurrent, next: c.expNextThreshold }
+              }}
+            </span>
+          </div>
+
+          <!--
+            The tease renders ONLY when the wire reported unlocks. Absent means
+            this read does not carry them (every response until C1a widens the
+            list read), and the card then says nothing rather than implying
+            there is nothing coming.
+          -->
+          @let teases = teasesFor(c);
+          @if (teases.length > 0) {
+            <ul
+              class="roster-card__teases"
+              [attr.data-testid]="'roster-tease-' + c.familiarId"
+            >
+              @for (t of teases; track t.skillKey) {
+                <li class="roster-card__tease">
+                  {{ 'familiar_skill.' + t.skillKey | translate }}
+                  @if (t.dormant) {
+                    <span class="roster-card__tease-dormant">
+                      {{ 'familiar_roster.tease_dormant' | translate }}
+                    </span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </article>
+      }
+
+      <!--
+        The idle pod. Present alongside a held roster (a pod warms on the
+        learner's own work) and it is the only card shown when nothing is held.
+      -->
+      <article class="roster-card roster-card--pod" data-testid="roster-idle-pod">
+        <h2 class="roster-card__name">
+          {{ 'familiar_roster.pod_title' | translate }}
+        </h2>
+        <p class="roster-card__meta">
+          {{ 'familiar_roster.pod_mystery' | translate }}
+        </p>
+        <p class="roster-card__station">
+          {{ 'familiar_roster.pod_warming' | translate }}
+        </p>
+        <a class="btn btn-secondary" routerLink="/a/daily-dose">
+          {{ 'familiar_roster.pod_warm_action' | translate }}
+        </a>
+      </article>
+    </div>
+
+    <!--
+      The reserved seat, named rather than hidden: the mockup carries it as a
+      dashed panel and it is the same named-tease posture the loadout uses for
+      a dark Skill. Nothing here is wired, and the copy says so.
+    -->
+    <section class="roster__reserved" data-testid="roster-reserved-note">
+      <p class="roster__reserved-title">
+        {{ 'familiar_roster.together_title' | translate }}
+      </p>
+      <p class="roster__reserved-body">
+        {{ 'familiar_roster.together_body' | translate }}
+      </p>
+    </section>
+  }
+</section>

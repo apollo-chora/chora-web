@@ -1,0 +1,37 @@
+<div
+  class="tenant-picker"
+  role="radiogroup"
+  [attr.aria-label]="'shared.tenant-picker.label' | translate"
+  data-testid="tenant-picker">
+  @for (tenant of memberships(); track tenant.id) {
+    <div
+      class="tenant-picker__row"
+      role="radio"
+      tabindex="0"
+      [attr.aria-checked]="false"
+      [attr.aria-label]="rowLabel(tenant)"
+      (click)="onRowClick(tenant)"
+      (keydown)="onRowKeydown($event, tenant)"
+      [attr.data-testid]="'tenant-picker-row-' + tenant.id">
+      <div class="tenant-picker__main">
+        <span class="tenant-picker__name">{{ rowLabel(tenant) }}</span>
+        @if (tenant.isDefault) {
+          <span class="tenant-picker__default-tag">
+            {{ 'shared.tenant-picker.default' | translate }}
+          </span>
+        }
+      </div>
+      @if ((tenant.roles ?? []).length > 0) {
+        <ul class="tenant-picker__roles" aria-hidden="true">
+          @for (role of tenant.roles ?? []; track role) {
+            <li class="tenant-picker__role-pill">{{ role }}</li>
+          }
+        </ul>
+      }
+    </div>
+  } @empty {
+    <p class="tenant-picker__empty">
+      {{ 'shared.tenant-picker.empty' | translate }}
+    </p>
+  }
+</div>

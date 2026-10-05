@@ -1,0 +1,139 @@
+<section
+  class="referrals"
+  role="main"
+  [attr.aria-label]="'settings.referrals_title' | translate"
+  data-testid="referrals">
+
+  <header class="referrals__header">
+    <h1 class="referrals__title" data-testid="referrals-title">
+      {{ 'settings.referrals_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="referrals__loading" aria-live="polite" data-testid="referrals-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="referrals__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (isError()) {
+    <div class="referrals__error" role="alert" data-testid="referrals-error">
+      <p class="referrals__error-text">{{ 'settings.referrals_load_error' | translate }}</p>
+    </div>
+  }
+
+  @if (referralInfo()) {
+    <!-- Referral Code -->
+    <div class="referrals__code-section" data-testid="referral-code-section">
+      <h2 class="referrals__section-heading">{{ 'settings.your_referral_code' | translate }}</h2>
+      <div class="referrals__code-display">
+        <code class="referrals__code" data-testid="referral-code">{{ referralCode() }}</code>
+        <button
+          type="button"
+          class="referrals__btn referrals__btn--secondary"
+          data-testid="btn-copy-code"
+          [attr.aria-label]="'settings.copy_referral_code' | translate"
+          (click)="copyCode()">
+          @if (codeCopied()) {
+            {{ 'settings.copied' | translate }}
+          } @else {
+            {{ 'settings.copy' | translate }}
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Share Link -->
+    <div class="referrals__share-section" data-testid="share-section">
+      <h2 class="referrals__section-heading">{{ 'settings.share_link' | translate }}</h2>
+      <div class="referrals__link-display">
+        <span class="referrals__link" data-testid="referral-link">{{ referralLink() }}</span>
+        <button
+          type="button"
+          class="referrals__btn referrals__btn--secondary"
+          data-testid="btn-copy-link"
+          [attr.aria-label]="'settings.copy_referral_link' | translate"
+          (click)="copyLink()">
+          @if (linkCopied()) {
+            {{ 'settings.copied' | translate }}
+          } @else {
+            {{ 'settings.copy_link' | translate }}
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Earned Credits -->
+    <div class="referrals__credits-balance" data-testid="credits-balance">
+      <span class="referrals__credits-label">{{ 'settings.earned_credits' | translate }}</span>
+      <span class="referrals__credits-value">
+        {{ formatPrice(earnedCredits(), currency()) }}
+      </span>
+    </div>
+
+    <!-- Referral Tiers -->
+    @if (tiers().length > 0) {
+      <div class="referrals__tiers" data-testid="referral-tiers">
+        <h2 class="referrals__section-heading">{{ 'settings.referral_milestones' | translate }}</h2>
+        <ul class="referrals__tier-list" role="list">
+          @for (tier of tiers(); track tier.name) {
+            <li
+              class="referrals__tier-item"
+              [class.referrals__tier-item--achieved]="tier.is_achieved"
+              role="listitem"
+              data-testid="tier-item">
+              <div class="referrals__tier-info">
+                <span class="referrals__tier-name">{{ tier.name }}</span>
+                <span class="referrals__tier-requirement">
+                  {{ tier.referrals_required }} {{ 'settings.referrals_needed' | translate }}
+                </span>
+              </div>
+              <span class="referrals__tier-reward">{{ tier.reward_description }}</span>
+              @if (tier.is_achieved) {
+                <span class="referrals__tier-badge" aria-label="Achieved">&#10003;</span>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    <!-- Credit Tracking Table -->
+    @if (credits().length > 0) {
+      <div class="referrals__tracking" data-testid="credit-tracking">
+        <h2 class="referrals__section-heading">{{ 'settings.credit_history' | translate }}</h2>
+        <table class="referrals__tracking-table" role="table"
+               [attr.aria-label]="'settings.credit_history' | translate">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'settings.date' | translate }}</th>
+              <th scope="col">{{ 'settings.referred_user' | translate }}</th>
+              <th scope="col">{{ 'settings.credit_amount' | translate }}</th>
+              <th scope="col">{{ 'settings.status' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (credit of credits(); track credit.id) {
+              <tr data-testid="credit-row">
+                <td>{{ formatDate(credit.created_at) }}</td>
+                <td>{{ credit.referred_initials }}</td>
+                <td>{{ formatPrice(credit.credit_cents, credit.currency) }}</td>
+                <td>
+                  <span
+                    class="referrals__credit-status"
+                    [class]="creditStatusClass(credit.status)">
+                    {{ creditStatusLabels[credit.status] | translate }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</section>

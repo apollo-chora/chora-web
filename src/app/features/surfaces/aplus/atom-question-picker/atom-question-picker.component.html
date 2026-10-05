@@ -1,0 +1,480 @@
+<section
+  class="atom-question-picker surface-aplus"
+  data-testid="aplus-question-picker"
+  role="region"
+  aria-labelledby="aplus-question-picker-heading"
+>
+  <header class="atom-question-picker__header">
+    <h3 id="aplus-question-picker-heading" class="atom-question-picker__title">
+      {{ 'aplus.atom_question_picker.title' | translate }}
+    </h3>
+    <!-- ADR-229 WS-2 (CHO-2133): the results are narrowed SERVER-side to
+         atoms the caller may reuse — this chip states the gate truthfully
+         (always on; no toggle per the integrative-UI mandate). -->
+    <span
+      class="atom-question-picker__usable-gate"
+      data-testid="aplus-question-picker-usable-gate"
+      [attr.title]="'aplus.atom_question_picker.usable_gate_hint' | translate"
+      [attr.aria-label]="'aplus.atom_question_picker.usable_gate_hint' | translate"
+    >
+      <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+      {{ 'aplus.atom_question_picker.usable_gate' | translate }}
+    </span>
+    @if (totalCount() !== null) {
+      <span
+        class="atom-question-picker__count"
+        data-testid="aplus-question-picker-total"
+      >
+        {{ countLabel() }}
+      </span>
+    }
+  </header>
+
+  <!-- ── Search (primary action, full width) ─────────────────────── -->
+  <div class="atom-question-picker__search">
+    <input
+      id="aplus-question-picker-search"
+      type="search"
+      class="atom-question-picker__search-input"
+      data-testid="aplus-question-picker-search-input"
+      [value]="searchQuery()"
+      (input)="onSearchInput($event)"
+      [attr.placeholder]="'aplus.atom_question_picker.search_placeholder' | translate"
+      [attr.aria-label]="'aplus.atom_question_picker.search_label' | translate"
+      autocomplete="off"
+    />
+  </div>
+
+  <!-- ── Filter row: source + type chips (left), sort + per-page (right) ── -->
+  <div class="atom-question-picker__filter-row">
+    <div class="atom-question-picker__filter-group">
+      <span class="atom-question-picker__filter-label">
+        {{ 'aplus.atom_question_picker.source_chips_label' | translate }}
+      </span>
+      <div
+        class="atom-question-picker__segmented"
+        role="group"
+        [attr.aria-label]="'aplus.atom_question_picker.source_chips_label' | translate"
+      >
+        <!-- ADR-243 D2, the ENROLMENT source sits first because it is the one
+             a learner attaching to their own map almost always wants, and it is
+             a chip rather than a mount-time default alone so Source A is not a
+             one-way door: without it the drawer can only ever be LEFT.
+             Host-gated (D6): reuse hosts never render it. -->
+        @if (offerEnrolledSource()) {
+        <button
+          type="button"
+          class="atom-question-picker__segmented-btn"
+          data-testid="aplus-question-picker-chip-source-enrolled"
+          [class.atom-question-picker__segmented-btn--active]="isSourceActive('enrolled')"
+          [attr.aria-pressed]="isSourceActive('enrolled')"
+          (click)="setSource('enrolled')"
+        >
+          {{ 'aplus.atom_question_picker.source_enrolled' | translate }}
+        </button>
+        }
+        <button
+          type="button"
+          class="atom-question-picker__segmented-btn"
+          data-testid="aplus-question-picker-chip-source-all"
+          [class.atom-question-picker__segmented-btn--active]="isSourceActive('all')"
+          [attr.aria-pressed]="isSourceActive('all')"
+          (click)="setSource('all')"
+        >
+          {{ 'aplus.atom_question_picker.source_all' | translate }}
+        </button>
+        <button
+          type="button"
+          class="atom-question-picker__segmented-btn"
+          data-testid="aplus-question-picker-chip-source-mine"
+          [class.atom-question-picker__segmented-btn--active]="isSourceActive('mine')"
+          [attr.aria-pressed]="isSourceActive('mine')"
+          (click)="setSource('mine')"
+        >
+          {{ 'aplus.atom_question_picker.source_mine' | translate }}
+        </button>
+        <button
+          type="button"
+          class="atom-question-picker__segmented-btn"
+          data-testid="aplus-question-picker-chip-source-saved"
+          [class.atom-question-picker__segmented-btn--active]="isSourceActive('saved')"
+          [attr.aria-pressed]="isSourceActive('saved')"
+          (click)="setSource('saved')"
+        >
+          {{ 'aplus.atom_question_picker.source_saved' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div class="atom-question-picker__filter-group">
+      <span class="atom-question-picker__filter-label">
+        {{ 'aplus.atom_question_picker.chips_label' | translate }}
+      </span>
+      <div
+        class="atom-question-picker__chips"
+        role="group"
+        [attr.aria-label]="'aplus.atom_question_picker.chips_label' | translate"
+      >
+        <button
+          type="button"
+          class="atom-question-picker__chip"
+          data-testid="aplus-question-picker-chip-mcq"
+          [class.atom-question-picker__chip--active]="isQuestionTypeActive('mcq')"
+          [attr.aria-pressed]="isQuestionTypeActive('mcq')"
+          (click)="toggleQuestionTypeChip('mcq')"
+        >
+          {{ 'aplus.atom_question_picker.chip_mcq' | translate }}
+        </button>
+        <button
+          type="button"
+          class="atom-question-picker__chip"
+          data-testid="aplus-question-picker-chip-oe"
+          [class.atom-question-picker__chip--active]="isQuestionTypeActive('oe')"
+          [attr.aria-pressed]="isQuestionTypeActive('oe')"
+          (click)="toggleQuestionTypeChip('oe')"
+        >
+          {{ 'aplus.atom_question_picker.chip_oe' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div class="atom-question-picker__filter-group atom-question-picker__filter-group--right">
+      <div class="atom-question-picker__select-wrap">
+        <label
+          class="atom-question-picker__filter-label"
+          for="aplus-question-picker-sort"
+        >
+          {{ 'aplus.atom_question_picker.sort_label' | translate }}
+        </label>
+        <select
+          id="aplus-question-picker-sort"
+          class="atom-question-picker__select"
+          data-testid="aplus-question-picker-sort"
+          [value]="sort()"
+          (change)="onSortChange($event)"
+        >
+          <option value="created_at:desc">{{ 'aplus.atom_question_picker.sort_newest' | translate }}</option>
+          <option value="created_at:asc">{{ 'aplus.atom_question_picker.sort_oldest' | translate }}</option>
+          <option value="updated_at:desc">{{ 'aplus.atom_question_picker.sort_recently_updated' | translate }}</option>
+          <option value="title:asc">{{ 'aplus.atom_question_picker.sort_title_asc' | translate }}</option>
+          <option value="question_type:asc">{{ 'aplus.atom_question_picker.sort_type_asc' | translate }}</option>
+        </select>
+      </div>
+      <div class="atom-question-picker__select-wrap">
+        <label
+          class="atom-question-picker__filter-label"
+          for="aplus-question-picker-page-size"
+        >
+          {{ 'aplus.atom_question_picker.page_size_label' | translate }}
+        </label>
+        <select
+          id="aplus-question-picker-page-size"
+          class="atom-question-picker__select"
+          data-testid="aplus-question-picker-page-size"
+          [value]="pageSize()"
+          (change)="onPageSizeChange($event)"
+        >
+          @for (n of pageSizeOptions; track n) {
+            <option [value]="n">{{ n }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Bulk-action bar (visible when selection > 0) ─────────────── -->
+  @if (selectedCount() > 0) {
+    <div
+      class="atom-question-picker__bulk-bar"
+      data-testid="aplus-question-picker-bulk-bar"
+      role="region"
+      [attr.aria-label]="'aplus.atom_question_picker.bulk_aria' | translate"
+    >
+      <span class="atom-question-picker__bulk-count">
+        {{ selectedCount() }} {{ 'aplus.atom_question_picker.bulk_selected_suffix' | translate }}
+      </span>
+      <button
+        type="button"
+        class="atom-question-picker__bulk-add"
+        data-testid="aplus-question-picker-bulk-add"
+        (click)="emitBulkAdd()"
+        [disabled]="selectedCount() === 0"
+      >
+        {{ 'aplus.atom_question_picker.bulk_add_cta' | translate }} ({{ selectedCount() }})
+      </button>
+      <button
+        type="button"
+        class="atom-question-picker__bulk-clear"
+        data-testid="aplus-question-picker-bulk-clear"
+        (click)="clearSelection()"
+      >
+        {{ 'aplus.atom_question_picker.bulk_clear' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- ── Results ──────────────────────────────────────────────────── -->
+  <div class="atom-question-picker__results">
+    @if (isLoading()) {
+      <div
+        class="atom-question-picker__loading"
+        data-testid="aplus-question-picker-loading"
+        role="status"
+        aria-busy="true"
+      >
+        {{ 'aplus.atom_question_picker.loading' | translate }}
+      </div>
+    } @else if (isError()) {
+      <div
+        class="atom-question-picker__error"
+        data-testid="aplus-question-picker-error"
+        role="alert"
+      >
+        <p>{{ errorKey() | translate }}</p>
+        <button
+          type="button"
+          class="atom-question-picker__retry"
+          data-testid="aplus-question-picker-retry"
+          (click)="retry()"
+        >
+          {{ 'aplus.atom_question_picker.retry' | translate }}
+        </button>
+      </div>
+    } @else if (!hasResults()) {
+      <!-- ADR-243 D7, an empty source is an honest answer, not an error, and
+           it states which source is empty and why. Never a spinner, never a
+           silent merge into the other source. -->
+      <div
+        class="atom-question-picker__empty"
+        data-testid="aplus-question-picker-empty"
+        [attr.data-empty-source]="sourceFilter()"
+        role="status"
+      >
+        {{ emptyKey() | translate }}
+      </div>
+    } @else {
+      <ul
+        class="atom-question-picker__list"
+        data-testid="aplus-question-picker-grid"
+        role="list"
+      >
+        @for (row of results(); track row.id) {
+          <li
+            class="atom-question-picker__row"
+            [class.atom-question-picker__row--selected]="isSelected(row.id)"
+            [class.atom-question-picker__row--expanded]="isExpanded(row.id)"
+            role="listitem"
+          >
+            <div class="atom-question-picker__row-header">
+              <label
+                class="atom-question-picker__check-wrap"
+                tabindex="-1"
+                (click)="$event.stopPropagation()"
+                (keydown)="$event.stopPropagation()">
+                <input
+                  type="checkbox"
+                  class="atom-question-picker__check"
+                  [attr.data-testid]="'aplus-question-picker-check-' + row.id"
+                  [checked]="isSelected(row.id)"
+                  (change)="toggleSelected(row.id)"
+                  [attr.aria-label]="(isSelected(row.id) ? 'aplus.atom_question_picker.deselect_aria' : 'aplus.atom_question_picker.select_aria') | translate"
+                />
+              </label>
+              <button
+                type="button"
+                class="atom-question-picker__row-button"
+                [attr.data-testid]="'aplus-question-picker-card-' + row.id"
+                [attr.aria-label]="row.title || row.stem"
+                [attr.aria-expanded]="isExpanded(row.id)"
+                (click)="toggleExpanded(row.id)"
+              >
+                <div class="atom-question-picker__row-meta">
+                  <span
+                    class="atom-question-picker__type-chip"
+                    [attr.data-question-type]="row.question_type"
+                  >
+                    {{ row.question_type | uppercase }}
+                  </span>
+                  <!-- ADR-243 D2, unconditional. A row with no reason, or with
+                       a reason this build does not know, gets a visible
+                       "unlabelled" badge rather than blank space: the picker
+                       mixes two entitlement models, and an unlabelled row is the
+                       exact failure the labels exist to prevent. -->
+                  <span
+                    class="atom-question-picker__source-badge"
+                    [attr.data-source]="sourceAttr(row.source)"
+                    [attr.data-testid]="'aplus-question-picker-source-' + row.id"
+                  >
+                    {{ sourceBadgeKey(row.source) | translate }}
+                  </span>
+                  <!-- ADR-229 A1.3 — a frozen orphan edition is truthfully
+                       badged "no longer shared" (field is additive; absence
+                       = not an orphan, never an error). -->
+                  @if (orphanedFrom(row)) {
+                    <span
+                      class="atom-question-picker__orphan-badge"
+                      [attr.data-testid]="'aplus-question-picker-orphan-' + row.id"
+                      [attr.title]="'aplus.atom_question_picker.badge_orphaned_hint' | translate"
+                    >
+                      <i class="fa-solid fa-link-slash" aria-hidden="true"></i>
+                      {{ 'aplus.atom_question_picker.badge_orphaned' | translate }}
+                    </span>
+                  }
+                </div>
+                <div class="atom-question-picker__row-content">
+                  <span class="atom-question-picker__row-title">{{ row.title || row.stem }}</span>
+                  @if (row.title && row.stem && row.title !== row.stem) {
+                    <span class="atom-question-picker__row-stem">{{ row.stem }}</span>
+                  }
+                </div>
+                <span class="atom-question-picker__row-chevron" aria-hidden="true">
+                  {{ isExpanded(row.id) ? '▾' : '▸' }}
+                </span>
+              </button>
+              <button
+                type="button"
+                class="atom-question-picker__row-quick-add"
+                [attr.data-testid]="'aplus-question-picker-quick-add-' + row.id"
+                (click)="quickAdd(row); $event.stopPropagation()"
+                [attr.title]="'aplus.atom_question_picker.quick_add_title' | translate"
+                [attr.aria-label]="'aplus.atom_question_picker.quick_add_aria' | translate"
+              >
+                +
+              </button>
+            </div>
+
+            @if (isExpanded(row.id)) {
+              <div class="atom-question-picker__row-detail" data-testid="aplus-question-picker-detail">
+                @if (row.stem) {
+                  <p class="atom-question-picker__row-stem-full">
+                    <strong>{{ 'aplus.atom_question_picker.detail_stem' | translate }}:</strong>
+                    {{ row.stem }}
+                  </p>
+                }
+
+                <!-- Lazy-fetched full atom projection — shows options + model answer when loaded. -->
+                @if (isPayloadReady(row.id)) {
+                  @if (payloadAtom(row.id); as atom) {
+                    <!-- ADR-229 A1.3 — the expanded payload may itself carry
+                         the orphan provenance (frozen edition): state it. -->
+                    @if (orphanedFrom(atom)) {
+                      <p
+                        class="atom-question-picker__orphan-note"
+                        [attr.data-testid]="'aplus-question-picker-orphan-note-' + row.id"
+                      >
+                        <i class="fa-solid fa-link-slash" aria-hidden="true"></i>
+                        {{ 'aplus.atom_question_picker.badge_orphaned_hint' | translate }}
+                      </p>
+                    }
+                    @if (atom.mcq_payload; as mcq) {
+                      @if (mcq.prompt && mcq.prompt !== row.stem) {
+                        <p class="atom-question-picker__row-stem-full">
+                          {{ mcq.prompt }}
+                        </p>
+                      }
+                      @if (mcq.options && mcq.options.length > 0) {
+                        <p class="atom-question-picker__row-detail-label">
+                          {{ 'aplus.atom_question_picker.detail_options' | translate }}
+                        </p>
+                        <ol class="atom-question-picker__row-detail-options">
+                          @for (opt of mcq.options; track opt.option_id) {
+                            <li class="atom-question-picker__row-detail-option">
+                              <span class="atom-question-picker__row-detail-option-label">
+                                {{ opt.label }}
+                              </span>
+                              @if (opt.text && opt.text !== opt.label) {
+                                : {{ opt.text }}
+                              }
+                            </li>
+                          }
+                        </ol>
+                      }
+                    }
+                    @if (questionImageFor(row.id); as questionImageUrl) {
+                      <chora-question-image
+                        [src]="questionImageUrl"
+                        alt="Generated question illustration"
+                        [caption]="'aplus.atom_question_picker.question_illustration' | translate"
+                        [testIdPrefix]="'aplus-question-picker-question-image-' + row.id" />
+                    }
+                    @if (answerImageFor(row.id); as answerImageUrl) {
+                      <chora-question-image
+                        [src]="answerImageUrl"
+                        alt="Generated model-answer illustration"
+                        [caption]="'aplus.atom_question_picker.model_answer_illustration' | translate"
+                        [testIdPrefix]="'aplus-question-picker-answer-image-' + row.id" />
+                    }
+                    @if (atom.oe_payload; as oe) {
+                      @if (oe.prompt && oe.prompt !== row.stem) {
+                        <p class="atom-question-picker__row-stem-full">
+                          {{ oe.prompt }}
+                        </p>
+                      }
+                      @if (oe.model_answer) {
+                        <p class="atom-question-picker__row-detail-label">
+                          {{ 'aplus.atom_question_picker.detail_oe' | translate }}
+                        </p>
+                        <p class="atom-question-picker__row-detail-model-answer">
+                          {{ oe.model_answer }}
+                        </p>
+                      }
+                      @if (oe.rubric && oe.rubric.length > 0) {
+                        <p class="atom-question-picker__row-detail-label">
+                          {{ 'aplus.atom_question_picker.detail_rubric' | translate }}
+                        </p>
+                        <ul class="atom-question-picker__row-detail-rubric">
+                          @for (c of oe.rubric; track c.criterion_id) {
+                            <li>
+                              <strong>{{ c.title }}</strong>
+                              @if (c.weight !== null) { ({{ c.weight }}) }
+                              @if (c.description) { : {{ c.description }} }
+                            </li>
+                          }
+                        </ul>
+                      }
+                    }
+                    @if (atom.essay_payload?.question_id) {
+                      <p class="atom-question-picker__row-detail-label">
+                        {{ 'aplus.atom_question_picker.detail_essay' | translate }}
+                      </p>
+                    }
+                  }
+                } @else if (isPayloadError(row.id)) {
+                  <p class="atom-question-picker__row-detail-error">
+                    {{ 'aplus.atom_question_picker.detail_load_error' | translate }}
+                  </p>
+                } @else {
+                  <p class="atom-question-picker__row-detail-loading" role="status" aria-busy="true">
+                    {{ 'aplus.atom_question_picker.detail_loading' | translate }}
+                  </p>
+                }
+
+                <dl class="atom-question-picker__row-meta-list">
+                  <dt>{{ 'aplus.atom_question_picker.detail_type' | translate }}</dt>
+                  <dd>{{ row.question_type | uppercase }}</dd>
+                  <dt>{{ 'aplus.atom_question_picker.detail_author' | translate }}</dt>
+                  <dd><code>{{ row.author_gcid }}</code></dd>
+                  <dt>{{ 'aplus.atom_question_picker.detail_created' | translate }}</dt>
+                  <dd>{{ row.created_at | relativeTime }}</dd>
+                  <dt>{{ 'aplus.atom_question_picker.detail_updated' | translate }}</dt>
+                  <dd>{{ row.updated_at | relativeTime }}</dd>
+                </dl>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+
+      @if (hasNextPage()) {
+        <button
+          type="button"
+          class="atom-question-picker__load-more"
+          data-testid="aplus-question-picker-load-more"
+          (click)="loadMore()"
+        >
+          {{ 'aplus.atom_question_picker.load_more' | translate }}
+        </button>
+      }
+    }
+  </div>
+</section>

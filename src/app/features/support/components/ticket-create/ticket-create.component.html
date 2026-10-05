@@ -1,0 +1,152 @@
+<section
+  class="ticket-create"
+  role="main"
+  [attr.aria-label]="'support.create_ticket_title' | translate"
+  data-testid="ticket-create">
+
+  <!-- Page Header -->
+  <header class="ticket-create__header">
+    <h1 class="ticket-create__title" data-testid="create-title">
+      {{ 'support.create_ticket_title' | translate }}
+    </h1>
+    <p class="ticket-create__subtitle" data-testid="create-subtitle">
+      {{ 'support.create_ticket_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Form -->
+  <form class="ticket-create__form" data-testid="ticket-form" (submit)="$event.preventDefault(); submit()">
+
+    <!-- Category -->
+    <div class="ticket-create__field">
+      <label class="ticket-create__label" for="ticket-category">
+        {{ 'support.category' | translate }}
+      </label>
+      <select
+        id="ticket-category"
+        class="ticket-create__select"
+        data-testid="select-category"
+        [value]="category()"
+        (change)="updateCategory($any($event.target).value)">
+        @for (cat of allCategories; track cat) {
+          <option [value]="cat">
+            {{ categoryLabels[cat] | translate }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <!-- Priority -->
+    <div class="ticket-create__field">
+      <label class="ticket-create__label" for="ticket-priority">
+        {{ 'support.priority' | translate }}
+      </label>
+      <select
+        id="ticket-priority"
+        class="ticket-create__select"
+        data-testid="select-priority"
+        [value]="priority()"
+        (change)="updatePriority($any($event.target).value)">
+        @for (pri of allPriorities; track pri) {
+          <option [value]="pri">
+            {{ priorityLabels[pri] | translate }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <!-- Subject -->
+    <div class="ticket-create__field">
+      <label class="ticket-create__label" for="ticket-subject">
+        {{ 'support.subject' | translate }}
+      </label>
+      <input
+        id="ticket-subject"
+        type="text"
+        class="ticket-create__input"
+        data-testid="input-subject"
+        [value]="subject()"
+        (input)="updateSubject($any($event.target).value)"
+        [attr.placeholder]="'support.subject_placeholder' | translate"
+        maxlength="200"
+        required />
+    </div>
+
+    <!-- Description -->
+    <div class="ticket-create__field">
+      <label class="ticket-create__label" for="ticket-description">
+        {{ 'support.description' | translate }}
+      </label>
+      <textarea
+        id="ticket-description"
+        class="ticket-create__textarea"
+        data-testid="input-description"
+        [value]="description()"
+        (input)="updateDescription($any($event.target).value)"
+        [attr.placeholder]="'support.description_placeholder' | translate"
+        rows="6"
+        maxlength="5000">
+      </textarea>
+    </div>
+
+    <!-- File Attachments -->
+    <div class="ticket-create__field">
+      <label class="ticket-create__label" for="ticket-attachments">
+        {{ 'support.attachments' | translate }}
+      </label>
+      <div class="ticket-create__attachment-area" data-testid="attachment-area">
+        <input
+          id="ticket-attachments"
+          type="file"
+          class="ticket-create__file-input"
+          data-testid="input-attachments"
+          multiple
+          (change)="addAttachments($any($event.target).files)" />
+        <p class="ticket-create__attachment-hint">
+          {{ 'support.attachment_hint' | translate }}
+        </p>
+      </div>
+
+      @if (attachmentCount() > 0) {
+        <ul class="ticket-create__attachment-list" role="list" data-testid="attachment-list">
+          @for (file of attachments(); track trackAttachment($index, file)) {
+            <li class="ticket-create__attachment-item" data-testid="attachment-item">
+              <span class="ticket-create__attachment-name">{{ file.name }}</span>
+              <span class="ticket-create__attachment-size">{{ formatFileSize(file.size) }}</span>
+              <button
+                type="button"
+                class="ticket-create__btn ticket-create__btn--link"
+                data-testid="btn-remove-attachment"
+                [attr.aria-label]="'support.remove_attachment' | translate"
+                (click)="removeAttachment($index)">
+                &times;
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <!-- Actions -->
+    <div class="ticket-create__actions" data-testid="form-actions">
+      <button
+        type="button"
+        class="ticket-create__btn ticket-create__btn--secondary"
+        data-testid="btn-cancel"
+        (click)="cancel()">
+        {{ 'support.cancel' | translate }}
+      </button>
+      <button
+        type="submit"
+        class="ticket-create__btn ticket-create__btn--primary"
+        data-testid="btn-submit"
+        [disabled]="!canSubmit()">
+        @if (submitting()) {
+          {{ 'support.submitting' | translate }}
+        } @else {
+          {{ 'support.submit_ticket' | translate }}
+        }
+      </button>
+    </div>
+  </form>
+</section>

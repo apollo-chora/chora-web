@@ -1,0 +1,290 @@
+<section
+  class="aplus-course-detail surface-aplus"
+  aria-labelledby="aplus-course-detail-heading"
+  data-testid="aplus-course-detail">
+  <nav aria-label="Breadcrumb" class="course-detail__crumbs">
+    <a routerLink="/a/catalog" data-testid="course-detail-back-to-catalog">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      {{ 'aplus.course_detail.back_to_catalog' | translate }}
+    </a>
+  </nav>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div
+        class="glass-panel course-detail__status"
+        role="status"
+        aria-busy="true"
+        data-testid="aplus-course-detail-loading">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        <p>{{ 'aplus.course_detail.loading' | translate }}</p>
+      </div>
+    }
+    @case ('error') {
+      <div
+        class="glass-panel course-detail__status course-detail__status--error"
+        role="alert"
+        data-testid="aplus-course-detail-error">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <p>{{ errorKey() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="retry()"
+          data-testid="aplus-course-detail-retry">
+          {{ 'aplus.course_detail.retry' | translate }}
+        </button>
+      </div>
+    }
+    @case ('success') {
+      @if (course(); as c) {
+        <article class="course-detail__body">
+          <header class="course-detail__hero glass-panel">
+            <h1
+              id="aplus-course-detail-heading"
+              class="course-detail__title"
+              data-testid="course-detail-title">
+              {{ c.title }}
+            </h1>
+
+            @if (c.instructor_name) {
+              <p
+                class="course-detail__instructor"
+                data-testid="course-detail-instructor">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                <span class="course-detail__instructor-label">
+                  {{ 'aplus.course_detail.by' | translate }}
+                </span>
+                <strong>{{ c.instructor_name }}</strong>
+              </p>
+            }
+
+            <div class="course-detail__badges">
+              @if (c.is_free) {
+                <span
+                  class="badge badge-success"
+                  data-testid="course-detail-free-badge">
+                  {{ 'aplus.course_detail.badge_free' | translate }}
+                </span>
+              } @else {
+                <span
+                  class="course-detail__price"
+                  data-testid="course-detail-price">
+                  {{ priceLabel(c) }}
+                </span>
+              }
+              @if (c.sf_eligible) {
+                <span
+                  class="badge badge-info"
+                  data-testid="course-detail-sf-badge">
+                  {{ 'aplus.course_detail.badge_sf_eligible' | translate }}
+                </span>
+              }
+            </div>
+
+            <dl class="course-detail__meta">
+              <div class="course-detail__meta-row">
+                <dt>
+                  <i class="fa-solid fa-users" aria-hidden="true"></i>
+                  <span class="sr-only">
+                    {{ 'aplus.course_detail.enrolled_count' | translate }}
+                  </span>
+                </dt>
+                <dd data-testid="course-detail-enrolled-count">
+                  {{ c.enrolled_count }}
+                  {{ 'aplus.course_detail.enrolled_count' | translate }}
+                </dd>
+              </div>
+              @if (c.syllabus_outline_count > 0) {
+                <div class="course-detail__meta-row">
+                  <dt>
+                    <i class="fa-solid fa-list-ul" aria-hidden="true"></i>
+                    <span class="sr-only">
+                      {{ 'aplus.course_detail.modules' | translate }}
+                    </span>
+                  </dt>
+                  <dd data-testid="course-detail-modules">
+                    {{ c.syllabus_outline_count }}
+                    {{ 'aplus.course_detail.modules' | translate }}
+                  </dd>
+                </div>
+              }
+              <div class="course-detail__meta-row">
+                <dt>
+                  <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                  <span class="sr-only">
+                    {{ 'aplus.course_detail.visibility' | translate }}
+                  </span>
+                </dt>
+                <dd data-testid="course-detail-visibility">
+                  {{ 'aplus.course_detail.visibility' | translate }}:
+                  {{ c.visibility }}
+                </dd>
+              </div>
+            </dl>
+
+            @if (c.tags.length) {
+              <ul class="course-detail__tags" data-testid="course-detail-tags">
+                @for (tag of c.tags; track tag) {
+                  <li class="course-detail__tag">{{ tag }}</li>
+                }
+              </ul>
+            }
+          </header>
+
+          @if (hasCj2Detail() && cj2(); as x) {
+            <!-- CJ#2 rich-aggregate enrichment — description, objectives,
+                 prerequisites, test-set count, scheduled open. Only
+                 rendered when /api/v1/courses/{id} returns populated
+                 fields (post-CJ#2 release). -->
+            <section
+              class="course-detail__cj2 glass-panel"
+              aria-labelledby="course-detail-about-heading"
+              data-testid="course-detail-cj2">
+              <h2 id="course-detail-about-heading" class="course-detail__cj2-heading">
+                {{ 'aplus.course_detail.about_heading' | translate }}
+              </h2>
+
+              @if (x.description) {
+                <p class="course-detail__cj2-description" data-testid="course-detail-description">
+                  {{ x.description }}
+                </p>
+              }
+
+              @if (x.scheduled_open_at) {
+                <p class="course-detail__cj2-scheduled" data-testid="course-detail-scheduled">
+                  <i class="fa-solid fa-calendar-day" aria-hidden="true"></i>
+                  <strong>{{ 'aplus.course_detail.scheduled_open' | translate }}:</strong>
+                  {{ x.scheduled_open_at }}
+                </p>
+              }
+
+              @if (x.learning_objectives && x.learning_objectives.length > 0) {
+                <div class="course-detail__cj2-block" data-testid="course-detail-objectives-block">
+                  <h3 class="course-detail__cj2-subhead">
+                    <i class="fa-solid fa-bullseye" aria-hidden="true"></i>
+                    {{ 'aplus.course_detail.learning_objectives' | translate }}
+                  </h3>
+                  <ul class="course-detail__cj2-list">
+                    @for (obj of x.learning_objectives; track $index) {
+                      <li>{{ obj }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              @if (x.prerequisites && x.prerequisites.length > 0) {
+                <div class="course-detail__cj2-block" data-testid="course-detail-prereqs-block">
+                  <h3 class="course-detail__cj2-subhead">
+                    <i class="fa-solid fa-square-check" aria-hidden="true"></i>
+                    {{ 'aplus.course_detail.prerequisites' | translate }}
+                  </h3>
+                  <ul class="course-detail__cj2-list">
+                    @for (p of x.prerequisites; track $index) {
+                      <li>{{ p }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              @if (x.test_set_ids && x.test_set_ids.length > 0) {
+                <p class="course-detail__cj2-testsets" data-testid="course-detail-testsets-count">
+                  <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                  <strong>{{ x.test_set_ids.length }}</strong>
+                  {{ 'aplus.course_detail.bundled_test_sets' | translate }}
+                </p>
+              }
+            </section>
+          }
+
+          @if (checkoutCancelled()) {
+            <div
+              class="course-detail__checkout-cancelled glass-panel"
+              role="status"
+              aria-live="polite"
+              data-testid="course-detail-checkout-cancelled">
+              <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+              <p>{{ 'aplus.course_detail.checkout_cancelled' | translate }}</p>
+            </div>
+          }
+
+          <section
+            class="course-detail__enrol glass-panel"
+            aria-labelledby="course-detail-enrol-heading">
+            <h2 id="course-detail-enrol-heading" class="course-detail__enrol-title">
+              @if (showEnrolledState()) {
+                {{ 'aplus.course_detail.enrolled_heading' | translate }}
+              } @else if (c.is_free) {
+                {{ 'aplus.course_detail.enrol' | translate }}
+              } @else {
+                {{ 'aplus.course_detail.pay_and_enrol' | translate }}
+              }
+            </h2>
+
+            @if (!c.is_free && !showEnrolledState()) {
+              <p class="course-detail__enrol-price-note" data-testid="course-detail-pay-price-note">
+                <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
+                {{ 'aplus.course_detail.pay_note_pre' | translate }}
+                <strong>{{ priceLabel(c) }}</strong>
+                {{ 'aplus.course_detail.pay_note_post' | translate }}
+              </p>
+            }
+
+            @if (showEnrolledState()) {
+              <p
+                class="course-detail__enrol-success"
+                role="status"
+                data-testid="course-detail-enrol-success">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'aplus.course_detail.enrolled' | translate }}
+              </p>
+              <a
+                class="btn btn-primary course-detail__enrol-btn"
+                [routerLink]="['/a/courses', courseId, 'learn']"
+                data-testid="course-detail-open-course-btn">
+                {{ 'aplus.course_detail.open_course' | translate }}
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </a>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-primary course-detail__enrol-btn"
+                (click)="enrol()"
+                [disabled]="isEnrolling() || isRedirecting()"
+                data-testid="course-detail-enrol-btn">
+                @if (isRedirecting()) {
+                  <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+                  {{ 'aplus.course_detail.redirecting_to_stripe' | translate }}
+                } @else if (isEnrolling()) {
+                  <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+                  @if (c.is_free) {
+                    {{ 'aplus.course_detail.enrolling' | translate }}
+                  } @else {
+                    {{ 'aplus.course_detail.opening_checkout' | translate }}
+                  }
+                } @else {
+                  @if (c.is_free) {
+                    {{ 'aplus.course_detail.enrol' | translate }}
+                  } @else {
+                    {{ 'aplus.course_detail.pay_with_stripe' | translate }}
+                  }
+                  <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                }
+              </button>
+
+              @if (enrolState().status === 'error') {
+                <p
+                  class="course-detail__enrol-error"
+                  role="alert"
+                  data-testid="course-detail-enrol-error">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ enrolErrorKey() | translate }}
+                </p>
+              }
+            }
+          </section>
+        </article>
+      }
+    }
+  }
+</section>

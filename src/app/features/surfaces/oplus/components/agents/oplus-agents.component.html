@@ -1,0 +1,549 @@
+<div
+  class="oplus-agents surface-oplus"
+  data-testid="oplus-agents-root"
+  [attr.data-state]="state().state"
+>
+  <!-- Header -->
+  <header class="oplus-agents__header glass-panel">
+    <div class="oplus-agents__title-row">
+      <h1
+        class="oplus-agents__title surface-accent-text"
+        data-testid="oplus-agents-title"
+      >
+        {{ 'oplus.agents.title' | translate }}
+      </h1>
+      <span
+        class="oplus-agents__live"
+        data-testid="oplus-agents-live"
+        role="status"
+        [attr.data-variant]="badge()"
+        [attr.aria-label]="badgeKey() | translate"
+      >
+        <span class="oplus-agents__live-dot" aria-hidden="true"></span>
+        {{ badgeKey() | translate }}
+      </span>
+    </div>
+    <p class="oplus-agents__subtitle">
+      {{ 'oplus.agents.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- ADR-197 read slice (CHO-2364): standalone "Agent prompt versions"
+       panel, driven purely by /bff/oplus/prompts. Never merged onto the
+       registry roster below: roster ids (qgen-mcq, ...) and runtime-role
+       evidence ids (qgen_question, ...) are different namespaces. -->
+  @if (!isAuditorGated()) {
+    <section
+      class="glass-panel oplus-prompts-panel"
+      data-testid="oplus-prompts-panel"
+      aria-labelledby="oplus-prompts-panel-title"
+    >
+      <div class="oplus-prompts-panel__head">
+        <h2 class="oplus-prompts-panel__title" id="oplus-prompts-panel-title">
+          {{ 'oplus.agents.prompts_title' | translate }}
+        </h2>
+        <p class="oplus-prompts-panel__subtitle">
+          {{ 'oplus.agents.prompts_subtitle' | translate }}
+        </p>
+      </div>
+
+      @switch (promptsBranch()) {
+        @case ('loading') {
+          <div
+            class="oplus-prompts-state oplus-prompts-state--loading"
+            data-testid="oplus-prompts-loading"
+            role="status"
+            aria-busy="true"
+            [attr.aria-label]="'oplus.agents.prompts_loading' | translate"
+          >
+            <span class="oplus-prompts-state__skeleton" aria-hidden="true"></span>
+            <span class="oplus-prompts-state__skeleton" aria-hidden="true"></span>
+            <span class="oplus-prompts-state__skeleton" aria-hidden="true"></span>
+          </div>
+        }
+        @case ('forbidden') {
+          <div
+            class="oplus-prompts-state"
+            data-testid="oplus-prompts-auditor-gate"
+            role="alert"
+          >
+            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+            <p>{{ 'oplus.agents.prompts_forbidden' | translate }}</p>
+          </div>
+        }
+        @case ('error') {
+          <div
+            class="oplus-prompts-state"
+            data-testid="oplus-prompts-error"
+            role="alert"
+          >
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <p>{{ 'oplus.agents.prompts_error' | translate }}</p>
+            <button
+              type="button"
+              class="oplus-prompts-state__retry"
+              data-testid="oplus-prompts-retry"
+              (click)="retryPrompts()"
+            >
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'oplus.agents.prompts_retry' | translate }}
+            </button>
+          </div>
+        }
+        @case ('empty') {
+          <div class="oplus-prompts-state" data-testid="oplus-prompts-empty">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <p>{{ 'oplus.agents.prompts_empty' | translate }}</p>
+          </div>
+        }
+        @default {
+          <ul
+            class="oplus-prompts-panel__cards"
+            role="list"
+            [attr.aria-label]="'oplus.agents.prompt_cards_aria' | translate"
+          >
+            @for (agent of promptAgents(); track agent.agent_id) {
+              <li
+                class="oplus-prompt-card"
+                [attr.data-testid]="'oplus-prompt-card-' + agent.agent_id"
+                [attr.data-agent-id]="agent.agent_id"
+              >
+                <div class="oplus-prompt-card__head">
+                  <i
+                    class="fa-solid fa-scroll oplus-prompt-card__icon"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="oplus-prompt-card__id">{{ agent.agent_id }}</span>
+                  <span
+                    class="oplus-prompt-card__crew"
+                    [attr.data-testid]="'oplus-prompt-crew-' + agent.agent_id"
+                  >
+                    {{ crewLabelKey(agent.crew_name) | translate }}
+                  </span>
+
+                  @if (agent.evidence_kind === 'decisions') {
+                    @if (
+                      agent.latest_prompt_version !== undefined &&
+                      agent.latest_prompt_source !== undefined
+                    ) {
+                      <button
+                        type="button"
+                        class="oplus-prompt__chip oplus-prompt__chip--button"
+                        [attr.data-testid]="'oplus-prompt-chip-' + agent.agent_id"
+                        [attr.aria-label]="
+                          'oplus.agents.prompt_view_chip_aria'
+                            | translate: { agent: agent.agent_id }
+                        "
+                        (click)="
+                          openPromptModal(
+                            agent.agent_id,
+                            agent.latest_prompt_version
+                          )
+                        "
+                        >{{ agent.latest_prompt_version }} ·
+                        {{ agent.latest_prompt_source
+                        }}@if (agent.last_decision_at !== undefined) {
+                          · {{ relativeTime(agent.last_decision_at) }}
+                        }
+                        <i
+                          class="fa-solid fa-book-open oplus-prompt__chip-view"
+                          aria-hidden="true"
+                        ></i></button
+                      >
+                    } @else {
+                      <!-- CHO-2368: no run evidence yet, but the v1 baseline
+                           content IS viewable — the chip opens the catalogue. -->
+                      <button
+                        type="button"
+                        class="oplus-prompt__chip oplus-prompt__chip--empty oplus-prompt__chip--button"
+                        [attr.data-testid]="'oplus-prompt-none-' + agent.agent_id"
+                        [attr.aria-label]="
+                          'oplus.agents.prompt_view_chip_aria'
+                            | translate: { agent: agent.agent_id }
+                        "
+                        (click)="openPromptModal(agent.agent_id)"
+                      >
+                        {{ 'oplus.agents.prompt_no_evidence' | translate }}
+                        <i
+                          class="fa-solid fa-book-open oplus-prompt__chip-view"
+                          aria-hidden="true"
+                        ></i>
+                      </button>
+                    }
+                    <span
+                      class="oplus-prompt-card__total"
+                      [attr.data-testid]="'oplus-prompt-total-' + agent.agent_id"
+                    >
+                      {{
+                        'oplus.agents.prompt_total_decisions'
+                          | translate: { n: agent.decisions_total }
+                      }}
+                    </span>
+                  } @else {
+                    <!-- ritual_stamps: Familiar Routine run evidence -->
+                    <span class="oplus-prompt__kind">
+                      {{ 'oplus.agents.prompt_from_ritual_stamps' | translate }}
+                    </span>
+                    @for (v of agent.versions; track v.prompt_version) {
+                      <button
+                        type="button"
+                        class="oplus-prompt__chip oplus-prompt__chip--button"
+                        [attr.data-testid]="
+                          'oplus-prompt-stamp-' +
+                          agent.agent_id +
+                          '-' +
+                          v.prompt_version
+                        "
+                        [attr.aria-label]="
+                          'oplus.agents.prompt_view_chip_aria'
+                            | translate: { agent: agent.agent_id }
+                        "
+                        (click)="
+                          openPromptModal(agent.agent_id, v.prompt_version)
+                        "
+                        >{{ v.prompt_version }} · {{ v.runs }}
+                        {{ 'oplus.agents.prompt_runs_label' | translate }} ·
+                        {{ relativeTime(v.last_seen) }}
+                        <i
+                          class="fa-solid fa-book-open oplus-prompt__chip-view"
+                          aria-hidden="true"
+                        ></i></button
+                      >
+                    } @empty {
+                      <!-- CHO-2368: the familiar's v1 baseline is viewable
+                           even before any Routine run stamps a version. -->
+                      <button
+                        type="button"
+                        class="oplus-prompt__chip oplus-prompt__chip--empty oplus-prompt__chip--button"
+                        [attr.data-testid]="'oplus-prompt-none-' + agent.agent_id"
+                        [attr.aria-label]="
+                          'oplus.agents.prompt_view_chip_aria'
+                            | translate: { agent: agent.agent_id }
+                        "
+                        (click)="openPromptModal(agent.agent_id)"
+                      >
+                        {{ 'oplus.agents.prompt_no_evidence' | translate }}
+                        <i
+                          class="fa-solid fa-book-open oplus-prompt__chip-view"
+                          aria-hidden="true"
+                        ></i>
+                      </button>
+                    }
+                    <span
+                      class="oplus-prompt-card__total"
+                      [attr.data-testid]="'oplus-prompt-total-' + agent.agent_id"
+                    >
+                      {{
+                        'oplus.agents.prompt_total_runs'
+                          | translate: { n: agent.runs_total }
+                      }}
+                    </span>
+                  }
+                </div>
+
+                @if (agent.evidence_kind === 'decisions' && agent.use_cases !== undefined) {
+                  @let open = isMatrixOpen(agent.agent_id);
+                  <button
+                    type="button"
+                    class="oplus-prompt__matrix-toggle"
+                    [id]="matrixToggleId(agent.agent_id)"
+                    [attr.aria-expanded]="open"
+                    [attr.aria-controls]="matrixId(agent.agent_id)"
+                    [attr.data-testid]="
+                      'oplus-prompt-matrix-toggle-' + agent.agent_id
+                    "
+                    (click)="toggleMatrix(agent.agent_id)"
+                  >
+                    <i
+                      class="fa-solid oplus-prompt__matrix-chevron"
+                      [class.fa-chevron-down]="open"
+                      [class.fa-chevron-right]="!open"
+                      aria-hidden="true"
+                    ></i>
+                    {{ 'oplus.agents.prompt_use_cases_toggle' | translate }}
+                    <span class="oplus-prompt__matrix-count">
+                      {{ agent.use_cases.length }}
+                    </span>
+                  </button>
+                  <div
+                    class="oplus-prompt__matrix"
+                    [id]="matrixId(agent.agent_id)"
+                    role="region"
+                    [attr.aria-labelledby]="matrixToggleId(agent.agent_id)"
+                    [attr.hidden]="!open ? '' : null"
+                    [attr.data-testid]="'oplus-prompt-matrix-' + agent.agent_id"
+                  >
+                    <table class="oplus-prompt__table">
+                      <thead>
+                        <tr>
+                          <th scope="col">
+                            {{ 'oplus.agents.prompt_col_use_case' | translate }}
+                          </th>
+                          <th scope="col">
+                            {{ 'oplus.agents.prompt_col_decisions' | translate }}
+                          </th>
+                          <th scope="col">
+                            {{ 'oplus.agents.prompt_col_latest' | translate }}
+                          </th>
+                          <th scope="col">
+                            {{ 'oplus.agents.prompt_col_last_seen' | translate }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (uc of agent.use_cases; track uc.key) {
+                          <tr
+                            [attr.data-testid]="
+                              'oplus-prompt-usecase-' +
+                              agent.agent_id +
+                              '-' +
+                              uc.key
+                            "
+                            [attr.data-empty]="uc.decisions === 0"
+                          >
+                            <th scope="row">
+                              {{ useCaseLabelKey(uc.key) | translate }}
+                            </th>
+                            <td class="oplus-prompt__num">{{ uc.decisions }}</td>
+                            <td
+                              [class.oplus-prompt__no-evidence]="
+                                uc.latest_prompt_version === undefined
+                              "
+                            >
+                              @if (
+                                uc.latest_prompt_version !== undefined &&
+                                uc.latest_prompt_source !== undefined
+                              ) {
+                                {{ uc.latest_prompt_version }} ·
+                                {{ uc.latest_prompt_source }}
+                              } @else {
+                                {{ 'oplus.agents.prompt_no_evidence' | translate }}
+                              }
+                            </td>
+                            <td>
+                              @if (uc.last_seen !== undefined) {
+                                {{ relativeTime(uc.last_seen) }}
+                              } @else {
+                                –
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  }
+
+  @if (isAuditorGated()) {
+    <section
+      class="glass-panel oplus-agents__gate"
+      data-testid="oplus-agents-auditor-gate"
+      role="alert"
+    >
+      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+      <h2>{{ 'oplus.errors.auditor_required_title' | translate }}</h2>
+      <p>{{ 'oplus.errors.auditor_required' | translate }}</p>
+    </section>
+  } @else if (hasErrorOnly()) {
+    <section
+      class="glass-panel oplus-agents__error"
+      data-testid="oplus-agents-error"
+      role="alert"
+    >
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p>{{ errorKey() | translate }}</p>
+    </section>
+  } @else if (crews().length === 0) {
+    <section
+      class="glass-panel oplus-agents__empty"
+      data-testid="oplus-agents-empty"
+    >
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      <p>{{ 'oplus.agents.no_crews' | translate }}</p>
+    </section>
+  } @else {
+    <!-- Crews + Agents accordion (L1 = Crew, L2 = Agent rows) -->
+    <ul
+      class="oplus-agents__crew-list"
+      role="list"
+      [attr.aria-label]="'oplus.agents.crews_aria' | translate"
+    >
+      @for (crew of crews(); track crew.crew_name; let i = $index) {
+        @let isFirst = i === 0;
+        @let expanded = isExpanded(crew.crew_name, isFirst);
+        <li
+          class="oplus-crew"
+          [class.is-empty]="!crew.has_recent_activity"
+          [attr.data-testid]="'oplus-crew-' + crew.crew_name"
+          [attr.data-crew-name]="crew.crew_name"
+          [attr.data-has-activity]="crew.has_recent_activity"
+        >
+          <!-- L1 — Crew header (button toggles expand/collapse) -->
+          <button
+            type="button"
+            class="oplus-crew__header glass-panel"
+            [id]="crewHeaderId(crew.crew_name)"
+            [attr.aria-expanded]="expanded"
+            [attr.aria-controls]="crewPanelId(crew.crew_name)"
+            [attr.data-testid]="'oplus-crew-toggle-' + crew.crew_name"
+            (click)="toggleCrew(crew.crew_name, isFirst)"
+          >
+            <i
+              class="fa-solid oplus-crew__chevron"
+              [class]="
+                expanded
+                  ? 'fa-solid oplus-crew__chevron fa-chevron-down'
+                  : 'fa-solid oplus-crew__chevron fa-chevron-right'
+              "
+              aria-hidden="true"
+            ></i>
+            <i
+              class="fa-solid fa-people-group oplus-crew__icon"
+              aria-hidden="true"
+            ></i>
+            <div class="oplus-crew__title-block">
+              <span class="oplus-crew__title">
+                {{ crew.crew_label ?? crew.crew_name }}
+              </span>
+              <span class="oplus-crew__id">{{ crew.crew_id }}</span>
+            </div>
+            <span
+              class="oplus-crew__chip"
+              [attr.data-testid]="'oplus-crew-count-' + crew.crew_name"
+              [attr.aria-label]="'oplus.agents.agent_count_aria' | translate"
+            >
+              {{ crew.agents.length }} {{ 'oplus.agents.agents_label' | translate }}
+            </span>
+            @if (!crew.has_recent_activity) {
+              <span
+                class="oplus-crew__quiet"
+                [attr.data-testid]="'oplus-crew-quiet-' + crew.crew_name"
+              >
+                <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                {{ 'oplus.agents.quiet' | translate }}
+              </span>
+            }
+          </button>
+
+          <!-- L2 — Agent rows -->
+          <div
+            class="oplus-crew__panel"
+            [id]="crewPanelId(crew.crew_name)"
+            role="region"
+            [attr.aria-labelledby]="crewHeaderId(crew.crew_name)"
+            [attr.hidden]="!expanded ? '' : null"
+          >
+            @if (!crew.has_recent_activity) {
+              <p
+                class="oplus-crew__empty"
+                [attr.data-testid]="'oplus-crew-empty-' + crew.crew_name"
+              >
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                {{ 'oplus.agents.no_recent_activity' | translate }}
+              </p>
+            }
+            <ul
+              class="oplus-agent-rows"
+              role="list"
+              [attr.aria-label]="'oplus.agents.agents_aria' | translate"
+            >
+              @for (agent of crew.agents; track agent.agent_id) {
+                <li
+                  class="oplus-agent-row glass-panel"
+                  [attr.data-testid]="
+                    'oplus-agent-row-' + crew.crew_name + '-' + agent.agent_id
+                  "
+                  [attr.data-agent-id]="agent.agent_id"
+                >
+                  <div class="oplus-agent-row__head">
+                    <i
+                      class="fa-solid fa-robot oplus-agent-row__icon"
+                      aria-hidden="true"
+                    ></i>
+                    <div class="oplus-agent-row__title-block">
+                      <span class="oplus-agent-row__name">{{ agent.agent_id }}</span>
+                      <span class="oplus-agent-row__role">{{ agent.role }}</span>
+                    </div>
+
+                    <!-- Selective deep-link policy: O+ NEVER duplicates Cloud Trace UI. -->
+                    <div class="oplus-agent-row__links">
+                      @if (agent.cloud_trace_template_url !== null) {
+                        <a
+                          class="oplus-deep-link"
+                          [href]="agent.cloud_trace_template_url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          [attr.data-testid]="
+                            'oplus-agent-trace-' +
+                            crew.crew_name +
+                            '-' +
+                            agent.agent_id
+                          "
+                          [attr.aria-label]="
+                            ('oplus.agents.view_in_cloud_trace_aria' | translate) +
+                            ' ' +
+                            agent.agent_id
+                          "
+                        >
+                          <i class="fa-solid fa-stream" aria-hidden="true"></i>
+                          {{ 'oplus.agents.view_in_cloud_trace' | translate }}
+                          <i
+                            class="fa-solid fa-arrow-up-right-from-square oplus-deep-link__icon"
+                            aria-hidden="true"
+                          ></i>
+                        </a>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Stats grid — show `—` for null per plan §D4 -->
+                  <dl
+                    class="oplus-agent-row__stats"
+                    [attr.data-testid]="
+                      'oplus-agent-stats-' + crew.crew_name + '-' + agent.agent_id
+                    "
+                  >
+                    <div class="oplus-agent-row__stat">
+                      <dt>{{ 'oplus.agents.stat_invocations' | translate }}</dt>
+                      <dd>{{ formatStat(agent.stats.invocations_24h) }}</dd>
+                    </div>
+                    <div class="oplus-agent-row__stat">
+                      <dt>{{ 'oplus.agents.stat_p95_latency' | translate }}</dt>
+                      <dd>{{ formatLatency(agent.stats.p95_latency_ms) }}</dd>
+                    </div>
+                    <div class="oplus-agent-row__stat">
+                      <dt>{{ 'oplus.agents.stat_refusal_rate' | translate }}</dt>
+                      <dd>{{ formatRefusalRate(agent.stats.refusal_rate) }}</dd>
+                    </div>
+                    @if (agent.engine_id !== null) {
+                      <div class="oplus-agent-row__stat">
+                        <dt>{{ 'oplus.agents.stat_engine_id' | translate }}</dt>
+                        <dd class="oplus-agent-row__mono">{{ agent.engine_id }}</dd>
+                      </div>
+                    }
+                  </dl>
+                </li>
+              }
+            </ul>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>
+
+<!-- CHO-2368 — prompt-content catalogue modal (parent-owned visibility). -->
+@if (promptModal(); as m) {
+  <chora-oplus-prompt-modal
+    [agentId]="m.agentId"
+    [initialVersion]="m.initialVersion"
+    (dismissed)="closePromptModal()"
+  />
+}

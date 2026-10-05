@@ -1,0 +1,33 @@
+<div
+  class="xp-widget"
+  role="region"
+  aria-label="XP and Level"
+  data-testid="xp-widget">
+
+  <div class="xp-widget__header">
+    <span class="xp-widget__level-badge" [attr.aria-label]="'Level ' + xp().level" data-testid="xp-level">
+      {{ 'engagement.xp.level' | translate }} {{ xp().level }}
+    </span>
+    <span class="xp-widget__total" data-testid="xp-total" aria-live="polite">
+      {{ xp().total_xp }} {{ 'engagement.xp.xp' | translate }}
+    </span>
+  </div>
+
+  <div class="xp-widget__progress-bar">
+    <div
+      class="xp-widget__progress-fill"
+      [style.width.%]="progressPercent()"
+      role="progressbar"
+      [attr.aria-valuenow]="progressPercent()"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-label]="'XP progress to next level: ' + progressPercent() + '%'"
+      data-testid="xp-progress">
+    </div>
+  </div>
+
+  <div class="xp-widget__next" data-testid="xp-next">
+    {{ xp().xp_to_next_level }}
+    {{ 'engagement.xp.to-next-level' | translate }}
+  </div>
+</div>

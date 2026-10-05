@@ -1,0 +1,233 @@
+<div
+  class="atom-player"
+  role="main"
+  aria-label="Atom Player"
+  data-testid="atom-player">
+
+  @switch (phase()) {
+    @case ('loading') {
+      <div class="atom-player__loading" role="status" aria-label="Loading atom" data-testid="player-loading">
+        <div class="atom-player__spinner"></div>
+        <p>{{ 'atomic.player.loading' | translate }}</p>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="atom-player__error" role="alert" data-testid="player-error">
+        <p>{{ 'atomic.player.not-available' | translate }}</p>
+        <button
+          class="atom-player__btn atom-player__btn--secondary"
+          (click)="exitPlayer()"
+          data-testid="player-exit-btn">
+          {{ 'atomic.player.back' | translate }}
+        </button>
+      </div>
+    }
+
+    @case ('ready') {
+      <!-- Header -->
+      <header class="atom-player__header" data-testid="player-header">
+        <button
+          class="atom-player__close-btn"
+          (click)="exitPlayer()"
+          aria-label="Exit player"
+          data-testid="player-close-btn">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <span class="atom-player__type-badge">{{ typeLabel() }}</span>
+        @if (atom()?.difficulty) {
+          <span class="atom-player__difficulty" aria-label="Difficulty {{ atom()!.difficulty }} of 5">
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <span [class.atom-player__star--filled]="i <= atom()!.difficulty" aria-hidden="true">★</span>
+            }
+          </span>
+        }
+      </header>
+
+      <!-- Quality indicators (AI-derived) -->
+      @if (qualityData(); as qd) {
+        <div class="atom-player__quality" data-testid="player-quality">
+          <chora-quality-badge
+            [difficultyScore]="qd.difficulty_score"
+            [qualityScore]="qd.quality_score"
+            [bloomsLevel]="qd.blooms_level" />
+          <chora-review-status
+            [status]="qd.review_status"
+            [confidence]="qd.review_confidence" />
+        </div>
+      }
+
+      <!-- Content area: type-specific renderer -->
+      <section class="atom-player__content" data-testid="player-content">
+        @switch (atomType()) {
+          @case ('multiple_choice') {
+            <chora-mcq-renderer
+              [content]="content()"
+              (answerChange)="onAnswerChange($event)" />
+          }
+          @case ('fill_blank') {
+            <chora-fill-blank-renderer
+              [content]="content()"
+              (answerChange)="onAnswerChange($event)" />
+          }
+          @case ('true_false') {
+            <chora-true-false-renderer
+              [content]="content()"
+              (answerChange)="onAnswerChange($event)" />
+          }
+          @case ('short_answer') {
+            <chora-short-answer-renderer
+              [content]="content()"
+              (answerChange)="onAnswerChange($event)" />
+          }
+          @case ('code') {
+            <chora-code-renderer
+              [content]="content()"
+              (answerChange)="onAnswerChange($event)" />
+          }
+          @default {
+            <chora-flashcard-renderer
+              [content]="content()" />
+          }
+        }
+      </section>
+
+      <!-- Hints -->
+      @if (maxHints() > 0) {
+        <div class="atom-player__hints" data-testid="player-hints">
+          @for (hint of revealedHints(); track $index) {
+            <div
+              class="atom-player__hint-text"
+              [attr.data-testid]="'hint-text-' + $index"
+              [attr.role]="$last ? 'status' : null"
+              [attr.aria-live]="$last ? 'polite' : null">
+              <span class="atom-player__hint-label">{{ 'atomic.player.hint-label' | translate }} {{ $index + 1 }}</span>
+              {{ hint }}
+            </div>
+          }
+          <button
+            class="atom-player__btn atom-player__btn--hint"
+            [disabled]="!canHint()"
+            (click)="requestHint()"
+            data-testid="hint-btn">
+            {{ 'atomic.player.hint' | translate }} ({{ maxHints() - hintsUsed() }})
+          </button>
+        </div>
+      }
+
+      <!-- Validation error (submission failed) -->
+      @if (validationError(); as err) {
+        <div class="atom-player__validation-error" role="alert" aria-live="polite" data-testid="validation-error">
+          <p>{{ 'atomic.player.validation-failed' | translate }}</p>
+          <p class="atom-player__validation-error-detail">{{ err.message }}</p>
+        </div>
+      }
+
+      <!-- Controls -->
+      @if (isGradable()) {
+        <footer class="atom-player__controls" data-testid="player-controls">
+          <button
+            class="atom-player__btn atom-player__btn--primary"
+            [disabled]="!canSubmit() || isSubmitting()"
+            (click)="submitAnswer()"
+            data-testid="submit-btn">
+            @if (isSubmitting()) {
+              <span class="atom-player__submit-spinner" aria-hidden="true"></span>
+              {{ 'atomic.player.submitting' | translate }}
+            } @else {
+              {{ 'atomic.player.submit' | translate }}
+            }
+          </button>
+        </footer>
+      }
+
+      <!-- Keyboard shortcut hint -->
+      <div class="atom-player__shortcuts" aria-hidden="true">
+        @if (maxHints() > 0) {
+          <kbd>H</kbd> {{ 'atomic.player.shortcut-hint' | translate }}
+        }
+        @if (isGradable()) {
+          <kbd>S</kbd> {{ 'atomic.player.shortcut-submit' | translate }}
+        }
+        <kbd>Esc</kbd> {{ 'atomic.player.shortcut-exit' | translate }}
+      </div>
+    }
+
+    @case ('submitted') {
+      @if (validationResult(); as result) {
+        <div
+          class="atom-player__feedback"
+          [class.atom-player__feedback--correct]="result.correct"
+          [class.atom-player__feedback--incorrect]="!result.correct"
+          role="alert"
+          aria-live="polite"
+          data-testid="player-feedback">
+
+          <!-- Correct/Incorrect icon -->
+          <div class="atom-player__feedback-icon" data-testid="feedback-icon">
+            @if (result.correct) {
+              <span aria-hidden="true">✓</span>
+              <span class="atom-player__feedback-label">{{ 'atomic.player.correct' | translate }}</span>
+            } @else {
+              <span aria-hidden="true">✗</span>
+              <span class="atom-player__feedback-label">{{ 'atomic.player.incorrect' | translate }}</span>
+            }
+          </div>
+
+          <!-- Rule type badge -->
+          <div class="atom-player__feedback-rule" data-testid="feedback-rule-type">
+            {{ ruleTypeLabel() }}
+          </div>
+
+          <!-- Explanation -->
+          @if (result.explanation) {
+            <p class="atom-player__feedback-explanation" data-testid="feedback-explanation">
+              {{ result.explanation }}
+            </p>
+          }
+
+          <!-- W8: author-generated model-answer illustration (scene or diagram) -->
+          @if (answerImageUrl(); as answerUrl) {
+            <chora-question-image
+              [src]="answerUrl"
+              alt="Generated model-answer illustration"
+              testIdPrefix="feedback-answer-image" />
+          }
+
+          <!-- Expected answer (when incorrect) -->
+          @if (!result.correct && result.expected_answer) {
+            <div class="atom-player__feedback-expected" data-testid="feedback-expected">
+              <span class="atom-player__feedback-expected-label">{{ 'atomic.player.expected-answer' | translate }}</span>
+              <code class="atom-player__feedback-expected-value">{{ result.expected_answer | json }}</code>
+            </div>
+          }
+
+          <!-- AI confidence -->
+          @if (result.confidence !== null && result.confidence !== undefined) {
+            <div class="atom-player__feedback-confidence" data-testid="feedback-confidence">
+              {{ 'atomic.player.ai-confidence' | translate }}: {{ (result.confidence * 100).toFixed(0) }}%
+            </div>
+          }
+
+          <!-- Actions -->
+          <div class="atom-player__feedback-actions">
+            @if (!result.correct) {
+              <button
+                class="atom-player__btn atom-player__btn--secondary"
+                (click)="retryAnswer()"
+                data-testid="feedback-retry-btn">
+                {{ 'atomic.player.try-again' | translate }}
+              </button>
+            }
+            <button
+              class="atom-player__btn atom-player__btn--primary"
+              (click)="exitPlayer()"
+              data-testid="feedback-done-btn">
+              {{ 'atomic.player.done' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+    }
+  }
+</div>

@@ -1,0 +1,154 @@
+<section
+  class="insight-narrative"
+  role="main"
+  [attr.aria-label]="'admin.insights.panel_title' | translate"
+  data-testid="insight-narrative">
+
+  <!-- Page Header -->
+  <header class="insight-narrative__header">
+    <h1 class="insight-narrative__title" data-testid="insights-title">
+      {{ 'admin.insights.panel_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Controls -->
+  <div class="insight-narrative__controls" data-testid="insight-controls">
+    <div class="insight-narrative__control-group">
+      <label for="insight-period" class="insight-narrative__label">
+        {{ 'admin.insights.time_range' | translate }}
+      </label>
+      <select
+        id="insight-period"
+        class="insight-narrative__select"
+        data-testid="select-period"
+        (change)="onPeriodChange($event)">
+        @for (period of periods; track period.value) {
+          <option [value]="period.value" [selected]="period.value === selectedPeriod()">
+            {{ period.label | translate }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="insight-narrative__control-group">
+      <label for="insight-focus" class="insight-narrative__label">
+        {{ 'admin.insights.focus_area' | translate }}
+      </label>
+      <select
+        id="insight-focus"
+        class="insight-narrative__select"
+        data-testid="select-focus-area"
+        (change)="onFocusAreaChange($event)">
+        @for (area of focusAreas; track area.value) {
+          <option [value]="area.value" [selected]="area.value === selectedFocusArea()">
+            {{ area.label | translate }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <button
+      type="button"
+      class="insight-narrative__btn insight-narrative__btn--primary"
+      data-testid="btn-generate"
+      [disabled]="insightState().status === 'loading'"
+      [attr.aria-label]="'admin.insights.generate' | translate"
+      (click)="generateInsights()">
+      @if (insightState().status === 'loading') {
+        {{ 'admin.insights.generating' | translate }}
+      } @else {
+        {{ 'admin.insights.generate' | translate }}
+      }
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (insightState().status === 'loading') {
+    <div class="insight-narrative__loading" data-testid="insights-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="insight-narrative__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Summary -->
+  @if (insightState().status === 'success' && summary()) {
+    <div class="insight-narrative__summary" data-testid="insights-summary">
+      <h2 class="insight-narrative__summary-title">
+        {{ 'admin.insights.summary' | translate }}
+      </h2>
+      <p class="insight-narrative__summary-text">{{ summary() }}</p>
+    </div>
+  }
+
+  <!-- Insight Cards -->
+  @if (insightState().status === 'success' && insights().length > 0) {
+    <div class="insight-narrative__cards" data-testid="insight-cards" role="list">
+      @for (insight of insights(); track insight.title) {
+        <article
+          class="insight-narrative__card"
+          role="listitem"
+          [attr.data-testid]="'insight-card'"
+          tabindex="0"
+          (click)="selectInsight(insight)"
+          (keyup.enter)="selectInsight(insight)"
+          [attr.aria-label]="insight.title">
+
+          <header class="insight-narrative__card-header">
+            <span
+              class="insight-narrative__trend-icon"
+              [class]="trendClass(insight.trend_direction)"
+              [attr.aria-label]="insight.trend_direction">
+              {{ trendIcon(insight.trend_direction) }}
+            </span>
+            <h3 class="insight-narrative__card-title">{{ insight.title }}</h3>
+            <span
+              class="insight-narrative__confidence"
+              [class]="confidenceBadgeClass(insight.confidence)">
+              {{ formatConfidence(insight.confidence) }}
+            </span>
+          </header>
+
+          <p class="insight-narrative__card-narrative">{{ insight.narrative }}</p>
+        </article>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (insightState().status === 'error') {
+    <div class="insight-narrative__error" data-testid="insights-error" role="alert">
+      <p>{{ 'admin.insights.generate_error' | translate }}</p>
+      <button
+        type="button"
+        class="insight-narrative__btn insight-narrative__btn--primary"
+        (click)="generateInsights()"
+        data-testid="btn-retry"
+        [attr.aria-label]="'admin.insights.retry' | translate">
+        {{ 'admin.insights.retry' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (insightState().status === 'success' && insights().length === 0) {
+    <p class="insight-narrative__empty" role="status" data-testid="insights-empty">
+      {{ 'admin.insights.no_insights' | translate }}
+    </p>
+  }
+
+  <!-- Idle State -->
+  @if (insightState().status === 'idle') {
+    <div class="insight-narrative__idle" data-testid="insights-idle">
+      <p>{{ 'admin.insights.idle_message' | translate }}</p>
+    </div>
+  }
+
+  <!-- Detail Panel -->
+  @if (selectedInsight()) {
+    <chora-trend-explanation
+      [insight]="selectedInsight()!"
+      (closed)="closeDetail()">
+    </chora-trend-explanation>
+  }
+</section>

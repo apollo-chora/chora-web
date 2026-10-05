@@ -1,0 +1,288 @@
+<section
+  class="content-approval"
+  [attr.aria-label]="'admin.moderation.title' | translate"
+  data-testid="content-approval">
+
+  <!-- Header -->
+  <header class="content-approval__header">
+    <div class="content-approval__header-text">
+      <h1 class="content-approval__title" data-testid="moderation-title">
+        {{ 'admin.moderation.title' | translate }}
+      </h1>
+      <p class="content-approval__subtitle">
+        {{ 'admin.moderation.subtitle' | translate }}
+      </p>
+    </div>
+    <div class="content-approval__header-stats" aria-live="polite">
+      <span class="content-approval__stat-badge content-approval__stat-badge--pending" data-testid="pending-count">
+        {{ pendingCount() }} {{ 'admin.moderation.pending' | translate }}
+      </span>
+      <span class="content-approval__stat-badge content-approval__stat-badge--escalated" data-testid="escalated-count">
+        {{ escalatedCount() }} {{ 'admin.moderation.escalated' | translate }}
+      </span>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <div class="content-approval__filters" data-testid="moderation-filters">
+    <div class="content-approval__filter-group">
+      <label for="moderation-status-filter" class="content-approval__filter-label">
+        {{ 'admin.moderation.filter-label' | translate }}
+      </label>
+      <select
+        id="moderation-status-filter"
+        class="content-approval__filter-select"
+        [value]="filterStatus()"
+        (change)="onFilterChange($event)"
+        data-testid="filter-status-select">
+        @for (opt of filterOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label | translate }}</option>
+        }
+      </select>
+    </div>
+    <span class="content-approval__filter-count" data-testid="filter-count" aria-live="polite">
+      {{ filteredItems().length }} {{ 'admin.moderation.items-shown' | translate }}
+    </span>
+  </div>
+
+  <!-- Loading -->
+  @if (listState().status === 'loading') {
+    <div class="content-approval__loading" data-testid="moderation-loading" role="status" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="content-approval__skeleton"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (listState().status === 'error') {
+    <div class="content-approval__error" data-testid="moderation-error" role="alert">
+      <p class="content-approval__error-text">
+        {{ 'admin.moderation.load-error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (listState().status === 'success' && filteredItems().length === 0) {
+    <div class="content-approval__empty" data-testid="moderation-empty" role="status">
+      <p>{{ 'admin.moderation.no-items' | translate }}</p>
+    </div>
+  }
+
+  <!-- Moderation list -->
+  @if (listState().status === 'success' && filteredItems().length > 0) {
+    <div class="content-approval__list" data-testid="moderation-list">
+      @for (item of filteredItems(); track item.id) {
+        <article class="content-approval__item" data-testid="moderation-item">
+          <!-- Item header (always visible) -->
+          <div class="content-approval__item-header"
+            (click)="toggleExpandItem(item.id)"
+            (keydown.enter)="toggleExpandItem(item.id)"
+            (keydown.space)="$event.preventDefault(); toggleExpandItem(item.id)"
+            tabindex="0"
+            role="button"
+            [attr.aria-expanded]="isExpanded(item.id)"
+            [attr.data-testid]="'item-header-' + item.id">
+            <div class="content-approval__item-summary">
+              <span class="content-approval__item-title">{{ item.title }}</span>
+              <span class="content-approval__item-type">{{ item.atom_type }}</span>
+              <span
+                class="content-approval__item-status"
+                [class]="getStatusClass(item.status)"
+                data-testid="item-status">
+                {{ item.status }}
+              </span>
+            </div>
+            <div class="content-approval__item-quick-stats">
+              <span
+                class="content-approval__vote-score"
+                [class]="getVoteScoreClass(item.vote_summary.net_score)"
+                data-testid="vote-score">
+                {{ item.vote_summary.net_score > 0 ? '+' : '' }}{{ item.vote_summary.net_score }}
+              </span>
+              @if (item.ai_analysis) {
+                <span
+                  class="content-approval__score"
+                  [class]="getQualityScoreClass(item.ai_analysis.quality_score)"
+                  data-testid="ai-score">
+                  {{ 'admin.moderation.ai-score' | translate }}: {{ item.ai_analysis.quality_score }}%
+                </span>
+              }
+              <span class="content-approval__item-date">{{ formatDate(item.created_at) }}</span>
+            </div>
+          </div>
+
+          <!-- Expanded details -->
+          @if (isExpanded(item.id)) {
+            <div class="content-approval__item-details" data-testid="item-details">
+
+              <!-- Content preview -->
+              <div class="content-approval__content-preview">
+                <h3 class="content-approval__section-title">
+                  {{ 'admin.moderation.content-preview' | translate }}
+                </h3>
+                <p class="content-approval__content-text">{{ item.content }}</p>
+                @if (item.tags.length > 0) {
+                  <div class="content-approval__tags">
+                    @for (tag of item.tags; track tag) {
+                      <span class="content-approval__tag">{{ tag }}</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Vote summary panel -->
+              <div class="content-approval__vote-panel" data-testid="vote-panel">
+                <h3 class="content-approval__section-title">
+                  {{ 'admin.moderation.vote-summary' | translate }}
+                </h3>
+                <div class="content-approval__vote-grid">
+                  <div class="content-approval__vote-item">
+                    <span class="content-approval__vote-count content-approval__vote-count--up">
+                      {{ item.vote_summary.upvotes }}
+                    </span>
+                    <span class="content-approval__vote-label">
+                      {{ 'admin.moderation.upvotes' | translate }}
+                    </span>
+                  </div>
+                  <div class="content-approval__vote-item">
+                    <span class="content-approval__vote-count content-approval__vote-count--down">
+                      {{ item.vote_summary.downvotes }}
+                    </span>
+                    <span class="content-approval__vote-label">
+                      {{ 'admin.moderation.downvotes' | translate }}
+                    </span>
+                  </div>
+                  <div class="content-approval__vote-item">
+                    <span class="content-approval__vote-count">
+                      {{ item.peer_reviews_completed }}/{{ item.peer_reviews_required }}
+                    </span>
+                    <span class="content-approval__vote-label">
+                      {{ 'admin.moderation.peer-reviews' | translate }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- AI Analysis report -->
+              @if (item.ai_analysis) {
+                <div class="content-approval__ai-panel" data-testid="ai-panel">
+                  <h3 class="content-approval__section-title">
+                    {{ 'admin.moderation.ai-analysis' | translate }}
+                  </h3>
+                  <div class="content-approval__ai-score-row">
+                    <span class="content-approval__ai-score-label">
+                      {{ 'admin.moderation.quality-score' | translate }}:
+                    </span>
+                    <span
+                      class="content-approval__ai-score-value"
+                      [class]="getQualityScoreClass(item.ai_analysis.quality_score)">
+                      {{ item.ai_analysis.quality_score }}%
+                    </span>
+                  </div>
+                  <p class="content-approval__ai-assessment">
+                    {{ item.ai_analysis.accuracy_assessment }}
+                  </p>
+                  @if (item.ai_analysis.recommendations.length > 0) {
+                    <div class="content-approval__ai-recommendations">
+                      <h4 class="content-approval__subsection-title">
+                        {{ 'admin.moderation.recommendations' | translate }}
+                      </h4>
+                      <ul class="content-approval__ai-list">
+                        @for (rec of item.ai_analysis.recommendations; track $index) {
+                          <li>{{ rec }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                  @if (item.ai_analysis.flags.length > 0) {
+                    <div class="content-approval__ai-flags">
+                      <h4 class="content-approval__subsection-title">
+                        {{ 'admin.moderation.flags' | translate }}
+                      </h4>
+                      <ul class="content-approval__ai-list content-approval__ai-list--flags">
+                        @for (flag of item.ai_analysis.flags; track $index) {
+                          <li>{{ flag }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Contributor history -->
+              <div class="content-approval__contributor-panel" data-testid="contributor-panel">
+                <h3 class="content-approval__section-title">
+                  {{ 'admin.moderation.contributor-history' | translate }}
+                </h3>
+                <div class="content-approval__contributor-grid">
+                  <div class="content-approval__contributor-item">
+                    <span class="content-approval__contributor-value">
+                      {{ item.contributor_display_name }}
+                    </span>
+                    <span class="content-approval__contributor-label">
+                      {{ 'admin.moderation.contributor-name' | translate }}
+                    </span>
+                  </div>
+                  <div class="content-approval__contributor-item">
+                    <span class="content-approval__contributor-value">
+                      {{ item.contributor_level }}
+                    </span>
+                    <span class="content-approval__contributor-label">
+                      {{ 'admin.moderation.contributor-level' | translate }}
+                    </span>
+                  </div>
+                  <div class="content-approval__contributor-item">
+                    <span class="content-approval__contributor-value">
+                      {{ item.contributor_atoms_submitted }}
+                    </span>
+                    <span class="content-approval__contributor-label">
+                      {{ 'admin.moderation.atoms-submitted' | translate }}
+                    </span>
+                  </div>
+                  <div class="content-approval__contributor-item">
+                    <span class="content-approval__contributor-value">
+                      {{ item.contributor_atoms_approved }}
+                    </span>
+                    <span class="content-approval__contributor-label">
+                      {{ 'admin.moderation.atoms-approved' | translate }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="content-approval__actions" data-testid="moderation-actions">
+                <button
+                  type="button"
+                  class="content-approval__action-btn content-approval__action-btn--approve"
+                  (click)="onAction(item, 'approve')"
+                  data-testid="approve-btn"
+                  [attr.aria-label]="'admin.moderation.approve' | translate">
+                  {{ 'admin.moderation.approve' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="content-approval__action-btn content-approval__action-btn--reject"
+                  (click)="onAction(item, 'reject')"
+                  data-testid="reject-btn"
+                  [attr.aria-label]="'admin.moderation.reject' | translate">
+                  {{ 'admin.moderation.reject' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="content-approval__action-btn content-approval__action-btn--escalate"
+                  (click)="onAction(item, 'escalate')"
+                  data-testid="escalate-btn"
+                  [attr.aria-label]="'admin.moderation.escalate' | translate">
+                  {{ 'admin.moderation.escalate' | translate }}
+                </button>
+              </div>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

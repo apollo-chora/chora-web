@@ -1,0 +1,287 @@
+// =====================================================================
+// R+ Class Roster — polyglassmorphism primitives (Tailwind translation).
+//
+// Tablet-first: 768px primary; ≥1280px desktop enhancement only.
+// NO mobile breakpoints (per chora-web/CLAUDE.md §11).
+// =====================================================================
+
+:host { display: block; }
+
+.class-roster {
+  padding: 1.5rem;
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__skip-link {
+    position: absolute;
+    inset-inline-start: 0.5rem;
+    top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--primary);
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    transform: translateY(-200%);
+    transition: transform 0.2s ease;
+
+    &:focus,
+    &:focus-visible {
+      transform: translateY(0);
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+  }
+
+  &__header {
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    i { font-size: 0.625rem; }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  &__instructor,
+  &__roster-size {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+
+    strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+  }
+
+  &__table-wrap {
+    padding: 0.5rem;
+    border-radius: 16px;
+    overflow-x: auto;
+  }
+
+  &__caption {
+    padding: 0.75rem 1rem;
+    text-align: start;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    caption-side: top;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    min-width: 720px;
+
+    thead th {
+      text-align: start;
+      padding: 0.75rem 1rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.4);
+      vertical-align: middle;
+      font-size: 0.9rem;
+    }
+
+    tbody tr td:first-child {
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+
+    tbody tr td:last-child {
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+  }
+
+  &__sort-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+
+    &:hover { color: var(--primary); }
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    i { font-size: 0.7rem; opacity: 0.6; }
+  }
+
+  // ── Honest async states (loading / error / empty) ──────────────────
+  &__loading,
+  &__error,
+  &__empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 2rem;
+    border-radius: 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  &__error {
+    color: var(--danger, #b91c1c);
+    font-weight: 600;
+  }
+
+  &__empty-state {
+    font-style: italic;
+  }
+
+  &__learner-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.75rem;
+    box-shadow: 0 2px 6px rgba(180, 83, 9, 0.25);
+  }
+
+  &__learner-name {
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  &__gcid {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.5);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+  }
+
+  &__progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 180px;
+  }
+
+  &__progress-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+
+  &__progress-label {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    min-width: 40px;
+    text-align: end;
+  }
+
+  &__activity {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__cert-cta {
+    white-space: nowrap;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    i { font-size: 0.85rem; }
+  }
+}
+
+// ── Desktop enhancement (≥1280px) ─────────────────────────────────────
+@media (min-width: 1280px) {
+  .class-roster {
+    padding: 2rem;
+
+    &__header {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      column-gap: 2rem;
+      row-gap: 0.5rem;
+    }
+
+    &__title {
+      flex-basis: 100%;
+      font-size: 1.75rem;
+    }
+
+    &__table {
+      min-width: unset;
+    }
+  }
+}
+
+// ── Reduced-motion compliance ─────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .class-roster__progress-fill,
+  .class-roster__skip-link {
+    transition: none;
+  }
+}

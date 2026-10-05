@@ -1,0 +1,15 @@
+<article
+  class="cplus-card"
+  [attr.role]="cardRole()"
+  [attr.data-elevation]="elevation()"
+  [attr.aria-label]="title()"
+>
+  @if (title(); as t) {
+    <div class="cplus-card__header">
+      <h2 class="cplus-card__title">{{ t }}</h2>
+    </div>
+  }
+  <div class="cplus-card__body">
+    <ng-content />
+  </div>
+</article>

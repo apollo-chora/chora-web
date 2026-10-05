@@ -1,0 +1,164 @@
+// /r/offerings finder page chrome. The list itself is the cross-surface
+// chora-collection-view primitive; this only owns the page header.
+
+:host {
+  display: block;
+}
+
+.offerings-finder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+  padding: var(--chora-space-lg);
+}
+
+// R4 (CHO-2269): portfolio header. The R+ landing summary that absorbed the
+// retired Rostering dashboard: a glass KPI strip above the finder title.
+.offerings-finder__portfolio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+  padding: var(--chora-space-md) var(--chora-space-lg);
+}
+
+.offerings-finder__portfolio-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offerings-finder__portfolio-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offerings-finder__portfolio-instructor {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  color: var(--chora-color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.offerings-finder__portfolio-kpis {
+  display: flex;
+  gap: var(--chora-space-lg);
+  margin: 0;
+}
+
+.offerings-finder__portfolio-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-secondary);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+  }
+}
+
+// The "+" floor marker on a paged (lower-bound) learner sum.
+.offerings-finder__portfolio-floor {
+  color: var(--chora-color-text-secondary);
+  font-weight: 700;
+}
+
+.offerings-finder__portfolio--error {
+  align-items: center;
+  gap: var(--chora-space-sm);
+  color: var(--chora-color-danger, #b91c1c);
+}
+
+.offerings-finder__portfolio-error-text {
+  margin: 0;
+  flex: 1 1 auto;
+  color: var(--chora-color-text-primary);
+}
+
+.offerings-finder__portfolio-error-detail {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--chora-color-text-secondary);
+}
+
+// Loading skeleton bars, distinct from a genuinely empty (hidden) portfolio.
+.offerings-finder__portfolio--loading {
+  gap: var(--chora-space-md);
+}
+
+.offerings-finder__portfolio-skeleton {
+  display: block;
+  height: 1.25rem;
+  border-radius: var(--chora-radius-sm, 6px);
+  background: var(--chora-color-surface-muted, rgba(148, 163, 184, 0.25));
+
+  &:first-child {
+    flex: 0 0 40%;
+  }
+
+  &:last-child {
+    flex: 0 0 25%;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .offerings-finder__portfolio-skeleton {
+    animation: offerings-finder-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes offerings-finder-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.offerings-finder__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+}
+
+.offerings-finder__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offerings-finder__new-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  white-space: nowrap;
+}
+
+.offerings-finder__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offerings-finder__subtitle {
+  margin: 0;
+  color: var(--chora-color-text-secondary);
+}

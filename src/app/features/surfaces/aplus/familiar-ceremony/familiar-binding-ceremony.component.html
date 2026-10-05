@@ -1,0 +1,171 @@
+<!-- Modal-only overlay: the ceremony ritual, roomy + focused. The parent (Hero
+     Card) renders this at the profile ROOT — outside the container-type /
+     backdrop-filter containing blocks — so the fixed host fills the viewport.
+     Open state is parent-owned (`open`); dismissable (Esc / backdrop / close)
+     via the `closed` output. Focus is trapped + restored (see the component). -->
+@if (open()) {
+  <div class="binding-ceremony__overlay" (keydown)="onKeydown($event)">
+    <div
+      class="binding-ceremony__scrim"
+      aria-hidden="true"
+      data-testid="familiar-ceremony-backdrop"
+      (click)="close()"></div>
+
+    <div
+      #dialogPanel
+      class="binding-ceremony__dialog glass-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="familiar-ceremony-dialog-heading"
+      tabindex="-1"
+      data-testid="familiar-ceremony-dialog">
+      <header class="binding-ceremony__dialog-head">
+        <h2
+          id="familiar-ceremony-dialog-heading"
+          class="binding-ceremony__dialog-title">
+          <i class="fa-solid fa-link" aria-hidden="true"></i>
+          {{ 'familiar.ceremony.bind_heading' | translate }}
+        </h2>
+        <button
+          type="button"
+          class="binding-ceremony__close"
+          data-testid="familiar-ceremony-close"
+          [attr.aria-label]="'familiar.ceremony.close' | translate"
+          (click)="close()">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
+      <p class="binding-ceremony__dialog-sub">
+        {{ 'familiar.ceremony.bind_sub' | translate }}
+      </p>
+
+      @if (ceremonyGoalId(); as goalId) {
+        <!-- Attach landed (or bound re-entry) → the learning-edges panel,
+             animated into the SAME modal. -->
+        <chora-aplus-ceremony-edges-panel
+          [familiarId]="familiarId()"
+          [goalId]="goalId" />
+      } @else {
+        <div role="status" aria-live="polite" class="binding-ceremony__body">
+          @switch (goalsState().status) {
+            @case ('loading') {
+              <p
+                class="binding-ceremony__loading"
+                data-testid="familiar-ceremony-goals-loading">
+                <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                {{ 'familiar.ceremony.bind_loading' | translate }}
+              </p>
+            }
+            @case ('error') {
+              <div
+                class="binding-ceremony__error"
+                role="alert"
+                data-testid="familiar-ceremony-goals-error">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                <p>{{ $any(goalsState()).error | translate }}</p>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-testid="familiar-ceremony-goals-retry"
+                  (click)="retryGoals()">
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                  {{ 'familiar.ceremony.error_retry' | translate }}
+                </button>
+              </div>
+            }
+            @case ('success') {
+              @if (boundGoal(); as bound) {
+                <div
+                  class="binding-ceremony__bound"
+                  data-testid="familiar-ceremony-bound">
+                  <p class="binding-ceremony__bound-line">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    {{ 'familiar.ceremony.bound_prefix' | translate }}
+                    <strong>
+                      @if (goalLabel(bound)) {
+                        {{ goalLabel(bound) }}
+                      } @else {
+                        {{ goalKindKey(bound) | translate }}
+                      }
+                    </strong>
+                  </p>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    data-testid="familiar-ceremony-scout"
+                    (click)="scoutBoundGoal()">
+                    <i class="fa-solid fa-binoculars" aria-hidden="true"></i>
+                    {{ 'familiar.ceremony.bound_scout_cta' | translate }}
+                  </button>
+                </div>
+              } @else if (attachableGoals().length === 0) {
+                <p
+                  class="binding-ceremony__none"
+                  data-testid="familiar-ceremony-no-goals">
+                  {{ 'familiar.ceremony.bind_no_goals' | translate }}
+                </p>
+              } @else {
+                <fieldset
+                  class="binding-ceremony__picker"
+                  [disabled]="attaching()">
+                  <legend class="binding-ceremony__picker-legend">
+                    {{ 'familiar.ceremony.bind_pick_label' | translate }}
+                  </legend>
+                  <ul class="binding-ceremony__goals">
+                    @for (g of attachableGoals(); track g.goalId) {
+                      <li>
+                        <label class="binding-ceremony__goal">
+                          <input
+                            type="radio"
+                            name="familiar-ceremony-goal"
+                            [attr.data-testid]="'familiar-ceremony-goal-option-' + g.goalId"
+                            [checked]="pickedGoalId() === g.goalId"
+                            (change)="pickGoal(g.goalId)" />
+                          <span class="binding-ceremony__goal-body">
+                            <span class="binding-ceremony__goal-kind">
+                              {{ goalKindKey(g) | translate }}
+                            </span>
+                            @if (goalLabel(g)) {
+                              <span class="binding-ceremony__goal-label">
+                                {{ goalLabel(g) }}
+                              </span>
+                            }
+                          </span>
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                </fieldset>
+
+                @if (attach().status === 'error') {
+                  <div
+                    class="binding-ceremony__error"
+                    role="alert"
+                    data-testid="familiar-ceremony-attach-error">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    <p>{{ $any(attach()).error | translate }}</p>
+                  </div>
+                }
+
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  data-testid="familiar-ceremony-attach"
+                  [disabled]="!pickedGoalId() || attaching()"
+                  (click)="summon()">
+                  @if (attaching()) {
+                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                    {{ 'familiar.ceremony.bind_attaching' | translate }}
+                  } @else {
+                    <i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+                    {{ 'familiar.ceremony.bind_attach_cta' | translate }}
+                  }
+                </button>
+              }
+            }
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

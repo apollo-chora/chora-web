@@ -1,0 +1,71 @@
+<div
+  class="translation-preview"
+  data-testid="translation-preview"
+  [attr.aria-label]="'admin.translation.preview_title' | translate">
+
+  <!-- Header with confidence -->
+  <header class="translation-preview__header">
+    <h3 class="translation-preview__title">
+      {{ 'admin.translation.preview_title' | translate }}
+    </h3>
+    <span
+      class="translation-preview__confidence"
+      [class]="confidenceClass()"
+      data-testid="confidence-badge"
+      [attr.aria-label]="'admin.translation.confidence' | translate">
+      {{ formatConfidence() }}
+    </span>
+    <span class="translation-preview__word-count" data-testid="word-count">
+      {{ translation().word_count }} {{ 'admin.translation.words' | translate }}
+    </span>
+  </header>
+
+  <!-- Side-by-side Content -->
+  <div class="translation-preview__columns">
+    <div class="translation-preview__column">
+      <h4 class="translation-preview__column-label">
+        {{ 'admin.translation.original' | translate }}
+        ({{ translation().source_language }})
+      </h4>
+      <div
+        class="translation-preview__content"
+        data-testid="original-content"
+        [attr.aria-label]="'admin.translation.original' | translate">
+        {{ originalContent() }}
+      </div>
+    </div>
+
+    <div class="translation-preview__column">
+      <h4 class="translation-preview__column-label">
+        {{ 'admin.translation.translated' | translate }}
+        ({{ translation().target_language }})
+      </h4>
+      <div
+        class="translation-preview__content"
+        data-testid="translated-content"
+        [attr.aria-label]="'admin.translation.translated' | translate">
+        {{ translation().translated_content }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <footer class="translation-preview__actions">
+    <button
+      type="button"
+      class="translation-preview__btn translation-preview__btn--accept"
+      data-testid="btn-accept"
+      [attr.aria-label]="'admin.translation.accept' | translate"
+      (click)="onAccept()">
+      {{ 'admin.translation.accept' | translate }}
+    </button>
+    <button
+      type="button"
+      class="translation-preview__btn translation-preview__btn--reject"
+      data-testid="btn-reject"
+      [attr.aria-label]="'admin.translation.reject' | translate"
+      (click)="onReject()">
+      {{ 'admin.translation.reject' | translate }}
+    </button>
+  </footer>
+</div>

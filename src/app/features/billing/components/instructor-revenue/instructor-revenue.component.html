@@ -1,0 +1,181 @@
+<section
+  class="instructor-revenue"
+  role="main"
+  [attr.aria-label]="'billing.instructor_revenue_title' | translate"
+  data-testid="instructor-revenue">
+
+  <header class="instructor-revenue__header">
+    <h1 class="instructor-revenue__title" data-testid="revenue-title">
+      {{ 'billing.instructor_revenue_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="instructor-revenue__loading" aria-live="polite" data-testid="revenue-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="instructor-revenue__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (isError()) {
+    <div class="instructor-revenue__error" role="alert" data-testid="revenue-error">
+      <p class="instructor-revenue__error-text">
+        {{ 'billing.revenue_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  @if (revenue(); as rev) {
+    <!-- Summary Cards -->
+    @if (summary(); as sum) {
+      <div class="instructor-revenue__summary" data-testid="revenue-summary">
+        <div class="instructor-revenue__summary-card">
+          <span class="instructor-revenue__summary-label">
+            {{ 'billing.total_earned' | translate }}
+          </span>
+          <span class="instructor-revenue__summary-value" data-testid="total-earned">
+            {{ formatPrice(sum.total_earned_cents, sum.currency) }}
+          </span>
+        </div>
+        <div class="instructor-revenue__summary-card">
+          <span class="instructor-revenue__summary-label">
+            {{ 'billing.pending_payout' | translate }}
+          </span>
+          <span class="instructor-revenue__summary-value" data-testid="pending-payout">
+            {{ formatPrice(sum.pending_payout_cents, sum.currency) }}
+          </span>
+        </div>
+        <div class="instructor-revenue__summary-card">
+          <span class="instructor-revenue__summary-label">
+            {{ 'billing.lifetime_revenue' | translate }}
+          </span>
+          <span class="instructor-revenue__summary-value" data-testid="lifetime-revenue">
+            {{ formatPrice(sum.lifetime_cents, sum.currency) }}
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- Revenue Share Breakdown -->
+    @if (revenueShares().length > 0) {
+      <div class="instructor-revenue__shares" data-testid="revenue-shares">
+        <h2 class="instructor-revenue__section-heading">
+          {{ 'billing.revenue_share_breakdown' | translate }}
+        </h2>
+        @for (share of revenueShares(); track share.category) {
+          <div class="instructor-revenue__share-row">
+            <div class="instructor-revenue__share-info">
+              <span class="instructor-revenue__share-category">{{ share.category }}</span>
+              <span class="instructor-revenue__share-amount">
+                {{ formatPrice(share.amount_cents, summary()?.currency ?? 'usd') }}
+                ({{ share.percentage }}%)
+              </span>
+            </div>
+            <div class="instructor-revenue__share-bar-track">
+              <div
+                class="instructor-revenue__share-bar-fill"
+                [style.width.%]="shareBarWidth(share.amount_cents)"
+                role="progressbar"
+                [attr.aria-valuenow]="share.amount_cents"
+                [attr.aria-valuemax]="maxShareAmount()">
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Promo Code Performance -->
+    @if (promoPerformance().length > 0) {
+      <div class="instructor-revenue__promo" data-testid="promo-performance">
+        <h2 class="instructor-revenue__section-heading">
+          {{ 'billing.promo_code_performance' | translate }}
+        </h2>
+        <table class="instructor-revenue__promo-table" role="table"
+               [attr.aria-label]="'billing.promo_code_performance' | translate">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'billing.promo_code' | translate }}</th>
+              <th scope="col">{{ 'billing.uses' | translate }}</th>
+              <th scope="col">{{ 'billing.revenue' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (promo of promoPerformance(); track promo.code) {
+              <tr data-testid="promo-row">
+                <td><code>{{ promo.code }}</code></td>
+                <td>{{ promo.uses }}</td>
+                <td>{{ formatPrice(promo.revenue_cents, summary()?.currency ?? 'usd') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Promo Code Generator -->
+    <div class="instructor-revenue__generator" data-testid="promo-generator">
+      <h2 class="instructor-revenue__section-heading">
+        {{ 'billing.generate_promo_code' | translate }}
+      </h2>
+      <div class="instructor-revenue__generator-form">
+        <label for="new-promo-code" class="instructor-revenue__label">
+          {{ 'billing.promo_code' | translate }}
+        </label>
+        <div class="instructor-revenue__generator-row">
+          <input
+            id="new-promo-code"
+            type="text"
+            class="instructor-revenue__input"
+            [ngModel]="newPromoCode()"
+            (ngModelChange)="newPromoCode.set($event)"
+            [attr.placeholder]="'billing.enter_promo_code' | translate" />
+          <button
+            type="button"
+            class="instructor-revenue__btn instructor-revenue__btn--primary"
+            data-testid="btn-generate-promo"
+            [disabled]="generatingPromo() || !newPromoCode().trim()"
+            [attr.aria-label]="'billing.generate_promo_code' | translate"
+            (click)="generatePromoCode()">
+            @if (generatingPromo()) {
+              {{ 'billing.generating' | translate }}
+            } @else {
+              {{ 'billing.generate' | translate }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payout History -->
+    @if (payouts().length > 0) {
+      <div class="instructor-revenue__payouts" data-testid="payout-history">
+        <h2 class="instructor-revenue__section-heading">
+          {{ 'billing.payout_history' | translate }}
+        </h2>
+        <ul class="instructor-revenue__payout-list" role="list">
+          @for (payout of payouts(); track payout.id) {
+            <li class="instructor-revenue__payout-item" role="listitem" data-testid="payout-item">
+              <div class="instructor-revenue__payout-info">
+                <span class="instructor-revenue__payout-amount">
+                  {{ formatPrice(payout.amount_cents, payout.currency) }}
+                </span>
+                <span class="instructor-revenue__payout-date">
+                  {{ formatDate(payout.requested_at) }}
+                </span>
+              </div>
+              <span
+                class="instructor-revenue__payout-status"
+                [class]="payoutStatusClass(payout.status)">
+                {{ payoutStatusLabels[payout.status] | translate }}
+              </span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  }
+</section>

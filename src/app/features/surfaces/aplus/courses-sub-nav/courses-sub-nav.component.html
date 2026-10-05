@@ -1,0 +1,15 @@
+<nav
+  class="authoring-sub-nav glass-panel"
+  [attr.aria-label]="'aplus.courses_sub_nav.aria_label' | translate"
+  data-testid="courses-sub-nav">
+  @for (tab of tabs; track tab.route) {
+    <a
+      [routerLink]="tab.route"
+      routerLinkActive="authoring-sub-nav__tab--active"
+      class="authoring-sub-nav__tab"
+      [attr.data-testid]="tab.testId">
+      <i [class]="tab.icon" aria-hidden="true"></i>
+      {{ tab.labelKey | translate }}
+    </a>
+  }
+</nav>

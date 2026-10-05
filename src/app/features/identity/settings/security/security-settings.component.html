@@ -1,0 +1,42 @@
+<div class="security" data-testid="security-settings-page">
+  <h1 class="security__title">{{ 'identity.security.title' | translate }}</h1>
+
+  <!-- ── Passkeys (thin A4 FE seam) ─────────────────────────────────── -->
+  <section class="security__section" aria-labelledby="security-passkey-heading" data-testid="security-passkey-section">
+    <h2 id="security-passkey-heading" class="security__section-title">
+      {{ 'identity.passkey-setup.title' | translate }}
+    </h2>
+
+    <div class="security__card">
+      <p class="security__description">{{ 'identity.passkey-setup.description' | translate }}</p>
+
+      @if (passkeyError()) {
+        <div class="security__error" role="alert" aria-live="polite" data-testid="security-passkey-error">
+          {{ passkeyError()! | translate }}
+        </div>
+      }
+
+      @if (registeredPasskey(); as passkey) {
+        <div class="security__success" role="status" aria-live="polite" data-testid="security-passkey-registered">
+          <p>{{ 'identity.passkey-setup.registered' | translate }}</p>
+          <code class="security__secret">{{ passkey.id }}</code>
+        </div>
+      }
+
+      @if (webAuthnSupported()) {
+        <button
+          class="security__btn security__btn--primary"
+          type="button"
+          (click)="registerPasskey()"
+          [disabled]="passkeyBusy()"
+          data-testid="security-passkey-register-btn">
+          {{ 'identity.passkey-setup.register_btn' | translate }}
+        </button>
+      } @else {
+        <p class="security__empty" data-testid="security-passkey-unsupported">
+          {{ 'identity.login.passkey_unsupported' | translate }}
+        </p>
+      }
+    </div>
+  </section>
+</div>

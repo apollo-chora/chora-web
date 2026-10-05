@@ -1,0 +1,263 @@
+// OplusEgressAuditComponent — CHO-2245.
+//
+// Canonical --chora-color-* tokens only. Every `color:` resolves to an AA-safe
+// defined token (text #212121, text-muted #616161, error #c62828, warning-text
+// #92400e, accent #7b1fa2 — each clears 4.5:1 on both #ffffff and #f5f5f5).
+// The semantic success/danger hues clear only ~4.47:1 as normal text, so they
+// appear here as borders and background tints, never as `color:`.
+
+.oplus-ea {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+  padding: var(--chora-space-lg);
+  color: var(--chora-color-text);
+}
+
+// ── Header ──────────────────────────────────────────────────────────────────
+
+.oplus-ea__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+  padding-bottom: var(--chora-space-md);
+  border-bottom: 2px solid var(--chora-color-accent);
+}
+
+.oplus-ea__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.oplus-ea__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.oplus-ea__lede {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--chora-color-text-muted);
+  line-height: 1.5;
+}
+
+.oplus-ea__refresh {
+  flex: 0 0 auto;
+}
+
+// ── States ──────────────────────────────────────────────────────────────────
+
+.oplus-ea__status,
+.oplus-ea__count {
+  margin: 0;
+  color: var(--chora-color-text-muted);
+  font-size: 0.875rem;
+}
+
+.oplus-ea__alert {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-error);
+  border-radius: var(--chora-radius-md);
+  background: rgba(198, 40, 40, 0.08);
+  color: var(--chora-color-error);
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.oplus-ea__empty {
+  padding: var(--chora-space-xl) var(--chora-space-lg);
+  border: 1px dashed var(--chora-color-border);
+  border-radius: var(--chora-radius-lg);
+  text-align: center;
+
+  strong {
+    display: block;
+    margin-bottom: var(--chora-space-xs);
+    color: var(--chora-color-text);
+    font-size: 1.0625rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--chora-color-text-muted);
+    line-height: 1.5;
+  }
+}
+
+// ── Decision list ────────────────────────────────────────────────────────────
+
+.oplus-ea__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oplus-ea__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+  padding: var(--chora-space-lg);
+  border: 1px solid var(--chora-color-border);
+  border-radius: var(--chora-radius-lg);
+  border-left: 4px solid var(--chora-color-success);
+}
+
+.oplus-ea__row--denied {
+  border-left-color: var(--chora-color-error);
+}
+
+.oplus-ea__row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+}
+
+.oplus-ea__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--chora-space-sm);
+  border-radius: var(--chora-radius-full);
+  border: 1px solid var(--chora-color-success);
+  background: rgba(46, 125, 50, 0.12);
+  color: var(--chora-color-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.oplus-ea__chip--permitted {
+  border-color: var(--chora-color-success);
+  background: rgba(46, 125, 50, 0.12);
+}
+
+.oplus-ea__chip--denied {
+  border-color: var(--chora-color-error);
+  background: rgba(198, 40, 40, 0.1);
+  color: var(--chora-color-error);
+}
+
+.oplus-ea__chip--anomaly {
+  border-color: var(--chora-color-warning-text);
+  background: rgba(146, 64, 14, 0.1);
+  color: var(--chora-color-warning-text);
+}
+
+.oplus-ea__time {
+  margin-inline-start: auto;
+  color: var(--chora-color-text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Metadata grid ────────────────────────────────────────────────────────────
+
+.oplus-ea__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--chora-space-sm) var(--chora-space-lg);
+  margin: 0;
+}
+
+.oplus-ea__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  dt {
+    color: var(--chora-color-text-muted);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--chora-color-text);
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+// ── "What was searched" ──────────────────────────────────────────────────────
+
+.oplus-ea__searched {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+  padding: var(--chora-space-md);
+  border-radius: var(--chora-radius-md);
+  background: rgba(123, 31, 162, 0.06);
+}
+
+.oplus-ea__searched-label {
+  margin: 0;
+  color: var(--chora-color-text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.oplus-ea__queries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oplus-ea__query {
+  padding: 2px var(--chora-space-sm);
+  border: 1px solid var(--chora-color-accent);
+  border-radius: var(--chora-radius-sm);
+  background: rgba(123, 31, 162, 0.08);
+  color: var(--chora-color-text);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.oplus-ea__searched-caption {
+  margin: 0;
+  color: var(--chora-color-text-muted);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+// ── Denial reason ────────────────────────────────────────────────────────────
+
+.oplus-ea__reason {
+  margin: 0;
+  color: var(--chora-color-text);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.oplus-ea__reason-label {
+  color: var(--chora-color-error);
+  font-weight: 600;
+}
+
+// Tablet-first: ≥768px primary; ≥1280px enhanced. No below-tablet breakpoints.
+@media (min-width: 1280px) {
+  .oplus-ea {
+    max-width: 80rem;
+  }
+}

@@ -1,0 +1,350 @@
+<section
+  class="surface-hplus branding"
+  data-testid="hplus-branding"
+  [attr.data-dirty]="isDirty()">
+  <main class="branding__main">
+    <nav
+      class="branding__breadcrumb"
+      [attr.aria-label]="'hplus.branding.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.branding.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="branding__crumb-active">
+        {{ 'hplus.branding.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    <!-- Hero -->
+    <header class="branding__hero">
+      <div>
+        <h1 class="branding__title">{{ 'hplus.branding.title' | translate }}</h1>
+        <p class="branding__subtitle">
+          {{ 'hplus.branding.subtitle' | translate }}
+        </p>
+      </div>
+      <div class="branding__hero-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-testid="branding-discard"
+          [disabled]="!isDirty() || saveState() === 'saving'"
+          (click)="discard()">
+          {{ 'hplus.branding.discard' | translate }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary branding__save"
+          data-testid="branding-save"
+          [disabled]="
+            !isDirty() || saveState() === 'saving' || loadState() !== 'ready'
+          "
+          [attr.aria-busy]="saveState() === 'saving'"
+          (click)="save()">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+          @if (saveState() === 'saving') {
+            {{ 'hplus.branding.saving' | translate }}
+          } @else {
+            {{ 'hplus.branding.save' | translate }}
+          }
+        </button>
+      </div>
+    </header>
+
+    <!-- Save feedback (PATCH /api/v1/tenants/me/branding) -->
+    @if (saveState() === 'saved') {
+      <p
+        class="branding__banner branding__banner--success"
+        data-testid="branding-save-success"
+        role="status">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        {{ 'hplus.branding.saveSuccess' | translate }}
+      </p>
+    } @else if (saveState() === 'error') {
+      <p
+        class="branding__banner branding__banner--error"
+        data-testid="branding-save-error"
+        role="alert">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        {{ 'hplus.branding.saveError' | translate }}
+        ({{ saveErrorCode() }})
+        @if (saveErrorMessage(); as message) {
+          <span class="branding__banner-detail">{{ message }}</span>
+        }
+      </p>
+    }
+
+    @if (loadState() === 'loading') {
+      <!-- Hydration in flight (GET /api/v1/tenants/me) -->
+      <p
+        class="branding__banner branding__banner--loading"
+        data-testid="branding-loading"
+        role="status">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        {{ 'hplus.branding.loading' | translate }}
+      </p>
+    } @else if (loadState() === 'error') {
+      <!-- Hydration failed — no mock fallback; surface the API code. -->
+      <div
+        class="branding__banner branding__banner--error"
+        data-testid="branding-load-error"
+        role="alert">
+        <p>
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{ 'hplus.branding.loadError' | translate }}
+          ({{ loadErrorCode() }})
+        </p>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-testid="branding-retry"
+          (click)="retryHydrate()">
+          {{ 'hplus.branding.retry' | translate }}
+        </button>
+      </div>
+    } @else {
+    <div class="branding__grid">
+      <!-- Left: form -->
+      <section class="glass-panel branding__form">
+        <h2 class="branding__section-title">
+          <i class="fa-solid fa-id-card" aria-hidden="true"></i>
+          {{ 'hplus.branding.identityHeading' | translate }}
+        </h2>
+
+        <!-- Logo URL (CHO-1805 MVP): hosted-image URL the BE actually
+             persists via PATCH logo_url. The file picker that lived here
+             previously never uploaded anything — picking a file only set
+             a display-name in local draft state and was silently
+             discarded on save. -->
+        <div class="branding__field">
+          <label for="branding-logo-url" class="branding__label">
+            {{ 'hplus.branding.logoUrlLabel' | translate }}
+          </label>
+          <input
+            id="branding-logo-url"
+            type="url"
+            class="form-control"
+            data-testid="branding-logo-url"
+            [attr.placeholder]="'hplus.branding.logoUrlPlaceholder' | translate"
+            [value]="draft().logoUrl"
+            (input)="onLogoUrlInput($event)" />
+          <p class="branding__field-hint">
+            {{ 'hplus.branding.logoUrlHint' | translate }}
+          </p>
+          @if (draft().logoFileName) {
+            <p
+              class="branding__file-meta"
+              data-testid="branding-logo-filename">
+              {{ draft().logoFileName }}
+            </p>
+          }
+        </div>
+
+        <!-- Primary color -->
+        <div class="branding__field">
+          <label for="branding-primary" class="branding__label">
+            {{ 'hplus.branding.primaryLabel' | translate }}
+          </label>
+          <div class="branding__color-row">
+            <input
+              id="branding-primary"
+              type="color"
+              class="branding__color-input"
+              data-testid="branding-primary-input"
+              [attr.aria-label]="'hplus.branding.primaryLabel' | translate"
+              [value]="draft().primaryColor"
+              (input)="onPrimaryInput($event)" />
+            <span
+              class="branding__swatch-text"
+              data-testid="branding-primary-swatch">
+              {{ draft().primaryColor }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Secondary color (CHO-1805: BE persistence not shipped yet —
+             disabled with Coming soon badge so admin can't be misled). -->
+        <div class="branding__field">
+          <label for="branding-secondary" class="branding__label">
+            {{ 'hplus.branding.secondaryLabel' | translate }}
+            <span
+              class="branding__coming-soon"
+              data-testid="branding-secondary-coming-soon"
+              [attr.title]="'hplus.branding.comingSoonTooltip' | translate">
+              {{ 'hplus.branding.comingSoon' | translate }}
+            </span>
+          </label>
+          <div class="branding__color-row">
+            <input
+              id="branding-secondary"
+              type="color"
+              class="branding__color-input"
+              data-testid="branding-secondary-input"
+              [attr.aria-label]="'hplus.branding.secondaryLabel' | translate"
+              [value]="draft().secondaryColor"
+              disabled
+              (input)="onSecondaryInput($event)" />
+            <span
+              class="branding__swatch-text"
+              data-testid="branding-secondary-swatch">
+              {{ draft().secondaryColor }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Font (CHO-1805: BE persistence not shipped yet — disabled
+             with Coming soon badge). -->
+        <div class="branding__field">
+          <label for="branding-font" class="branding__label">
+            {{ 'hplus.branding.fontLabel' | translate }}
+            <span
+              class="branding__coming-soon"
+              data-testid="branding-font-coming-soon"
+              [attr.title]="'hplus.branding.comingSoonTooltip' | translate">
+              {{ 'hplus.branding.comingSoon' | translate }}
+            </span>
+          </label>
+          <input
+            id="branding-font"
+            type="text"
+            class="form-control"
+            data-testid="branding-font-family"
+            [value]="draft().fontFamily"
+            disabled
+            (input)="onFontInput($event)" />
+        </div>
+
+        <!-- Domain -->
+        <div class="branding__field">
+          <label for="branding-domain" class="branding__label">
+            {{ 'hplus.branding.domainLabel' | translate }}
+          </label>
+          <input
+            id="branding-domain"
+            type="text"
+            class="form-control"
+            data-testid="branding-domain"
+            [value]="draft().customDomain"
+            (input)="onDomainInput($event)" />
+        </div>
+
+        <!-- Toggles (CHO-1805: both flags are FE-only — BE persistence
+             ships in a follow-up. Disabled with Coming soon badge so
+             admin can't toggle, save, and see the value silently reset). -->
+        <ul class="branding__toggles" role="list">
+          <li class="branding__toggle-row">
+            <div>
+              <div class="branding__toggle-name">
+                {{ 'hplus.branding.whiteLabel.name' | translate }}
+                <span
+                  class="branding__coming-soon"
+                  data-testid="branding-white-label-coming-soon"
+                  [attr.title]="'hplus.branding.comingSoonTooltip' | translate">
+                  {{ 'hplus.branding.comingSoon' | translate }}
+                </span>
+              </div>
+              <p class="branding__toggle-hint">
+                {{ 'hplus.branding.whiteLabel.hint' | translate }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="branding__toggle"
+              data-testid="branding-toggle-white-label"
+              role="switch"
+              [attr.aria-checked]="draft().whiteLabelEnabled"
+              [attr.aria-label]="'hplus.branding.whiteLabel.name' | translate"
+              [class.branding__toggle--on]="draft().whiteLabelEnabled"
+              disabled
+              (click)="toggleWhiteLabel()">
+              <span class="branding__toggle-knob"></span>
+            </button>
+          </li>
+          <li class="branding__toggle-row">
+            <div>
+              <div class="branding__toggle-name">
+                {{ 'hplus.branding.customSmtp.name' | translate }}
+                <span
+                  class="branding__coming-soon"
+                  data-testid="branding-smtp-coming-soon"
+                  [attr.title]="'hplus.branding.comingSoonTooltip' | translate">
+                  {{ 'hplus.branding.comingSoon' | translate }}
+                </span>
+              </div>
+              <p class="branding__toggle-hint">
+                {{ 'hplus.branding.customSmtp.hint' | translate }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="branding__toggle"
+              data-testid="branding-toggle-smtp"
+              role="switch"
+              [attr.aria-checked]="draft().customSmtpEnabled"
+              [attr.aria-label]="'hplus.branding.customSmtp.name' | translate"
+              [class.branding__toggle--on]="draft().customSmtpEnabled"
+              disabled
+              (click)="toggleCustomSmtp()">
+              <span class="branding__toggle-knob"></span>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Right: preview -->
+      <aside
+        class="glass-panel branding__preview"
+        data-testid="branding-preview"
+        [attr.aria-label]="'hplus.branding.previewAriaLabel' | translate">
+        <header class="branding__preview-head">
+          <h2 class="branding__section-title">
+            <i class="fa-solid fa-eye" aria-hidden="true"></i>
+            {{ 'hplus.branding.previewHeading' | translate }}
+          </h2>
+        </header>
+        <div class="branding__preview-card">
+          <div
+            class="branding__preview-banner"
+            [style.background]="
+              'linear-gradient(135deg,' +
+              draft().primaryColor +
+              ',' +
+              draft().secondaryColor +
+              ')'
+            ">
+            <!-- CHO-1807 — render the pasted logo URL inline so the
+                 admin sees paste-and-confirm instead of having to save
+                 + refresh to know whether the URL was sane. -->
+            @if (draft().logoUrl) {
+              <img
+                class="branding__preview-logo"
+                data-testid="branding-preview-logo"
+                [src]="draft().logoUrl"
+                [attr.alt]="draft().tenantName"
+                referrerpolicy="no-referrer" />
+            }
+            <span data-testid="branding-preview-name">
+              {{ draft().tenantName }}
+            </span>
+          </div>
+          <div
+            class="branding__preview-body"
+            [style.fontFamily]="draft().fontFamily">
+            <p class="branding__preview-hello">
+              {{ 'hplus.branding.previewHello' | translate }}
+            </p>
+            <p class="branding__preview-tagline">
+              {{ 'hplus.branding.previewTagline' | translate }}
+            </p>
+            <button
+              type="button"
+              class="branding__preview-cta"
+              [style.backgroundColor]="draft().primaryColor"
+              [attr.aria-label]="'hplus.branding.previewCta' | translate">
+              {{ 'hplus.branding.previewCta' | translate }}
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    }
+  </main>
+</section>

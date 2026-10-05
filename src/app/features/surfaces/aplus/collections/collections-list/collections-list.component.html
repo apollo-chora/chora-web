@@ -1,0 +1,172 @@
+<section
+  class="collections-list surface-aplus"
+  aria-labelledby="collections-list-heading"
+  data-testid="collections-list">
+  <chora-courses-sub-nav />
+
+  <!-- Page header -->
+  <header class="collections-list__header glass-panel">
+    <div class="collections-list__header-content">
+      <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+      <div class="collections-list__header-text">
+        <h1 id="collections-list-heading" class="collections-list__title">
+          My Collections
+        </h1>
+        <p class="collections-list__subtitle">
+          Curated, ordered lists of LearningAtoms
+        </p>
+      </div>
+    </div>
+    <a
+      routerLink="/a/study/collections/new"
+      class="btn btn-primary collections-list__create-btn"
+      aria-label="Create new Collection"
+      data-testid="collections-list-create-btn">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      New Collection
+    </a>
+  </header>
+
+  <chora-study-sub-nav />
+
+  @switch (state().status) {
+
+    @case ('loading') {
+      <div
+        class="glass-panel collections-list__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="collections-list-loading">
+        <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        <span>Loading collections…</span>
+      </div>
+    }
+
+    @case ('error') {
+      @if (isContractGap()) {
+        <!--
+          WS-6b-BE-A1: Collection endpoints not yet proxied in chora-gateway.
+          GET /api/v1/me/collections → GATEWAY_ROUTE_NOT_FOUND.
+          Known contract gap — not a transient failure.
+        -->
+        <div
+          class="glass-panel collections-list__contract-gap"
+          role="alert"
+          data-testid="collections-list-contract-gap">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <div>
+            <strong>Collections endpoint not yet wired</strong>
+            <p>
+              The BFF endpoint
+              <code>GET /api/v1/me/collections</code>
+              is contracted in <code>creation-admin.yaml §listMyCollections</code>
+              but not yet proxied in chora-gateway.
+              Follow-up BE ask: <strong>WS-6b-BE-A1</strong>.
+            </p>
+          </div>
+        </div>
+      } @else {
+        <div
+          class="glass-panel collections-list__error"
+          role="alert"
+          data-testid="collections-list-error">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          <div>
+            <p
+              class="collections-list__error-message"
+              data-testid="collections-list-error-msg">
+              {{ errorKey() | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="retryLoad()"
+              data-testid="collections-list-retry">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              Retry
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    @case ('success') {
+      @if (isEmpty()) {
+        <div
+          class="glass-panel collections-list__empty"
+          data-testid="collections-list-empty">
+          <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+          <h2 class="collections-list__empty-heading">No collections yet</h2>
+          <p class="collections-list__empty-hint">
+            Collections let you curate and order LearningAtoms across any topic.
+          </p>
+          <a
+            routerLink="/a/study/collections/new"
+            class="btn btn-primary"
+            data-testid="collections-list-empty-create-btn">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            Create your first Collection
+          </a>
+        </div>
+      } @else {
+        <ul
+          class="collections-list__grid"
+          aria-label="Personal Collections"
+          data-testid="collections-list-grid">
+          @for (col of collections(); track col.collection_id) {
+            <li class="collections-list__card glass-panel" [attr.data-testid]="'collections-list-card-' + col.collection_id">
+              <a
+                class="collections-list__card-link"
+                [routerLink]="['/a/study/collections', col.collection_id]"
+                [attr.aria-label]="'Open collection: ' + col.title">
+
+                <!-- Card header -->
+                <div class="collections-list__card-header">
+                  <h2 class="collections-list__card-title" [attr.data-testid]="'collections-list-title-' + col.collection_id">
+                    {{ col.title }}
+                  </h2>
+                  <span
+                    class="collections-list__visibility-badge"
+                    [attr.aria-label]="visibilityAria(col.visibility)"
+                    [attr.data-testid]="'collections-list-visibility-' + col.collection_id">
+                    <i [class]="visibilityIcon(col.visibility)" aria-hidden="true"></i>
+                    {{ visibilityLabelKey(col.visibility) | translate }}
+                  </span>
+                </div>
+
+                <!-- Description (optional) -->
+                @if (col.description) {
+                  <p
+                    class="collections-list__card-description"
+                    [attr.data-testid]="'collections-list-desc-' + col.collection_id">
+                    {{ col.description }}
+                  </p>
+                }
+
+                <!-- Card footer: atom count + updated_at -->
+                <div class="collections-list__card-footer">
+                  <span
+                    class="collections-list__atom-badge"
+                    [attr.aria-label]="atomCount(col) + ' atoms'"
+                    [attr.data-testid]="'collections-list-atom-count-' + col.collection_id">
+                    <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+                    {{ atomCount(col) }}
+                    @if (atomCount(col) === 1) { atom } @else { atoms }
+                  </span>
+                  <time
+                    class="collections-list__updated-at"
+                    [attr.datetime]="col.updated_at"
+                    [attr.data-testid]="'collections-list-updated-' + col.collection_id">
+                    {{ col.updated_at | date:'d MMM yyyy' : 'UTC' }}
+                  </time>
+                </div>
+
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+
+</section>

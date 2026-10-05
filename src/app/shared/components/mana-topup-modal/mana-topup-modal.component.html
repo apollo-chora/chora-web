@@ -1,0 +1,98 @@
+<div
+  class="mana-topup-modal-backdrop"
+  data-testid="mana-topup-modal-backdrop"
+  role="presentation"
+  tabindex="-1"
+  (click)="onBackdropClick()"
+  (keydown)="onKeydown($event)">
+  <div
+    #dialogPanel
+    class="mana-topup-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="mana-topup-modal-title"
+    aria-describedby="mana-topup-modal-message"
+    tabindex="-1"
+    data-testid="mana-topup-modal"
+    (click)="$event.stopPropagation()"
+    (keydown)="$event.stopPropagation()">
+    <h2 id="mana-topup-modal-title" class="mana-topup-modal__title">
+      {{ 'core.mana.topup_modal.title' | translate }}
+    </h2>
+    <p id="mana-topup-modal-message" class="mana-topup-modal__message">
+      {{ 'core.mana.topup_modal.message' | translate }}
+    </p>
+
+    <dl class="mana-topup-modal__breakdown">
+      <div class="mana-topup-modal__row">
+        <dt>{{ 'core.mana.topup_modal.required' | translate }}</dt>
+        <dd data-testid="mana-topup-modal-required">
+          {{ upsell().required_units }} {{ 'core.mana.unit' | translate }}
+        </dd>
+      </div>
+      <div class="mana-topup-modal__row">
+        <dt>{{ 'core.mana.topup_modal.balance' | translate }}</dt>
+        <dd data-testid="mana-topup-modal-balance">
+          {{ upsell().current_balance_units }} {{ 'core.mana.unit' | translate }}
+        </dd>
+      </div>
+      <div class="mana-topup-modal__row mana-topup-modal__row--gap">
+        <dt>{{ 'core.mana.topup_modal.gap' | translate }}</dt>
+        <dd data-testid="mana-topup-modal-gap">
+          {{ gap() }} {{ 'core.mana.unit' | translate }}
+        </dd>
+      </div>
+      @if (upsell().recommended_topup_units !== null) {
+        <div class="mana-topup-modal__row mana-topup-modal__row--recommended">
+          <dt>{{ 'core.mana.topup_modal.recommended_units' | translate }}</dt>
+          <dd data-testid="mana-topup-modal-recommended-units">
+            {{ upsell().recommended_topup_units }}
+            {{ 'core.mana.unit' | translate }}
+          </dd>
+        </div>
+      }
+      @if (upsell().recommended_plan_code) {
+        <div class="mana-topup-modal__row mana-topup-modal__row--plan">
+          <dt>{{ 'core.mana.topup_modal.recommended_plan' | translate }}</dt>
+          <dd data-testid="mana-topup-modal-recommended-plan">
+            {{ upsell().recommended_plan_code }}
+          </dd>
+        </div>
+      }
+    </dl>
+
+    @if (errorMessage()) {
+      <p
+        class="mana-topup-modal__error"
+        role="alert"
+        data-testid="mana-topup-modal-error">
+        {{ errorMessage()! | translate }}
+      </p>
+    }
+
+    <div class="mana-topup-modal__actions">
+      <button
+        type="button"
+        class="mana-topup-modal__btn mana-topup-modal__btn--cancel"
+        data-testid="mana-topup-modal-cancel"
+        [disabled]="submitting()"
+        (click)="onCancel()">
+        {{ 'core.mana.topup_modal.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="mana-topup-modal__btn mana-topup-modal__btn--confirm"
+        data-testid="mana-topup-modal-confirm"
+        [disabled]="submitting()"
+        (click)="onConfirm()">
+        @if (submitting()) {
+          <span
+            class="mana-topup-modal__spinner"
+            data-testid="mana-topup-modal-spinner"
+            aria-hidden="true"></span>
+        }
+        {{ ctaKey() | translate }}
+      </button>
+    </div>
+  </div>
+</div>

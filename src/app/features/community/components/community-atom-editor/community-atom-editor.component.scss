@@ -1,0 +1,354 @@
+:host {
+  display: block;
+}
+
+.community-atom-editor {
+  padding: var(--chora-space-lg, 24px);
+  max-width: 800px;
+  margin: 0 auto;
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: var(--chora-space-xs, 4px) 0 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Auto-save indicator
+  // ---------------------------------------------------------------------------
+
+  &__autosave {
+    margin-block-end: var(--chora-space-md, 16px);
+  }
+
+  &__autosave-text {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+
+    &--error {
+      color: #991b1b;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Form fields
+  // ---------------------------------------------------------------------------
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-lg, 24px);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--chora-color-text, #333);
+  }
+
+  &__input,
+  &__select {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+    background: #fff;
+    color: var(--chora-color-text, #333);
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__textarea {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+    font-family: inherit;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 200px;
+    background: #fff;
+    color: var(--chora-color-text, #333);
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+
+    &::placeholder {
+      color: var(--chora-color-text-disabled, #aaa);
+    }
+  }
+
+  &__hint {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tags
+  // ---------------------------------------------------------------------------
+
+  &__tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: #fff;
+    min-height: 40px;
+    align-items: center;
+
+    &:focus-within {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: var(--chora-color-surface-2, #e5e5e5);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  &__tag-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--chora-color-text-muted, #666);
+
+    &:hover {
+      color: #991b1b;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      border-radius: 50%;
+    }
+  }
+
+  &__tag-input {
+    flex: 1;
+    min-width: 100px;
+    padding: var(--chora-space-xs, 4px);
+    border: none;
+    font-size: 0.875rem;
+    background: transparent;
+    outline: none;
+
+    &::placeholder {
+      color: var(--chora-color-text-disabled, #aaa);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Drag-drop upload zone
+  // ---------------------------------------------------------------------------
+
+  &__dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-xl, 32px);
+    border: 2px dashed var(--chora-color-border, #d1d5db);
+    border-radius: var(--chora-radius-md, 8px);
+    text-align: center;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &--active {
+      border-color: var(--chora-color-primary, #2563eb);
+      background: rgba(37, 99, 235, 0.04);
+    }
+  }
+
+  &__dropzone-text {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  &__browse-btn {
+    display: inline-block;
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-primary, #2563eb);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--chora-color-primary, #2563eb);
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(37, 99, 235, 0.04);
+    }
+  }
+
+  &__file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // File list
+  // ---------------------------------------------------------------------------
+
+  &__file-list {
+    list-style: none;
+    margin: var(--chora-space-sm, 8px) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__file-item {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    background: var(--chora-color-surface-1, #fafafa);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.8125rem;
+  }
+
+  &__file-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__file-size {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+    white-space: nowrap;
+  }
+
+  &__file-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--chora-color-text-muted, #666);
+
+    &:hover {
+      color: #991b1b;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      border-radius: 50%;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Submit
+  // ---------------------------------------------------------------------------
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-block-start: var(--chora-space-md, 16px);
+    border-block-start: 1px solid var(--chora-color-border, #e5e5e5);
+  }
+
+  &__submit-btn {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-xl, 32px);
+    border: none;
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: var(--chora-color-primary, #2563eb);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--chora-color-primary-dark, #1d4ed8);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Success
+  // ---------------------------------------------------------------------------
+
+  &__success {
+    padding: var(--chora-space-md, 16px);
+    background: #dcfce7;
+    color: #166534;
+    border-radius: var(--chora-radius-md, 8px);
+    font-size: 0.875rem;
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+// Desktop enhancement
+@media (min-width: 1280px) {
+  .community-atom-editor {
+    max-width: 960px;
+  }
+}

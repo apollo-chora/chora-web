@@ -1,0 +1,132 @@
+<section
+  class="survey-list"
+  role="main"
+  [attr.aria-label]="'survey.list_title' | translate"
+  data-testid="survey-list">
+
+  <!-- Page Header -->
+  <header class="survey-list__header">
+    <h1 class="survey-list__title" data-testid="survey-list-title">
+      {{ 'survey.list_title' | translate }}
+    </h1>
+    <p class="survey-list__subtitle">
+      {{ 'survey.list_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Filter Bar -->
+  <nav class="survey-list__filters" aria-label="Survey status filters" data-testid="survey-filters">
+    <button
+      type="button"
+      class="survey-list__filter-btn"
+      [class.survey-list__filter-btn--active]="activeFilter() === 'all'"
+      data-testid="filter-all"
+      (click)="setFilter('all')">
+      {{ 'survey.filter_all' | translate }}
+    </button>
+    <button
+      type="button"
+      class="survey-list__filter-btn"
+      [class.survey-list__filter-btn--active]="activeFilter() === 'published'"
+      data-testid="filter-published"
+      (click)="setFilter('published')">
+      {{ 'survey.filter_published' | translate }}
+    </button>
+    <button
+      type="button"
+      class="survey-list__filter-btn"
+      [class.survey-list__filter-btn--active]="activeFilter() === 'draft'"
+      data-testid="filter-draft"
+      (click)="setFilter('draft')">
+      {{ 'survey.filter_draft' | translate }}
+    </button>
+    <button
+      type="button"
+      class="survey-list__filter-btn"
+      [class.survey-list__filter-btn--active]="activeFilter() === 'archived'"
+      data-testid="filter-archived"
+      (click)="setFilter('archived')">
+      {{ 'survey.filter_archived' | translate }}
+    </button>
+  </nav>
+
+  <!-- Loading -->
+  @if (surveyListState().status === 'loading') {
+    <div class="survey-list__loading" data-testid="survey-list-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="survey-list__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (surveyListState().status === 'error') {
+    <div class="survey-list__error" data-testid="survey-list-error" role="alert">
+      <p class="survey-list__error-text">
+        {{ 'survey.list_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (surveyListState().status === 'success' && surveyCount() === 0) {
+    <div class="survey-list__empty" data-testid="survey-list-empty" role="status">
+      <p class="survey-list__empty-text">
+        {{ 'survey.no_surveys_available' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Survey Cards -->
+  @if (surveyListState().status === 'success' && surveyCount() > 0) {
+    <div class="survey-list__grid" data-testid="survey-list-grid" role="list">
+      @for (survey of filteredSurveys(); track survey.id) {
+        <article
+          class="survey-list__card"
+          role="listitem"
+          [attr.data-testid]="'survey-card-' + survey.id">
+
+          <div class="survey-list__card-header">
+            <h2 class="survey-list__card-title" [attr.data-testid]="'survey-title-' + survey.id">
+              {{ survey.title }}
+            </h2>
+            <span
+              class="survey-list__status"
+              [class]="statusClass(survey.status)"
+              [attr.data-testid]="'survey-status-' + survey.id">
+              {{ statusLabels[survey.status] | translate }}
+            </span>
+          </div>
+
+          @if (survey.description) {
+            <p class="survey-list__card-description">
+              {{ survey.description }}
+            </p>
+          }
+
+          <div class="survey-list__card-meta">
+            <span class="survey-list__card-questions" [attr.data-testid]="'survey-questions-' + survey.id">
+              {{ survey.question_count }} {{ 'survey.questions_label' | translate }}
+            </span>
+            <span class="survey-list__card-date">
+              {{ formatDate(survey.created_at) }}
+            </span>
+          </div>
+
+          <div class="survey-list__card-actions">
+            @if (survey.status === 'published') {
+              <button
+                type="button"
+                class="survey-list__btn survey-list__btn--primary"
+                [attr.data-testid]="'btn-respond-' + survey.id"
+                [attr.aria-label]="'survey.take_survey' | translate"
+                (click)="navigateToRespond(survey)">
+                {{ 'survey.take_survey' | translate }}
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

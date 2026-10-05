@@ -1,0 +1,259 @@
+<section
+  class="surface-rplus wbl-detail"
+  data-testid="rplus-wbl-detail"
+  role="region"
+  aria-labelledby="rplus-wbl-detail-heading">
+  <header class="wbl-detail__header glass-panel">
+    <nav
+      class="wbl-detail__breadcrumb"
+      [attr.aria-label]="'rplus.wblDetail.breadcrumb_aria' | translate">
+      <a
+        class="wbl-detail__breadcrumb-link"
+        data-testid="wbl-detail-back-link"
+        routerLink="/r/wbl">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        {{ 'rplus.wblDetail.breadcrumb_root' | translate }}
+      </a>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.wblDetail.breadcrumb_leaf' | translate }}
+      </span>
+    </nav>
+
+    <div class="wbl-detail__title-row">
+      <h1
+        id="rplus-wbl-detail-heading"
+        class="wbl-detail__title"
+        data-testid="wbl-detail-title">
+        {{ 'rplus.wblDetail.title' | translate }}
+      </h1>
+      <code class="wbl-detail__placement-id" data-testid="wbl-detail-id">
+        {{ id() }}
+      </code>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <p
+      class="wbl-detail__loading glass-panel"
+      data-testid="wbl-detail-loading"
+      role="status"
+      aria-busy="true">
+      {{ 'rplus.wblDetail.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div
+      class="wbl-detail__error glass-panel"
+      data-testid="wbl-detail-error"
+      role="alert">
+      <p class="wbl-detail__error-message">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        {{ errorKey() | translate }}
+      </p>
+      <button
+        type="button"
+        class="btn btn-ghost wbl-detail__retry"
+        data-testid="wbl-detail-retry"
+        (click)="retry()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        {{ 'rplus.wblDetail.retry' | translate }}
+      </button>
+    </div>
+  } @else if (placement(); as p) {
+    <article
+      class="wbl-detail__panel glass-panel"
+      [attr.data-testid]="'wbl-detail-panel-' + p.id">
+      <div class="wbl-detail__panel-head">
+        <span
+          class="badge"
+          [class]="'badge ' + badge(p.state)"
+          [attr.data-testid]="'wbl-detail-state-' + p.id">
+          {{ p.state }}
+        </span>
+        <h2 class="wbl-detail__host" data-testid="wbl-detail-host">
+          <i class="fa-solid fa-building-user" aria-hidden="true"></i>
+          {{ p.hostOrgName }}
+        </h2>
+      </div>
+
+      <dl class="wbl-detail__fields">
+        <div class="wbl-detail__field">
+          <dt>{{ 'rplus.wblDetail.col.learner' | translate }}</dt>
+          <dd data-testid="wbl-detail-learner">{{ p.gcid }}</dd>
+        </div>
+        <div class="wbl-detail__field">
+          <dt>{{ 'rplus.wblDetail.col.course' | translate }}</dt>
+          <dd data-testid="wbl-detail-course">{{ p.courseId }}</dd>
+        </div>
+        <div class="wbl-detail__field">
+          <dt>{{ 'rplus.wblDetail.col.supervisor' | translate }}</dt>
+          <dd data-testid="wbl-detail-supervisor">{{ p.supervisorName }}</dd>
+        </div>
+        <div class="wbl-detail__field">
+          <dt>{{ 'rplus.wblDetail.col.supervisor_email' | translate }}</dt>
+          <dd>
+            <a
+              class="wbl-detail__email"
+              data-testid="wbl-detail-supervisor-email"
+              [href]="'mailto:' + p.supervisorEmail">{{ p.supervisorEmail }}</a>
+          </dd>
+        </div>
+        <div class="wbl-detail__field">
+          <dt>{{ 'rplus.wblDetail.col.start_date' | translate }}</dt>
+          <dd>
+            <time
+              data-testid="wbl-detail-start"
+              [attr.datetime]="p.startDate">{{ p.startDate }}</time>
+          </dd>
+        </div>
+        <div class="wbl-detail__field">
+          <dt>{{ 'rplus.wblDetail.col.end_date' | translate }}</dt>
+          <dd>
+            <time
+              data-testid="wbl-detail-end"
+              [attr.datetime]="p.endDate">{{ p.endDate }}</time>
+          </dd>
+        </div>
+        <div class="wbl-detail__field wbl-detail__field--wide">
+          <dt>{{ 'rplus.wblDetail.col.hours' | translate }}</dt>
+          <dd>
+            <span
+              class="wbl-detail__hours"
+              data-testid="wbl-detail-hours">
+              {{ p.hoursCompleted }} / {{ p.hoursRequired }}
+              {{ 'rplus.wblDetail.hours_unit' | translate }}
+            </span>
+            <div
+              class="wbl-detail__progress"
+              role="progressbar"
+              data-testid="wbl-detail-progress"
+              [attr.aria-label]="'rplus.wblDetail.progress_aria' | translate"
+              [attr.aria-valuenow]="completionPct()"
+              aria-valuemin="0"
+              aria-valuemax="100">
+              <span
+                class="wbl-detail__progress-fill surface-accent-bg"
+                [style.width]="completionPct() + '%'"></span>
+            </div>
+          </dd>
+        </div>
+        @if (p.evaluatorNotes) {
+          <div class="wbl-detail__field wbl-detail__field--wide">
+            <dt>{{ 'rplus.wblDetail.col.evaluator_notes' | translate }}</dt>
+            <dd class="wbl-detail__notes" data-testid="wbl-detail-notes">
+              {{ p.evaluatorNotes }}
+            </dd>
+          </div>
+        }
+        <div class="wbl-detail__field">
+          <dt>{{ 'rplus.wblDetail.col.created_at' | translate }}</dt>
+          <dd>
+            <time [attr.datetime]="p.createdAt">{{ p.createdAt }}</time>
+          </dd>
+        </div>
+        <div class="wbl-detail__field">
+          <dt>{{ 'rplus.wblDetail.col.updated_at' | translate }}</dt>
+          <dd>
+            <time [attr.datetime]="p.updatedAt">{{ p.updatedAt }}</time>
+          </dd>
+        </div>
+      </dl>
+
+      <form
+        class="wbl-detail__patch"
+        data-testid="wbl-detail-patch-form"
+        [formGroup]="patchDraft"
+        (ngSubmit)="savePatch()">
+        <h3 class="wbl-detail__patch-title">
+          {{ 'rplus.wblDetail.patch.title' | translate }}
+        </h3>
+        <p class="wbl-detail__patch-subtitle">
+          {{ 'rplus.wblDetail.patch.subtitle' | translate }}
+        </p>
+
+        @if (patchError(); as msg) {
+          <p
+            class="wbl-detail__patch-error"
+            role="alert"
+            data-testid="wbl-detail-patch-error">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ msg }}
+          </p>
+        }
+
+        @if (!canEdit()) {
+          <p
+            class="wbl-detail__patch-locked"
+            data-testid="wbl-detail-patch-locked">
+            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+            {{ 'rplus.wblDetail.patch.locked' | translate }}
+          </p>
+        }
+
+        <div class="wbl-detail__patch-grid">
+          <div class="wbl-detail__patch-field">
+            <label for="wbl-detail-hours-completed">
+              {{ 'rplus.wblDetail.patch.hours_completed' | translate }}
+            </label>
+            <input
+              id="wbl-detail-hours-completed"
+              type="number"
+              min="0"
+              [attr.max]="hoursRequired()"
+              data-testid="wbl-detail-hours-input"
+              formControlName="hours_completed"
+              [attr.aria-describedby]="'wbl-detail-hours-help'" />
+            <small id="wbl-detail-hours-help" class="wbl-detail__patch-help">
+              {{ 'rplus.wblDetail.patch.hours_help' | translate }}
+              {{ hoursRequired() }}
+            </small>
+          </div>
+
+          <div
+            class="wbl-detail__patch-field wbl-detail__patch-field--wide">
+            <label for="wbl-detail-evaluator-notes">
+              {{ 'rplus.wblDetail.patch.evaluator_notes' | translate }}
+            </label>
+            <textarea
+              id="wbl-detail-evaluator-notes"
+              rows="3"
+              maxlength="4000"
+              data-testid="wbl-detail-notes-input"
+              formControlName="evaluator_notes"></textarea>
+          </div>
+        </div>
+
+        <div class="wbl-detail__patch-actions">
+          <button
+            type="submit"
+            class="btn btn-primary wbl-detail__patch-submit"
+            data-testid="wbl-detail-patch-submit"
+            [disabled]="!canEdit() || isPatchPending() || patchDraft.invalid">
+            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+            {{ 'rplus.wblDetail.patch.submit_cta' | translate }}
+          </button>
+        </div>
+      </form>
+
+      <footer class="wbl-detail__panel-foot">
+        <a
+          class="btn btn-ghost wbl-detail__back-cta"
+          data-testid="wbl-detail-back-cta"
+          routerLink="/r/wbl">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          {{ 'rplus.wblDetail.back_cta' | translate }}
+        </a>
+        <button
+          type="button"
+          class="btn btn-primary wbl-detail__withdraw-cta"
+          data-testid="wbl-detail-withdraw"
+          [disabled]="!canWithdraw() || isWithdrawPending()"
+          (click)="withdraw()"
+          [attr.aria-label]="'rplus.wblDetail.withdraw_aria' | translate">
+          <i class="fa-solid fa-ban" aria-hidden="true"></i>
+          {{ 'rplus.wblDetail.withdraw_cta' | translate }}
+        </button>
+      </footer>
+    </article>
+  }
+</section>

@@ -1,0 +1,62 @@
+@if (visible()) {
+  <div
+    class="survey-gate"
+    role="alert"
+    aria-live="polite"
+    data-testid="survey-certificate-gate">
+
+    <div class="survey-gate__content">
+      <div class="survey-gate__icon" aria-hidden="true">!</div>
+
+      <div class="survey-gate__text">
+        <p class="survey-gate__message">
+          {{ 'shared.survey_gate.complete_survey_message' | translate }}
+        </p>
+
+        @if (completedTitle()) {
+          <p class="survey-gate__context">
+            {{ completedTitle() }}
+          </p>
+        }
+
+        @if (totalQuestions() > 0) {
+          <div class="survey-gate__progress">
+            <div
+              class="survey-gate__progress-bar"
+              role="progressbar"
+              [attr.aria-valuenow]="progressPct()"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-label]="'shared.survey_gate.progress' | translate">
+              <div
+                class="survey-gate__progress-fill"
+                [style.width]="progressPct() + '%'">
+              </div>
+            </div>
+            <span class="survey-gate__progress-text" data-testid="survey-progress">
+              {{ progressText() }} {{ 'shared.survey_gate.questions_answered' | translate }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="survey-gate__actions">
+        <a
+          [routerLink]="surveyLink()"
+          class="survey-gate__btn survey-gate__btn--primary"
+          data-testid="btn-go-to-survey"
+          [attr.aria-label]="'shared.survey_gate.go_to_survey' | translate">
+          {{ 'shared.survey_gate.go_to_survey' | translate }}
+        </a>
+        <button
+          type="button"
+          class="survey-gate__btn survey-gate__btn--dismiss"
+          (click)="dismiss()"
+          data-testid="btn-dismiss-gate"
+          [attr.aria-label]="'shared.survey_gate.dismiss' | translate">
+          {{ 'shared.survey_gate.dismiss' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

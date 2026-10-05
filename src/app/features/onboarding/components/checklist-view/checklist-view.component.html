@@ -1,0 +1,148 @@
+<section
+  class="checklist-view"
+  role="main"
+  [attr.aria-label]="'onboarding.checklist.title' | translate"
+  data-testid="checklist-view">
+
+  <header class="checklist-view__header">
+    <h1 class="checklist-view__title" data-testid="checklist-title">
+      {{ 'onboarding.checklist.title' | translate }}
+    </h1>
+  </header>
+
+  @if (checklistState().status === 'loading') {
+    <div class="checklist-view__loading" aria-live="polite" data-testid="checklist-loading">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="checklist-view__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (checklistState().status === 'error') {
+    <div class="checklist-view__error" role="alert" data-testid="checklist-error">
+      <p>{{ 'onboarding.checklist.load_error' | translate }}</p>
+    </div>
+  }
+
+  @if (checklist(); as cl) {
+    <!-- Progress Bar -->
+    <div class="checklist-view__progress" data-testid="progress-section">
+      <div class="checklist-view__progress-header">
+        <span class="checklist-view__progress-label">
+          {{ 'onboarding.checklist.progress' | translate }}
+        </span>
+        <span class="checklist-view__progress-count" data-testid="progress-count">
+          {{ completedCount() }} / {{ totalCount() }} ({{ progressPercentage() }}%)
+        </span>
+      </div>
+      <div
+        class="checklist-view__progress-bar"
+        role="progressbar"
+        [attr.aria-valuenow]="progressPercentage()"
+        [attr.aria-valuemin]="0"
+        [attr.aria-valuemax]="100"
+        [attr.aria-label]="'onboarding.checklist.progress' | translate"
+        data-testid="progress-bar">
+        <div
+          class="checklist-view__progress-fill"
+          [style.width.%]="progressPercentage()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Item List -->
+    <div class="checklist-view__list" role="list"
+         [attr.aria-label]="'onboarding.checklist.items' | translate"
+         data-testid="checklist-items">
+      @for (item of items(); track trackByItemId($index, item)) {
+        <div
+          class="checklist-view__item"
+          [class.checklist-view__item--completed]="item.status === 'completed'"
+          [class.checklist-view__item--overdue]="item.status === 'overdue'"
+          [class.checklist-view__item--expanded]="isExpanded(item.id)"
+          role="listitem"
+          [attr.data-testid]="'checklist-item-' + item.id">
+
+          <!-- Item Header (clickable) -->
+          <div
+            class="checklist-view__item-header"
+            (click)="toggleItem(item.id)"
+            (keydown.enter)="toggleItem(item.id)"
+            (keydown.space)="toggleItem(item.id); $event.preventDefault()"
+            tabindex="0"
+            role="button"
+            [attr.aria-expanded]="isExpanded(item.id)"
+            [attr.aria-label]="item.name">
+
+            <!-- Status Icon -->
+            <span
+              class="checklist-view__status-icon"
+              [class.checklist-view__status-icon--pending]="item.status === 'pending'"
+              [class.checklist-view__status-icon--in-progress]="item.status === 'in_progress'"
+              [class.checklist-view__status-icon--completed]="item.status === 'completed'"
+              [class.checklist-view__status-icon--overdue]="item.status === 'overdue'"
+              [attr.aria-label]="getStatusAriaLabel(item.status) | translate"
+              aria-hidden="true">
+              {{ getStatusIcon(item.status) }}
+            </span>
+
+            <div class="checklist-view__item-summary">
+              <span class="checklist-view__item-name">{{ item.name }}</span>
+              @if (item.due_date) {
+                <span class="checklist-view__item-due"
+                      [class.checklist-view__item-due--overdue]="item.status === 'overdue'">
+                  {{ 'onboarding.checklist.due' | translate }}: {{ item.due_date | date:'mediumDate' }}
+                </span>
+              }
+            </div>
+
+            <span class="checklist-view__expand-icon" aria-hidden="true">
+              @if (isExpanded(item.id)) {
+                &#9650;
+              } @else {
+                &#9660;
+              }
+            </span>
+          </div>
+
+          <!-- Item Details (expanded) -->
+          @if (isExpanded(item.id)) {
+            <div class="checklist-view__item-details" data-testid="item-details">
+              <p class="checklist-view__item-description">{{ item.description }}</p>
+
+              @if (item.status === 'completed' && item.completed_at) {
+                <p class="checklist-view__item-completed-date">
+                  {{ 'onboarding.checklist.completed_on' | translate }}:
+                  {{ item.completed_at | date:'mediumDate' }}
+                </p>
+              }
+
+              <div class="checklist-view__item-actions">
+                @if (item.linked_resource_url) {
+                  <button
+                    type="button"
+                    class="checklist-view__btn checklist-view__btn--secondary"
+                    (click)="navigateToResource(item.linked_resource_url); $event.stopPropagation()"
+                    [attr.aria-label]="'onboarding.checklist.go_to_resource' | translate"
+                    data-testid="go-to-resource-btn">
+                    {{ 'onboarding.checklist.go_to_resource' | translate }}
+                  </button>
+                }
+                @if (item.status !== 'completed') {
+                  <button
+                    type="button"
+                    class="checklist-view__btn checklist-view__btn--primary"
+                    (click)="markComplete(item); $event.stopPropagation()"
+                    [attr.aria-label]="'onboarding.checklist.mark_complete' | translate"
+                    data-testid="mark-complete-btn">
+                    {{ 'onboarding.checklist.mark_complete' | translate }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

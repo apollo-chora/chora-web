@@ -1,0 +1,55 @@
+:host {
+  display: block;
+}
+
+.readonly-banner {
+  background: #fef2f2;
+  border-block-end: 2px solid #dc2626;
+  padding: var(--chora-space-sm, 8px) var(--chora-space-lg, 24px);
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  &__icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #991b1b;
+  }
+
+  &__explanation {
+    font-size: 0.8125rem;
+    color: #b91c1c;
+  }
+}
+
+@media (min-width: 1280px) {
+  .readonly-banner {
+    &__text {
+      flex-direction: row;
+      gap: var(--chora-space-sm, 8px);
+      align-items: center;
+    }
+
+    &__title::after {
+      content: '\2014';
+      margin-inline: var(--chora-space-xs, 4px);
+    }
+  }
+}

@@ -1,0 +1,85 @@
+<article
+  class="agent-metric-card"
+  [class]="statusClass()"
+  [attr.data-testid]="'agent-card-' + agent().agent_id"
+  [attr.aria-label]="agent().agent_name">
+
+  <!-- Header -->
+  <header class="agent-metric-card__header">
+    <span
+      class="agent-metric-card__status-dot"
+      [class]="statusDotClass()"
+      [attr.aria-label]="agent().status">
+    </span>
+    <h3 class="agent-metric-card__name" data-testid="agent-name">
+      {{ agent().agent_name }}
+    </h3>
+    <span
+      class="agent-metric-card__status-badge"
+      [attr.data-testid]="'agent-status-' + agent().agent_id">
+      {{ agent().status | uppercase }}
+    </span>
+  </header>
+
+  <!-- Metrics Grid -->
+  <div class="agent-metric-card__metrics" role="list">
+    <div class="agent-metric-card__metric" role="listitem">
+      <span class="agent-metric-card__metric-label">
+        {{ 'admin.monitoring.p99_latency' | translate }}
+      </span>
+      <span
+        class="agent-metric-card__metric-value"
+        [attr.data-testid]="'latency-' + agent().agent_id">
+        {{ formatLatency(agent().p99_latency_ms) }}
+      </span>
+    </div>
+
+    <div class="agent-metric-card__metric" role="listitem">
+      <span class="agent-metric-card__metric-label">
+        {{ 'admin.monitoring.tokens_24h' | translate }}
+      </span>
+      <span
+        class="agent-metric-card__metric-value"
+        [attr.data-testid]="'tokens-' + agent().agent_id">
+        {{ formatTokens(agent().token_usage_24h) }}
+      </span>
+    </div>
+
+    <div class="agent-metric-card__metric" role="listitem">
+      <span class="agent-metric-card__metric-label">
+        {{ 'admin.monitoring.error_rate' | translate }}
+      </span>
+      <span
+        class="agent-metric-card__metric-value"
+        [attr.data-testid]="'error-rate-' + agent().agent_id">
+        {{ formatErrorRate(agent().error_rate) }}
+      </span>
+    </div>
+
+    <div class="agent-metric-card__metric" role="listitem">
+      <span class="agent-metric-card__metric-label">
+        {{ 'admin.monitoring.fallback_triggers' | translate }}
+      </span>
+      <span
+        class="agent-metric-card__metric-value"
+        [attr.data-testid]="'fallbacks-' + agent().agent_id">
+        {{ agent().fallback_triggers }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="agent-metric-card__footer">
+    <span class="agent-metric-card__last-active">
+      {{ formatLastActive(agent().last_active) }}
+    </span>
+    <button
+      type="button"
+      class="agent-metric-card__details-btn"
+      [attr.data-testid]="'btn-details-' + agent().agent_id"
+      [attr.aria-label]="'admin.monitoring.view_details' | translate"
+      (click)="onViewDetails()">
+      {{ 'admin.monitoring.view_details' | translate }}
+    </button>
+  </footer>
+</article>

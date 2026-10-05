@@ -1,0 +1,233 @@
+<section
+  data-testid="rplus-assessment-instantiation"
+  class="surface-rplus assessment-instantiation">
+  <header class="assessment-instantiation__header">
+    <h1 class="assessment-instantiation__title">
+      {{ 'rplus.assessment_instantiation.heading' | translate }}
+    </h1>
+    <p class="assessment-instantiation__subtitle">
+      {{ 'rplus.assessment_instantiation.subtitle' | translate }}
+    </p>
+  </header>
+
+  <form
+    class="assessment-instantiation__form"
+    (ngSubmit)="submit()">
+    <!-- ── Section 1: Test-Set picker ─────────────────────────── -->
+    <fieldset class="assessment-instantiation__section">
+      <legend class="assessment-instantiation__section-title">
+        {{ 'rplus.assessment_instantiation.section_test_set' | translate }}
+      </legend>
+
+      @if (isTestSetsLoading()) {
+        <div
+          data-testid="test-set-picker-loading"
+          class="assessment-instantiation__loading"
+          aria-busy="true">
+          <p>{{ 'rplus.assessment_list.loading' | translate }}</p>
+        </div>
+      } @else if (isTestSetsError()) {
+        <div
+          data-testid="test-set-picker-error"
+          class="assessment-instantiation__error"
+          role="alert">
+          <p>{{ testSetsErrorKey() | translate }}</p>
+        </div>
+      } @else {
+        <label
+          for="test-set-picker"
+          class="assessment-instantiation__label">
+          {{ 'rplus.assessment_instantiation.test_set_label' | translate }}
+        </label>
+        <select
+          id="test-set-picker"
+          data-testid="test-set-picker-select"
+          class="assessment-instantiation__select"
+          [value]="selectedTestSetId() ?? ''"
+          (change)="onTestSetChange(($any($event.target)).value)">
+          <option value="">
+            {{
+              'rplus.assessment_instantiation.test_set_placeholder' | translate
+            }}
+          </option>
+          @for (ts of testSets(); track ts.test_set_id) {
+            <option [value]="ts.test_set_id">{{ ts.title }}</option>
+          }
+        </select>
+        @if (fieldErrorTestSet().length > 0) {
+          <p
+            data-testid="instantiation-field-error-test-set"
+            class="assessment-instantiation__field-error"
+            role="alert">
+            {{ fieldErrorTestSet() }}
+          </p>
+        }
+      }
+    </fieldset>
+
+    <!-- ── Section 2: Title ──────────────────────────────────── -->
+    <fieldset class="assessment-instantiation__section">
+      <legend class="assessment-instantiation__section-title">
+        {{ 'rplus.assessment_instantiation.section_title' | translate }}
+      </legend>
+      <label
+        for="instantiation-title"
+        class="assessment-instantiation__label">
+        {{ 'rplus.assessment_instantiation.title_label' | translate }}
+      </label>
+      <input
+        id="instantiation-title"
+        data-testid="instantiation-title"
+        class="assessment-instantiation__input"
+        type="text"
+        maxlength="200"
+        autocomplete="off"
+        [value]="title()"
+        (input)="onTitleInput(($any($event.target)).value)" />
+      @if (isTitleInvalid()) {
+        <p
+          data-testid="instantiation-title-error"
+          class="assessment-instantiation__field-error"
+          role="alert">
+          {{ 'rplus.assessment_instantiation.title_error' | translate }}
+        </p>
+      }
+      @if (fieldErrorTitle().length > 0) {
+        <p
+          data-testid="instantiation-field-error-title"
+          class="assessment-instantiation__field-error"
+          role="alert">
+          {{ fieldErrorTitle() }}
+        </p>
+      }
+    </fieldset>
+
+    <!-- ── Section 3: Cohort (chip input) ────────────────────── -->
+    <fieldset class="assessment-instantiation__section">
+      <legend class="assessment-instantiation__section-title">
+        {{ 'rplus.assessment_instantiation.section_cohort' | translate }}
+      </legend>
+      <p class="assessment-instantiation__help">
+        {{ 'rplus.assessment_instantiation.cohort_help' | translate }}
+      </p>
+      <chora-rplus-member-picker
+        [chips]="invitedMembers()"
+        (selected)="onMemberSelected($event)"
+        (removed)="onMemberRemoved($event)" />
+      <button
+        type="button"
+        data-testid="instantiation-add-me"
+        class="assessment-instantiation__add-me"
+        (click)="addMeAsLearner()">
+        {{ 'rplus.assessment_instantiation.add_me' | translate }}
+      </button>
+      @if (addMeError()) {
+        <p
+          data-testid="instantiation-add-me-error"
+          class="assessment-instantiation__field-error"
+          role="alert">
+          {{ 'rplus.assessment_instantiation.add_me_error' | translate }}
+        </p>
+      }
+      @if (fieldErrorCohort().length > 0) {
+        <p
+          data-testid="instantiation-field-error-cohort"
+          class="assessment-instantiation__field-error"
+          role="alert">
+          {{ fieldErrorCohort() }}
+        </p>
+      }
+    </fieldset>
+
+    <!-- ── Section 4: Window (optional) + auto-release ────────── -->
+    <fieldset class="assessment-instantiation__section">
+      <legend class="assessment-instantiation__section-title">
+        {{ 'rplus.assessment_instantiation.section_dates' | translate }}
+      </legend>
+      <div class="assessment-instantiation__date-row">
+        <div class="assessment-instantiation__date-field">
+          <label
+            for="instantiation-start"
+            class="assessment-instantiation__label">
+            {{ 'rplus.assessment_instantiation.open_at_label' | translate }}
+          </label>
+          <input
+            id="instantiation-start"
+            data-testid="instantiation-start"
+            class="assessment-instantiation__input"
+            type="datetime-local"
+            [value]="startAt() ?? ''"
+            (input)="onStartChange(($any($event.target)).value)" />
+        </div>
+        <div class="assessment-instantiation__date-field">
+          <label
+            for="instantiation-end"
+            class="assessment-instantiation__label">
+            {{ 'rplus.assessment_instantiation.close_at_label' | translate }}
+          </label>
+          <input
+            id="instantiation-end"
+            data-testid="instantiation-end"
+            class="assessment-instantiation__input"
+            type="datetime-local"
+            [value]="endAt() ?? ''"
+            (input)="onEndChange(($any($event.target)).value)" />
+        </div>
+      </div>
+      <label class="assessment-instantiation__toggle-row">
+        <input
+          data-testid="instantiation-auto-release"
+          type="checkbox"
+          [checked]="autoRelease()"
+          (change)="onAutoReleaseChange(($any($event.target)).checked)" />
+        <span>
+          {{
+            'rplus.assessment_instantiation.auto_release_label' | translate
+          }}
+        </span>
+      </label>
+      <label class="assessment-instantiation__toggle-row">
+        <input
+          data-testid="instantiation-shuffle-mcq"
+          type="checkbox"
+          [checked]="shuffleMcqOptions()"
+          (change)="onShuffleMcqOptionsChange(($any($event.target)).checked)" />
+        <span>
+          {{ 'rplus.assessment_instantiation.shuffle_mcq_label' | translate }}
+          <small class="assessment-instantiation__toggle-hint">
+            {{ 'rplus.assessment_instantiation.shuffle_mcq_hint' | translate }}
+          </small>
+        </span>
+      </label>
+    </fieldset>
+
+    <!-- ── Submit + error banner ──────────────────────────────── -->
+    @if (isSubmitError()) {
+      <div
+        data-testid="instantiation-error-banner"
+        class="assessment-instantiation__error"
+        role="alert">
+        <p>{{ submitErrorKey() | translate }}</p>
+        <button
+          type="button"
+          data-testid="instantiation-retry"
+          class="assessment-instantiation__retry"
+          (click)="retry()">
+          {{ 'rplus.assessment_instantiation.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    <button
+      type="submit"
+      data-testid="instantiation-submit"
+      class="assessment-instantiation__submit"
+      [disabled]="!canSubmit()">
+      @if (isSubmitting()) {
+        {{ 'rplus.assessment_instantiation.submit_pending' | translate }}
+      } @else {
+        {{ 'rplus.assessment_instantiation.submit' | translate }}
+      }
+    </button>
+  </form>
+</section>

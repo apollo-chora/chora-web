@@ -1,0 +1,409 @@
+<!--
+  WS-2 Overlay slots — rendered conditionally above page content.
+  stageUpOverlay / sourceRevelationOverlay are set via FamiliarRealtimeService
+  subscriptions in FamiliarComponent constructor.
+-->
+@if (stageUpOverlay(); as t) {
+  <chora-aplus-familiar-stage-up-overlay
+    [transition]="t"
+    [species]="familiar()?.species ?? ''"
+    (closed)="dismissStageUp()"
+    data-testid="aplus-familiar-stage-up-overlay-slot" />
+}
+
+@if (sourceRevelationOverlay(); as p) {
+  <chora-aplus-familiar-source-revelation-overlay
+    [payload]="p"
+    [species]="familiar()?.species ?? ''"
+    (closed)="dismissSourceRevelation()"
+    data-testid="aplus-familiar-source-revelation-overlay-slot" />
+}
+
+<!--
+  The binding-ceremony MODAL is rendered at the profile ROOT (outside
+  `.aplus-familiar`'s container-type + the card's backdrop-filter, both of which
+  are containing blocks for position:fixed) so it covers the full viewport. The
+  bond footer's CTA toggles `ceremonyOpen`; the component owns the modal.
+-->
+@if (familiar(); as f) {
+  <chora-aplus-familiar-binding-ceremony
+    [familiarId]="f.familiarId"
+    [open]="ceremonyOpen()"
+    (closed)="ceremonyOpen.set(false)" />
+}
+
+<!--
+  ADR-225: one-time first-interaction AI-transparency NOTICE. Self-gates on
+  `mustAcknowledge`; the profile hosts AI affordances (binding-ceremony
+  edge-scout, Grimoire skill invoke), so it is a valid first-interaction entry.
+-->
+<chora-ai-transparency-notice surface="familiar" scope="familiar_profile" />
+
+<section
+  class="aplus-familiar surface-aplus"
+  [attr.data-breed]="familiar()?.species || 'dragon'"
+  aria-labelledby="aplus-familiar-heading"
+  data-testid="aplus-familiar">
+  @if (mode() === 'front-door') {
+    <!-- ── FRONT-DOOR (CHO-2095) — the bare route resolves the learner's
+         active familiar and redirects to its PROFILE (marketplace when the
+         cast is empty). The roster LIST is retired: the dashboard "Your
+         Cast" strip is the switcher. Only resolution states render here. -->
+    @switch (frontDoor().status) {
+      @case ('error') {
+        <div
+          class="familiar__front-door glass-panel"
+          role="alert"
+          data-testid="aplus-familiar-front-door-error">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <p>{{ frontDoorError() | translate }}</p>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-testid="aplus-familiar-front-door-retry"
+            (click)="retryFrontDoor()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            {{ 'aplus.familiar_list.retry' | translate }}
+          </button>
+        </div>
+      }
+      @default {
+        <div
+          class="familiar__front-door glass-panel"
+          role="status"
+          aria-live="polite"
+          data-testid="aplus-familiar-front-door-loading">
+          <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+          {{ 'aplus.familiar_list.resolving' | translate }}
+        </div>
+      }
+    }
+  } @else if (familiar(); as f) {
+    @if (f.growthStage === 0) {
+      <!-- F-I2 (CHO-2089): a pre-hatch egg gets the incubation card, not the
+           growth hero — the hero's Stage/EXP chrome is meaningless pre-hatch
+           (the egg warms toward the hatch threshold, not a stage curve). -->
+      <chora-aplus-incubation-card
+        [familiarId]="f.familiarId"
+        data-testid="aplus-familiar-incubation-slot" />
+    } @else {
+    <!-- ── PROFILE MODE — Hero Card (ADR-149 growth view) ─────────────
+         One glass card; the banner + runes + XP + bond take the per-breed
+         accent (var(--breed-accent), scoped by [data-breed] on the section).
+         Chrome is identical for every Familiar; only the accent changes. -->
+    <article class="fcard glass-panel" data-testid="aplus-familiar-card">
+      <!-- BANNER: portrait + nameplate + rarity -->
+      <div class="fcard__banner">
+        <a routerLink="/a/dashboard" class="fcard__back"
+           data-testid="aplus-familiar-back"
+           [attr.aria-label]="'aplus.familiar.back_to_dashboard' | translate">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        </a>
+
+        <div class="fcard__portrait">
+          <chora-breed-art
+            [species]="f.species"
+            [stage]="f.growthStage"
+            [shiny]="f.shinyVariant"
+            size="sm"
+            mood="curious"
+            [bare]="true"
+            [altText]="f.displayName || stageLabel()" />
+        </div>
+
+        <div class="fcard__id">
+          <h1 id="aplus-familiar-heading" class="fcard__name" data-testid="aplus-familiar-name">
+            {{ f.displayName || ('aplus.familiar.untitled' | translate) }}
+          </h1>
+          <p class="fcard__epithet">
+            <span data-testid="aplus-familiar-stage">{{ stageLabel() }}</span>
+            <span class="fcard__dot" aria-hidden="true">·</span>
+            <chora-ai-companion-badge />
+          </p>
+        </div>
+
+        <div class="fcard__badges">
+          @if (f.rarity) {
+            <span class="fcard__rarity" [attr.data-rarity]="f.rarity">
+              {{ ('aplus.familiar.rarity_' + f.rarity) | translate }}
+            </span>
+          }
+          @if (f.shinyVariant) {
+            <span class="fcard__shiny" data-testid="aplus-familiar-shiny">
+              <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+              {{ 'aplus.familiar.shiny' | translate }}
+            </span>
+          }
+          @if (f.growthStage > 0) {
+            <!-- CHO-2095: chat's front door lives on the profile hero. -->
+            <a
+              class="fcard__chat-cta"
+              [routerLink]="['/a/companion', f.familiarId, 'chat']"
+              data-testid="aplus-familiar-chat-cta">
+              <i class="fa-solid fa-comments" aria-hidden="true"></i>
+              {{ 'aplus.familiar.chat_cta' | translate }}
+            </a>
+          }
+          @if (f.growthStage >= 5) {
+            <!-- P5 Far Sight (CHO-2113): the Seeker surface unlocks at stage 5. -->
+            <a
+              class="fcard__chat-cta"
+              routerLink="/a/far-sight"
+              data-testid="aplus-familiar-far-sight-cta">
+              <i class="fa-solid fa-binoculars" aria-hidden="true"></i>
+              {{ 'aplus.familiar.far_sight_cta' | translate }}
+            </a>
+          }
+        </div>
+      </div>
+
+      <div class="fcard__body">
+        <!-- STAT SCORES -->
+        <div class="fcard__scores">
+          <div class="fcard__score">
+            <span class="fcard__score-lab">{{ 'aplus.familiar.stage' | translate }}</span>
+            <span class="fcard__score-val accent" data-testid="aplus-familiar-level">{{ f.growthStage }}</span>
+          </div>
+          <div class="fcard__score">
+            <span class="fcard__score-lab">{{ 'aplus.familiar.score_mind' | translate }}</span>
+            <span class="fcard__score-val sm" data-testid="aplus-familiar-mind">{{ mindLabelKey() | translate }}</span>
+          </div>
+          <div class="fcard__score">
+            <span class="fcard__score-lab">{{ 'aplus.familiar.meta_total_exp' | translate }}</span>
+            <span class="fcard__score-val">{{ f.expCumulative | number }}</span>
+          </div>
+          <div class="fcard__score">
+            <span class="fcard__score-lab">{{ 'aplus.familiar.tools_heading' | translate }}</span>
+            <span class="fcard__score-val">{{ f.unlockedTools.length }}</span>
+          </div>
+        </div>
+
+        <!-- XP -->
+        @if (!atMaturedStage()) {
+          <div class="fcard__xp">
+            <div class="fcard__xp-top">
+              <span class="fcard__score-lab">{{ 'aplus.familiar.exp_label' | translate }}</span>
+              <span class="fcard__xp-num" data-testid="aplus-familiar-xp">
+                {{ f.expCurrent | number }} / {{ f.expNextThreshold | number }} EXP
+              </span>
+            </div>
+            <div
+              class="progress-track fcard__xp-bar"
+              role="progressbar"
+              [attr.aria-valuenow]="expPct()"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-label]="'aplus.familiar.exp_aria' | translate">
+              <div class="progress-fill" [style.width.%]="expPct()"></div>
+            </div>
+            <p class="fcard__hint" data-testid="aplus-familiar-exp-hint">
+              {{ 'aplus.familiar.exp_hint' | translate }}
+            </p>
+          </div>
+        } @else {
+          <div class="fcard__matured" data-testid="aplus-familiar-matured">
+            <i class="fa-solid fa-trophy" aria-hidden="true"></i>
+            {{ 'aplus.familiar.matured_badge' | translate }}
+          </div>
+        }
+
+        <!--
+          The Future-form preview, on demand (owner R47, D7). A BUTTON, not a
+          link: the route it used to point at has never been mounted, and the
+          overlay it opens is already hosted at this component's root.
+        -->
+        @if (hasAhaMoment()) {
+          <button
+            type="button"
+            class="fcard__aha"
+            data-testid="aplus-familiar-source-revelation-open"
+            (click)="openSourceRevelation()">
+            <i class="fa-solid fa-eye" aria-hidden="true"></i>
+            <span class="fcard__aha-body">
+              <span class="fcard__aha-title">{{ 'aplus.familiar.aha_active_title' | translate }}</span>
+              <span class="fcard__aha-sub">{{ 'aplus.familiar.aha_active_sub' | translate }}</span>
+            </span>
+          </button>
+        }
+
+        <!-- SKILLS (the shared Grimoire loadout) -->
+        <section class="fcard__section" aria-label="skills">
+          <chora-familiar-loadout [familiarId]="f.familiarId" />
+        </section>
+
+        <!-- ABILITIES -->
+        <section class="fcard__section">
+          <h2 class="fcard__sec">
+            <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
+            {{ 'aplus.familiar.tools_heading' | translate }}
+          </h2>
+          @if (f.unlockedTools.length > 0) {
+            <div class="fcard__abils" data-testid="aplus-familiar-tools">
+              @for (tool of f.unlockedTools; track tool) {
+                <!-- D3 (CHO-2047): the learner reads a capability, not the
+                     handler key. An unmapped tool falls through the translate
+                     pipe's humaniser, which is still a phrase and never a
+                     bare snake_case token. -->
+                <span class="fcard__pill">
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  {{ 'aplus.familiar.tool.' + tool | translate }}
+                </span>
+              }
+            </div>
+          } @else {
+            <p class="fcard__empty" data-testid="aplus-familiar-tools-empty">
+              {{ 'aplus.familiar.tools_empty' | translate }}
+            </p>
+          }
+        </section>
+
+        <!-- FOCUS + MEMORY (two-up) -->
+        <div class="fcard__grid2">
+          <div class="fcard__mini" aria-labelledby="aplus-familiar-resonance-heading">
+            <h3 id="aplus-familiar-resonance-heading" class="fcard__mini-h">
+              <i class="fa-solid fa-hexagon-nodes" aria-hidden="true"></i>
+              {{ 'aplus.familiar.resonance_heading' | translate }}
+            </h3>
+            @if (f.resonantConceptId) {
+              @if (f.resonantConceptTitle) {
+                <p class="fcard__mini-p" data-testid="aplus-familiar-resonant-concept">
+                  {{
+                    'aplus.familiar.resonant_concept_named'
+                      | translate: { title: f.resonantConceptTitle }
+                  }}
+                </p>
+              } @else {
+                <!-- The id is set but the server resolved no title, so the
+                     concept has left this learner's map. Say that, rather than
+                     showing a name that is not theirs or a bare identifier. -->
+                <p class="fcard__mini-p" data-testid="aplus-familiar-resonant-unresolved">
+                  {{ 'aplus.familiar.resonant_concept_gone' | translate }}
+                </p>
+              }
+            } @else {
+              <p class="fcard__mini-p" data-testid="aplus-familiar-resonant-empty">
+                {{ 'aplus.familiar.resonance_empty' | translate }}
+              </p>
+            }
+            @if (f.resonantAtomId) {
+              <p class="fcard__mini-p" data-testid="aplus-familiar-resonant">
+                @if (f.resonantAtomTitle) {
+                  {{
+                    'aplus.familiar.resonant_atom_named'
+                      | translate: { title: f.resonantAtomTitle }
+                  }}
+                } @else {
+                  {{ 'aplus.familiar.resonant_atom_gone' | translate }}
+                }
+              </p>
+            }
+            @if (f.resonantConceptId || f.resonantAtomId) {
+              <a routerLink="/a/knowledge" class="fcard__mini-link"
+                 data-testid="aplus-familiar-resonant-map-link">
+                <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+                {{ 'aplus.familiar.resonant_map_link' | translate }}
+              </a>
+            }
+          </div>
+
+          <div class="fcard__mini" data-testid="aplus-familiar-memory"
+               aria-labelledby="aplus-familiar-memory-heading">
+            <h3 id="aplus-familiar-memory-heading" class="fcard__mini-h">
+              <i class="fa-solid fa-brain" aria-hidden="true"></i>
+              {{ 'aplus.familiar.memory_heading' | translate }}
+            </h3>
+            @switch (profileState().status) {
+              @case ('loading') {
+                <p class="fcard__mini-p" role="status" aria-live="polite"
+                   data-testid="aplus-familiar-memory-loading">
+                  {{ 'aplus.familiar.loading' | translate }}
+                </p>
+              }
+              @case ('error') {
+                <div class="fcard__mini-error" role="alert"
+                     data-testid="aplus-familiar-memory-error">
+                  <p>{{ $any(profileState()).error | translate }}</p>
+                  <button type="button" class="btn btn-secondary"
+                          (click)="retryProfile()"
+                          data-testid="aplus-familiar-memory-retry">
+                    <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                    {{ 'aplus.familiar.error_retry' | translate }}
+                  </button>
+                </div>
+              }
+              @case ('success') {
+                @if (memorySummary(); as summary) {
+                  <p class="fcard__mini-p" data-testid="aplus-familiar-memory-recap">{{ summary }}</p>
+                } @else {
+                  <p class="fcard__mini-p" data-testid="aplus-familiar-memory-empty">
+                    {{ 'aplus.familiar.memory_empty' | translate }}
+                  </p>
+                }
+              }
+            }
+          </div>
+        </div>
+
+        <!-- GROWTH LEDGER -->
+        <div class="fcard__ledger">
+          @if (f.hatchedAt) {
+            <div class="fcard__ledger-item">
+              <span class="fcard__score-lab">{{ 'aplus.familiar.meta_hatched_at' | translate }}</span>
+              <time [attr.datetime]="f.hatchedAt" data-testid="aplus-familiar-hatched-at">
+                {{ f.hatchedAt | relativeTime }}
+              </time>
+            </div>
+          }
+          @if (f.lastStageUpAt) {
+            <div class="fcard__ledger-item">
+              <span class="fcard__score-lab">{{ 'aplus.familiar.meta_last_stage_up' | translate }}</span>
+              <time [attr.datetime]="f.lastStageUpAt" data-testid="aplus-familiar-last-stage-up-at">
+                {{ f.lastStageUpAt | relativeTime }}
+              </time>
+            </div>
+          }
+          <a [routerLink]="['/a/companion', f.familiarId, 'growth-log']"
+             class="fcard__mini-link fcard__ledger-link"
+             data-testid="aplus-familiar-growth-log-link">
+            <i class="fa-solid fa-scroll" aria-hidden="true"></i>
+            {{ 'aplus.familiar.view_growth_log' | translate }}
+          </a>
+          <!-- CHO-2095: retire relocated from the roster list. The confirm
+               names the CHO-2096 contract: irreversible, memories deleted. -->
+          <button
+            type="button"
+            class="fcard__retire"
+            data-testid="aplus-familiar-retire"
+            [disabled]="retiring()"
+            (click)="retireFamiliar()">
+            @if (retiring()) {
+              <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            } @else {
+              <i class="fa-solid fa-box-archive" aria-hidden="true"></i>
+            }
+            {{ 'aplus.familiar.retire_action' | translate }}
+          </button>
+        </div>
+
+        <!-- BOND FOOTER → ceremony modal -->
+        <div class="fcard__bond">
+          <span class="fcard__bond-txt">
+            <i class="fa-solid fa-link" aria-hidden="true"></i>
+            {{ 'familiar.ceremony.bind_sub' | translate }}
+          </span>
+          <button type="button" class="fcard__bond-cta"
+                  data-testid="familiar-ceremony-begin"
+                  (click)="ceremonyOpen.set(true)">
+            <i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+            {{ 'familiar.ceremony.bind_begin' | translate }}
+          </button>
+        </div>
+      </div>
+    </article>
+    }
+  } @else {
+    <p class="familiar__loading" role="status" aria-live="polite">
+      {{ 'aplus.familiar.loading' | translate }}
+    </p>
+  }
+</section>

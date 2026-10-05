@@ -1,0 +1,61 @@
+<!--
+  The dashed box IS the drop target (the root div) so a drop anywhere inside it
+  — over the prompt OR over an already-added chip — lands. The inner <label> is
+  the click-to-browse prompt (it wraps the hidden input and provides its
+  accessible name). Selected files render as removable badge chips INSIDE the
+  box, directly under the prompt, so they read as "in" the dropzone.
+-->
+<div
+  class="file-dropzone"
+  [class.file-dropzone--dragging]="isDragging()"
+  [class.file-dropzone--disabled]="disabled()"
+  [attr.data-testid]="testIdPrefix() + 'dropzone-root'"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)">
+  <label
+    class="file-dropzone__zone"
+    [attr.data-testid]="testIdPrefix() + 'dropzone'">
+    <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+    <span class="file-dropzone__title">{{ label() }}</span>
+    @if (hint()) {
+      <span class="file-dropzone__hint">{{ hint() }}</span>
+    }
+    @if (formats()) {
+      <span class="file-dropzone__formats">{{ formats() }}</span>
+    }
+    <input
+      type="file"
+      class="file-dropzone__input"
+      [attr.data-testid]="testIdPrefix() + 'input'"
+      [accept]="accept()"
+      [multiple]="multiple()"
+      [disabled]="disabled()"
+      (change)="onPicked($event)" />
+  </label>
+
+  @if (files().length > 0) {
+    <ul
+      class="file-dropzone__chips"
+      [attr.data-testid]="testIdPrefix() + 'file-list'"
+      [attr.aria-label]="'file_dropzone.selected_files' | translate">
+      @for (f of files(); track f.name + ':' + f.size; let i = $index) {
+        <li
+          class="file-dropzone__chip"
+          [attr.data-testid]="testIdPrefix() + 'file-chip-' + i">
+          <i class="fa-solid fa-file-lines file-dropzone__chip-icon" aria-hidden="true"></i>
+          <span class="file-dropzone__chip-name" [attr.title]="f.name">{{ f.name }}</span>
+          <button
+            type="button"
+            class="file-dropzone__chip-remove"
+            [attr.data-testid]="testIdPrefix() + 'file-remove-' + i"
+            [attr.aria-label]="('file_dropzone.remove_file' | translate) + ': ' + f.name"
+            [disabled]="disabled()"
+            (click)="remove(i)">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -1,0 +1,169 @@
+<div
+  class="daily-dose"
+  role="region"
+  aria-label="DailyDose"
+  data-testid="daily-dose">
+
+  @switch (doseState().status) {
+    @case ('loading') {
+      <div class="daily-dose__loading" role="status" aria-label="Loading DailyDose" data-testid="dose-loading">
+        <div class="daily-dose__spinner"></div>
+        <p>{{ 'atomic.daily-dose.loading' | translate }}</p>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="daily-dose__error" role="alert" data-testid="dose-error">
+        <p>{{ 'atomic.daily-dose.error' | translate }}</p>
+        <button
+          class="daily-dose__btn daily-dose__btn--secondary"
+          (click)="exitDose()"
+          data-testid="dose-exit-btn">
+          {{ 'atomic.daily-dose.back' | translate }}
+        </button>
+      </div>
+    }
+
+    @case ('success') {
+      @if (isComplete()) {
+        <!-- Session complete -->
+        <div class="daily-dose__complete" data-testid="dose-complete">
+          <div class="daily-dose__complete-icon" aria-hidden="true">&#10003;</div>
+          <h2>{{ 'atomic.daily-dose.complete-title' | translate }}</h2>
+          <div class="daily-dose__stats" data-testid="dose-stats">
+            <div class="daily-dose__stat">
+              <span class="daily-dose__stat-value" data-testid="stat-xp">{{ xpEarned() }}</span>
+              <span class="daily-dose__stat-label">{{ 'atomic.daily-dose.xp-earned' | translate }}</span>
+            </div>
+            <div class="daily-dose__stat">
+              <span class="daily-dose__stat-value" data-testid="stat-completed">{{ completedCount() }}/{{ totalCards() }}</span>
+              <span class="daily-dose__stat-label">{{ 'atomic.daily-dose.atoms-completed' | translate }}</span>
+            </div>
+          </div>
+          <button
+            class="daily-dose__btn daily-dose__btn--primary"
+            (click)="exitDose()"
+            data-testid="dose-done-btn">
+            {{ 'atomic.daily-dose.done' | translate }}
+          </button>
+        </div>
+      } @else {
+        <!-- Header: progress + combo -->
+        <header class="daily-dose__header" data-testid="dose-header">
+          <button
+            class="daily-dose__close-btn"
+            (click)="exitDose()"
+            aria-label="Exit DailyDose"
+            data-testid="dose-close-btn">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <div class="daily-dose__progress-info">
+            <span data-testid="dose-counter">{{ currentIndex() + 1 }} / {{ totalCards() }}</span>
+          </div>
+          <chora-combo-meter [combo]="combo()" />
+        </header>
+
+        <!-- Progress bar -->
+        <progress
+          class="daily-dose__progress-bar"
+          [value]="progressPercent()"
+          max="100"
+          [attr.aria-valuenow]="progressPercent()"
+          [attr.aria-valuetext]="progressPercent() + '% complete'"
+          data-testid="dose-progress">
+        </progress>
+
+        <!-- Card stack area -->
+        <div
+          class="daily-dose__stack"
+          (touchstart)="onTouchStart($event)"
+          (touchend)="onTouchEnd($event)"
+          data-testid="dose-stack">
+
+          @if (currentCard(); as card) {
+            <div class="daily-dose__card" data-testid="dose-current-card">
+              <!-- Source indicator -->
+              <div class="daily-dose__card-source" data-testid="card-source">
+                <span class="material-icons-outlined daily-dose__source-icon" aria-hidden="true">{{ getSourceIcon(card) }}</span>
+                <span>{{ 'atomic.daily-dose.source-' + card.source | translate }}</span>
+              </div>
+
+              <!-- Card content -->
+              <div
+                class="daily-dose__card-body"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'Open atom: ' + card.topic_label"
+                (click)="openAtom(card.atom)"
+                (keydown.enter)="openAtom(card.atom)"
+                (keydown.space)="openAtom(card.atom); $event.preventDefault()"
+                data-testid="card-body">
+
+                <!-- Atom type icon -->
+                <span class="daily-dose__card-type-icon material-icons-outlined" aria-hidden="true">{{ currentCardIcon() }}</span>
+
+                <!-- Topic label -->
+                <span class="daily-dose__card-topic" data-testid="card-topic">{{ card.topic_label }}</span>
+
+                <!-- Atom title from revision stem/front -->
+                <h3 class="daily-dose__card-title" data-testid="card-title">
+                  @if (card.atom.latest_revision; as rev) {
+                    {{ $any(rev.content)['stem'] ?? $any(rev.content)['front'] ?? 'Atom' }}
+                  }
+                </h3>
+
+                <!-- Meta row -->
+                <div class="daily-dose__card-meta">
+                  <span class="daily-dose__card-time" data-testid="card-time">{{ estimatedTime() }}</span>
+                  @if (card.is_goal_aligned) {
+                    <span
+                      class="daily-dose__card-goal"
+                      aria-label="Goal aligned"
+                      data-testid="card-goal-indicator">
+                      <span class="material-icons-outlined" aria-hidden="true">flag</span>
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Navigation buttons -->
+        <nav class="daily-dose__nav" aria-label="Card navigation" data-testid="dose-nav">
+          <button
+            class="daily-dose__btn daily-dose__btn--nav"
+            [disabled]="!hasPrevious()"
+            (click)="previousCard()"
+            aria-label="Previous card"
+            data-testid="dose-prev-btn">
+            <span aria-hidden="true">&#8592;</span>
+            {{ 'atomic.daily-dose.previous' | translate }}
+          </button>
+          <button
+            class="daily-dose__btn daily-dose__btn--primary"
+            (click)="openCurrentAtom()"
+            data-testid="dose-start-btn">
+            {{ 'atomic.daily-dose.start' | translate }}
+          </button>
+          <button
+            class="daily-dose__btn daily-dose__btn--nav"
+            [disabled]="!hasNext()"
+            (click)="nextCard()"
+            aria-label="Next card"
+            data-testid="dose-next-btn">
+            {{ 'atomic.daily-dose.next' | translate }}
+            <span aria-hidden="true">&#8594;</span>
+          </button>
+        </nav>
+
+        <!-- Keyboard shortcuts -->
+        <div class="daily-dose__shortcuts" aria-hidden="true">
+          <kbd>&#8592;</kbd><kbd>&#8594;</kbd> {{ 'atomic.daily-dose.shortcut-nav' | translate }}
+          <kbd>Enter</kbd> {{ 'atomic.daily-dose.shortcut-open' | translate }}
+          <kbd>Esc</kbd> {{ 'atomic.daily-dose.shortcut-exit' | translate }}
+        </div>
+      }
+    }
+  }
+</div>

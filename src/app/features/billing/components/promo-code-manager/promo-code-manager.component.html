@@ -1,0 +1,135 @@
+<section
+  class="promo-code-manager"
+  role="main"
+  [attr.aria-label]="'billing.promo_codes_title' | translate"
+  data-testid="promo-code-manager">
+
+  <!-- Page Header -->
+  <header class="promo-code-manager__header">
+    <h1 class="promo-code-manager__title" data-testid="promo-codes-title">
+      {{ 'billing.promo_codes_title' | translate }}
+    </h1>
+    <button
+      type="button"
+      class="promo-code-manager__btn promo-code-manager__btn--primary"
+      data-testid="btn-toggle-create-form"
+      [attr.aria-label]="'billing.create_promo_code' | translate"
+      [attr.aria-expanded]="showCreateForm()"
+      (click)="toggleCreateForm()">
+      @if (showCreateForm()) {
+        {{ 'billing.hide_form' | translate }}
+      } @else {
+        {{ 'billing.create_promo_code' | translate }}
+      }
+    </button>
+  </header>
+
+  <!-- Inline Create Form -->
+  @if (showCreateForm()) {
+    <chora-promo-code-form
+      (created)="onPromoCreated()"
+      (cancelled)="toggleCreateForm()"
+    />
+  }
+
+  <!-- Loading -->
+  @if (promoCodeState().status === 'loading') {
+    <div class="promo-code-manager__loading" data-testid="promo-codes-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="promo-code-manager__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (promoCodeState().status === 'error') {
+    <div class="promo-code-manager__error" data-testid="promo-codes-error" role="alert">
+      <p class="promo-code-manager__error-text">
+        {{ 'billing.promo_codes_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="promo-code-manager__empty" data-testid="promo-codes-empty" role="status">
+      <p class="promo-code-manager__empty-text">
+        {{ 'billing.no_promo_codes' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Promo Code Table -->
+  @if (promoCodeState().status === 'success' && !isEmpty()) {
+    <div class="promo-code-manager__table-wrapper" data-testid="promo-code-table-wrapper">
+      <table
+        class="promo-code-manager__table"
+        role="table"
+        [attr.aria-label]="'billing.promo_codes_title' | translate">
+        <thead>
+          <tr role="row">
+            <th class="promo-code-manager__th" role="columnheader" scope="col">
+              {{ 'billing.code' | translate }}
+            </th>
+            <th class="promo-code-manager__th" role="columnheader" scope="col">
+              {{ 'billing.discount' | translate }}
+            </th>
+            <th class="promo-code-manager__th" role="columnheader" scope="col">
+              {{ 'billing.usage' | translate }}
+            </th>
+            <th class="promo-code-manager__th" role="columnheader" scope="col">
+              {{ 'billing.valid_period' | translate }}
+            </th>
+            <th class="promo-code-manager__th" role="columnheader" scope="col">
+              {{ 'billing.status' | translate }}
+            </th>
+            <th class="promo-code-manager__th" role="columnheader" scope="col">
+              {{ 'billing.actions' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (promo of promoCodes(); track promo.id) {
+            <tr
+              class="promo-code-manager__row"
+              role="row"
+              [attr.data-testid]="'promo-' + promo.id">
+              <td class="promo-code-manager__cell promo-code-manager__cell--code" role="cell">
+                {{ promo.code }}
+              </td>
+              <td class="promo-code-manager__cell" role="cell">
+                {{ discountDisplay(promo) }}
+              </td>
+              <td class="promo-code-manager__cell" role="cell">
+                {{ usageDisplay(promo) }}
+              </td>
+              <td class="promo-code-manager__cell" role="cell">
+                {{ formatDate(promo.valid_from) }} &ndash; {{ formatDate(promo.valid_until) }}
+              </td>
+              <td class="promo-code-manager__cell" role="cell">
+                <span
+                  class="promo-code-manager__badge"
+                  [class]="statusClass(promo)"
+                  [attr.data-testid]="'promo-status-' + promo.id">
+                  {{ statusLabel(promo) | translate }}
+                </span>
+              </td>
+              <td class="promo-code-manager__cell" role="cell">
+                @if (canRevoke(promo)) {
+                  <button
+                    type="button"
+                    class="promo-code-manager__btn promo-code-manager__btn--danger"
+                    [attr.data-testid]="'btn-revoke-' + promo.id"
+                    [attr.aria-label]="'billing.revoke_promo_code' | translate"
+                    (click)="revokePromoCode(promo.id)">
+                    {{ 'billing.revoke' | translate }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

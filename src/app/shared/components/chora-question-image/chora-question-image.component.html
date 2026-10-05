@@ -1,0 +1,91 @@
+@if (hasSrc()) {
+  <figure class="chora-question-image" [attr.data-testid]="testId('figure')">
+    @if (caption(); as cap) {
+      <figcaption class="chora-question-image__caption">{{ cap }}</figcaption>
+    }
+
+    @if (errored()) {
+      <!-- FAIL-LOUD broken state — the error is shown, never swallowed. -->
+      <div
+        class="chora-question-image__broken"
+        role="img"
+        [attr.aria-label]="alt()"
+        [attr.data-testid]="testId('broken')">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <span class="chora-question-image__broken-text">
+          {{ 'shared.question_image.load_failed' | translate }}
+        </span>
+        @if (alt()) {
+          <span class="chora-question-image__broken-alt">{{ alt() }}</span>
+        }
+      </div>
+    } @else {
+      <button
+        type="button"
+        class="chora-question-image__trigger"
+        [class.is-loading]="!loaded()"
+        [class.is-zoomable]="canZoom()"
+        [disabled]="!canZoom()"
+        (click)="openZoom()"
+        [attr.aria-label]="
+          canZoom()
+            ? ('shared.question_image.expand' | translate) +
+              (alt() ? ': ' + alt() : '')
+            : alt() || null
+        "
+        [attr.data-testid]="testId('trigger')">
+        <img
+          class="chora-question-image__img"
+          [src]="src()"
+          [alt]="alt()"
+          [style.max-width]="maxWidthStyle()"
+          [style.max-height]="maxHeightStyle()"
+          (load)="onLoad($event)"
+          (error)="onError()"
+          [attr.data-testid]="testId('img')" />
+
+        @if (canZoom()) {
+          <span class="chora-question-image__expand-hint" aria-hidden="true">
+            <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+          </span>
+        }
+      </button>
+
+      @if (!loaded()) {
+        <div
+          class="chora-question-image__loading"
+          [attr.data-testid]="testId('loading')"
+          [attr.aria-label]="'shared.question_image.loading' | translate">
+          <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        </div>
+      }
+    }
+  </figure>
+
+  @if (zoomed()) {
+    <div
+      #lightboxPanel
+      class="chora-question-image__lightbox"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="alt() || (caption() ?? '')"
+      tabindex="-1"
+      (click)="closeZoom()"
+      (keydown)="onLightboxKeydown($event)"
+      [attr.data-testid]="testId('lightbox')">
+      <button
+        type="button"
+        class="chora-question-image__lightbox-close"
+        (click)="closeZoom(); $event.stopPropagation()"
+        [attr.aria-label]="'shared.question_image.close' | translate"
+        [attr.data-testid]="testId('close')">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+      <img
+        class="chora-question-image__lightbox-img"
+        [src]="src()"
+        [alt]="alt()"
+        (click)="$event.stopPropagation()" />
+    </div>
+  }
+}

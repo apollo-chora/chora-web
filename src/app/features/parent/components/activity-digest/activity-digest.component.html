@@ -1,0 +1,125 @@
+<section
+  class="activity-digest"
+  role="main"
+  [attr.aria-label]="'parent.activity_digest_title' | translate"
+  data-testid="activity-digest">
+
+  <!-- Page Header -->
+  <header class="activity-digest__header">
+    <h1 class="activity-digest__title" data-testid="digest-title">
+      {{ 'parent.activity_digest_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Loading -->
+  @if (digestState().status === 'loading') {
+    <div class="activity-digest__loading" data-testid="digest-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="activity-digest__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (digestState().status === 'error') {
+    <div class="activity-digest__error" data-testid="digest-error" role="alert">
+      <p class="activity-digest__error-text">
+        {{ 'parent.digests_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- No Digests -->
+  @if (digestState().status === 'success' && !hasDigests()) {
+    <div class="activity-digest__empty" data-testid="digest-empty" role="status">
+      <p class="activity-digest__empty-text">
+        {{ 'parent.no_digests' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Digest List -->
+  @if (digestState().status === 'success' && hasDigests()) {
+    <div class="activity-digest__list" data-testid="digest-list">
+      @for (digest of learnerDigests(); track digest.id) {
+        <article class="activity-digest__card" data-testid="digest-card">
+          <!-- Period -->
+          <header class="activity-digest__card-header">
+            <h2 class="activity-digest__period" data-testid="digest-period">
+              {{ formatPeriod(digest.period_start, digest.period_end) }}
+            </h2>
+            @if (digest.sent_at) {
+              <span class="activity-digest__sent-badge" data-testid="digest-sent">
+                {{ 'parent.digest_sent' | translate }}
+              </span>
+            }
+          </header>
+
+          <!-- Stats Grid -->
+          <div class="activity-digest__stats">
+            <div class="activity-digest__stat" data-testid="stat-atoms">
+              <span class="activity-digest__stat-value">{{ digest.atoms_completed }}</span>
+              <span class="activity-digest__stat-label">
+                {{ 'parent.atoms_completed' | translate }}
+              </span>
+            </div>
+            <div class="activity-digest__stat" data-testid="stat-xp">
+              <span class="activity-digest__stat-value">{{ digest.xp_earned }}</span>
+              <span class="activity-digest__stat-label">
+                {{ 'parent.xp_earned' | translate }}
+              </span>
+            </div>
+            <div class="activity-digest__stat" data-testid="stat-streak">
+              <span class="activity-digest__stat-value">{{ digest.streak_days }}</span>
+              <span class="activity-digest__stat-label">
+                {{ 'parent.streak_days' | translate }}
+              </span>
+            </div>
+            <div class="activity-digest__stat" data-testid="stat-score">
+              <span class="activity-digest__stat-value">{{ formatScore(digest.average_score_pct) }}</span>
+              <span class="activity-digest__stat-label">
+                {{ 'parent.average_score' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Highlights -->
+          @if (digest.highlights.length > 0) {
+            <div class="activity-digest__highlights" data-testid="digest-highlights">
+              <h3 class="activity-digest__highlights-heading">
+                {{ 'parent.highlights' | translate }}
+              </h3>
+              <ul class="activity-digest__highlights-list" role="list">
+                @for (highlight of digest.highlights; track highlight) {
+                  <li class="activity-digest__highlight-item" role="listitem">
+                    {{ highlight }}
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+
+  <!-- Frequency Preferences -->
+  <div class="activity-digest__preferences" data-testid="digest-preferences">
+    <h2 class="activity-digest__preferences-heading">
+      {{ 'parent.digest_frequency' | translate }}
+    </h2>
+    <div class="activity-digest__frequency-options" role="radiogroup" [attr.aria-label]="'parent.digest_frequency' | translate">
+      @for (freq of allFrequencies; track freq) {
+        <button
+          type="button"
+          class="activity-digest__frequency-btn"
+          [class.activity-digest__frequency-btn--active]="preference()?.frequency === freq"
+          [attr.aria-pressed]="preference()?.frequency === freq"
+          [attr.data-testid]="'btn-frequency-' + freq"
+          (click)="updateFrequency(freq)">
+          {{ frequencyLabels[freq] | translate }}
+        </button>
+      }
+    </div>
+  </div>
+</section>

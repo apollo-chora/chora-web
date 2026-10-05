@@ -1,0 +1,313 @@
+<section
+  class="me-assessment surface-aplus"
+  aria-labelledby="me-assessment-heading"
+  data-testid="me-assessment">
+  @switch (detailState().status) {
+    @case ('loading') {
+      <div
+        class="me-assessment__loading glass-panel"
+        role="status"
+        aria-busy="true"
+        data-testid="me-assessment-loading">
+        {{ 'aplus.me_assessments.detail.loading' | translate }}
+      </div>
+    }
+    @case ('error') {
+      <div
+        class="me-assessment__error glass-panel"
+        role="alert"
+        data-testid="me-assessment-load-error">
+        <p>{{ loadErrorKey() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-testid="me-assessment-retry"
+          (click)="retryLoad()">
+          {{ 'aplus.me_assessments.detail.retry' | translate }}
+        </button>
+      </div>
+    }
+    @case ('success') {
+      @if (detail(); as d) {
+        @if (!inCanvas()) {
+          <article class="me-assessment__cover glass-panel">
+            <header class="me-assessment__cover-header">
+              <h1
+                id="me-assessment-heading"
+                class="me-assessment__cover-title"
+                data-testid="me-assessment-cover-title">
+                {{ d.title }}
+              </h1>
+
+              <div
+                class="me-assessment__cover-meta"
+                data-testid="me-assessment-cover-meta">
+                <!-- Row 1: schedule (open + close) — 2 wide cards with
+                     formatted local-timezone datetimes. Pre-fix these
+                     emitted raw ISO strings that overflowed the cell. -->
+                <chora-stat-card
+                  class="me-assessment__cover-meta-window"
+                  [label]="'aplus.me_assessments.detail.window_open' | translate"
+                  [value]="(d.scheduled_open_at | date:'medium') ?? d.scheduled_open_at"
+                  valueTestid="me-assessment-cover-open" />
+                <chora-stat-card
+                  class="me-assessment__cover-meta-window"
+                  [label]="'aplus.me_assessments.detail.window_close' | translate"
+                  [value]="(d.scheduled_close_at | date:'medium') ?? d.scheduled_close_at"
+                  valueTestid="me-assessment-cover-close" />
+
+                <!-- Row 2: numeric stats — 3 compact cards. -->
+                <chora-stat-card
+                  class="me-assessment__cover-meta-stat"
+                  [label]="'aplus.me_assessments.detail.questions' | translate"
+                  [value]="d.question_count ?? d.questions.length"
+                  accent="primary"
+                  valueTestid="me-assessment-cover-questions" />
+                <chora-stat-card
+                  class="me-assessment__cover-meta-stat"
+                  [label]="'aplus.me_assessments.detail.total_points' | translate"
+                  [value]="d.total_points ?? 0"
+                  [state]="d.total_points === null ? 'pending' : 'value'"
+                  accent="primary"
+                  valueTestid="me-assessment-cover-total-points" />
+                <chora-stat-card
+                  class="me-assessment__cover-meta-stat"
+                  [label]="'aplus.me_assessments.detail.attempts' | translate"
+                  [value]="d.learner_attempt_count + ' / ' + d.max_attempts"
+                  valueTestid="me-assessment-cover-attempts" />
+              </div>
+            </header>
+
+            @if (showViewResultCta()) {
+              <a
+                class="btn btn-primary me-assessment__start"
+                data-testid="me-assessment-view-result"
+                [routerLink]="resultHref()">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'aplus.me_assessments.detail.view_result_cta' | translate }}
+              </a>
+            }
+            @switch (startState().status) {
+              @case ('idle') {
+                @if (showStartCta()) {
+                  <button
+                    type="button"
+                    class="btn btn-primary me-assessment__start"
+                    (click)="startSession()"
+                    data-testid="me-assessment-start">
+                    <i class="fa-solid fa-play" aria-hidden="true"></i>
+                    {{ 'aplus.me_assessments.detail.start_cta' | translate }}
+                  </button>
+                }
+              }
+              @case ('starting') {
+                <p
+                  class="me-assessment__starting"
+                  role="status"
+                  aria-busy="true"
+                  data-testid="me-assessment-starting">
+                  {{ 'aplus.me_assessments.detail.starting' | translate }}
+                </p>
+              }
+              @case ('error') {
+                @if (!showViewResultCta()) {
+                <div
+                  class="me-assessment__start-error"
+                  role="alert"
+                  data-testid="me-assessment-start-error">
+                  <p>{{ startErrorKey() | translate }}</p>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="startSession()"
+                    data-testid="me-assessment-start-retry">
+                    {{ 'aplus.me_assessments.detail.retry' | translate }}
+                  </button>
+                </div>
+                }
+              }
+            }
+
+            <!-- CHO-2182: non-OPEN windows show their state, never a dead Start.
+                 SCHEDULED surfaces the open time; CLOSED/GRADING/GRADED/RELEASED
+                 surface a state chip mirroring the list card. -->
+            @if (showScheduledState()) {
+              <div
+                class="me-assessment__state"
+                role="status"
+                data-testid="me-assessment-scheduled">
+                <span
+                  class="me-assessment__state-chip"
+                  data-attempt-status="SCHEDULED">
+                  {{ 'aplus.me_assessments.detail.state_scheduled' | translate }}
+                </span>
+                <p class="me-assessment__state-note">
+                  {{ 'aplus.me_assessments.detail.scheduled_note' | translate }}
+                  {{ (d.scheduled_open_at | date:'medium') ?? d.scheduled_open_at }}
+                </p>
+              </div>
+            } @else if (showClosedState()) {
+              <div
+                class="me-assessment__state"
+                role="status"
+                data-testid="me-assessment-state">
+                <span
+                  class="me-assessment__state-chip"
+                  [attr.data-attempt-status]="d.state">
+                  {{ coverStateKey() | translate }}
+                </span>
+              </div>
+            }
+          </article>
+        } @else {
+          <article
+            class="me-assessment__canvas glass-panel"
+            data-testid="me-assessment-canvas">
+            <header class="me-assessment__canvas-header">
+              <h1
+                id="me-assessment-heading"
+                class="me-assessment__canvas-title">
+                {{ d.title }}
+              </h1>
+              <span
+                class="me-assessment__autosave-pill"
+                role="status"
+                aria-live="polite"
+                data-testid="me-assessment-autosave-pill"
+                [attr.data-state]="autosavePillState()">
+                @switch (autosavePillState()) {
+                  @case ('idle') {
+                    {{ 'aplus.me_assessments.detail.autosave_idle' | translate }}
+                  }
+                  @case ('saving') {
+                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                    {{ 'aplus.me_assessments.detail.autosave_saving' | translate }}
+                  }
+                  @case ('saved') {
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    {{ 'aplus.me_assessments.detail.autosave_saved' | translate }}
+                    <code>{{ (autosavePillSavedAt() | date:'mediumTime') ?? autosavePillSavedAt() }}</code>
+                  }
+                  @case ('error') {
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    {{ autosavePillErrorKey() | translate }}
+                  }
+                }
+              </span>
+            </header>
+
+            <ol class="me-assessment__questions">
+              @for (q of d.questions; track trackQuestion($index, q)) {
+                <li
+                  class="me-assessment__question"
+                  [attr.data-testid]="'me-assessment-question-' + q.test_set_question_id"
+                  [attr.data-question-type]="q.question_type">
+                  <header class="me-assessment__question-header">
+                    <span class="me-assessment__question-no">
+                      {{ q.display_order }}
+                    </span>
+                    <h2
+                      class="me-assessment__question-prompt"
+                      [attr.id]="'me-assessment-stem-' + q.test_set_question_id"
+                      data-testid="me-assessment-question-prompt">
+                      {{ promptStem(q) }}
+                    </h2>
+                    <span class="me-assessment__question-points">
+                      {{ questionPoints(q) }}
+                      {{ 'aplus.me_assessments.detail.points_short' | translate }}
+                    </span>
+                  </header>
+
+                  @if (questionImageUrl(q); as imageUrl) {
+                    <chora-question-image
+                      [src]="imageUrl"
+                      alt="Generated question illustration"
+                      [testIdPrefix]="'me-assessment-question-image-' + q.test_set_question_id" />
+                  }
+
+                  @if (isMcqQuestion(q) && hasMcqOptions(q)) {
+                    <ul class="me-assessment__mcq" role="radiogroup">
+                      @for (opt of mcqOptions(q); track trackOption($index, opt); let i = $index) {
+                        <li>
+                          <chora-mcq-option
+                            mode="interactive"
+                            [marker]="optionLetter(i)"
+                            [text]="optionDisplay(opt)"
+                            [selected]="isMcqSelected(q, opt.option_id)"
+                            [stemElementId]="'me-assessment-stem-' + q.test_set_question_id"
+                            [testId]="'me-assessment-mcq-option-' + q.test_set_question_id + '-' + opt.option_id"
+                            (pick)="selectMcq(q, opt.option_id)" />
+                        </li>
+                      }
+                    </ul>
+                  }
+
+                  @if (isOeQuestion(q)) {
+                    <textarea
+                      class="me-assessment__oe"
+                      rows="6"
+                      [attr.data-testid]="'me-assessment-oe-' + q.test_set_question_id"
+                      [attr.aria-label]="'aplus.me_assessments.detail.oe_label' | translate"
+                      [value]="oeValue(q)"
+                      (input)="updateOe(q, $any($event.target).value)">
+                    </textarea>
+                  }
+                </li>
+              }
+            </ol>
+
+            <footer class="me-assessment__canvas-footer">
+              @switch (submitFinalState().status) {
+                @case ('idle') {
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    (click)="submitFinal()"
+                    data-testid="me-assessment-submit">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                    {{ 'aplus.me_assessments.detail.submit_cta' | translate }}
+                  </button>
+                }
+                @case ('submitting') {
+                  <p
+                    class="me-assessment__submitting"
+                    role="status"
+                    aria-busy="true"
+                    data-testid="me-assessment-submitting">
+                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                    {{ 'aplus.me_assessments.detail.submitting' | translate }}
+                  </p>
+                }
+                @case ('submitted') {
+                  <a
+                    class="btn btn-primary"
+                    [routerLink]="resultHref()"
+                    [attr.href]="resultHref()"
+                    data-testid="me-assessment-go-result">
+                    {{ 'aplus.me_assessments.detail.go_result' | translate }}
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                  </a>
+                }
+                @case ('error') {
+                  <div
+                    class="me-assessment__submit-error"
+                    role="alert"
+                    data-testid="me-assessment-submit-error">
+                    <p>{{ submitErrorKey() | translate }}</p>
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      (click)="submitFinal()"
+                      data-testid="me-assessment-submit-retry">
+                      {{ 'aplus.me_assessments.detail.retry' | translate }}
+                    </button>
+                  </div>
+                }
+              }
+            </footer>
+          </article>
+        }
+      }
+    }
+  }
+</section>

@@ -1,0 +1,269 @@
+:host {
+  display: block;
+}
+
+.assessment-list {
+  padding: var(--chora-space-lg, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg, 24px);
+
+  &__header {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--chora-space-md, 16px);
+    flex-wrap: wrap;
+  }
+
+  &__header-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__subtitle {
+    color: var(--chora-color-text-muted, #6b7280);
+    margin: 0;
+  }
+
+  // "+ New assessment" CTA — anchor styled as a primary button.
+  // Matches the A+ test-set-list new-cta pattern. Tablet-first;
+  // wraps below the title text on narrow viewports via header flex-wrap.
+  &__new-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--primary, #1976d2);
+    color: #fff;
+    text-decoration: none;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 160ms ease-out, transform 160ms ease-out;
+    flex: 0 0 auto;
+    white-space: nowrap;
+
+    &::before {
+      content: '+';
+      font-size: 1.1em;
+      line-height: 1;
+      margin-right: 0.15em;
+    }
+
+    &:hover {
+      background: var(--primary-hover, #1565c0);
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary, #1976d2);
+      outline-offset: 2px;
+    }
+  }
+
+  &__loading,
+  &__error,
+  &__empty,
+  &__filter-empty {
+    padding: var(--chora-space-lg, 24px);
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+    text-align: center;
+  }
+
+  &__error {
+    background: var(--chora-color-danger-surface, rgba(220, 38, 38, 0.08));
+    color: var(--chora-color-danger, #dc2626);
+  }
+
+  &__retry {
+    margin-top: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-sm, 4px);
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__chip {
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border-radius: 999px;
+    border: 1px solid var(--chora-color-border, rgba(255, 255, 255, 0.16));
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+
+    &--active {
+      background: var(--chora-color-primary, #5b7fff);
+      color: var(--chora-color-on-primary, #fff);
+      border-color: transparent;
+    }
+  }
+
+  // ── Search ─────────────────────────────────────────────────────────
+  &__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    max-width: 420px;
+
+    > i {
+      position: absolute;
+      left: 0.85rem;
+      color: var(--chora-color-text-muted, #6b7280);
+      font-size: 0.8rem;
+      pointer-events: none;
+    }
+  }
+
+  &__search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px)
+      var(--chora-space-sm, 8px) 2.2rem;
+    border: 1px solid var(--chora-color-border, rgba(255, 255, 255, 0.16));
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+    color: inherit;
+    font: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #5b7fff);
+      outline-offset: 1px;
+      border-color: var(--chora-color-primary, #5b7fff);
+    }
+  }
+
+  // ── One assessment per row ─────────────────────────────────────────
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__row {
+    border: 1px solid var(--chora-color-border, rgba(255, 255, 255, 0.16));
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+    transition: transform 0.12s ease-in-out, border-color 0.12s ease-in-out;
+
+    &:hover {
+      transform: translateY(-1px);
+      border-color: var(--chora-color-primary, #5b7fff);
+    }
+  }
+
+  &__row-link {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+    padding: var(--chora-space-md, 16px);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &__row-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__row-titles {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    flex-wrap: wrap;
+  }
+
+  &__row-title {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__pill {
+    flex-shrink: 0;
+    padding: 2px var(--chora-space-sm, 8px);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__row-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem var(--chora-space-lg, 24px);
+    margin: 0;
+  }
+
+  &__row-meta-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--chora-space-xs, 4px);
+    font-size: 0.85rem;
+
+    > dt {
+      color: var(--chora-color-text-muted, #6b7280);
+      margin: 0;
+    }
+
+    > dd {
+      margin: 0;
+      color: var(--chora-color-text, inherit);
+      font-weight: 600;
+    }
+  }
+
+  &__row-chevron {
+    flex: 0 0 auto;
+    color: var(--chora-color-text-muted, #6b7280);
+    font-size: 0.8rem;
+  }
+
+  &__load-more {
+    align-self: center;
+    margin-top: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-lg, 24px);
+    border-radius: var(--chora-radius-md, 8px);
+    border: 1px solid var(--chora-color-border, rgba(255, 255, 255, 0.16));
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+
+    &:hover {
+      border-color: var(--chora-color-primary, #5b7fff);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #5b7fff);
+      outline-offset: 2px;
+    }
+  }
+}

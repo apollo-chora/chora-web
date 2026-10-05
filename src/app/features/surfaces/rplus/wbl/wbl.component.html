@@ -1,0 +1,385 @@
+<section
+  class="surface-rplus wbl"
+  data-testid="rplus-wbl">
+  <header class="wbl__header glass-panel">
+    <div class="wbl__breadcrumb">
+      <span>{{ 'rplus.wbl.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.wbl.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <div class="wbl__title-row">
+      <h1 class="wbl__title">
+        {{ 'rplus.wbl.title' | translate }}
+      </h1>
+      <span
+        class="wbl__tenant-pill"
+        data-testid="wbl-tenant">
+        <i class="fa-solid fa-building" aria-hidden="true"></i>
+        {{ 'rplus.wbl.tenant_label' | translate }}:
+        <strong>{{ tenantName() }}</strong>
+      </span>
+    </div>
+    <div class="wbl__meta">
+      <span
+        class="wbl__total"
+        data-testid="wbl-total">
+        <strong>{{ totalPlacements() }}</strong>
+        {{ totalCountLabelKey() | translate }}
+      </span>
+      <button
+        type="button"
+        class="btn btn-primary wbl__create-cta"
+        data-testid="wbl-create-cta"
+        (click)="onCompose()"
+        [attr.aria-expanded]="composerOpen()"
+        [attr.aria-controls]="'wbl-composer-panel'"
+        [attr.aria-label]="'rplus.wbl.create_aria' | translate">
+        <i class="fa-solid fa-briefcase" aria-hidden="true"></i>
+        {{ 'rplus.wbl.create_cta' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (composerOpen()) {
+    <section
+      id="wbl-composer-panel"
+      class="wbl__composer glass-panel"
+      data-testid="wbl-composer"
+      [attr.aria-label]="'rplus.wbl.composer.title' | translate">
+      <header class="wbl__composer-head">
+        <h2 class="wbl__composer-title">
+          {{ 'rplus.wbl.composer.title' | translate }}
+        </h2>
+        <p class="wbl__composer-subtitle">
+          {{ 'rplus.wbl.composer.subtitle' | translate }}
+        </p>
+      </header>
+
+      @if (composerError(); as msg) {
+        <p
+          class="wbl__composer-error"
+          role="alert"
+          data-testid="wbl-composer-error">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{ msg }}
+        </p>
+      }
+
+      <form
+        class="wbl__composer-form"
+        [formGroup]="draft"
+        (ngSubmit)="onSubmit()"
+        data-testid="wbl-composer-form">
+        <div class="wbl__composer-field">
+          <label for="wbl-composer-gcid">
+            {{ 'rplus.wbl.fields.gcid' | translate }}
+            <span class="wbl__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="wbl-composer-gcid"
+            type="text"
+            data-testid="wbl-composer-gcid"
+            formControlName="gcid"
+            autocomplete="off"
+            [attr.aria-required]="true" />
+        </div>
+
+        <div class="wbl__composer-field">
+          <label for="wbl-composer-course">
+            {{ 'rplus.wbl.fields.course_id' | translate }}
+            <span class="wbl__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="wbl-composer-course"
+            type="text"
+            data-testid="wbl-composer-course"
+            formControlName="course_id"
+            autocomplete="off"
+            [attr.aria-required]="true" />
+        </div>
+
+        <div class="wbl__composer-field wbl__composer-field--wide">
+          <label for="wbl-composer-host">
+            {{ 'rplus.wbl.fields.host_org_name' | translate }}
+            <span class="wbl__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="wbl-composer-host"
+            type="text"
+            data-testid="wbl-composer-host"
+            formControlName="host_org_name"
+            autocomplete="organization"
+            [attr.aria-required]="true" />
+        </div>
+
+        <div class="wbl__composer-field wbl__composer-field--wide">
+          <label for="wbl-composer-role">
+            {{ 'rplus.wbl.fields.role_title' | translate }}
+          </label>
+          <input
+            id="wbl-composer-role"
+            type="text"
+            data-testid="wbl-composer-role"
+            formControlName="role_title"
+            autocomplete="off" />
+          <small class="wbl__composer-help">
+            {{ 'rplus.wbl.fields.role_title_help' | translate }}
+          </small>
+        </div>
+
+        <div class="wbl__composer-field">
+          <label for="wbl-composer-start">
+            {{ 'rplus.wbl.fields.start_date' | translate }}
+            <span class="wbl__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="wbl-composer-start"
+            type="date"
+            data-testid="wbl-composer-start"
+            formControlName="start_date"
+            [attr.aria-required]="true" />
+        </div>
+
+        <div class="wbl__composer-field">
+          <label for="wbl-composer-end">
+            {{ 'rplus.wbl.fields.end_date' | translate }}
+            <span class="wbl__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="wbl-composer-end"
+            type="date"
+            data-testid="wbl-composer-end"
+            formControlName="end_date"
+            [attr.aria-required]="true" />
+        </div>
+
+        <div class="wbl__composer-field">
+          <label for="wbl-composer-supervisor">
+            {{ 'rplus.wbl.fields.supervisor_name' | translate }}
+            <span class="wbl__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="wbl-composer-supervisor"
+            type="text"
+            data-testid="wbl-composer-supervisor"
+            formControlName="supervisor_name"
+            autocomplete="name"
+            [attr.aria-required]="true" />
+        </div>
+
+        <div class="wbl__composer-field">
+          <label for="wbl-composer-supervisor-email">
+            {{ 'rplus.wbl.fields.supervisor_email' | translate }}
+            <span class="wbl__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="wbl-composer-supervisor-email"
+            type="email"
+            data-testid="wbl-composer-supervisor-email"
+            formControlName="supervisor_email"
+            autocomplete="email"
+            [attr.aria-required]="true" />
+        </div>
+
+        <div class="wbl__composer-field">
+          <label for="wbl-composer-hours">
+            {{ 'rplus.wbl.fields.hours_required' | translate }}
+            <span class="wbl__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="wbl-composer-hours"
+            type="number"
+            min="1"
+            data-testid="wbl-composer-hours"
+            formControlName="hours_required"
+            [attr.aria-required]="true" />
+        </div>
+
+        <div class="wbl__composer-actions">
+          <button
+            type="submit"
+            class="btn btn-primary wbl__composer-submit"
+            data-testid="wbl-composer-submit"
+            [disabled]="submitting() || draft.invalid">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'rplus.wbl.composer.submit_cta' | translate }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost wbl__composer-cancel"
+            data-testid="wbl-composer-cancel"
+            (click)="onCancel()"
+            [disabled]="submitting()">
+            {{ 'rplus.wbl.composer.cancel_cta' | translate }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  @if (hasItems()) {
+    <div class="wbl__search">
+      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+      <input
+        type="search"
+        class="wbl__search-input"
+        data-testid="wbl-search"
+        [value]="searchQuery()"
+        (input)="onSearchInput($any($event.target).value)"
+        [attr.placeholder]="'rplus.wbl.search_placeholder' | translate"
+        [attr.aria-label]="'rplus.wbl.search_label' | translate" />
+    </div>
+  }
+
+  <div class="wbl__list" role="list">
+    @for (p of visibleItems(); track p.id) {
+      <article
+        class="wbl__row glass-panel"
+        role="listitem"
+        [attr.data-testid]="'wbl-row-' + p.id">
+        <div class="wbl__row-head">
+          <span
+            class="badge"
+            [class]="'badge ' + badge(p.state)"
+            [attr.data-testid]="'wbl-state-' + p.id">
+            {{ p.state }}
+          </span>
+          <h2 class="wbl__row-host">
+            <i class="fa-solid fa-building-user" aria-hidden="true"></i>
+            {{ p.hostOrgName }}
+          </h2>
+          <code class="wbl__placement-id">{{ p.id }}</code>
+        </div>
+
+        <dl class="wbl__details">
+          <div class="wbl__detail">
+            <dt>{{ 'rplus.wbl.col.learner' | translate }}</dt>
+            <dd [attr.data-testid]="'wbl-learner-' + p.id">
+              {{ p.learnerName || p.gcid }}
+            </dd>
+          </div>
+          <div class="wbl__detail">
+            <dt>{{ 'rplus.wbl.col.course' | translate }}</dt>
+            <dd [attr.data-testid]="'wbl-course-' + p.id">
+              {{ p.courseTitle || p.courseId }}
+            </dd>
+          </div>
+          <div class="wbl__detail">
+            <dt>{{ 'rplus.wbl.col.supervisor' | translate }}</dt>
+            <dd>{{ p.supervisorName }}</dd>
+          </div>
+          <div class="wbl__detail">
+            <dt>{{ 'rplus.wbl.col.supervisor_email' | translate }}</dt>
+            <dd>
+              <a
+                class="wbl__email"
+                [href]="'mailto:' + p.supervisorEmail">{{ p.supervisorEmail }}</a>
+            </dd>
+          </div>
+          <div class="wbl__detail">
+            <dt>{{ 'rplus.wbl.col.start_date' | translate }}</dt>
+            <dd>
+              <time
+                [attr.datetime]="p.startDate"
+                [attr.data-testid]="'wbl-start-' + p.id"
+                >{{ p.startDate | date: 'd MMM y' : 'UTC' }}</time>
+            </dd>
+          </div>
+          <div class="wbl__detail">
+            <dt>{{ 'rplus.wbl.col.end_date' | translate }}</dt>
+            <dd>
+              <time
+                [attr.datetime]="p.endDate"
+                [attr.data-testid]="'wbl-end-' + p.id"
+                >{{ p.endDate | date: 'd MMM y' : 'UTC' }}</time>
+            </dd>
+          </div>
+          <div class="wbl__detail wbl__detail--wide">
+            <dt>{{ 'rplus.wbl.col.hours' | translate }}</dt>
+            <dd>
+              <span
+                class="wbl__hours"
+                [attr.data-testid]="'wbl-hours-' + p.id">
+                {{ p.hoursCompleted }} / {{ p.hoursRequired }}
+                {{ 'rplus.wbl.hours_unit' | translate }}
+              </span>
+              <div
+                class="wbl__progress"
+                role="progressbar"
+                [attr.aria-label]="'rplus.wbl.progress_aria' | translate"
+                [attr.aria-valuenow]="p.completionPct"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                [attr.data-testid]="'wbl-progress-' + p.id">
+                <span
+                  class="wbl__progress-fill surface-accent-bg"
+                  [style.--wbl-progress]="p.completionPct + '%'"
+                  [style.width]="p.completionPct + '%'"></span>
+              </div>
+            </dd>
+          </div>
+          @if (p.evaluatorNotes) {
+            <div class="wbl__detail wbl__detail--wide">
+              <dt>{{ 'rplus.wbl.col.evaluator_notes' | translate }}</dt>
+              <dd class="wbl__notes">{{ p.evaluatorNotes }}</dd>
+            </div>
+          }
+        </dl>
+
+        <footer class="wbl__row-foot">
+          <span class="wbl__updated">
+            <i class="fa-solid fa-clock" aria-hidden="true"></i>
+            {{ 'rplus.wbl.updated_at' | translate }}:
+            <time
+              [attr.datetime]="p.updatedAt"
+              [attr.data-testid]="'wbl-updated-' + p.id"
+              >{{ p.updatedAt | date: 'medium' : 'UTC' }}</time>
+          </span>
+          <div class="wbl__actions">
+            <button
+              type="button"
+              class="btn btn-ghost wbl__action"
+              [attr.data-testid]="'wbl-withdraw-' + p.id"
+              [disabled]="
+                p.state === 'WITHDRAWN' ||
+                p.state === 'COMPLETED' ||
+                withdrawing()
+              "
+              (click)="onWithdrawClicked(p.id)"
+              [attr.aria-label]="'rplus.wbl.withdraw_aria' | translate">
+              <i class="fa-solid fa-ban" aria-hidden="true"></i>
+              {{ 'rplus.wbl.withdraw_cta' | translate }}
+            </button>
+          </div>
+        </footer>
+      </article>
+    } @empty {
+      @if (noMatch()) {
+        <p
+          class="wbl__empty glass-panel"
+          data-testid="wbl-no-match">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          {{ 'rplus.wbl.no_match' | translate }}
+        </p>
+      } @else {
+        <p
+          class="wbl__empty glass-panel"
+          data-testid="wbl-empty">
+          <i class="fa-solid fa-briefcase" aria-hidden="true"></i>
+          {{ 'rplus.wbl.empty' | translate }}
+        </p>
+      }
+    }
+  </div>
+  @if (hasMore()) {
+    <button
+      type="button"
+      class="wbl__load-more"
+      data-testid="wbl-load-more"
+      (click)="loadMore()">
+      {{ 'rplus.wbl.load_more' | translate }}
+    </button>
+  }
+</section>

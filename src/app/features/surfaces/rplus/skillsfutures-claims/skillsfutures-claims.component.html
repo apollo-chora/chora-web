@@ -1,0 +1,189 @@
+<section
+  class="surface-rplus skillsfutures-claims"
+  data-testid="rplus-skillsfutures-claims">
+  <header class="skillsfutures-claims__header glass-panel">
+    <div class="skillsfutures-claims__breadcrumb">
+      <span>{{ 'rplus.skillsfuturesClaims.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.skillsfuturesClaims.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <div class="skillsfutures-claims__title-row">
+      <h1 class="skillsfutures-claims__title">
+        {{ 'rplus.skillsfuturesClaims.title' | translate }}
+      </h1>
+      <span class="skillsfutures-claims__sf-pill" data-testid="skillsfutures-claims-pill">
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        {{ 'rplus.skillsfuturesClaims.sf_aligned' | translate }}
+      </span>
+    </div>
+    <p class="skillsfutures-claims__subtitle">
+      {{ 'rplus.skillsfuturesClaims.subtitle' | translate }}
+    </p>
+    <div class="skillsfutures-claims__meta">
+      <span
+        class="skillsfutures-claims__tenant-pill"
+        data-testid="skillsfutures-claims-tenant">
+        <i class="fa-solid fa-building" aria-hidden="true"></i>
+        {{ 'rplus.skillsfuturesClaims.tenant_label' | translate }}:
+        <strong>{{ tenantName() }}</strong>
+      </span>
+      <span
+        class="skillsfutures-claims__total"
+        data-testid="skillsfutures-claims-total">
+        <strong>{{ totalClaims() }}</strong>
+        {{ 'rplus.skillsfuturesClaims.total_label' | translate }}
+      </span>
+    </div>
+
+    <div class="skillsfutures-claims__filter">
+      <label
+        for="skillsfutures-claims-state-filter"
+        class="skillsfutures-claims__filter-label">
+        {{ 'rplus.skillsfuturesClaims.filter_label' | translate }}
+      </label>
+      <select
+        id="skillsfutures-claims-state-filter"
+        class="skillsfutures-claims__filter-select"
+        data-testid="skillsfutures-claims-state-filter"
+        [attr.aria-label]="'rplus.skillsfuturesClaims.filter_aria' | translate"
+        (change)="onStateFilterChanged($any($event.target).value)">
+        <option value="">
+          {{ 'rplus.skillsfuturesClaims.filter_all' | translate }}
+        </option>
+        @for (s of stateOptions; track s) {
+          <option [value]="s" [selected]="stateFilter() === s">
+            {{ 'rplus.skillsfuturesClaims.state.' + s | translate }}
+          </option>
+        }
+      </select>
+    </div>
+  </header>
+
+  <div class="skillsfutures-claims__list">
+    @for (claim of claims(); track claim.id) {
+      <article
+        class="skillsfutures-claims__row glass-panel"
+        [attr.data-testid]="'skillsfutures-claims-row-' + claim.id">
+        <div class="skillsfutures-claims__row-head">
+          <span
+            class="badge"
+            [class]="'badge ' + badge(claim.state)"
+            [attr.data-testid]="'skillsfutures-claims-state-' + claim.id">
+            {{ 'rplus.skillsfuturesClaims.state.' + claim.state | translate }}
+          </span>
+          <code class="skillsfutures-claims__claim-id">{{ claim.id }}</code>
+        </div>
+
+        <dl class="skillsfutures-claims__details">
+          <div class="skillsfutures-claims__detail">
+            <dt>{{ 'rplus.skillsfuturesClaims.col.learner' | translate }}</dt>
+            <dd>{{ claim.gcid }}</dd>
+          </div>
+          <div class="skillsfutures-claims__detail">
+            <dt>{{ 'rplus.skillsfuturesClaims.col.course' | translate }}</dt>
+            <dd>{{ claim.courseId }}</dd>
+          </div>
+          <div class="skillsfutures-claims__detail">
+            <dt>{{ 'rplus.skillsfuturesClaims.col.nric_hash' | translate }}</dt>
+            <dd>
+              <code
+                class="skillsfutures-claims__nric"
+                [attr.title]="claim.nricHash"
+                [attr.aria-label]="'rplus.skillsfuturesClaims.nric_aria' | translate">
+                {{ nric(claim.nricHash) }}
+              </code>
+            </dd>
+          </div>
+          <div class="skillsfutures-claims__detail">
+            <dt>{{ 'rplus.skillsfuturesClaims.col.requested' | translate }}</dt>
+            <dd>
+              <strong
+                [attr.data-testid]="'skillsfutures-claims-requested-' + claim.id">
+                {{ sgd(claim.requestedAmountSGDCents) }}
+              </strong>
+            </dd>
+          </div>
+          <div class="skillsfutures-claims__detail">
+            <dt>{{ 'rplus.skillsfuturesClaims.col.approved' | translate }}</dt>
+            <dd>
+              @if (claim.state === 'APPROVED' || claim.state === 'DISBURSED') {
+                <strong
+                  [attr.data-testid]="'skillsfutures-claims-approved-' + claim.id">
+                  {{ sgd(claim.approvedAmountSGDCents) }}
+                </strong>
+              } @else {
+                <span class="skillsfutures-claims__muted">-</span>
+              }
+            </dd>
+          </div>
+          <div class="skillsfutures-claims__detail">
+            <dt>{{ 'rplus.skillsfuturesClaims.col.submitted_at' | translate }}</dt>
+            <dd>
+              <time [attr.datetime]="claim.submittedAt">
+                {{ claim.submittedAt }}
+              </time>
+            </dd>
+          </div>
+          @if (claim.decidedAt) {
+            <div class="skillsfutures-claims__detail">
+              <dt>{{ 'rplus.skillsfuturesClaims.col.decided_at' | translate }}</dt>
+              <dd>
+                <time [attr.datetime]="claim.decidedAt">
+                  {{ claim.decidedAt }}
+                </time>
+              </dd>
+            </div>
+          }
+          @if (claim.decidedByGCID) {
+            <div class="skillsfutures-claims__detail">
+              <dt>{{ 'rplus.skillsfuturesClaims.col.decided_by' | translate }}</dt>
+              <dd>{{ claim.decidedByGCID }}</dd>
+            </div>
+          }
+          @if (claim.rejectionReason) {
+            <div class="skillsfutures-claims__detail skillsfutures-claims__detail--wide">
+              <dt>{{ 'rplus.skillsfuturesClaims.col.rejection_reason' | translate }}</dt>
+              <dd
+                [attr.data-testid]="'skillsfutures-claims-reason-' + claim.id">
+                {{ claim.rejectionReason }}
+              </dd>
+            </div>
+          }
+        </dl>
+
+        @if (claim.state === 'PENDING') {
+          <footer class="skillsfutures-claims__row-foot">
+            <div class="skillsfutures-claims__actions">
+              <button
+                type="button"
+                class="btn btn-primary skillsfutures-claims__action"
+                [attr.data-testid]="'skillsfutures-claims-approve-' + claim.id"
+                (click)="onApproveClicked(claim.id)"
+                [attr.aria-label]="'rplus.skillsfuturesClaims.approve_aria' | translate">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'rplus.skillsfuturesClaims.approve_cta' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost skillsfutures-claims__action"
+                [attr.data-testid]="'skillsfutures-claims-reject-' + claim.id"
+                (click)="onRejectClicked(claim.id)"
+                [attr.aria-label]="'rplus.skillsfuturesClaims.reject_aria' | translate">
+                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                {{ 'rplus.skillsfuturesClaims.reject_cta' | translate }}
+              </button>
+            </div>
+          </footer>
+        }
+      </article>
+    } @empty {
+      <p
+        class="skillsfutures-claims__empty"
+        data-testid="skillsfutures-claims-empty">
+        {{ 'rplus.skillsfuturesClaims.empty' | translate }}
+      </p>
+    }
+  </div>
+</section>

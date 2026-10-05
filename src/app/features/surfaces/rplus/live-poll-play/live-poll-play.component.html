@@ -1,0 +1,109 @@
+<section
+  class="surface-rplus poll-play"
+  data-testid="rplus-live-poll-play">
+  <header class="poll-play__header glass-panel">
+    <div class="poll-play__title-row">
+      <h1 class="poll-play__title" data-testid="poll-play-title">
+        <i class="fa-solid fa-square-poll-vertical surface-accent-text" aria-hidden="true"></i>
+        {{ 'rplus.livePoll.title' | translate }}
+      </h1>
+      <span
+        class="badge poll-play__conn"
+        [class.poll-play__conn--ok]="connectionState() === 'connected'"
+        [class.poll-play__conn--warn]="
+          connectionState() === 'connecting' ||
+          connectionState() === 'reconnecting'
+        "
+        [class.poll-play__conn--off]="connectionState() === 'closed'"
+        data-testid="poll-play-connection"
+        aria-live="polite">
+        {{ 'rplus.livePoll.connection.' + connectionState() | translate }}
+      </span>
+    </div>
+    <dl class="poll-play__kpis">
+      <div class="poll-play__kpi">
+        <dt>{{ 'rplus.livePoll.kpi_state' | translate }}</dt>
+        <dd data-testid="poll-play-state">
+          {{ 'rplus.livePoll.state.' + state() | translate }}
+        </dd>
+      </div>
+      <div class="poll-play__kpi">
+        <dt>{{ 'rplus.livePoll.kpi_votes' | translate }}</dt>
+        <dd data-testid="poll-play-total-votes">{{ totalVotes() }}</dd>
+      </div>
+    </dl>
+  </header>
+
+  @if (question().length > 0) {
+    <section
+      class="poll-play__poll glass-panel"
+      aria-labelledby="poll-play-question"
+      data-testid="poll-play-poll">
+      <h2
+        id="poll-play-question"
+        class="poll-play__question"
+        data-testid="poll-play-question">
+        {{ question() }}
+      </h2>
+
+      <ol class="poll-play__options" data-testid="poll-play-options">
+        @for (row of tallyRows(); track row.label) {
+          <li class="poll-play__option-row">
+            <button
+              type="button"
+              class="poll-play__option"
+              [class.poll-play__option--disabled]="!canVote()"
+              [disabled]="!canVote()"
+              (click)="vote(row.label)"
+              [attr.data-testid]="'poll-play-option-' + $index"
+              [attr.aria-label]="row.label">
+              <span class="poll-play__option-label">{{ row.label }}</span>
+              <span class="poll-play__option-count">
+                {{ row.voteCount }} ({{ row.percent }}%)
+              </span>
+              <span
+                class="poll-play__option-bar surface-accent-bg"
+                [style.width.%]="row.percent"
+                aria-hidden="true"></span>
+            </button>
+          </li>
+        }
+      </ol>
+
+      @if (hasVoted()) {
+        <p
+          class="poll-play__voted"
+          role="status"
+          data-testid="poll-play-voted">
+          <i class="fa-solid fa-circle-check surface-accent-text" aria-hidden="true"></i>
+          {{ 'rplus.livePoll.vote_recorded' | translate }}
+        </p>
+      } @else if (isClosed()) {
+        <p
+          class="poll-play__voted"
+          role="status"
+          data-testid="poll-play-closed-note">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          {{ 'rplus.livePoll.voting_closed' | translate }}
+        </p>
+      }
+    </section>
+  } @else {
+    <section
+      class="poll-play__empty glass-panel"
+      data-testid="poll-play-empty">
+      <i class="fa-regular fa-hourglass" aria-hidden="true"></i>
+      {{ 'rplus.livePoll.waiting' | translate }}
+    </section>
+  }
+
+  @if (isClosed()) {
+    <footer
+      class="poll-play__closed glass-panel"
+      role="status"
+      data-testid="poll-play-closed">
+      <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+      {{ 'rplus.livePoll.poll_closed' | translate }}
+    </footer>
+  }
+</section>

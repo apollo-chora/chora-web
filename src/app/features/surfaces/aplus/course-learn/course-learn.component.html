@@ -1,0 +1,318 @@
+<section
+  class="course-learn surface-aplus"
+  aria-labelledby="aplus-course-learn-heading"
+  data-testid="aplus-course-learn">
+  <nav aria-label="Breadcrumb" class="course-learn__crumbs">
+    <a
+      [routerLink]="['/a/courses', courseId]"
+      data-testid="course-learn-back-to-detail">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      {{ 'aplus.course_learn.back_to_course_detail' | translate }}
+    </a>
+  </nav>
+
+  @switch (state().status) {
+    @case ('polling') {
+      <div
+        class="glass-panel course-learn__status"
+        role="status"
+        aria-busy="true"
+        data-testid="aplus-course-learn-polling">
+        <div class="course-learn__spinner-wrap">
+          <i
+            class="fa-solid fa-circle-notch fa-spin course-learn__spinner"
+            aria-hidden="true"></i>
+        </div>
+        <h1 id="aplus-course-learn-heading" class="course-learn__status-title">
+          {{ 'aplus.course_learn.bootstrap_loading_heading' | translate }}
+        </h1>
+        <p class="course-learn__status-body">
+          {{ 'aplus.course_learn.bootstrap_loading_body' | translate }}
+        </p>
+        <p class="course-learn__attempt" data-testid="aplus-course-learn-attempt">
+          {{ 'aplus.course_learn.attempt' | translate }}
+          {{ attempts() }}
+        </p>
+      </div>
+    }
+
+    @case ('ready') {
+      @if (path(); as p) {
+        <article class="course-learn__body">
+          <header
+            class="course-learn__hero glass-panel"
+            data-testid="course-learn-hero">
+            <h1
+              id="aplus-course-learn-heading"
+              class="course-learn__title"
+              data-testid="course-learn-title">
+              @if (displayTitle(); as t) {
+                {{ t }}
+              } @else {
+                {{ 'aplus.course_learn.untitled_course' | translate }}
+              }
+            </h1>
+            <dl class="course-learn__meta">
+              <div class="course-learn__meta-row">
+                <dt>
+                  <i class="fa-solid fa-list-ol" aria-hidden="true"></i>
+                  <span class="sr-only">
+                    {{ 'aplus.course_learn.total_atoms' | translate }}
+                  </span>
+                </dt>
+                <dd data-testid="course-learn-total-atoms">
+                  {{ p.total_atoms }}
+                  {{ 'aplus.course_learn.total_atoms' | translate }}
+                </dd>
+              </div>
+              <div class="course-learn__meta-row">
+                <dt>
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  <span class="sr-only">
+                    {{ 'aplus.course_learn.completed_count' | translate }}
+                  </span>
+                </dt>
+                <dd data-testid="course-learn-completed-count">
+                  {{ p.completed_atoms }}
+                  /
+                  {{ p.total_atoms }}
+                  {{ 'aplus.course_learn.completed_count' | translate }}
+                </dd>
+              </div>
+              @if (completionPct(); as pct) {
+                <div class="course-learn__meta-row">
+                  <dt>
+                    <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                    <span class="sr-only">
+                      {{ 'aplus.course_learn.completion_pct' | translate }}
+                    </span>
+                  </dt>
+                  <dd data-testid="course-learn-completion-pct">
+                    {{ pct }}%
+                    {{ 'aplus.course_learn.completion_pct' | translate }}
+                  </dd>
+                </div>
+              }
+              <div class="course-learn__meta-row">
+                <dt>
+                  <i class="fa-solid fa-route" aria-hidden="true"></i>
+                  <span class="sr-only">
+                    {{ 'aplus.course_learn.mode' | translate }}
+                  </span>
+                </dt>
+                <dd data-testid="course-learn-mode">
+                  {{ 'aplus.course_learn.mode_straight_up' | translate }}
+                </dd>
+              </div>
+            </dl>
+          </header>
+
+          <section
+            class="course-learn__atoms glass-panel"
+            aria-labelledby="course-learn-atoms-heading"
+            data-testid="course-learn-atoms">
+            <h2 id="course-learn-atoms-heading" class="course-learn__atoms-title">
+              {{ 'aplus.course_learn.atoms_heading' | translate }}
+            </h2>
+            <ol class="course-learn__atom-list">
+              @for (atom of p.atoms; track atom.atom_id) {
+                <li
+                  class="course-learn__atom"
+                  [class.course-learn__atom--completed]="atom.state === 'completed'"
+                  [class.course-learn__atom--in-progress]="atom.state === 'in_progress'"
+                  [class.course-learn__atom--not-started]="atom.state === 'not_started'"
+                  [attr.data-testid]="'course-learn-atom-' + atom.order"
+                  [attr.data-state]="atom.state">
+                  <div class="course-learn__atom-order" aria-hidden="true">
+                    @if (atom.state === 'completed') {
+                      <i class="fa-solid fa-circle-check"></i>
+                    } @else {
+                      <span>{{ atom.order }}</span>
+                    }
+                  </div>
+                  <div class="course-learn__atom-content">
+                    <h3
+                      class="course-learn__atom-title"
+                      [attr.data-testid]="'course-learn-atom-title-' + atom.order">
+                      {{ atom.title }}
+                    </h3>
+                    <span
+                      class="course-learn__atom-state-badge"
+                      [class.course-learn__atom-state-badge--completed]="atom.state === 'completed'"
+                      [class.course-learn__atom-state-badge--in-progress]="atom.state === 'in_progress'"
+                      [class.course-learn__atom-state-badge--not-started]="atom.state === 'not_started'"
+                      [attr.data-testid]="'course-learn-atom-state-' + atom.order">
+                      {{ stateLabelKey(atom) | translate }}
+                    </span>
+                  </div>
+                  <div class="course-learn__atom-action">
+                    @if (atom.state === 'in_progress') {
+                      <a
+                        class="btn btn-primary"
+                        [routerLink]="atomPlayLink(atom)"
+                        [queryParams]="atomPlayQueryParams()"
+                        [attr.data-testid]="'course-learn-atom-start-' + atom.order">
+                        {{ 'aplus.course_learn.start_atom' | translate }}
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      </a>
+                    } @else if (atom.state === 'completed') {
+                      <a
+                        class="btn btn-secondary"
+                        [routerLink]="atomPlayLink(atom)"
+                        [queryParams]="atomPlayQueryParams()"
+                        [attr.data-testid]="'course-learn-atom-review-' + atom.order">
+                        {{ 'aplus.course_learn.review_atom' | translate }}
+                      </a>
+                    } @else {
+                      <span
+                        class="course-learn__atom-locked"
+                        [attr.data-testid]="'course-learn-atom-locked-' + atom.order">
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        {{ 'aplus.course_learn.locked' | translate }}
+                      </span>
+                    }
+                  </div>
+                </li>
+              }
+            </ol>
+          </section>
+
+          <!-- CHO-1612: Heterogeneous curriculum panel.
+               Renders all content kinds (atom/video/youtube/document/
+               live_classroom/assessment) ordered by position. Shown
+               below the atoms list so the existing Straight-Up atom
+               flow is preserved as the primary read. -->
+          <chora-aplus-course-curriculum
+            [courseId]="courseId"
+            data-testid="course-learn-curriculum">
+          </chora-aplus-course-curriculum>
+        </article>
+      }
+    }
+
+    @case ('provisioning') {
+      <!-- OPEN-4: enrolment confirmed via /me/enrolments, but the LearningPath
+           bootstrap outran the poll window. Encouraging, NON-accusatory copy
+           (no "you're not enrolled") + a "check again" CTA that re-polls. -->
+      <div
+        class="glass-panel course-learn__status"
+        role="status"
+        data-testid="aplus-course-learn-provisioning">
+        <div class="course-learn__icon-wrap">
+          <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        </div>
+        <h1 id="aplus-course-learn-heading" class="course-learn__status-title">
+          {{ 'aplus.course_learn.provisioning_heading' | translate }}
+        </h1>
+        <p
+          class="course-learn__status-body"
+          data-testid="aplus-course-learn-provisioning-body">
+          {{ 'aplus.course_learn.provisioning_body' | translate }}
+        </p>
+        <div class="course-learn__actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="retry()"
+            data-testid="aplus-course-learn-provisioning-retry">
+            {{ 'aplus.course_learn.provisioning_retry' | translate }}
+          </button>
+          <a
+            routerLink="/a/dashboard"
+            class="btn btn-secondary"
+            data-testid="aplus-course-learn-to-dashboard">
+            {{ 'aplus.course_learn.back_to_dashboard' | translate }}
+          </a>
+        </div>
+      </div>
+    }
+
+    @case ('not_enrolled') {
+      <div
+        class="glass-panel course-learn__status course-learn__status--error"
+        role="alert"
+        data-testid="aplus-course-learn-not-enrolled">
+        <div class="course-learn__icon-wrap course-learn__icon-wrap--warn">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        </div>
+        <h1 id="aplus-course-learn-heading" class="course-learn__status-title">
+          {{ 'aplus.course_learn.not_enrolled_heading' | translate }}
+        </h1>
+        <p class="course-learn__status-body">
+          {{ 'aplus.course_learn.not_enrolled_body' | translate }}
+        </p>
+        <div class="course-learn__actions">
+          <a
+            [routerLink]="['/a/courses', courseId]"
+            class="btn btn-primary"
+            data-testid="aplus-course-learn-to-course-detail">
+            {{ 'aplus.course_learn.view_course' | translate }}
+          </a>
+          <a
+            routerLink="/a/catalog"
+            class="btn btn-secondary"
+            data-testid="aplus-course-learn-to-catalog">
+            {{ 'aplus.course_learn.browse_catalog' | translate }}
+          </a>
+        </div>
+      </div>
+    }
+
+    @case ('timeout') {
+      <!-- Fail-loud timeout: explicit "contact support" per task spec +
+           feedback_no_stubs_real_wiring (no silent fallback). -->
+      <div
+        class="glass-panel course-learn__status course-learn__status--warn"
+        role="alert"
+        data-testid="aplus-course-learn-timeout">
+        <div class="course-learn__icon-wrap course-learn__icon-wrap--warn">
+          <i class="fa-solid fa-clock" aria-hidden="true"></i>
+        </div>
+        <h1 id="aplus-course-learn-heading" class="course-learn__status-title">
+          {{ 'aplus.course_learn.bootstrap_timeout_heading' | translate }}
+        </h1>
+        <p class="course-learn__status-body" data-testid="aplus-course-learn-timeout-body">
+          {{ 'aplus.course_learn.bootstrap_timeout_contact_support' | translate }}
+        </p>
+        <div class="course-learn__actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="retry()"
+            data-testid="aplus-course-learn-retry">
+            {{ 'aplus.course_learn.retry' | translate }}
+          </button>
+          <a
+            routerLink="/a/dashboard"
+            class="btn btn-secondary"
+            data-testid="aplus-course-learn-to-dashboard">
+            {{ 'aplus.course_learn.back_to_dashboard' | translate }}
+          </a>
+        </div>
+      </div>
+    }
+
+    @case ('error') {
+      <div
+        class="glass-panel course-learn__status course-learn__status--error"
+        role="alert"
+        data-testid="aplus-course-learn-error">
+        <div class="course-learn__icon-wrap course-learn__icon-wrap--err">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        </div>
+        <h1 id="aplus-course-learn-heading" class="course-learn__status-title">
+          {{ 'aplus.course_learn.error_heading' | translate }}
+        </h1>
+        <p class="course-learn__status-body">{{ errorKey() | translate }}</p>
+        <div class="course-learn__actions">
+          <a
+            routerLink="/a/dashboard"
+            class="btn btn-secondary"
+            data-testid="aplus-course-learn-to-dashboard">
+            {{ 'aplus.course_learn.back_to_dashboard' | translate }}
+          </a>
+        </div>
+      </div>
+    }
+  }
+</section>

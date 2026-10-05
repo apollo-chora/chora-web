@@ -1,0 +1,47 @@
+:host {
+  display: block;
+}
+
+.aplus-checkout-result {
+  display: flex;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.checkout-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 560px;
+  width: 100%;
+  padding: 40px 32px;
+  text-align: center;
+
+  &__icon {
+    font-size: 3rem;
+  }
+
+  &--success &__icon {
+    color: var(--chora-color-success, #34d399);
+  }
+
+  &--cancel &__icon {
+    color: var(--chora-color-warning, #fbbf24);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  &__sub {
+    margin: 0;
+    opacity: 0.82;
+    line-height: 1.5;
+  }
+
+  &__cta {
+    margin-top: 10px;
+  }
+}

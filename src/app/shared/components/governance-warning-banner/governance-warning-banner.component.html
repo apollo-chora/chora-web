@@ -1,0 +1,30 @@
+@if (isVisible()) {
+  <div
+    class="governance-warning-banner"
+    role="alert"
+    aria-live="polite"
+    data-testid="governance-warning-banner">
+    <div class="governance-warning-banner__content">
+      <span class="governance-warning-banner__icon" aria-hidden="true">&#9888;</span>
+      <div class="governance-warning-banner__text">
+        <span class="governance-warning-banner__count" data-testid="warning-count">
+          {{ 'governance.warning' | translate }}
+          {{ warningCount() }}
+          {{ 'governance.of' | translate }}
+          {{ maxWarnings() }}
+        </span>
+        <span class="governance-warning-banner__message" data-testid="warning-message">
+          {{ message() }}
+        </span>
+      </div>
+      <button
+        type="button"
+        class="governance-warning-banner__dismiss"
+        data-testid="btn-acknowledge"
+        [attr.aria-label]="'governance.acknowledge_warning' | translate"
+        (click)="acknowledge()">
+        {{ 'governance.acknowledge' | translate }}
+      </button>
+    </div>
+  </div>
+}

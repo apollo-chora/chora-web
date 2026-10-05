@@ -1,0 +1,119 @@
+<section
+  class="fmap surface-aplus"
+  aria-labelledby="fmap-heading"
+  data-testid="familiar-map">
+  <header class="fmap__header glass-panel">
+    <div class="fmap__title-wrap">
+      <h1 id="fmap-heading" class="fmap__title">
+        <i class="fa-solid fa-dragon" aria-hidden="true"></i>
+        {{ 'aplus.discovery.familiar.title' | translate }}
+      </h1>
+      <p class="fmap__tagline">
+        {{ 'aplus.discovery.familiar.tagline' | translate }}
+      </p>
+    </div>
+    <a routerLink=".." class="fmap__back" data-testid="fmap-back">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      {{ 'aplus.discovery.familiar.back' | translate }}
+    </a>
+  </header>
+
+  <div class="fmap__grid">
+    <aside class="fmap__side">
+      <!-- Acquire a Familiar for a map -->
+      <form
+        class="fmap__panel glass-panel"
+        [formGroup]="acquireForm"
+        (ngSubmit)="acquire()"
+        data-testid="fmap-acquire">
+        <h2>{{ 'aplus.discovery.familiar.acquire_heading' | translate }}</h2>
+        <p class="fmap__hint">
+          {{ 'aplus.discovery.familiar.acquire_hint' | translate }}
+        </p>
+        <label class="fmap__field">
+          <span>{{ 'aplus.discovery.familiar.map_label' | translate }}</span>
+          <select formControlName="goalId" data-testid="fmap-goal">
+            <option value="" disabled>
+              {{ 'aplus.discovery.familiar.map_placeholder' | translate }}
+            </option>
+            @for (g of goals(); track g.goalId) {
+              <option [value]="g.goalId">{{ goalLabel(g) }}</option>
+            }
+          </select>
+        </label>
+        <label class="fmap__field">
+          <span>{{ 'aplus.discovery.familiar.name_label' | translate }}</span>
+          <input
+            type="text"
+            formControlName="familiarName"
+            data-testid="fmap-name"
+            [attr.placeholder]="'aplus.discovery.familiar.name_placeholder' | translate" />
+        </label>
+        <button
+          type="submit"
+          class="fmap__primary-btn"
+          [disabled]="acquireForm.invalid || acquiring()"
+          data-testid="fmap-acquire-submit">
+          <i class="fa-solid fa-egg" aria-hidden="true"></i>
+          {{ 'aplus.discovery.familiar.acquire_cta' | translate }}
+        </button>
+      </form>
+
+      <!-- Bindings list -->
+      <div class="fmap__panel glass-panel" data-testid="fmap-bindings">
+        <h2>{{ 'aplus.discovery.familiar.bindings_heading' | translate }}</h2>
+        @switch (bindings().status) {
+          @case ('loading') {
+            <p
+              class="fmap__muted"
+              role="status"
+              data-testid="fmap-bindings-loading">
+              {{ 'aplus.discovery.familiar.bindings_loading' | translate }}
+            </p>
+          }
+          @case ('error') {
+            <div class="fmap__error" role="alert" data-testid="fmap-bindings-error">
+              <p>{{ 'aplus.discovery.familiar.bindings_error' | translate }}</p>
+              <button
+                type="button"
+                (click)="loadBindings()"
+                data-testid="fmap-bindings-retry">
+                {{ 'aplus.discovery.familiar.retry' | translate }}
+              </button>
+            </div>
+          }
+          @default {
+            @if (bindingsList().length === 0) {
+              <p class="fmap__muted" data-testid="fmap-bindings-empty">
+                {{ 'aplus.discovery.familiar.bindings_empty' | translate }}
+              </p>
+            } @else {
+              <ul class="fmap__bind-list">
+                @for (b of bindingsList(); track b.bindingId) {
+                  <li>
+                    <button
+                      type="button"
+                      class="fmap__bind"
+                      [class.is-active]="b.familiarId === selectedFamiliarId()"
+                      (click)="selectBinding(b.familiarId)"
+                      [attr.data-testid]="'fmap-bind-' + b.familiarId">
+                      <span class="fmap__bind-theme">{{ b.mapTheme }}</span>
+                      <span class="fmap__bind-acq">{{ b.acquisition }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        }
+      </div>
+    </aside>
+
+    <!-- Memory + explainability -->
+    <div
+      class="fmap__panel glass-panel fmap__memory-host"
+      data-testid="fmap-memory-host">
+      <chora-familiar-map-memory-panel [state]="memory()" />
+    </div>
+  </div>
+</section>

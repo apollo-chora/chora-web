@@ -1,0 +1,176 @@
+<section
+  class="explainability-viewer"
+  role="main"
+  [attr.aria-label]="'admin.explainability.viewer_title' | translate"
+  data-testid="explainability-viewer">
+
+  <!-- Page Header -->
+  <header class="explainability-viewer__header">
+    <h1 class="explainability-viewer__title" data-testid="viewer-title">
+      {{ 'admin.explainability.viewer_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Filters -->
+  <div class="explainability-viewer__filters" data-testid="filters" role="search">
+    <div class="explainability-viewer__filter-group">
+      <label for="filter-agent" class="explainability-viewer__label">
+        {{ 'admin.explainability.agent_name' | translate }}
+      </label>
+      <input
+        id="filter-agent"
+        type="text"
+        class="explainability-viewer__input"
+        data-testid="filter-agent-name"
+        [placeholder]="'admin.explainability.agent_name_placeholder' | translate"
+        [attr.aria-label]="'admin.explainability.agent_name' | translate"
+        (input)="onAgentNameInput($event)" />
+    </div>
+
+    <div class="explainability-viewer__filter-group">
+      <label for="filter-verdict" class="explainability-viewer__label">
+        {{ 'admin.explainability.verdict' | translate }}
+      </label>
+      <select
+        id="filter-verdict"
+        class="explainability-viewer__select"
+        data-testid="filter-verdict"
+        (change)="onVerdictChange($event)">
+        @for (opt of verdictOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="explainability-viewer__filter-group">
+      <label for="filter-date-from" class="explainability-viewer__label">
+        {{ 'admin.explainability.date_from' | translate }}
+      </label>
+      <input
+        id="filter-date-from"
+        type="date"
+        class="explainability-viewer__input"
+        data-testid="filter-date-from"
+        [attr.aria-label]="'admin.explainability.date_from' | translate"
+        (input)="onDateFromInput($event)" />
+    </div>
+
+    <div class="explainability-viewer__filter-group">
+      <label for="filter-date-to" class="explainability-viewer__label">
+        {{ 'admin.explainability.date_to' | translate }}
+      </label>
+      <input
+        id="filter-date-to"
+        type="date"
+        class="explainability-viewer__input"
+        data-testid="filter-date-to"
+        [attr.aria-label]="'admin.explainability.date_to' | translate"
+        (input)="onDateToInput($event)" />
+    </div>
+
+    <button
+      type="button"
+      class="explainability-viewer__btn explainability-viewer__btn--primary"
+      data-testid="btn-search"
+      [disabled]="investigationState().status === 'loading'"
+      [attr.aria-label]="'admin.explainability.search' | translate"
+      (click)="search()">
+      @if (investigationState().status === 'loading') {
+        {{ 'admin.explainability.searching' | translate }}
+      } @else {
+        {{ 'admin.explainability.search' | translate }}
+      }
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (investigationState().status === 'loading') {
+    <div class="explainability-viewer__loading" data-testid="viewer-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="explainability-viewer__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Investigation List -->
+  @if (investigationState().status === 'success' && investigations().length > 0) {
+    <div class="explainability-viewer__list" data-testid="investigation-list" role="list">
+      @for (inv of investigations(); track inv.decision_id) {
+        <article
+          class="explainability-viewer__item"
+          role="listitem"
+          [attr.data-testid]="'investigation-' + inv.decision_id">
+
+          <!-- Item Header (clickable) -->
+          <header
+            class="explainability-viewer__item-header"
+            tabindex="0"
+            (click)="toggleInvestigation(inv.decision_id)"
+            (keyup.enter)="toggleInvestigation(inv.decision_id)"
+            [attr.aria-expanded]="isExpanded(inv.decision_id)"
+            [attr.aria-label]="inv.agent_name + ': ' + inv.verdict">
+            <span
+              class="explainability-viewer__verdict"
+              [class]="verdictClass(inv.verdict)">
+              {{ inv.verdict | uppercase }}
+            </span>
+            <span class="explainability-viewer__item-agent">{{ inv.agent_name }}</span>
+            <span class="explainability-viewer__item-timestamp">
+              {{ formatTimestamp(inv.timestamp) }}
+            </span>
+            <span class="explainability-viewer__item-toggle">
+              @if (isExpanded(inv.decision_id)) {
+                &#9660;
+              } @else {
+                &#9654;
+              }
+            </span>
+          </header>
+
+          <!-- Expanded Detail -->
+          @if (isExpanded(inv.decision_id)) {
+            <div class="explainability-viewer__item-detail" data-testid="investigation-detail">
+              <chora-reasoning-trace
+                [steps]="inv.reasoning_steps"
+                [summary]="inv.reasoning_summary">
+              </chora-reasoning-trace>
+
+              <chora-policy-reference
+                [policies]="inv.policy_references">
+              </chora-policy-reference>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (investigationState().status === 'error') {
+    <div class="explainability-viewer__error" data-testid="viewer-error" role="alert">
+      <p>{{ 'admin.explainability.search_error' | translate }}</p>
+      <button
+        type="button"
+        class="explainability-viewer__btn explainability-viewer__btn--primary"
+        (click)="search()"
+        data-testid="btn-retry"
+        [attr.aria-label]="'admin.explainability.retry' | translate">
+        {{ 'admin.explainability.retry' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Empty Results -->
+  @if (investigationState().status === 'success' && investigations().length === 0) {
+    <p class="explainability-viewer__empty" role="status" data-testid="viewer-empty">
+      {{ 'admin.explainability.no_investigations' | translate }}
+    </p>
+  }
+
+  <!-- Idle State -->
+  @if (investigationState().status === 'idle') {
+    <div class="explainability-viewer__idle" data-testid="viewer-idle">
+      <p>{{ 'admin.explainability.idle_message' | translate }}</p>
+    </div>
+  }
+</section>

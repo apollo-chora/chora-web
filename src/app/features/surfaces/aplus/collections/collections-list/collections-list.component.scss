@@ -1,0 +1,295 @@
+/**
+ * CollectionsListComponent styles — A+ personal collections grid.
+ * Tablet-first (≥768px primary, ≥1280px desktop enhanced).
+ * Glassmorphism design system — glass-panel containers, A+ accent tokens.
+ * BEM: .collections-list__*
+ */
+
+:host {
+  display: block;
+}
+
+.collections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+  }
+
+  &__header-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--primary);
+    font-size: 1.5rem;
+  }
+
+  &__header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
+  }
+
+  &__subtitle {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  &__create-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  // ── Loading ──────────────────────────────────────────────────────────────
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3rem 1.5rem;
+    font-size: 1rem;
+    color: var(--text-muted);
+  }
+
+  // ── Error ────────────────────────────────────────────────────────────────
+  &__error,
+  &__contract-gap {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-left: 4px solid var(--danger);
+
+    i {
+      color: var(--danger);
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    p {
+      margin: 0.25rem 0;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    strong {
+      color: var(--text-main);
+    }
+
+    code {
+      background: rgba(0, 0, 0, 0.06);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+  }
+
+  &__error-message {
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-main);
+  }
+
+  // ── Empty state ──────────────────────────────────────────────────────────
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 4rem 2rem;
+    text-align: center;
+
+    i {
+      font-size: 2.5rem;
+      color: var(--primary);
+      opacity: 0.5;
+    }
+  }
+
+  &__empty-heading {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__empty-hint {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    max-width: 36ch;
+  }
+
+  // ── Grid ─────────────────────────────────────────────────────────────────
+
+  // Tablet (primary ≥768px): 2 columns
+  &__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+
+    // Desktop enhanced: 3 columns
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  // ── Card ─────────────────────────────────────────────────────────────────
+  &__card {
+    padding: 0;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  &__card-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 1.25rem;
+    color: inherit;
+    text-decoration: none;
+    height: 100%;
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  &__visibility-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(25, 118, 210, 0.1);
+    border: 1px solid rgba(25, 118, 210, 0.2);
+    color: var(--primary);
+    white-space: nowrap;
+  }
+
+  &__card-description {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    // Clamp to 2 lines
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: auto;
+  }
+
+  &__atom-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+
+    i {
+      color: var(--primary);
+      font-size: 0.875rem;
+    }
+  }
+
+  &__updated-at {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  // ── prefers-reduced-motion ───────────────────────────────────────────────
+  @media (prefers-reduced-motion: reduce) {
+    &__card {
+      transition: none;
+
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+}
+
+// ── Button overrides (A+ accent) ────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: var(--button-radius, 8px);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &.btn-primary {
+    background: var(--primary);
+    color: #ffffff;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}

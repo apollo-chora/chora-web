@@ -1,0 +1,196 @@
+<section
+  class="community-atom-editor"
+  [attr.aria-label]="'community.contribute.title' | translate"
+  data-testid="community-atom-editor">
+
+  <header class="community-atom-editor__header">
+    <h1 class="community-atom-editor__title" data-testid="contribute-title">
+      {{ 'community.contribute.title' | translate }}
+    </h1>
+    <p class="community-atom-editor__subtitle">
+      {{ 'community.contribute.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Auto-save indicator -->
+  @if (lastSavedAt()) {
+    <div class="community-atom-editor__autosave" role="status" aria-live="polite" data-testid="autosave-status">
+      @switch (autoSaveState()) {
+        @case ('saving') {
+          <span class="community-atom-editor__autosave-text">
+            {{ 'community.contribute.autosaving' | translate }}
+          </span>
+        }
+        @case ('saved') {
+          <span class="community-atom-editor__autosave-text">
+            {{ 'community.contribute.draft-saved' | translate }}
+          </span>
+        }
+        @case ('error') {
+          <span class="community-atom-editor__autosave-text community-atom-editor__autosave-text--error">
+            {{ 'community.contribute.draft-save-error' | translate }}
+          </span>
+        }
+      }
+    </div>
+  }
+
+  <form class="community-atom-editor__form" (submit)="$event.preventDefault(); onSubmit()">
+    <!-- Title -->
+    <div class="community-atom-editor__field">
+      <label for="atom-title" class="community-atom-editor__label">
+        {{ 'community.contribute.title-label' | translate }}
+      </label>
+      <input
+        id="atom-title"
+        type="text"
+        class="community-atom-editor__input"
+        [value]="title()"
+        (input)="onTitleInput($event)"
+        [attr.placeholder]="'community.contribute.title-placeholder' | translate"
+        data-testid="atom-title-input"
+        required />
+    </div>
+
+    <!-- Atom type -->
+    <div class="community-atom-editor__field">
+      <label for="atom-type-select" class="community-atom-editor__label">
+        {{ 'community.contribute.type-label' | translate }}
+      </label>
+      <select
+        id="atom-type-select"
+        class="community-atom-editor__select"
+        [value]="selectedType()"
+        (change)="onTypeChange($event)"
+        data-testid="atom-type-select">
+        @for (type of atomTypes; track type) {
+          <option [value]="type">{{ atomTypeLabels[type] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Content editor -->
+    <div class="community-atom-editor__field">
+      <label for="atom-content" class="community-atom-editor__label">
+        {{ 'community.contribute.content-label' | translate }}
+      </label>
+      <textarea
+        id="atom-content"
+        class="community-atom-editor__textarea"
+        [value]="content()"
+        (input)="onContentInput($event)"
+        [attr.placeholder]="'community.contribute.content-placeholder' | translate"
+        data-testid="atom-content-textarea"
+        rows="12"
+        required>
+      </textarea>
+      <span class="community-atom-editor__hint">
+        {{ 'community.contribute.markdown-hint' | translate }}
+      </span>
+    </div>
+
+    <!-- Tags -->
+    <div class="community-atom-editor__field">
+      <label for="atom-tags" class="community-atom-editor__label">
+        {{ 'community.contribute.tags-label' | translate }}
+      </label>
+      <div class="community-atom-editor__tags-container">
+        @for (tag of tags(); track tag) {
+          <span class="community-atom-editor__tag" data-testid="atom-tag">
+            {{ tag }}
+            <button
+              type="button"
+              class="community-atom-editor__tag-remove"
+              (click)="removeTag(tag)"
+              [attr.aria-label]="'Remove tag ' + tag">
+              &times;
+            </button>
+          </span>
+        }
+        <input
+          id="atom-tags"
+          type="text"
+          class="community-atom-editor__tag-input"
+          [value]="tagInput()"
+          (input)="onTagInputChange($event)"
+          (keydown)="onTagInputKeydown($event)"
+          [attr.placeholder]="'community.contribute.tag-placeholder' | translate"
+          data-testid="tag-input" />
+      </div>
+    </div>
+
+    <!-- Media upload zone -->
+    <div class="community-atom-editor__field">
+      <span class="community-atom-editor__label">
+        {{ 'community.contribute.media-label' | translate }}
+      </span>
+      <div
+        class="community-atom-editor__dropzone"
+        [class.community-atom-editor__dropzone--active]="isDragOver()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        data-testid="media-dropzone"
+        role="region"
+        [attr.aria-label]="'community.contribute.dropzone-label' | translate">
+        <p class="community-atom-editor__dropzone-text">
+          {{ 'community.contribute.dropzone-text' | translate }}
+        </p>
+        <label for="media-file-input" class="community-atom-editor__browse-btn">
+          {{ 'community.contribute.browse-files' | translate }}
+        </label>
+        <input
+          id="media-file-input"
+          type="file"
+          class="community-atom-editor__file-input"
+          multiple
+          accept="image/*,video/*,audio/*,.pdf"
+          (change)="onFileSelect($event)"
+          data-testid="media-file-input" />
+      </div>
+
+      <!-- Uploaded files list -->
+      @if (mediaFiles().length > 0) {
+        <ul class="community-atom-editor__file-list" data-testid="file-list">
+          @for (file of mediaFiles(); track $index) {
+            <li class="community-atom-editor__file-item">
+              <span class="community-atom-editor__file-name">{{ file.name }}</span>
+              <span class="community-atom-editor__file-size">{{ formatFileSize(file.size) }}</span>
+              <button
+                type="button"
+                class="community-atom-editor__file-remove"
+                (click)="removeFile($index)"
+                [attr.aria-label]="'Remove file ' + file.name"
+                data-testid="remove-file-btn">
+                &times;
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <!-- Submit -->
+    <div class="community-atom-editor__actions">
+      <button
+        type="submit"
+        class="community-atom-editor__submit-btn"
+        [disabled]="!canSubmit()"
+        data-testid="submit-btn"
+        [attr.aria-label]="'community.contribute.submit' | translate">
+        @if (submitState().status === 'submitting') {
+          {{ 'community.contribute.submitting' | translate }}
+        } @else {
+          {{ 'community.contribute.submit' | translate }}
+        }
+      </button>
+    </div>
+
+    <!-- Success message -->
+    @if (submitState().status === 'success') {
+      <div class="community-atom-editor__success" role="status" data-testid="submit-success">
+        <p>{{ 'community.contribute.success-message' | translate }}</p>
+      </div>
+    }
+  </form>
+</section>

@@ -1,0 +1,223 @@
+:host {
+  display: block;
+}
+
+// ─── Shared base ───────────────────────────────────────────────────────
+
+.chora-mcq-option {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 28px;
+  column-gap: 0.85rem;
+  row-gap: 0.4rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-main);
+  font-family: inherit;
+  width: 100%;
+  text-align: left;
+  min-width: 0;
+}
+
+.chora-mcq-option__marker {
+  grid-column: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1.5px solid var(--glass-border);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-main);
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.chora-mcq-option__text {
+  grid-column: 2;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-main);
+  word-break: break-word;
+}
+
+// ─── Interactive (working canvas) ─────────────────────────────────────
+
+.chora-mcq-option--interactive {
+  cursor: pointer;
+  grid-template-columns: 40px 1fr 32px;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.72);
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    transform 80ms ease,
+    box-shadow 140ms ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--primary);
+    background: rgba(25, 118, 210, 0.05);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.08);
+  }
+
+  &.is-selected {
+    border-color: var(--primary);
+    background: rgba(25, 118, 210, 0.1);
+    box-shadow: 0 6px 18px rgba(25, 118, 210, 0.18);
+
+    .chora-mcq-option__marker {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .chora-mcq-option__check {
+      color: var(--primary);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .chora-mcq-option__marker {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .chora-mcq-option__text {
+    font-size: 15px;
+  }
+}
+
+.chora-mcq-option__check {
+  grid-column: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: transparent;
+  transition: color 140ms ease;
+}
+
+// ─── Reveal (result page) ─────────────────────────────────────────────
+
+.chora-mcq-option--reveal {
+  background: rgba(255, 255, 255, 0.55);
+
+  &[data-is-correct='true'] {
+    background: rgba(15, 118, 110, 0.08);
+    border-color: rgba(15, 118, 110, 0.35);
+
+    .chora-mcq-option__marker {
+      background: rgba(15, 118, 110, 0.15);
+      border-color: rgba(15, 118, 110, 0.4);
+      color: var(--success, #0f766e);
+    }
+  }
+
+  // The learner picked this option AND it was wrong — red treatment so the
+  // mistaken pick reads distinctly from the green correct answer.
+  &.is-wrong {
+    background: rgba(239, 68, 68, 0.07);
+    border-color: rgba(239, 68, 68, 0.4);
+
+    .chora-mcq-option__marker {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: var(--danger, #ef4444);
+    }
+  }
+
+  // The learner picked the correct option — emphasise the green border so the
+  // happy path is unmistakable next to the plain (unchosen) correct reveal.
+  &.is-correct.is-selected {
+    border-color: rgba(15, 118, 110, 0.55);
+    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.12);
+  }
+}
+
+.chora-mcq-option__correct {
+  grid-column: 3;
+  font-size: 18px;
+  color: var(--success, #0f766e);
+}
+
+.chora-mcq-option__wrong {
+  grid-column: 3;
+  font-size: 18px;
+  color: var(--danger, #ef4444);
+}
+
+// "Your answer" / "Correct answer" pills sit on their own row beneath the
+// option text (full-width grid track) so long option labels never collide.
+.chora-mcq-option__badges {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-top: 0.1rem;
+}
+
+.chora-mcq-option__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+
+  i { font-size: 10px; }
+
+  &--your[data-correct='true'] {
+    background: rgba(15, 118, 110, 0.14);
+    color: var(--success, #0f766e);
+    border-color: rgba(15, 118, 110, 0.3);
+  }
+
+  &--your[data-correct='false'] {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger, #ef4444);
+    border-color: rgba(239, 68, 68, 0.32);
+  }
+
+  &--answer {
+    background: rgba(15, 118, 110, 0.1);
+    color: var(--success, #0f766e);
+    border-color: rgba(15, 118, 110, 0.28);
+  }
+}
+
+.chora-mcq-option__explainer {
+  grid-column: 2 / -1;
+  margin: 0;
+  padding-top: 0.35rem;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-style: italic;
+  border-top: 1px dashed rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chora-mcq-option--interactive { transition: none; }
+}

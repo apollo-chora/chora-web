@@ -1,0 +1,307 @@
+<main
+  class="play"
+  data-testid="play-stage"
+  [attr.data-stage]="stage()">
+  @if (resolveError(); as err) {
+    <section class="play__panel play__panel--error" role="alert" data-testid="play-resolve-error">
+      <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+      <h1 class="play__error-title">{{ 'rplus.play.resolve_error' | translate }}</h1>
+      <p class="play__error-detail">
+        {{ 'rplus.play.code_label' | translate }}
+        <strong>{{ code() }}</strong> · HTTP {{ err.status }}
+      </p>
+    </section>
+  } @else if (pollError(); as err) {
+    <section class="play__panel play__panel--error" role="alert" data-testid="play-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p class="play__error-detail">
+        {{ 'rplus.play.error_generic' | translate }} (HTTP {{ err.status }})
+      </p>
+    </section>
+  } @else {
+    @switch (stage()) {
+      @case ('JOIN') {
+        <section class="play__panel play__join" data-testid="play-join-stage">
+          <p class="play__code-chip">
+            <i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i>
+            {{ code() }}
+          </p>
+          <h1 class="play__title">
+            {{ session()?.quizTitle || ('rplus.play.join_title' | translate) }}
+          </h1>
+          <label class="play__nickname-label" for="play-nickname">
+            {{ 'rplus.play.nickname_label' | translate }}
+          </label>
+          <input
+            id="play-nickname"
+            class="play__nickname"
+            type="text"
+            maxlength="20"
+            autocomplete="off"
+            data-testid="play-nickname"
+            [value]="nickname()"
+            [attr.placeholder]="'rplus.play.nickname_placeholder' | translate"
+            [attr.aria-invalid]="joinErrorKey() ? 'true' : null"
+            (input)="onNicknameInput($event)"
+            (keydown.enter)="join()" />
+          @if (joinErrorKey()) {
+            <p
+              class="play__join-error"
+              role="alert"
+              data-testid="play-join-error">
+              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+              {{ joinErrorKey() | translate }}
+            </p>
+          }
+          <button
+            type="button"
+            class="play__join-cta"
+            data-testid="play-join"
+            [disabled]="joining()"
+            (click)="join()">
+            @if (joining()) {
+              <i class="fa-solid fa-spinner" aria-hidden="true"></i>
+              {{ 'rplus.play.joining' | translate }}
+            } @else {
+              <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+              {{ 'rplus.play.join_cta' | translate }}
+            }
+          </button>
+        </section>
+      }
+      @case ('LOBBY') {
+        <section class="play__panel play__lobby" data-testid="play-lobby" aria-live="polite">
+          <i class="fa-solid fa-circle-check play__lobby-icon" aria-hidden="true"></i>
+          <h1 class="play__title">
+            {{ 'rplus.play.lobby_in' | translate }}
+            <span class="play__nick">{{ snapshot()?.me?.nickname }}</span>
+          </h1>
+          <p class="play__lobby-hint">{{ 'rplus.play.lobby_hint' | translate }}</p>
+          <p class="play__lobby-count" data-testid="play-lobby-count">
+            <i class="fa-solid fa-users" aria-hidden="true"></i>
+            <strong>{{ snapshot()?.participantCount }}</strong>
+            {{ 'rplus.play.lobby_joined' | translate }}
+          </p>
+        </section>
+      }
+      @case ('GET_READY') {
+        <section class="play__panel play__ready" data-testid="play-get-ready" aria-live="assertive">
+          <p class="play__ready-beat">{{ 'rplus.play.get_ready' | translate }}</p>
+        </section>
+      }
+      @case ('QUESTION') {
+        <section class="play__panel play__question" data-testid="play-question">
+          @if (remainingSeconds() !== null) {
+            <div
+              class="play__timer"
+              data-testid="play-timer"
+              role="timer"
+              [attr.aria-label]="'rplus.play.timer_aria' | translate"
+              [class.play__timer--pulse]="pulsing()"
+              [style.background]="
+                'conic-gradient(var(--play-ring) ' + ringDegrees() +
+                'deg, var(--play-ring-rest) 0deg)'
+              ">
+              <span class="play__timer-value">{{ remainingSeconds() }}</span>
+            </div>
+          }
+          <h1 class="play__prompt" data-testid="play-prompt">
+            {{ question()?.prompt }}
+          </h1>
+          @if (tooLate()) {
+            <p class="play__too-late" role="status" data-testid="play-too-late">
+              <i class="fa-solid fa-hourglass-end" aria-hidden="true"></i>
+              {{ 'rplus.play.too_late' | translate }}
+            </p>
+          } @else {
+            <ul class="play__options" data-testid="play-options">
+              @for (opt of question()?.options; track $index) {
+                <li class="play__option-cell">
+                  <button
+                    type="button"
+                    class="play__option play__option--{{ $index }}"
+                    [attr.data-testid]="'play-option-' + $index"
+                    [disabled]="submitting()"
+                    [attr.aria-label]="
+                      ('rplus.play.option_aria' | translate) + ' ' + opt.label
+                    "
+                    (click)="choose(opt.label)">
+                    <span class="play__option-shape" aria-hidden="true">
+                      {{ shapes[$index % 4] }}
+                    </span>
+                    <span class="play__option-label">{{ opt.label }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+          <footer class="play__question-meta">
+            @if (question()?.doublePoints) {
+              <span class="play__double" data-testid="play-double-badge">
+                ×2 {{ 'rplus.play.double_points' | translate }}
+              </span>
+            }
+            <span data-testid="play-answered-count">
+              {{ answered() }} {{ 'rplus.play.answered' | translate }}
+            </span>
+          </footer>
+        </section>
+      }
+      @case ('LOCKED') {
+        <section class="play__panel play__locked" data-testid="play-locked" aria-live="polite">
+          @if (remainingSeconds() !== null) {
+            <div
+              class="play__timer"
+              data-testid="play-timer"
+              role="timer"
+              [attr.aria-label]="'rplus.play.timer_aria' | translate"
+              [class.play__timer--pulse]="pulsing()"
+              [style.background]="
+                'conic-gradient(var(--play-ring) ' + ringDegrees() +
+                'deg, var(--play-ring-rest) 0deg)'
+              ">
+              <span class="play__timer-value">{{ remainingSeconds() }}</span>
+            </div>
+          }
+          <i class="fa-solid fa-lock play__locked-icon" aria-hidden="true"></i>
+          <h1 class="play__title">{{ 'rplus.play.locked_title' | translate }}</h1>
+          <p class="play__lobby-hint">{{ 'rplus.play.locked_body' | translate }}</p>
+        </section>
+      }
+      @case ('REVEAL') {
+        <section
+          class="play__panel play__reveal"
+          data-testid="play-reveal"
+          aria-live="assertive"
+          [class.play__reveal--correct]="revealResult()?.correct === true"
+          [class.play__reveal--wrong]="revealResult()?.correct === false">
+          @if (revealResult(); as result) {
+            <h1 class="play__reveal-verdict">
+              @if (result.correct) {
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'rplus.play.reveal_correct' | translate }}
+              } @else {
+                <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                {{ 'rplus.play.reveal_wrong' | translate }}
+              }
+            </h1>
+            <p class="play__reveal-points" data-testid="play-reveal-points">
+              +{{ result.awardedPoints }} {{ 'rplus.play.reveal_points' | translate }}
+            </p>
+            @if (result.streakAfter > 1) {
+              <p class="play__reveal-streak" data-testid="play-reveal-streak">
+                🔥 {{ 'rplus.play.reveal_streak' | translate }}{{ result.streakAfter }}
+              </p>
+            }
+          } @else {
+            <h1 class="play__reveal-verdict">
+              <i class="fa-regular fa-hourglass" aria-hidden="true"></i>
+              {{ 'rplus.play.reveal_no_answer' | translate }}
+            </h1>
+          }
+          @if (snapshot()?.me; as me) {
+            @if (me.rank > 0) {
+              <p class="play__reveal-rank" data-testid="play-reveal-rank">
+                {{ 'rplus.play.reveal_rank' | translate }}
+                <strong>{{ ordinal(me.rank) }}</strong>
+                @if (rankDelta(); as delta) {
+                  @if (delta > 0) {
+                    <span class="play__delta play__delta--up">▲{{ delta }}</span>
+                  } @else if (delta < 0) {
+                    <span class="play__delta play__delta--down">▼{{ -delta }}</span>
+                  }
+                }
+              </p>
+            }
+          }
+          @if (snapshot()?.reveal; as reveal) {
+            @if (reveal.correctLabel) {
+              <p class="play__reveal-answer" data-testid="play-reveal-answer">
+                {{ 'rplus.play.reveal_correct_answer' | translate }}
+                <strong>{{ reveal.correctLabel }}</strong>
+              </p>
+            }
+            @if (reveal.explainer) {
+              <p class="play__reveal-explainer" data-testid="play-reveal-explainer">
+                <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+                {{ reveal.explainer }}
+              </p>
+            }
+          }
+        </section>
+      }
+      @case ('PODIUM') {
+        <section class="play__panel play__podium" data-testid="play-podium">
+          <i class="fa-solid fa-trophy play__podium-icon" aria-hidden="true"></i>
+          <h1 class="play__title">{{ 'rplus.play.podium_title' | translate }}</h1>
+          @if (snapshot()?.me; as me) {
+            @if (me.rank > 0) {
+              <p class="play__podium-place" data-testid="play-podium-place">
+                {{ 'rplus.play.podium_placed' | translate }}
+                <strong>{{ ordinal(me.rank) }}</strong>
+                @if (podiumTotal() > 0) {
+                  {{ 'rplus.play.podium_of' | translate }} {{ podiumTotal() }}
+                }
+              </p>
+            }
+            <p class="play__podium-score" data-testid="play-podium-score">
+              {{ me.score }} {{ 'rplus.play.podium_points' | translate }}
+              @if (me.streak > 1) {
+                · 🔥 {{ 'rplus.play.reveal_streak' | translate }}{{ me.streak }}
+              }
+            </p>
+          }
+          @if (reviewEntries().length > 0) {
+            <section
+              class="play__review"
+              data-testid="play-review"
+              [attr.aria-label]="'rplus.play.review_title' | translate">
+              <h2 class="play__review-title">
+                {{ 'rplus.play.review_title' | translate }}
+              </h2>
+              <ul class="play__review-list">
+                @for (r of reviewEntries(); track r.questionId; let i = $index) {
+                  <li class="play__review-row">
+                    <span class="play__review-num">Q{{ i + 1 }}</span>
+                    <span class="play__review-prompt">{{ r.prompt }}</span>
+                    @if (r.yourChoice !== null) {
+                      <span
+                        class="play__review-verdict"
+                        [class.play__review-verdict--correct]="r.yourCorrect"
+                        [class.play__review-verdict--wrong]="!r.yourCorrect">
+                        <i
+                          class="fa-solid"
+                          [class.fa-check]="r.yourCorrect"
+                          [class.fa-xmark]="!r.yourCorrect"
+                          aria-hidden="true"></i>
+                        {{ r.yourChoice }}
+                      </span>
+                    } @else {
+                      <span class="play__review-verdict play__review-verdict--skipped">
+                        {{ 'rplus.play.review_skipped' | translate }}
+                      </span>
+                    }
+                    @if (!r.yourCorrect) {
+                      <span class="play__review-correct">
+                        {{ 'rplus.play.review_answer' | translate }}
+                        {{ r.correctLabel }}
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+          <button
+            type="button"
+            class="play__exit"
+            data-testid="play-exit"
+            (click)="exit()">
+            <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+            {{ 'rplus.play.podium_exit' | translate }}
+          </button>
+        </section>
+      }
+    }
+  }
+</main>

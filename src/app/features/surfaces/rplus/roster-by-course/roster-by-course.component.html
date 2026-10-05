@@ -1,0 +1,129 @@
+<section
+  class="surface-rplus roster-by-course"
+  data-testid="rplus-roster-by-course">
+  <a class="visually-hidden-focusable" href="#roster-by-course-table">
+    {{ 'rplus.rosterByCourse.skip_to_table' | translate }}
+  </a>
+
+  <header class="roster-by-course__header glass-panel">
+    <div class="roster-by-course__breadcrumb">
+      <span>{{ 'rplus.rosterByCourse.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.rosterByCourse.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <div class="roster-by-course__title-row">
+      <h1 class="roster-by-course__title">
+        {{ 'rplus.rosterByCourse.title' | translate }}
+      </h1>
+      <span
+        class="roster-by-course__course-pill"
+        data-testid="roster-by-course-course-pill">
+        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+        {{ 'rplus.rosterByCourse.course_label' | translate }}:
+        <code class="roster-by-course__course-id">{{ courseId() }}</code>
+      </span>
+    </div>
+    <div class="roster-by-course__meta">
+      <span
+        class="roster-by-course__total"
+        data-testid="roster-by-course-total">
+        <strong>{{ learnerCount() }}</strong>
+        {{ 'rplus.rosterByCourse.total_label' | translate }}
+      </span>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <p
+      class="roster-by-course__loading glass-panel"
+      data-testid="roster-by-course-loading"
+      role="status"
+      aria-live="polite">
+      {{ 'rplus.rosterByCourse.loading' | translate }}
+    </p>
+  } @else if (hasError()) {
+    <p
+      class="roster-by-course__error glass-panel"
+      data-testid="roster-by-course-error"
+      role="alert"
+      aria-live="assertive">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      {{ errorTranslationKey()! | translate }}
+    </p>
+  } @else if (learners().length === 0) {
+    <p
+      class="roster-by-course__empty glass-panel"
+      data-testid="roster-by-course-empty">
+      {{ 'rplus.rosterByCourse.empty' | translate }}
+    </p>
+  } @else {
+    <div class="roster-by-course__table-wrap glass-panel">
+      <table
+        id="roster-by-course-table"
+        class="roster-by-course__table"
+        data-testid="roster-by-course-table"
+        [attr.aria-label]="'rplus.rosterByCourse.table.aria_label' | translate">
+        <caption class="visually-hidden">
+          {{ 'rplus.rosterByCourse.table.caption' | translate }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">
+              {{ 'rplus.rosterByCourse.col.learner' | translate }}
+            </th>
+            <th scope="col">
+              {{ 'rplus.rosterByCourse.col.gcid' | translate }}
+            </th>
+            <th scope="col">
+              {{ 'rplus.rosterByCourse.col.progress' | translate }}
+            </th>
+            <th scope="col">
+              {{ 'rplus.rosterByCourse.col.enrolled_at' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (learner of learners(); track learner.gcid) {
+            <tr [attr.data-testid]="'roster-by-course-row-' + learner.gcid">
+              <td class="roster-by-course__cell-name">
+                {{ learner.displayName }}
+              </td>
+              <td>
+                <code class="roster-by-course__gcid">{{ learner.gcid }}</code>
+              </td>
+              <td>
+                <div
+                  class="roster-by-course__progress"
+                  [attr.aria-label]="
+                    'rplus.rosterByCourse.progress.aria_label' | translate
+                  "
+                  role="meter"
+                  [attr.aria-valuemin]="0"
+                  [attr.aria-valuemax]="100"
+                  [attr.aria-valuenow]="clampedProgress(learner.progressPct)"
+                  [attr.data-testid]="
+                    'roster-by-course-progress-' + learner.gcid
+                  ">
+                  <span
+                    class="roster-by-course__progress-bar"
+                    [style.width.%]="clampedProgress(learner.progressPct)">
+                  </span>
+                  <span class="roster-by-course__progress-label">
+                    {{ clampedProgress(learner.progressPct) }}%
+                  </span>
+                </div>
+              </td>
+              <td>
+                <time [attr.datetime]="learner.enrolledAt">
+                  {{ learner.enrolledAt }}
+                </time>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

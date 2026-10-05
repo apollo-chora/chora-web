@@ -1,0 +1,130 @@
+<div class="training-enrollment" data-testid="training-enrollment-page">
+  <!-- Header -->
+  <header class="training-enrollment__header">
+    <h1 class="training-enrollment__title">{{ 'training.title' | translate }}</h1>
+  </header>
+
+  <!-- Filter bar -->
+  <div class="training-enrollment__filters" data-testid="training-filters">
+    <select
+      class="training-enrollment__filter-select"
+      aria-label="Filter by topic"
+      data-testid="topic-filter"
+      (change)="onSubjectFilterChange($event)">
+      <option value="">{{ 'training.filter.all-topics' | translate }}</option>
+      @for (topic of availableTopics(); track topic) {
+        <option [value]="topic">{{ topic }}</option>
+      }
+    </select>
+
+    <input
+      type="text"
+      class="training-enrollment__search-input"
+      [placeholder]="'training.filter.search-trainer' | translate"
+      aria-label="Search by trainer name"
+      data-testid="trainer-search"
+      (input)="onTrainerSearchChange($event)" />
+  </div>
+
+  <!-- Session list -->
+  @if (loading()) {
+    <div class="training-enrollment__skeleton-grid" role="status" aria-label="Loading sessions">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="training-enrollment__skeleton-card"></div>
+      }
+    </div>
+  } @else if (error()) {
+    <div class="training-enrollment__error" role="alert" data-testid="training-error">
+      <p>{{ error() }}</p>
+    </div>
+  } @else if (filteredSessions().length === 0) {
+    <div class="training-enrollment__empty" role="status" data-testid="training-empty">
+      <p>{{ 'training.empty' | translate }}</p>
+    </div>
+  } @else {
+    <div class="training-enrollment__grid" role="list" data-testid="session-grid">
+      @for (session of filteredSessions(); track session.id) {
+        <article
+          class="session-card"
+          role="listitem"
+          data-testid="session-card">
+          <div class="session-card__header">
+            <h2 class="session-card__title" data-testid="session-title">{{ session.title }}</h2>
+            <span
+              class="session-card__capacity session-card__capacity--{{ getCapacityLevel(session) }}"
+              data-testid="session-capacity">
+              {{ session.enrolledCount }}/{{ session.capacity }}
+              @if (getCapacityLevel(session) === 'full') {
+                ({{ 'training.capacity.waitlist' | translate }})
+              }
+            </span>
+          </div>
+
+          <div class="session-card__meta">
+            <span class="session-card__trainer" data-testid="session-trainer">
+              {{ session.trainerName }}
+            </span>
+            <span class="session-card__datetime" data-testid="session-datetime">
+              {{ formatDateTime(session.dateTime) }}
+            </span>
+            <span class="session-card__duration" data-testid="session-duration">
+              {{ session.durationMinutes }} min
+            </span>
+          </div>
+
+          @if (session.topics.length > 0) {
+            <div class="session-card__topics">
+              @for (topic of session.topics; track topic) {
+                <span class="session-card__topic-tag">{{ topic }}</span>
+              }
+            </div>
+          }
+
+          <div class="session-card__actions">
+            <button
+              type="button"
+              class="session-card__details-btn"
+              data-testid="session-details-btn"
+              (click)="openDetail(session)">
+              {{ 'training.action.view-details' | translate }}
+            </button>
+
+            @if (enrolledIds().has(session.id) || session.isEnrolled) {
+              <span class="session-card__enrolled-badge" data-testid="session-enrolled-badge">
+                &#10003; {{ 'training.status.enrolled' | translate }}
+              </span>
+            } @else if (getCapacityLevel(session) === 'full') {
+              <button
+                type="button"
+                class="session-card__btn session-card__btn--waitlist"
+                data-testid="session-waitlist-btn"
+                [disabled]="enrollingId() === session.id"
+                (click)="onEnroll(session.id)">
+                {{ 'training.action.join-waitlist' | translate }}
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="session-card__btn session-card__btn--enroll"
+                data-testid="session-enroll-btn"
+                [disabled]="enrollingId() === session.id"
+                (click)="onEnroll(session.id)">
+                {{ 'training.action.enroll' | translate }}
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  <!-- Detail modal -->
+  @if (selectedSession()) {
+    <chora-training-session-detail-modal
+      [session]="selectedSession()!"
+      [enrolling]="enrollingId() === selectedSession()!.id"
+      (closed)="closeDetail()"
+      (enroll)="onEnroll($event)"
+      (withdraw)="onWithdraw($event)" />
+  }
+</div>

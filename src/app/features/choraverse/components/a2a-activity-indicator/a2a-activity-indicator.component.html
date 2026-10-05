@@ -1,0 +1,95 @@
+@if (hasActiveSession()) {
+  <div class="a2a-activity-indicator" data-testid="a2a-activity-indicator">
+    <!-- Pulsing indicator badge -->
+    <button
+      type="button"
+      class="a2a-activity-indicator__badge"
+      [attr.aria-label]="'a2a.activity.indicator_aria' | translate"
+      (mouseenter)="showTooltip()"
+      (mouseleave)="hideTooltip()"
+      (focus)="showTooltip()"
+      (blur)="hideTooltip()"
+      (click)="isStudyConversation() ? toggleChat() : null"
+      (keydown.enter)="isStudyConversation() ? toggleChat() : null">
+
+      <!-- Pulse ring (respects prefers-reduced-motion via CSS) -->
+      <span class="a2a-activity-indicator__pulse" aria-hidden="true"></span>
+
+      <!-- Static dot (always visible) -->
+      <span class="a2a-activity-indicator__dot" aria-hidden="true"></span>
+
+      <!-- Task count badge -->
+      @if (activeTaskCount() > 1) {
+        <span class="a2a-activity-indicator__count" aria-hidden="true">
+          {{ activeTaskCount() }}
+        </span>
+      }
+    </button>
+
+    <!-- Tooltip -->
+    @if (isTooltipVisible() && primaryTask(); as task) {
+      <div class="a2a-activity-indicator__tooltip" role="tooltip" aria-live="polite">
+        <span class="a2a-activity-indicator__tooltip-text">
+          {{ tooltipText() }}
+          {{ 'a2a.activity.talking_to_familiar' | translate }}
+        </span>
+        <span class="a2a-activity-indicator__tooltip-skill">
+          {{ skillLabels[task.skill] | translate }}
+        </span>
+      </div>
+    }
+
+    <!-- Read-only chat tab (study_conversation only) -->
+    @if (isChatOpen() && isStudyConversation()) {
+      <div class="a2a-activity-indicator__chat" role="log"
+        aria-labelledby="a2a-chat-title" aria-live="polite">
+        <header class="a2a-activity-indicator__chat-header">
+          <h3 id="a2a-chat-title" class="a2a-activity-indicator__chat-title">
+            {{ 'a2a.activity.chat_title' | translate }}
+          </h3>
+          <span class="a2a-activity-indicator__chat-badge">
+            {{ 'a2a.activity.read_only' | translate }}
+          </span>
+          <button
+            type="button"
+            class="a2a-activity-indicator__chat-close"
+            [attr.aria-label]="'a2a.activity.close_chat_aria' | translate"
+            (click)="closeChat()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </header>
+
+        <div class="a2a-activity-indicator__chat-messages">
+          @if (chatMessages().length === 0) {
+            <p class="a2a-activity-indicator__chat-empty">
+              {{ 'a2a.activity.chat_waiting' | translate }}
+            </p>
+          } @else {
+            @for (msg of chatMessages(); track msg.id) {
+              <div class="a2a-activity-indicator__chat-message"
+                [class.a2a-activity-indicator__chat-message--familiar]="msg.sender === 'familiar'"
+                [class.a2a-activity-indicator__chat-message--agent]="msg.sender === 'external_agent'">
+                <span class="a2a-activity-indicator__chat-sender">
+                  @if (msg.sender === 'familiar') {
+                    {{ 'a2a.activity.sender_familiar' | translate }}
+                  } @else {
+                    {{ 'a2a.activity.sender_agent' | translate }}
+                  }
+                </span>
+                <span class="a2a-activity-indicator__chat-content">{{ msg.content }}</span>
+                <time class="a2a-activity-indicator__chat-time">
+                  {{ formatTimestamp(msg.timestamp) }}
+                </time>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

@@ -1,0 +1,379 @@
+<section
+  class="stage-completion"
+  role="main"
+  [attr.aria-label]="'admissions.stage_completion_title' | translate"
+  data-testid="stage-completion">
+
+  <!-- Header -->
+  <header class="stage-completion__header">
+    <button
+      type="button"
+      class="stage-completion__back-link"
+      (click)="goBack()"
+      data-testid="back-link"
+      [attr.aria-label]="'common.back' | translate">
+      &larr; {{ 'common.back' | translate }}
+    </button>
+    @if (stageDetail(); as detail) {
+      <h1 class="stage-completion__title" data-testid="stage-title">
+        {{ detail.stage_name }}
+      </h1>
+      @if (detail.instructions) {
+        <p class="stage-completion__instructions">{{ detail.instructions }}</p>
+      }
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="stage-completion__loading" aria-live="polite" data-testid="stage-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="stage-completion__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading() && stageDetail(); as detail) {
+    <div class="stage-completion__content" data-testid="stage-content">
+      @switch (detail.stage_type) {
+
+        <!-- Document Upload -->
+        @case ('document_upload') {
+          <div class="stage-completion__section" data-testid="document-upload-section">
+            <h2 class="stage-completion__section-title">
+              {{ 'admissions.upload_documents' | translate }}
+            </h2>
+            <p class="stage-completion__hint">
+              {{ 'admissions.accepted_formats' | translate }}: {{ acceptedTypes().join(', ') }}
+              | {{ 'admissions.max_size' | translate }}: {{ maxFileSizeMb() }}MB
+            </p>
+
+            <!-- Drop Zone -->
+            <div
+              class="stage-completion__drop-zone"
+              [class.stage-completion__drop-zone--active]="dragOver()"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event)"
+              (keydown)="onKeyActivateUpload($event)"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'admissions.drop_files_here' | translate"
+              data-testid="drop-zone">
+              <span class="stage-completion__drop-icon" aria-hidden="true">&#128196;</span>
+              <p class="stage-completion__drop-text">
+                {{ 'admissions.drop_files_here' | translate }}
+              </p>
+              <label class="stage-completion__browse-btn" for="file-input">
+                {{ 'admissions.browse_files' | translate }}
+              </label>
+              <input
+                #fileInput
+                type="file"
+                id="file-input"
+                class="stage-completion__file-input"
+                [accept]="acceptedTypes().map(t => '.' + t).join(',')"
+                (change)="onFileSelected($event)"
+                data-testid="file-input"
+                [attr.aria-label]="'admissions.select_file' | translate" />
+            </div>
+
+            @if (uploading()) {
+              <div class="stage-completion__upload-progress" aria-live="polite" data-testid="upload-progress">
+                <span class="stage-completion__upload-spinner" aria-hidden="true"></span>
+                {{ 'admissions.uploading' | translate }}: {{ uploadProgress() }}
+              </div>
+            }
+
+            <!-- Uploaded Documents -->
+            @if (documents().length > 0) {
+              <div class="stage-completion__documents" data-testid="uploaded-documents">
+                <h3 class="stage-completion__subsection-title">
+                  {{ 'admissions.uploaded_files' | translate }}
+                </h3>
+                @for (doc of documents(); track trackByDocId($index, doc)) {
+                  <div class="stage-completion__doc-row" [attr.data-testid]="'doc-' + $index">
+                    <span class="stage-completion__doc-name">{{ doc.filename }}</span>
+                    <span
+                      class="stage-completion__scan-badge"
+                      [class]="getScanStatusClass(doc)"
+                      [attr.aria-label]="'admissions.scan_status' | translate">
+                      @switch (doc.scan_status) {
+                        @case ('clean') {
+                          <span aria-hidden="true">&#10003;</span>
+                          {{ 'admissions.scan_clean' | translate }}
+                        }
+                        @case ('rejected') {
+                          <span aria-hidden="true">&#10007;</span>
+                          {{ 'admissions.scan_rejected' | translate }}
+                        }
+                        @case ('scanning') {
+                          <span aria-hidden="true">&#8987;</span>
+                          {{ 'admissions.scan_scanning' | translate }}
+                        }
+                        @default {
+                          <span aria-hidden="true">&#8226;</span>
+                          {{ 'admissions.scan_pending' | translate }}
+                        }
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Form -->
+        @case ('form') {
+          <div class="stage-completion__section" data-testid="form-section">
+            <h2 class="stage-completion__section-title">
+              {{ 'admissions.complete_form' | translate }}
+            </h2>
+            @for (field of formFields(); track trackByFieldId($index, field)) {
+              <div class="stage-completion__form-field" [attr.data-testid]="'field-' + field.id">
+                <label [for]="'form-field-' + field.id" class="stage-completion__form-label">
+                  {{ field.label }}
+                  @if (field.required) {
+                    <span class="stage-completion__required" aria-hidden="true">*</span>
+                  }
+                </label>
+                @switch (field.type) {
+                  @case ('textarea') {
+                    <textarea
+                      [id]="'form-field-' + field.id"
+                      class="stage-completion__form-textarea"
+                      [ngModel]="formResponses()[field.id] ?? ''"
+                      (ngModelChange)="onFormFieldChange(field.id, $event)"
+                      [placeholder]="field.placeholder"
+                      [required]="field.required"
+                      rows="4"
+                      [attr.aria-label]="field.label"
+                      [attr.aria-required]="field.required"></textarea>
+                  }
+                  @case ('select') {
+                    <select
+                      [id]="'form-field-' + field.id"
+                      class="stage-completion__form-select"
+                      [ngModel]="formResponses()[field.id] ?? ''"
+                      (ngModelChange)="onFormFieldChange(field.id, $event)"
+                      [required]="field.required"
+                      [attr.aria-label]="field.label"
+                      [attr.aria-required]="field.required">
+                      <option value="">{{ 'admissions.select_option' | translate }}</option>
+                      @for (opt of field.options; track opt) {
+                        <option [value]="opt">{{ opt }}</option>
+                      }
+                    </select>
+                  }
+                  @case ('checkbox') {
+                    <label class="stage-completion__checkbox-label">
+                      <input
+                        type="checkbox"
+                        [id]="'form-field-' + field.id"
+                        [ngModel]="formResponses()[field.id] ?? false"
+                        (ngModelChange)="onFormFieldChange(field.id, $event)"
+                        [attr.aria-label]="field.label" />
+                      {{ field.placeholder || field.label }}
+                    </label>
+                  }
+                  @case ('date') {
+                    <input
+                      type="date"
+                      [id]="'form-field-' + field.id"
+                      class="stage-completion__form-input"
+                      [ngModel]="formResponses()[field.id] ?? ''"
+                      (ngModelChange)="onFormFieldChange(field.id, $event)"
+                      [required]="field.required"
+                      [attr.aria-label]="field.label"
+                      [attr.aria-required]="field.required" />
+                  }
+                  @case ('number') {
+                    <input
+                      type="number"
+                      [id]="'form-field-' + field.id"
+                      class="stage-completion__form-input"
+                      [ngModel]="formResponses()[field.id] ?? ''"
+                      (ngModelChange)="onFormFieldChange(field.id, $event)"
+                      [placeholder]="field.placeholder"
+                      [required]="field.required"
+                      [attr.aria-label]="field.label"
+                      [attr.aria-required]="field.required" />
+                  }
+                  @default {
+                    <input
+                      type="text"
+                      [id]="'form-field-' + field.id"
+                      class="stage-completion__form-input"
+                      [ngModel]="formResponses()[field.id] ?? ''"
+                      (ngModelChange)="onFormFieldChange(field.id, $event)"
+                      [placeholder]="field.placeholder"
+                      [required]="field.required"
+                      [attr.aria-label]="field.label"
+                      [attr.aria-required]="field.required" />
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Assessment -->
+        @case ('assessment') {
+          <div class="stage-completion__section" data-testid="assessment-section">
+            <h2 class="stage-completion__section-title">
+              {{ 'admissions.complete_assessment' | translate }}
+            </h2>
+            <p class="stage-completion__hint">
+              {{ 'admissions.assessment_instructions' | translate }}
+            </p>
+            <button
+              type="button"
+              class="stage-completion__launch-btn"
+              (click)="launchAssessment()"
+              data-testid="launch-assessment-btn"
+              [attr.aria-label]="'admissions.launch_assessment' | translate">
+              {{ 'admissions.launch_assessment' | translate }}
+            </button>
+          </div>
+        }
+
+        <!-- Interview -->
+        @case ('interview') {
+          <div class="stage-completion__section" data-testid="interview-section">
+            <h2 class="stage-completion__section-title">
+              {{ 'admissions.book_interview' | translate }}
+            </h2>
+
+            @if (bookedSlot(); as slot) {
+              <div class="stage-completion__booked-slot" data-testid="booked-slot">
+                <h3 class="stage-completion__subsection-title">
+                  {{ 'admissions.booked_slot' | translate }}
+                </h3>
+                <p>{{ slot.start_time | date:'medium' }} - {{ slot.end_time | date:'medium' }}</p>
+                @if (slot.location) {
+                  <p>{{ 'admissions.location' | translate }}: {{ slot.location }}</p>
+                }
+                @if (slot.meeting_url) {
+                  <p>
+                    <a [href]="slot.meeting_url" target="_blank" rel="noopener noreferrer"
+                       [attr.aria-label]="'admissions.join_meeting' | translate">
+                      {{ 'admissions.join_meeting' | translate }}
+                    </a>
+                  </p>
+                }
+              </div>
+            } @else {
+              <div class="stage-completion__slot-list" data-testid="available-slots"
+                   role="radiogroup" [attr.aria-label]="'admissions.available_slots' | translate">
+                @for (slot of interviewSlots(); track trackBySlotId($index, slot)) {
+                  <div
+                    class="stage-completion__slot-option"
+                    [class.stage-completion__slot-option--selected]="selectedSlotId() === slot.id"
+                    [class.stage-completion__slot-option--booked]="slot.booked"
+                    [attr.data-testid]="'slot-' + $index">
+                    <label class="stage-completion__slot-label">
+                      <input
+                        type="radio"
+                        name="interview-slot"
+                        [value]="slot.id"
+                        [checked]="selectedSlotId() === slot.id"
+                        [disabled]="slot.booked"
+                        (change)="selectSlot(slot.id)"
+                        [attr.aria-label]="(slot.start_time | date:'medium') + ' - ' + (slot.end_time | date:'medium')" />
+                      <span>{{ slot.start_time | date:'medium' }} - {{ slot.end_time | date:'medium' }}</span>
+                    </label>
+                    @if (slot.location) {
+                      <span class="stage-completion__slot-location">{{ slot.location }}</span>
+                    }
+                    @if (slot.booked) {
+                      <span class="stage-completion__slot-booked-badge">
+                        {{ 'admissions.slot_taken' | translate }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Prerequisite Check -->
+        @case ('prerequisite_check') {
+          <div class="stage-completion__section" data-testid="prerequisite-section">
+            <h2 class="stage-completion__section-title">
+              {{ 'admissions.prerequisite_check' | translate }}
+            </h2>
+            <div class="stage-completion__prereq-list">
+              @for (result of prerequisiteResults(); track trackByResultId($index, result)) {
+                <div
+                  class="stage-completion__prereq-item"
+                  [class.stage-completion__prereq-item--passed]="result.passed"
+                  [class.stage-completion__prereq-item--failed]="!result.passed"
+                  [attr.data-testid]="'prereq-' + $index">
+                  <span class="stage-completion__prereq-icon" aria-hidden="true">
+                    @if (result.passed) {
+                      &#10003;
+                    } @else {
+                      &#10007;
+                    }
+                  </span>
+                  <div class="stage-completion__prereq-content">
+                    <span class="stage-completion__prereq-desc">{{ result.description }}</span>
+                    <span class="stage-completion__prereq-detail">{{ result.detail }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+            @if (!allPrerequisitesPassed()) {
+              <div class="stage-completion__prereq-warning" role="alert" data-testid="prereq-warning">
+                {{ 'admissions.prerequisites_not_met' | translate }}
+              </div>
+            }
+          </div>
+        }
+
+        @default {
+          <div class="stage-completion__section" data-testid="unknown-section">
+            <p>{{ 'admissions.unknown_stage_type' | translate }}</p>
+          </div>
+        }
+      }
+
+      <!-- Validation Errors -->
+      @if (validationErrors().length > 0) {
+        <div class="stage-completion__errors" role="alert" aria-live="polite" data-testid="validation-errors">
+          @for (err of validationErrors(); track err) {
+            <p class="stage-completion__error-msg">{{ err }}</p>
+          }
+        </div>
+      }
+
+      <!-- Submit -->
+      <footer class="stage-completion__footer" data-testid="stage-footer">
+        <button
+          type="button"
+          class="stage-completion__btn stage-completion__btn--secondary"
+          (click)="goBack()"
+          data-testid="stage-back-btn"
+          [attr.aria-label]="'common.back' | translate">
+          {{ 'common.back' | translate }}
+        </button>
+        @if (detail.stage_type !== 'prerequisite_check' || allPrerequisitesPassed()) {
+          <button
+            type="button"
+            class="stage-completion__btn stage-completion__btn--primary"
+            [disabled]="!canSubmit() || submitting()"
+            (click)="submitStage()"
+            data-testid="submit-stage-btn"
+            [attr.aria-label]="'admissions.submit_stage' | translate">
+            @if (submitting()) {
+              {{ 'admissions.submitting' | translate }}
+            } @else {
+              {{ 'admissions.submit_stage' | translate }}
+            }
+          </button>
+        }
+      </footer>
+    </div>
+  }
+</section>

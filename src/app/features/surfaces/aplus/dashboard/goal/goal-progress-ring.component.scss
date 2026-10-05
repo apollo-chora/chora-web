@@ -1,0 +1,60 @@
+// GoalProgressRingComponent — compact verified-progress %-ring (CHO-1921).
+// Glass-consistent, tablet-legible; the arc uses the per-surface accent
+// (`--primary`) so it picks up A+'s brand colour. Progress is reinforced by the
+// centred numeric percent + the host aria-label — never colour alone.
+
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  line-height: 0;
+}
+
+.goal-progress-ring__wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.goal-progress-ring__svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(0deg); // keep the box upright; the arc itself is rotated
+}
+
+.goal-progress-ring__track {
+  stroke: var(--glass-border, rgba(255, 255, 255, 0.5));
+  stroke-width: 3;
+}
+
+.goal-progress-ring__arc {
+  stroke: var(--primary, var(--chora-color-primary, #1976d2));
+  stroke-width: 3.4;
+  transition: stroke-dasharray 0.6s ease;
+}
+
+.goal-progress-ring__percent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-main, #1e293b);
+  font-variant-numeric: tabular-nums;
+}
+
+// Honour reduced-motion — no animated fill sweep.
+@media (prefers-reduced-motion: reduce) {
+  .goal-progress-ring__arc {
+    transition: none;
+  }
+}

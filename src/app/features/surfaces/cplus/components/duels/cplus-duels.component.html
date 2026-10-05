@@ -1,0 +1,372 @@
+<chora-cplus-page-header
+  [title]="'cplus.duels.page_title' | translate"
+  [description]="'cplus.duels.page_subtitle' | translate"
+  [breadcrumb]="breadcrumb"
+></chora-cplus-page-header>
+
+<div class="cplus-duels">
+  @switch (step()) {
+    @case ('lobby') {
+      <!-- Two-column layout: left = play, right = stats/leaderboard -->
+      <div class="cplus-duels__lobby-grid">
+        <!-- LEFT: Matchmaking panel -->
+        <div class="cplus-duels__play-panel">
+          <!-- Hero illustration -->
+          <div class="cplus-duels__hero-art">
+            <img src="assets/illustrations/duels/game-day.svg" alt="" aria-hidden="true" />
+            <div class="cplus-duels__hero-art-tagline">
+              <h2 class="cplus-duels__hero-art-title">Ready to Duel?</h2>
+              <p class="cplus-duels__hero-art-sub">{{ 'cplus.duels.page_subtitle' | translate }}</p>
+            </div>
+          </div>
+
+          <!-- Player rating hero -->
+          @switch (ratingState().status) {
+            @case ('loading') {
+              <div class="cplus-duels__rating-skeleton">
+                <span class="cplus-duels__rating-skeleton-spark"></span>
+              </div>
+            }
+            @case ('error') {
+              <div class="cplus-duels__rating-error">
+                {{ $any(ratingState()).error.message | translate }}
+              </div>
+            }
+            @case ('success') {
+              <div class="cplus-duels__rating-hero">
+                <div class="cplus-duels__rating-hero-main">
+                  <div class="cplus-duels__rating-icon-ring" aria-hidden="true">
+                    <i class="fa-solid fa-trophy"></i>
+                  </div>
+                  <div class="cplus-duels__rating-hero-text">
+                    <span class="cplus-duels__rating-hero-value">{{ $any(ratingState()).rating.rating }}</span>
+                    <span class="cplus-duels__rating-hero-label">{{ 'cplus.duels.rating' | translate }}</span>
+                  </div>
+                </div>
+                <div class="cplus-duels__rating-hero-record">
+                  <span class="cplus-duels__rating-hero-wl">
+                    <strong class="cplus-duels__rating-hero-w">{{ $any(ratingState()).rating.wins }}</strong>W
+                    <strong class="cplus-duels__rating-hero-l">{{ $any(ratingState()).rating.losses }}</strong>L
+                    <strong class="cplus-duels__rating-hero-d">{{ $any(ratingState()).rating.draws }}</strong>D
+                  </span>
+                  <span class="cplus-duels__rating-hero-peak">
+                    <i class="fa-solid fa-mountain" aria-hidden="true"></i>
+                    {{ $any(ratingState()).rating.peak_elo }} {{ 'cplus.duels.peak_elo' | translate }}
+                  </span>
+                </div>
+              </div>
+            }
+          }
+
+          @if (searchError()) {
+            <div class="cplus-duels__play-error" role="alert">
+              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+              {{ $any(searchError()) | translate }}
+            </div>
+          }
+
+          <!-- Mode selection cards -->
+          <div class="cplus-duels__mode-cards">
+            <button
+              type="button"
+              class="cplus-duels__mode-card"
+              [class.cplus-duels__mode-card--active]="selectedMode() === 'classic'"
+              (click)="selectMode('classic')"
+            >
+              <div class="cplus-duels__mode-card-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <span class="cplus-duels__mode-card-label">{{ 'cplus.duels.mode_classic' | translate }}</span>
+              <span class="cplus-duels__mode-card-desc">{{ 'cplus.duels.mode_classic_desc' | translate }}</span>
+            </button>
+            <button
+              type="button"
+              class="cplus-duels__mode-card"
+              [class.cplus-duels__mode-card--active]="selectedMode() === 'blitz'"
+              (click)="selectMode('blitz')"
+            >
+              <div class="cplus-duels__mode-card-icon">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+              <span class="cplus-duels__mode-card-label">{{ 'cplus.duels.mode_blitz' | translate }}</span>
+              <span class="cplus-duels__mode-card-desc">{{ 'cplus.duels.mode_blitz_desc' | translate }}</span>
+            </button>
+          </div>
+
+          <!-- Blitz variant -->
+          @if (selectedMode() === 'blitz') {
+            <div class="cplus-duels__variant-row">
+              <div class="cplus-duels__preset-group" role="group" aria-label="Blitz variant">
+                <button
+                  type="button"
+                  class="cplus-duels__preset-btn"
+                  [class.cplus-duels__preset-btn--selected]="selectedBlitzVariant() === 'timed'"
+                  (click)="selectBlitzVariant('timed')"
+                >
+                  <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                  {{ 'cplus.duels.blitz_timed' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="cplus-duels__preset-btn"
+                  [class.cplus-duels__preset-btn--selected]="selectedBlitzVariant() === 'race'"
+                  (click)="selectBlitzVariant('race')"
+                >
+                  <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+                  {{ 'cplus.duels.blitz_race' | translate }}
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Question count + category -->
+          <div class="cplus-duels__config-row">
+            <div class="cplus-duels__preset-group" role="group" aria-label="Question count preset">
+              <button
+                type="button"
+                class="cplus-duels__preset-btn"
+                [class.cplus-duels__preset-btn--selected]="selectedPreset() === 'quick'"
+                (click)="selectPreset('quick')"
+              >5</button>
+              <button
+                type="button"
+                class="cplus-duels__preset-btn"
+                [class.cplus-duels__preset-btn--selected]="selectedPreset() === 'standard'"
+                (click)="selectPreset('standard')"
+              >10</button>
+              <button
+                type="button"
+                class="cplus-duels__preset-btn"
+                [class.cplus-duels__preset-btn--selected]="selectedPreset() === 'marathon'"
+                (click)="selectPreset('marathon')"
+              >15</button>
+            </div>
+            <div class="cplus-duels__preset-group cplus-duels__preset-group--scroll" role="group" aria-label="Category">
+              @for (cat of categoryLabels; track cat) {
+                <button
+                  type="button"
+                  class="cplus-duels__preset-btn"
+                  [class.cplus-duels__preset-btn--selected]="selectedCategory() === cat"
+                  (click)="selectCategory(cat)"
+                >{{ 'cplus.duels.category_' + cat | translate }}</button>
+              }
+            </div>
+          </div>
+
+          <button type="button" class="cplus-duels__find-btn" (click)="findMatch()">
+            <i class="fa-solid fa-crossed-swords" aria-hidden="true"></i>
+            {{ 'cplus.duels.find_match' | translate }}
+          </button>
+        </div>
+
+        <!-- RIGHT: Leaderboard -->
+        <div class="cplus-duels__side-panel">
+          @if (leaderboardState().status === 'success' && $any(leaderboardState()).entries.length > 0) {
+            <div class="cplus-duels__leaderboard">
+              <h3 class="cplus-duels__leaderboard-title">
+                <i class="fa-solid fa-ranking-star" aria-hidden="true"></i>
+                {{ 'cplus.duels.leaderboard_title' | translate }}
+              </h3>
+              <div class="cplus-duels__leaderboard-list" role="list">
+                @for (entry of $any(leaderboardState()).entries; track entry.gcid; let i = $index) {
+                  <div
+                    class="cplus-duels__leaderboard-row"
+                    [class.cplus-duels__leaderboard-row--me]="entry.gcid === myGcid()"
+                    role="listitem"
+                  >
+                    <span class="cplus-duels__leaderboard-rank" [class.cplus-duels__leaderboard-rank--top3]="i < 3">{{ i + 1 }}</span>
+                    <span class="cplus-duels__leaderboard-name">
+                      {{ entry.gcid === myGcid() ? ('cplus.duels.you' | translate) : (entry.display_name || shortGcid(entry.gcid)) }}
+                    </span>
+                    <span class="cplus-duels__leaderboard-rating">{{ entry.rating }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @case ('searching') {
+      <chora-cplus-card [title]="'cplus.duels.searching_title' | translate">
+        <div class="cplus-duels__searching">
+          <img class="cplus-duels__searching-art" src="assets/illustrations/duels/quiz.svg" alt="" aria-hidden="true" />
+          <div class="cplus-duels__searching-spinner-wrapper">
+            <span class="cplus-duels__searching-spinner"></span>
+            <span class="cplus-duels__searching-pulse"></span>
+          </div>
+          <p class="cplus-duels__searching-text">{{ 'cplus.duels.searching' | translate }}</p>
+          @if (searchCountdown()) {
+            <p class="cplus-duels__searching-countdown" role="timer" aria-live="polite">{{ searchCountdown() }}</p>
+          }
+          <button type="button" class="cplus-duels__searching-cancel-btn" (click)="cancelMatchmaking()">
+            {{ 'cplus.duels.cancel' | translate }}
+          </button>
+        </div>
+      </chora-cplus-card>
+    }
+
+    @case ('arena') {
+      <chora-cplus-card [title]="'cplus.duels.arena_title' | translate">
+        <div class="cplus-duels-arena">
+          <!-- Arena status bar -->
+          <div class="cplus-duels-arena__statusbar">
+            <div class="cplus-duels-arena__round-info">
+              <span class="cplus-duels-arena__round-label">{{ 'cplus.duels.round' | translate }}</span>
+              <span class="cplus-duels-arena__round-value">{{ currentRound() }}/{{ totalRounds() }}</span>
+            </div>
+            @if (roundCountdown()) {
+              <span class="cplus-duels-arena__timer" [class.cplus-duels-arena__timer--urgent]="roundCountdown() === '0:00'">
+                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                {{ roundCountdown() }}
+              </span>
+            }
+            @if (blitzCountdown()) {
+              <span class="cplus-duels-arena__timer cplus-duels-arena__timer--blitz" [class.cplus-duels-arena__timer--urgent]="blitzCountdown() === '0:00'">
+                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                {{ blitzCountdown() }}
+              </span>
+            }
+            <div class="cplus-duels-arena__scoreboard">
+              <span class="cplus-duels-arena__score cplus-duels-arena__score--me">{{ scoreMe() }}</span>
+              <span class="cplus-duels-arena__score-sep">vs</span>
+              <span class="cplus-duels-arena__score cplus-duels-arena__score--opp">{{ scoreOpponent() }}</span>
+            </div>
+            @if (comboMe() >= 2) {
+              <span class="cplus-duels-arena__combo" aria-live="polite">
+                <i class="fa-solid fa-fire" aria-hidden="true"></i>
+                {{ comboMe() }}x
+              </span>
+            }
+            @if (wsReconnecting() || (!wsConnected() && !connectionLost())) {
+              <span class="cplus-duels-arena__reconnecting">{{ 'cplus.duels.reconnecting' | translate }}</span>
+            }
+          </div>
+
+          <!-- Blitz arena: all questions at once -->
+          @if (blitzQuestions().length > 0) {
+            <div class="cplus-duels-arena__blitz-questions">
+              @for (q of blitzQuestions(); track q.round_no) {
+                <div
+                  class="cplus-duels-arena__blitz-card"
+                  [class.cplus-duels-arena__blitz-card--answered]="blitzAnswered().has(q.round_no)"
+                  [class.cplus-duels-arena__blitz-card--correct]="blitzResults().get(q.round_no)?.correct"
+                >
+                  <div class="cplus-duels-arena__blitz-card-header">
+                    <span class="cplus-duels-arena__blitz-card-no">Q{{ q.round_no }}</span>
+                    @if (blitzResults().get(q.round_no); as result) {
+                      <span class="cplus-duels-arena__blitz-card-result" [class.cplus-duels-arena__blitz-card-result--correct]="result.correct">
+                        {{ result.correct ? '✓' : '✗' }} +{{ result.points }}
+                      </span>
+                    }
+                  </div>
+                  <p class="cplus-duels-arena__blitz-card-text">{{ q.question }}</p>
+                  <div class="cplus-duels-arena__blitz-card-options">
+                    @for (opt of q.options; track opt) {
+                      <button
+                        type="button"
+                        class="cplus-duels-arena__option cplus-duels-arena__option--blitz"
+                        [disabled]="blitzAnswered().has(q.round_no)"
+                        (click)="selectBlitzAnswer(q.round_no, opt)"
+                      >{{ opt }}</button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Classic arena: one question at a time -->
+          @if (blitzQuestions().length === 0 && question()) {
+            <div class="cplus-duels-arena__question">
+              <p>{{ question() }}</p>
+            </div>
+          }
+
+          @if (blitzQuestions().length === 0 && options().length > 0) {
+            <div class="cplus-duels-arena__options">
+              @for (opt of options(); track opt) {
+                <button
+                  type="button"
+                  class="cplus-duels-arena__option"
+                  [class.cplus-duels-arena__option--selected]="selectedAnswer() === opt"
+                  [disabled]="selectedAnswer() !== null"
+                  (click)="selectAnswer(opt)"
+                >{{ opt }}</button>
+              }
+            </div>
+          }
+
+          @if (blitzQuestions().length === 0 && lastResult(); as result) {
+            <div class="cplus-duels-arena__result" [class.cplus-duels-arena__result--correct]="result.correct">
+              <i class="fa-solid {{ result.correct ? 'fa-check-circle' : 'fa-times-circle' }}" aria-hidden="true"></i>
+              {{ result.timeout
+                  ? ('cplus.duels.timeout' | translate)
+                  : (result.correct
+                      ? ('cplus.duels.correct' | translate)
+                      : ('cplus.duels.incorrect' | translate)) }}
+              <span class="cplus-duels-arena__result-points">+{{ result.points }}</span>
+            </div>
+          }
+
+          @if (blitzQuestions().length === 0 && hypeMessage(); as hype) {
+            <div class="cplus-duels-arena__hype" [class.cplus-duels-arena__hype--positive]="lastResult()?.correct">
+              {{ hype }}
+            </div>
+          }
+
+          @if (blitzQuestions().length > 0 && hypeMessage(); as hype) {
+            <div class="cplus-duels-arena__hype cplus-duels-arena__hype--blitz" [class.cplus-duels-arena__hype--positive]="lastResult()?.correct ?? blitzResults().size > 0">
+              {{ hype }}
+            </div>
+          }
+
+          @if (blitzQuestions().length === 0 && waitingForOpponent()) {
+            <div class="cplus-duels-arena__waiting">
+              <span class="cplus-duels-arena__waiting-spinner"></span>
+              {{ 'cplus.duels.waiting_opponent' | translate }}
+            </div>
+          }
+
+          @if (duelOutcome(); as outcome) {
+            <div class="cplus-duels-arena__outcome-art">
+              @if (outcome === 'win') {
+                <img src="assets/illustrations/duels/winners.svg" alt="" aria-hidden="true" />
+              } @else if (outcome === 'loss') {
+                <img src="assets/illustrations/duels/feeling-proud.svg" alt="" aria-hidden="true" />
+              } @else {
+                <img src="assets/illustrations/duels/celebrating.svg" alt="" aria-hidden="true" />
+              }
+            </div>
+            <div
+              class="cplus-duels-arena__outcome"
+              [class.cplus-duels-arena__outcome--win]="outcome === 'win'"
+              [class.cplus-duels-arena__outcome--loss]="outcome === 'loss'"
+              [class.cplus-duels-arena__outcome--draw]="outcome === 'draw'"
+            >
+              <i class="fa-solid {{ outcome === 'win' ? 'fa-crown' : outcome === 'loss' ? 'fa-skull' : 'fa-handshake' }}" aria-hidden="true"></i>
+              @switch (outcome) {
+                @case ('win') { {{ 'cplus.duels.outcome_win' | translate }} }
+                @case ('loss') { {{ 'cplus.duels.outcome_loss' | translate }} }
+                @case ('draw') { {{ 'cplus.duels.outcome_draw' | translate }} }
+              }
+            </div>
+            <button type="button" class="cplus-duels-arena__back-btn" (click)="backToLobby()">
+              {{ 'cplus.duels.back_to_lobby' | translate }}
+            </button>
+          }
+
+          @if (connectionLost() && !duelOutcome()) {
+            <div class="cplus-duels-arena__connection-lost">
+              <p>{{ 'cplus.duels.connection_lost' | translate }}</p>
+              <button type="button" class="cplus-duels-arena__back-btn" (click)="backToLobby()">
+                {{ 'cplus.duels.back_to_lobby' | translate }}
+              </button>
+            </div>
+          }
+        </div>
+      </chora-cplus-card>
+    }
+  }
+</div>

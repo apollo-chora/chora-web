@@ -1,0 +1,378 @@
+:host {
+  display: block;
+}
+
+.marketplace-detail {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__description {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Pricing + CTA
+  // -------------------------------------------------------------------------
+
+  &__pricing-section {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-end: var(--chora-space-lg, 24px);
+    flex-wrap: wrap;
+  }
+
+  &__price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--chora-color-text, #111);
+  }
+
+  &__interval {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  // -------------------------------------------------------------------------
+  // Carousel
+  // -------------------------------------------------------------------------
+
+  &__carousel {
+    position: relative;
+    margin-block-end: var(--chora-space-lg, 24px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__carousel-viewport {
+    width: 100%;
+    max-width: 640px;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--chora-radius-md, 8px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    background: var(--chora-color-surface-1, #fafafa);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__carousel-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  &__carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: 50%;
+    background: var(--chora-color-surface-0, #fff);
+    cursor: pointer;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--prev {
+      inset-inline-start: -20px;
+    }
+
+    &--next {
+      inset-inline-end: -20px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__carousel-indicators {
+    display: flex;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--chora-color-border, #ccc);
+
+    &--active {
+      background: var(--chora-color-primary, #2563eb);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Section Headings
+  // -------------------------------------------------------------------------
+
+  &__section-heading {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-md, 16px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Features
+  // -------------------------------------------------------------------------
+
+  &__features {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__feature-item {
+    font-size: 0.875rem;
+    padding-inline-start: var(--chora-space-lg, 24px);
+    position: relative;
+
+    &::before {
+      content: '\2713';
+      position: absolute;
+      inset-inline-start: 0;
+      color: #16a34a;
+      font-weight: 700;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Long Description
+  // -------------------------------------------------------------------------
+
+  &__long-desc {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__long-desc-text {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Compatibility Matrix
+  // -------------------------------------------------------------------------
+
+  &__compatibility {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__compat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+
+    th,
+    td {
+      padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+      text-align: start;
+      border-block-end: 1px solid var(--chora-color-border, #e5e5e5);
+    }
+
+    th {
+      font-weight: 600;
+      background: var(--chora-color-surface-1, #fafafa);
+    }
+  }
+
+  &__compat-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: capitalize;
+  }
+
+  &__compat--compatible {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  &__compat--required {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  &__compat--incompatible {
+    background: #fecaca;
+    color: #991b1b;
+  }
+
+  // -------------------------------------------------------------------------
+  // Reviews
+  // -------------------------------------------------------------------------
+
+  &__reviews {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__review-summary {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__no-reviews {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__review-card {
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-sm, 4px);
+    padding: var(--chora-space-md, 16px);
+    margin-block-end: var(--chora-space-sm, 8px);
+  }
+
+  &__review-header {
+    display: flex;
+    justify-content: space-between;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__review-author {
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  &__review-date {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__review-stars {
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__star {
+    color: var(--chora-color-border, #ccc);
+    font-size: 1rem;
+
+    &--filled {
+      color: #f59e0b;
+    }
+  }
+
+  &__review-text {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Buttons
+  // -------------------------------------------------------------------------
+
+  &__btn {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-lg, 24px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+
+    &--primary {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Loading / Error
+  // -------------------------------------------------------------------------
+
+  &__loading {
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__skeleton-row {
+    height: 16px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-sm, 4px);
+    margin-block-end: var(--chora-space-sm, 8px);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+  }
+
+  &__error-text {
+    font-size: 0.875rem;
+    color: #991b1b;
+    margin: 0;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Desktop enhancement
+@media (min-width: 1280px) {
+  .marketplace-detail {
+    max-width: 960px;
+
+    &__pricing-section {
+      gap: var(--chora-space-md, 16px);
+    }
+
+    &__carousel-viewport {
+      max-width: 800px;
+    }
+  }
+}

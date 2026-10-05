@@ -1,0 +1,17 @@
+@use 'styles/tokens';
+@use 'styles/polyglass-tokens';
+@use 'styles/reset';
+@use 'styles/typography';
+@use 'styles/polyglass-components';
+@use 'styles/tooltip';
+@use 'styles/surface-accents';
+@use 'styles/aplus-hub';
+@use 'styles/imda-accents';
+@use 'styles/rtl';
+
+// C+ surface tokens — scoped aliases resolving to --chora-* (ADR-196).
+// Emitted to :root so var(--cplus-*) is available to all C+ components.
+@use 'app/features/surfaces/cplus/styles/cplus-tokens';
+
+// Global entrypoint: each partial above is a layer of the glassmorphism design
+// system (tokens → reset → typography → components → per-surface accents → rtl).

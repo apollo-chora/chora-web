@@ -1,0 +1,198 @@
+:host {
+  display: block;
+}
+
+.nudge-preview {
+  padding: var(--chora-space-md, 16px);
+  border-radius: var(--chora-radius-md, 8px);
+  background: var(--chora-color-surface-1, #ffffff);
+  border: 1px solid var(--chora-color-border, #e0e0e0);
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-bottom: var(--chora-space-md, 16px);
+
+    .material-icons-outlined {
+      font-size: 24px;
+      color: var(--chora-color-primary, #1976d2);
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Loading / Error
+  // ---------------------------------------------------------------------------
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    font-size: 14px;
+    color: var(--chora-color-text-secondary, #757575);
+  }
+
+  &__spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--chora-color-surface-2, #e0e0e0);
+    border-top-color: var(--chora-color-primary, #1976d2);
+    border-radius: 50%;
+    animation: nudge-spin 0.8s linear infinite;
+  }
+
+  &__error-msg {
+    font-size: 14px;
+    color: #f44336;
+    margin: 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Message row
+  // ---------------------------------------------------------------------------
+
+  &__message-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--chora-space-sm, 8px);
+    margin-bottom: var(--chora-space-sm, 8px);
+  }
+
+  &__urgency {
+    font-size: 24px;
+    flex-shrink: 0;
+
+    &--low {
+      color: #4caf50;
+    }
+
+    &--medium {
+      color: #ff9800;
+    }
+
+    &--high {
+      color: #f44336;
+      animation: nudge-pulse 1.5s infinite;
+    }
+
+    &--critical {
+      color: #b71c1c;
+      animation: nudge-pulse 0.8s infinite;
+    }
+  }
+
+  &__message {
+    margin: 0;
+    font-size: 14px;
+    color: var(--chora-color-text-primary, #212121);
+    line-height: 1.5;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Meta
+  // ---------------------------------------------------------------------------
+
+  &__meta {
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-2, #e0e0e0);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--chora-color-text-secondary, #757575);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Suggested atoms
+  // ---------------------------------------------------------------------------
+
+  &__suggestions {
+    h4 {
+      margin: 0 0 var(--chora-space-sm, 8px);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--chora-color-text-primary, #212121);
+    }
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__item {
+    margin: 0;
+    padding: 0;
+  }
+
+  &__atom-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    border: none;
+    border-radius: var(--chora-radius-sm, 4px);
+    background: transparent;
+    cursor: pointer;
+    text-align: start;
+
+    &:hover {
+      background: var(--chora-color-surface-0, #fafafa);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #1976d2);
+      outline-offset: 2px;
+    }
+  }
+
+  &__atom-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--chora-color-primary, #1976d2);
+  }
+
+  &__atom-reason {
+    font-size: 12px;
+    color: var(--chora-color-text-secondary, #757575);
+  }
+}
+
+@keyframes nudge-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nudge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge-preview__urgency--high,
+  .nudge-preview__urgency--critical {
+    animation: none;
+  }
+}

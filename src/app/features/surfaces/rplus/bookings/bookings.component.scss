@@ -1,0 +1,381 @@
+// R+ Bookings — polyglass BEM, tablet-first (≥768px primary,
+// ≥1280px desktop enhanced). Surface accent: amber (#b45309 / #ea580c).
+
+:host { display: block; }
+
+.bookings {
+  padding: 1.5rem;
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    i { font-size: 0.625rem; }
+  }
+
+  &__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  &__tenant-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: var(--chora-color-text-muted);
+    strong { color: var(--text-main); font-weight: 700; }
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__total {
+    font-size: 0.85rem;
+    color: var(--chora-color-text-muted);
+    strong {
+      font-size: 1.25rem;
+      color: var(--text-main);
+      font-weight: 800;
+      margin-inline-end: 0.25rem;
+    }
+  }
+
+  // ── Fail-loud mutation banner (create / status-PATCH failure) ────────────
+  &__mutation-error {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid rgba(220, 38, 38, 0.45);
+    background: rgba(254, 226, 226, 0.55);
+    color: #991b1b;
+    font-size: 0.9rem;
+    i { color: #dc2626; }
+  }
+
+  &__mutation-error-text { flex: 1; }
+
+  &__mutation-error-dismiss {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  // ── Create form ──────────────────────────────────────────────────────────
+  &__form {
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__form-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  &__form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--chora-color-text-muted);
+      font-weight: 700;
+    }
+  }
+
+  &__input {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    background: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    color: var(--text-main);
+    &:focus {
+      outline: 2px solid var(--surface-accent, #ea580c);
+      outline-offset: 1px;
+    }
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  // CHO-2336: picker field label (learner group heading / class error label),
+  // hint (loading / empty), and fail-loud class-source error + retry.
+  &__field-label {
+    margin: 0;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--chora-color-text-muted);
+    font-weight: 700;
+  }
+
+  &__field-hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted);
+    font-style: italic;
+  }
+
+  &__field-error {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(220, 38, 38, 0.4);
+    background: rgba(254, 226, 226, 0.5);
+    color: #991b1b;
+    font-size: 0.85rem;
+    i { color: #dc2626; }
+  }
+
+  &__field-retry {
+    margin-inline-start: auto;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  &__form-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__create-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  // ── Booking list ─────────────────────────────────────────────────────────
+  &__list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  &__row {
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__row-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: space-between;
+  }
+
+  &__booking-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted);
+    background: rgba(255, 255, 255, 0.5);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+  }
+
+  &__details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 1.25rem;
+    margin: 0;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+  }
+
+  &__detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    dt {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--chora-color-text-muted);
+      font-weight: 700;
+    }
+    dd {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      word-break: break-word;
+    }
+  }
+
+  &__row-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    flex-wrap: wrap;
+  }
+
+  &__status-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--chora-color-text-muted);
+    font-weight: 700;
+  }
+
+  &__status-select {
+    padding: 0.375rem 0.625rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    background: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    color: var(--text-main);
+    &:focus {
+      outline: 2px solid var(--surface-accent, #ea580c);
+      outline-offset: 1px;
+    }
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--chora-color-text-muted);
+    font-style: italic;
+  }
+
+  // ── J2 (CHO-1830) — loading skeletons (mirror the &__list grid) ──────────
+  &__loading {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  &__skeleton-card {
+    height: 152px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.4);
+    animation: bookings-pulse 1.5s ease-in-out infinite;
+  }
+
+  // ── J1 (CHO-1830) — fail-loud load-error banner (replaces silent-empty) ──
+  &__error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    background: rgba(220, 38, 38, 0.08);
+  }
+
+  &__error-icon {
+    font-size: 1.5rem;
+    color: #dc2626;
+  }
+
+  &__error-text {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    color: var(--text-main);
+    font-weight: 600;
+  }
+
+  &__error-detail {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--chora-color-text-muted);
+  }
+}
+
+// Scoped keyframe name (bookings-*) so it can't collide with the global `pulse`
+// keyframe other surfaces define. Disabled under reduced-motion (WCAG).
+@keyframes bookings-pulse {
+  0%,
+  100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bookings__skeleton-card { animation: none; }
+}
+
+@media (min-width: 1280px) {
+  .bookings {
+    padding: 2rem;
+    &__form-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    &__list,
+    &__loading {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    &__details {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}

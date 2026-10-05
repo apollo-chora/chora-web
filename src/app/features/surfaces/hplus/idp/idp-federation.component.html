@@ -1,0 +1,234 @@
+<section class="surface-hplus idp" data-testid="hplus-idp">
+  <main class="idp__main">
+    <nav
+      class="idp__breadcrumb"
+      [attr.aria-label]="'hplus.idp.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.idp.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="idp__crumb-active">
+        {{ 'hplus.idp.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    <header class="idp__hero">
+      <h1 class="idp__title">
+        {{ 'hplus.idp.title' | translate }}
+      </h1>
+      <p class="idp__subtitle">
+        {{ 'hplus.idp.subtitle' | translate }}
+      </p>
+    </header>
+
+    <!-- CHO-1808 — platform-vs-tenant disclaimer. Admins who just signed
+         in via Continue-with-Google on /login were misreading the
+         "Google DISCONNECTED" card as a contradiction. The two are
+         independent: this page is about tenant-bound workspace SSO. -->
+    <aside
+      class="idp__page-disclaimer"
+      data-testid="idp-page-disclaimer"
+      role="note">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      <p>{{ 'hplus.idp.pageDisclaimer' | translate }}</p>
+    </aside>
+
+    @if (loading()) {
+      <p
+        class="idp__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="idp-loading">
+        {{ 'hplus.idp.loading' | translate }}
+      </p>
+    }
+
+    @if (loadError(); as msg) {
+      <p
+        class="idp__load-error"
+        role="alert"
+        data-testid="idp-load-error">
+        {{ msg | translate }}
+      </p>
+    }
+
+    <ul
+      class="idp__list"
+      data-testid="idp-list"
+      role="list">
+      @for (card of cards(); track card.id) {
+        <li
+          class="glass-panel idp__card"
+          [attr.data-testid]="'idp-card-' + card.id"
+          [attr.data-state]="card.state">
+          <header class="idp__card-head">
+            <div class="idp__card-identity">
+              <div class="idp__icon surface-accent-bg" aria-hidden="true">
+                <i class="fa-brands" [class]="card.icon"></i>
+              </div>
+              <div>
+                <h2 class="idp__card-name">
+                  {{ card.nameKey | translate }}
+                </h2>
+                @if (card.noteKey) {
+                  <p
+                    class="idp__card-note"
+                    [attr.data-testid]="'idp-' + card.id + '-note'">
+                    {{ card.noteKey | translate }}
+                  </p>
+                }
+                @if (card.id === 'singpass') {
+                  <p class="sr-only" data-testid="idp-singpass-note-sr">
+                    Singpass: KYC pricing applies.
+                  </p>
+                }
+                @if (card.clientSecretName) {
+                  <p
+                    class="idp__secret-name"
+                    [attr.data-testid]="'idp-' + card.id + '-secret-name'">
+                    {{ 'hplus.idp.secretConfigured' | translate }}
+                  </p>
+                }
+              </div>
+            </div>
+            <span [class]="badgeClass(card.state)">
+              {{ stateLabelKey(card.state) | translate }}
+            </span>
+          </header>
+
+          @if (disconnectPending() === card.id) {
+            <div
+              class="idp__confirm"
+              role="alertdialog"
+              [attr.data-testid]="'idp-disconnect-confirm-' + card.id">
+              <p class="idp__confirm-prompt">
+                {{ 'hplus.idp.disconnectConfirmPrompt' | translate }}
+              </p>
+              <div class="idp__confirm-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [attr.data-testid]="'idp-disconnect-cancel-' + card.id"
+                  (click)="cancelDisconnect()">
+                  {{ 'hplus.idp.disconnectCancel' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  [attr.data-testid]="'idp-disconnect-confirm-yes-' + card.id"
+                  (click)="confirmDisconnect()">
+                  {{ 'hplus.idp.disconnectConfirm' | translate }}
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (connectForm() && connectForm()!.cardId === card.id) {
+            <form
+              class="idp__connect-form"
+              [attr.data-testid]="'idp-connect-form-' + card.id"
+              (ngSubmit)="submitConnectForm()">
+              @if (connectForm()!.providerType !== 'singpass') {
+                <label class="idp__field">
+                  <span>{{ 'hplus.idp.clientIdLabel' | translate }}</span>
+                  <input
+                    type="text"
+                    name="clientId"
+                    required
+                    [ngModel]="connectForm()!.clientId"
+                    (ngModelChange)="updateConnectField('clientId', $event)"
+                    [attr.data-testid]="'idp-connect-client-id-' + card.id"
+                    autocomplete="off" />
+                </label>
+                <label class="idp__field">
+                  <span>{{ 'hplus.idp.clientSecretLabel' | translate }}</span>
+                  <input
+                    type="password"
+                    name="clientSecret"
+                    required
+                    [ngModel]="connectForm()!.clientSecret"
+                    (ngModelChange)="updateConnectField('clientSecret', $event)"
+                    [attr.data-testid]="'idp-connect-client-secret-' + card.id"
+                    autocomplete="off" />
+                </label>
+                <label class="idp__field">
+                  <span>{{ 'hplus.idp.discoveryUrlLabel' | translate }}</span>
+                  <input
+                    type="url"
+                    name="discoveryUrl"
+                    required
+                    [ngModel]="connectForm()!.discoveryUrl"
+                    (ngModelChange)="updateConnectField('discoveryUrl', $event)"
+                    [attr.data-testid]="'idp-connect-discovery-' + card.id" />
+                </label>
+              } @else {
+                <label class="idp__field idp__field--inline">
+                  <input
+                    type="checkbox"
+                    name="singpassEnabled"
+                    [ngModel]="connectForm()!.singpassEnabled"
+                    (ngModelChange)="updateConnectField('singpassEnabled', $event)"
+                    [attr.data-testid]="'idp-connect-singpass-enabled-' + card.id" />
+                  <span>{{ 'hplus.idp.singpassEnableLabel' | translate }}</span>
+                </label>
+              }
+              @if (connectForm()!.errorMessage; as err) {
+                <p
+                  class="idp__form-error"
+                  role="alert"
+                  [attr.data-testid]="'idp-connect-error-' + card.id">
+                  {{ err }}
+                </p>
+              }
+              <div class="idp__connect-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [attr.data-testid]="'idp-connect-cancel-' + card.id"
+                  (click)="cancelConnectForm()">
+                  {{ 'hplus.idp.connectCancel' | translate }}
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [attr.data-testid]="'idp-connect-submit-' + card.id"
+                  [disabled]="connectForm()!.submitting">
+                  {{ 'hplus.idp.connectSubmit' | translate }}
+                </button>
+              </div>
+            </form>
+          }
+
+          <footer class="idp__card-actions">
+            @if (card.state === 'connected') {
+              <button
+                type="button"
+                class="btn btn-secondary"
+                [attr.data-testid]="'idp-test-' + card.id"
+                disabled
+                [title]="'hplus.idp.testDisabledTooltip' | translate">
+                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                {{ 'hplus.idp.testCta' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary idp__disconnect"
+                [attr.data-testid]="'idp-disconnect-' + card.id"
+                [disabled]="disconnectPending() === card.id"
+                (click)="requestDisconnect(card.id)">
+                {{ 'hplus.idp.disconnectCta' | translate }}
+              </button>
+            } @else if (!connectForm() || connectForm()!.cardId !== card.id) {
+              <button
+                type="button"
+                class="btn btn-primary"
+                [attr.data-testid]="'idp-connect-' + card.id"
+                (click)="openConnectForm(card.id)">
+                <i class="fa-solid fa-plug" aria-hidden="true"></i>
+                {{ 'hplus.idp.connectCta' | translate }}
+              </button>
+            }
+          </footer>
+        </li>
+      }
+    </ul>
+  </main>
+</section>

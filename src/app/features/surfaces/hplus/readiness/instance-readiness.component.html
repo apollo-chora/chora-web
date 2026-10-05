@@ -1,0 +1,129 @@
+<section class="surface-hplus instance-readiness" data-testid="instance-readiness">
+  <main class="instance-readiness__main">
+    <nav
+      class="instance-readiness__breadcrumb"
+      [attr.aria-label]="'hplus.readiness.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.readiness.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="instance-readiness__crumb-active">
+        {{ 'hplus.readiness.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    <header class="instance-readiness__header">
+      <h1>{{ 'hplus.readiness.heading' | translate }}</h1>
+      <p class="instance-readiness__tagline">
+        {{ 'hplus.readiness.tagline' | translate }}
+      </p>
+    </header>
+
+    @switch (state().status) {
+      @case ('loading') {
+        <div
+          class="glass-panel instance-readiness__loading"
+          role="status"
+          aria-busy="true"
+          data-loading>
+          {{ 'hplus.readiness.loading' | translate }}
+        </div>
+      }
+      @case ('error') {
+        <div class="glass-panel instance-readiness__error" role="alert" data-error>
+          <p>{{ errorKey() | translate }}</p>
+          <button type="button" class="btn btn-primary" data-retry (click)="retry()">
+            {{ 'hplus.readiness.retry' | translate }}
+          </button>
+        </div>
+      }
+      @case ('success') {
+        <!--
+          The next action is the server's sentence, printed as it came. It is
+          absent when nothing needs work, and the server never derives it from
+          a check that could not run.
+        -->
+        @if (nextAction()) {
+          <div class="glass-panel instance-readiness__next" data-next-action>
+            <h2>{{ 'hplus.readiness.nextActionHeading' | translate }}</h2>
+            <p class="instance-readiness__next-text">{{ nextAction() }}</p>
+          </div>
+        }
+
+        <p class="instance-readiness__tally">
+          {{ 'hplus.readiness.needsWork' | translate }}
+          <strong data-needs-work-count>{{ needsWorkCount() }}</strong>
+        </p>
+
+        <!--
+          A degraded answer says so and names the parts that failed, rather
+          than blanking the screen. An operator who loses seven good answers
+          because an eighth service is down has been handed an outage instead
+          of information.
+        -->
+        @if (partial()) {
+          <div
+            class="glass-panel instance-readiness__partial"
+            role="status"
+            data-partial-banner>
+            <p>{{ 'hplus.readiness.partial' | translate }}</p>
+            <ul class="instance-readiness__parts">
+              @for (part of failedParts(); track part) {
+                <li>{{ part }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        <ul class="instance-readiness__rows">
+          @for (row of rows(); track row.key) {
+            <li
+              class="glass-panel instance-readiness__row"
+              [class.is-ok]="row.status === 'ok'"
+              [class.is-attention]="row.status === 'attention'"
+              [class.is-unknown]="row.status === 'unknown'"
+              [attr.data-row]="row.key"
+              [attr.data-status]="row.status">
+              <div class="instance-readiness__row-head">
+                <span class="instance-readiness__row-label">{{ row.label }}</span>
+                <!--
+                  A count is a pointer on the wire. Absent means the row counts
+                  nothing; zero means it counted and found none. Testing for
+                  undefined rather than falsiness is what keeps those apart.
+                -->
+                @if (hasCount(row)) {
+                  <span class="instance-readiness__row-count" data-count>{{ row.count }}</span>
+                }
+                <span class="instance-readiness__row-verdict">
+                  {{ 'hplus.readiness.status.' + row.status | translate }}
+                </span>
+              </div>
+
+              @if (row.detail) {
+                <p class="instance-readiness__row-detail">{{ row.detail }}</p>
+              }
+
+              <!--
+                An unknown row always carries a reason. It is rendered as the
+                answer it is, not as a failure: the check could not run, and
+                saying so is more use than an invented verdict.
+              -->
+              @if (row.reason) {
+                <p class="instance-readiness__row-reason">{{ row.reason }}</p>
+              }
+
+              @if (knownGapFor(row.key)) {
+                <p class="instance-readiness__row-gap" data-known-gap>
+                  {{ knownGapFor(row.key) }}
+                </p>
+              }
+            </li>
+          }
+        </ul>
+
+        <nav class="instance-readiness__links" aria-label="Related screens">
+          <a routerLink="/h/go-live">{{ 'hplus.readiness.goLiveLink' | translate }}</a>
+          <a routerLink="/h/tenant">{{ 'hplus.readiness.tenantLink' | translate }}</a>
+        </nav>
+      }
+    }
+  </main>
+</section>

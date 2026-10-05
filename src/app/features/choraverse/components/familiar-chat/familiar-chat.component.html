@@ -1,0 +1,108 @@
+<section
+  class="familiar-chat"
+  role="log"
+  [attr.aria-label]="'choraverse.familiar_chat.title' | translate"
+  data-testid="familiar-chat">
+
+  <!-- Header -->
+  <header class="familiar-chat__header">
+    <h2 class="familiar-chat__title" data-testid="chat-title">
+      {{ 'choraverse.familiar_chat.title' | translate }}
+    </h2>
+  </header>
+
+  <!-- Message List -->
+  <div
+    class="familiar-chat__messages"
+    data-testid="chat-messages"
+    aria-live="polite">
+
+    @if (chatState().status === 'loading') {
+      <div class="familiar-chat__loading" data-testid="chat-loading">
+        <span>{{ 'choraverse.familiar_chat.loading' | translate }}</span>
+      </div>
+    }
+
+    @if (chatState().status === 'error') {
+      <div class="familiar-chat__error" data-testid="chat-error" role="alert">
+        <span>{{ 'choraverse.familiar_chat.error' | translate }}</span>
+      </div>
+    }
+
+    @for (message of messages(); track message.id) {
+      <div
+        class="familiar-chat__message"
+        [class.familiar-chat__message--learner]="message.role === 'learner'"
+        [class.familiar-chat__message--familiar]="message.role === 'familiar'"
+        [attr.data-testid]="'chat-message-' + message.id">
+
+        <div class="familiar-chat__bubble">
+          <span class="familiar-chat__role">
+            @if (message.role === 'familiar') {
+              {{ 'choraverse.familiar_chat.role_familiar' | translate }}
+            } @else {
+              {{ 'choraverse.familiar_chat.role_learner' | translate }}
+            }
+          </span>
+          <p class="familiar-chat__content">{{ message.content }}</p>
+
+          <!-- Streaming indicator -->
+          @if (message.is_streaming) {
+            <span
+              class="familiar-chat__streaming-dots"
+              aria-label="Responding"
+              data-testid="streaming-indicator">
+              <span class="familiar-chat__dot"></span>
+              <span class="familiar-chat__dot"></span>
+              <span class="familiar-chat__dot"></span>
+            </span>
+          }
+        </div>
+
+        <!-- Citations -->
+        @if (message.role === 'familiar' && message.citations.length > 0) {
+          <div class="familiar-chat__citations" data-testid="chat-citations">
+            @for (citation of message.citations; track citation.atomId) {
+              <button
+                type="button"
+                class="familiar-chat__citation-chip"
+                [attr.data-testid]="'citation-' + citation.atomId"
+                [attr.aria-label]="citation.atomTitle">
+                {{ citation.atomTitle }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Input Area -->
+  <div class="familiar-chat__input-area" data-testid="chat-input-area">
+    <label for="chat-input" class="familiar-chat__input-label">
+      {{ 'choraverse.familiar_chat.input_label' | translate }}
+    </label>
+    <div class="familiar-chat__input-row">
+      <input
+        id="chat-input"
+        type="text"
+        class="familiar-chat__input"
+        data-testid="chat-input"
+        [value]="messageInput()"
+        (input)="onInputChange($any($event.target).value)"
+        (keydown.enter)="onKeyEnter($event)"
+        [disabled]="isStreaming()"
+        [attr.placeholder]="'choraverse.familiar_chat.placeholder' | translate"
+        [attr.aria-label]="'choraverse.familiar_chat.input_label' | translate" />
+      <button
+        type="button"
+        class="familiar-chat__send-btn"
+        data-testid="chat-send-btn"
+        [disabled]="isStreaming() || messageInput().trim().length === 0"
+        (click)="sendMessage()"
+        [attr.aria-label]="'choraverse.familiar_chat.send' | translate">
+        {{ 'choraverse.familiar_chat.send' | translate }}
+      </button>
+    </div>
+  </div>
+</section>

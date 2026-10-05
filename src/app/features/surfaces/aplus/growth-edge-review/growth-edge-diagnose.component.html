@@ -1,0 +1,120 @@
+<section class="ge-diag" aria-labelledby="ge-diag-title">
+  <header class="ge-diag-header">
+    <h1 id="ge-diag-title">{{ 'aplus.growth_edge_review.diag_title' | translate }}</h1>
+    <p class="ge-diag-sub">{{ 'aplus.growth_edge_review.diag_subtitle' | translate }}</p>
+  </header>
+
+  <form class="glass-panel ge-diag-form" [formGroup]="form" (ngSubmit)="submit()">
+    <!-- ── File + kind ──────────────────────────────────────────────── -->
+    <div class="ge-diag-row">
+      <label class="ge-diag-file">
+        <input
+          type="file"
+          accept=".pdf,.png,.jpg,.jpeg,.txt,.md"
+          (change)="onFileSelected($event)"
+          [disabled]="uploadPhase() === 'uploading'"
+          data-testid="ge-diag-file"
+        />
+        <span>{{
+          file() ? file()!.name : ('aplus.growth_edge_review.diag_choose_file' | translate)
+        }}</span>
+      </label>
+
+      <label class="ge-diag-field">
+        <span>{{ 'aplus.growth_edge_review.diag_kind_label' | translate }}</span>
+        <select class="ge-diag-select" formControlName="upload_kind" data-testid="ge-diag-kind">
+          @for (k of uploadKinds; track k) {
+            <option [value]="k">{{ kindKey(k) | translate }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    @if (fileError()) {
+      <p class="ge-diag-error" role="alert" data-testid="ge-diag-file-error">
+        {{ fileError()! | translate }}
+      </p>
+    }
+
+    <!-- ── Source-material (textbook) consent — D8 one-tap rights gate ── -->
+    @if (isSourceMaterial()) {
+      <label class="ge-diag-consent" data-testid="ge-diag-consent">
+        <input type="checkbox" formControlName="source_material_consent" />
+        <span>{{ 'aplus.growth_edge_review.diag_consent' | translate }}</span>
+      </label>
+    }
+
+    <!-- ── Structured clues (bounded pickers) ─────────────────────────── -->
+    <fieldset class="ge-diag-clues">
+      <legend>{{ 'aplus.growth_edge_review.diag_clues_legend' | translate }}</legend>
+
+      <div class="ge-diag-row">
+        <label class="ge-diag-field">
+          <span>{{ 'aplus.growth_edge_review.diag_subject' | translate }}</span>
+          <select class="ge-diag-select" formControlName="subject" data-testid="ge-diag-subject">
+            <option value="">{{ 'aplus.growth_edge_review.diag_any' | translate }}</option>
+            @for (s of subjects; track s) {
+              <option [value]="s">{{ subjectKey(s) | translate }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="ge-diag-field">
+          <span>{{ 'aplus.growth_edge_review.diag_level' | translate }}</span>
+          <select class="ge-diag-select" formControlName="level" data-testid="ge-diag-level">
+            <option value="">{{ 'aplus.growth_edge_review.diag_any' | translate }}</option>
+            @for (l of levels; track l) {
+              <option [value]="l">{{ levelKey(l) | translate }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <div class="ge-diag-confidence" role="radiogroup"
+        [attr.aria-label]="'aplus.growth_edge_review.diag_confidence' | translate">
+        <span class="ge-diag-conf-label">{{ 'aplus.growth_edge_review.diag_confidence' | translate }}</span>
+        @for (c of confidences; track c) {
+          <label class="ge-diag-conf-opt">
+            <input type="radio" formControlName="confidence" [value]="c" />
+            <span>{{ confidenceKey(c) | translate }}</span>
+          </label>
+        }
+      </div>
+
+      <!-- Optional clarification — DATA only, length-capped, never a prompt. -->
+      <label class="ge-diag-note-label">
+        <span>{{ 'aplus.growth_edge_review.diag_note' | translate }}</span>
+        <textarea
+          class="ge-diag-note"
+          formControlName="note"
+          rows="2"
+          [maxlength]="noteMax"
+          [attr.placeholder]="'aplus.growth_edge_review.diag_note_placeholder' | translate"
+          data-testid="ge-diag-note"
+        ></textarea>
+        <small class="ge-diag-note-hint">{{ 'aplus.growth_edge_review.diag_note_hint' | translate }}</small>
+      </label>
+    </fieldset>
+
+    @if (uploadPhase() === 'uploading') {
+      <p class="ge-diag-status" data-testid="ge-diag-uploading">
+        <span class="ge-diag-spinner" aria-hidden="true"></span>
+        {{ 'aplus.growth_edge_review.diag_uploading' | translate }}
+      </p>
+    }
+    @if (uploadPhase() === 'failed') {
+      <p class="ge-diag-error" role="alert" data-testid="ge-diag-failed">
+        {{ 'aplus.growth_edge_review.diag_failed' | translate }}
+      </p>
+    }
+
+    <button
+      type="submit"
+      class="btn-primary ge-diag-submit"
+      [disabled]="!canSubmit()"
+      data-testid="ge-diag-submit"
+    >
+      {{ 'aplus.growth_edge_review.diag_analyze' | translate }}
+    </button>
+  </form>
+</section>

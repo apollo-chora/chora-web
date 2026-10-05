@@ -1,0 +1,409 @@
+:host {
+  display: block;
+}
+
+.fmemory {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.fmemory__idle,
+.fmemory__loading,
+.fmemory__error,
+.fmemory__empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.fmemory__error {
+  color: var(--danger);
+}
+
+// ─── Character-sheet header: portrait · name · rank ───────────────────
+.fmemory__header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(
+    135deg,
+    rgba(25, 118, 210, 0.12),
+    rgba(236, 72, 153, 0.1)
+  );
+}
+
+.fmemory__portrait {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(25, 118, 210, 0.35);
+  background: radial-gradient(circle at 30% 25%, #fff, rgba(25, 118, 210, 0.2));
+  color: var(--primary);
+  font-size: 1.35rem;
+}
+
+.fmemory__ident {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.fmemory__name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text-main);
+}
+
+.fmemory__tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: flex-start;
+  padding: 0.16rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(25, 118, 210, 0.14);
+  color: var(--primary);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  i {
+    font-size: 9px;
+  }
+}
+
+// ─── Stat cards (character attributes) ────────────────────────────────
+.fmemory__meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 0.5rem;
+}
+
+.fmemory__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.5);
+
+  dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+
+    i {
+      color: var(--primary);
+      font-size: 10px;
+    }
+  }
+  dd {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+}
+
+.fmemory__skills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.fmemory__skill {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(236, 72, 153, 0.12);
+  color: #db2777;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.fmemory__rules {
+  margin: 0;
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.5);
+
+  div {
+    // Compact key/value: label + value sit together on the left, not stretched
+    // to the panel edges (the old space-between spread wide on a roomy drawer).
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.35rem 0.5rem;
+    font-size: 11.5px;
+  }
+  dt {
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  dd {
+    margin: 0;
+    color: var(--text-main);
+    text-align: left;
+  }
+}
+
+.fmemory__memories,
+.fmemory__neighbors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  h4 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+}
+
+.fmemory__explain {
+  margin: 0;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.fmemory__entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+  border-left: 3px solid var(--primary);
+}
+
+.fmemory__entry-type {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+}
+
+.fmemory__entry-content {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.45;
+}
+
+.fmemory__entry-date {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.fmemory__neighbor {
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.fmemory__neighbor-title {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.3rem;
+}
+
+.fmemory__citations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.fmemory__citation {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.6rem;
+  border-left: 2px solid rgba(25, 118, 210, 0.3);
+}
+
+.fmemory__citation-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.fmemory__citation-path {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: 'Courier New', monospace;
+}
+
+/* ── Goal-scoped knowledge (CHO-2116 tier 1) ─────────────────────────── */
+.fmemory__knowledge {
+  margin-top: 12px;
+
+  h4 {
+    margin: 0 0 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+}
+
+.fmemory__knowledge-label {
+  margin: 8px 0 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.fmemory__knowledge-list {
+  margin: 0;
+  padding-left: 18px;
+
+  &--mastered {
+    opacity: 0.85;
+  }
+}
+
+.fmemory__knowledge-item {
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.fmemory__knowledge-due {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  background: color-mix(in srgb, orange 18%, transparent);
+  color: var(--text-main);
+}
+
+/* ── The Companion's reflection (CHO-2118 tier 2) ────────────────────────
+   The emotional centre of the panel: first-person prose, set as a quote so it
+   reads as the Companion SPEAKING rather than as another data row. It leads the
+   block; the deterministic lists below are the evidence behind it. */
+.fmemory__reflection {
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--primary);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  font-size: 13px;
+  line-height: 1.5;
+  font-style: italic;
+  color: var(--text-main);
+}
+
+.fmemory__reflection-disclosure {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* A quiet marker, never a spinner: the learner is reading the LAST GOOD
+   reflection while a new one is synthesised, so nothing is actually blocked. */
+.fmemory__reflection-pending {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-muted);
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-right: 6px;
+    border-radius: 50%;
+    vertical-align: middle;
+    background: var(--primary);
+    animation: fmemory-reflect-pulse 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes fmemory-reflect-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* AP: honour reduced-motion — the pulse is decoration, the copy carries the
+   meaning on its own. */
+@media (prefers-reduced-motion: reduce) {
+  .fmemory__reflection-pending::before {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* Research notes (CHO-2185) — what the Companion looked up on the live web, with
+   the durable account of where it came from. Mirrors the __knowledge block. */
+.fmemory__research {
+  margin-top: 12px;
+
+  h4 {
+    margin: 0 0 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+}
+
+.fmemory__research-note {
+  padding: 8px 0;
+
+  & + & {
+    border-top: 1px solid var(--glass-border, rgb(255 255 255 / 8%));
+  }
+}
+
+.fmemory__research-prose {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* The honest empty state for a note written before provenance was recorded.
+   Secondary + muted: it is a statement ABOUT the note, never part of it. */
+.fmemory__research-unrecorded {
+  margin: 0;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-muted);
+}

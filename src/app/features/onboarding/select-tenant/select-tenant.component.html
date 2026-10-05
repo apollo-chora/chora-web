@@ -1,0 +1,48 @@
+<div class="select-tenant" data-testid="select-tenant">
+
+  <!-- Branding -->
+  <header class="select-tenant__branding">
+    <div class="select-tenant__logo" aria-hidden="true">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="2" fill="none" />
+        <text x="24" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="currentColor">C</text>
+      </svg>
+    </div>
+    <span class="select-tenant__brand-name">Chora</span>
+  </header>
+
+  <!-- Main glass card -->
+  <main class="select-tenant__card" role="main" aria-labelledby="select-tenant-heading">
+
+    <h1
+      id="select-tenant-heading"
+      class="select-tenant__heading"
+      data-testid="select-tenant-title">
+      {{ 'onboarding.select-tenant.title' | translate }}
+    </h1>
+
+    <p class="select-tenant__intro" data-testid="select-tenant-intro">
+      {{ 'onboarding.select-tenant.intro' | translate }}
+    </p>
+
+    @if (errored()) {
+      <p
+        class="select-tenant__error"
+        role="alert"
+        aria-live="polite"
+        data-testid="select-tenant-error">
+        {{ 'onboarding.select-tenant.error' | translate }}
+      </p>
+    }
+
+    <chora-tenant-picker
+      [memberships]="memberships()"
+      (tenantSelected)="onSelect($event)" />
+
+    @if (switching()) {
+      <p class="select-tenant__loading" aria-live="polite" data-testid="select-tenant-loading">
+        {{ 'onboarding.select-tenant.switching' | translate }}
+      </p>
+    }
+  </main>
+</div>

@@ -1,0 +1,254 @@
+// oplus-prompt-modal - CHO-2368 catalogue dialog.
+//
+// Rides the design-system .modal-overlay / .modal-content glass tokens
+// (_polyglass-components.scss); local rules widen the panel for prompt text
+// and add the O+ purple accent. Text colors stay on the --chora-color-text-*
+// tokens (legacy --text-muted family is frozen; text-token-contrast enforces
+// AA).
+
+:host {
+  display: contents;
+}
+
+.oplus-prompt-modal__panel {
+  width: min(760px, 94vw);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem 2rem;
+  text-align: left;
+}
+
+.oplus-prompt-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.oplus-prompt-modal__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+
+  i {
+    color: rgba(123, 45, 142, 0.85);
+  }
+}
+
+.oplus-prompt-modal__agent {
+  font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  font-size: 0.95rem;
+  color: var(--chora-color-primary-strong);
+}
+
+.oplus-prompt-modal__close {
+  border: none;
+  background: rgba(123, 45, 142, 0.08);
+  border-radius: 8px;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--chora-color-text-primary);
+
+  &:hover {
+    background: rgba(123, 45, 142, 0.16);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chora-color-primary-strong);
+    outline-offset: 2px;
+  }
+}
+
+.oplus-prompt-modal__status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--chora-color-text-muted);
+  padding: 0.75rem 0;
+}
+
+.oplus-prompt-modal__retry {
+  align-self: flex-start;
+  border: 1px solid rgba(123, 45, 142, 0.35);
+  background: rgba(123, 45, 142, 0.08);
+  color: var(--chora-color-text-primary);
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--chora-color-primary-strong);
+    outline-offset: 2px;
+  }
+}
+
+.oplus-prompt-modal__selector-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.oplus-prompt-modal__selector-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--chora-color-text-muted);
+}
+
+.oplus-prompt-modal__selector {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(123, 45, 142, 0.35);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--chora-color-text-primary);
+
+  &:focus-visible {
+    outline: 2px solid var(--chora-color-primary-strong);
+    outline-offset: 2px;
+  }
+}
+
+.oplus-prompt-modal__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: rgba(123, 45, 142, 0.06);
+
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--chora-color-text-primary);
+  }
+}
+
+.oplus-prompt-modal__kind {
+  font-weight: 700;
+
+  &--baseline {
+    color: var(--chora-color-primary-strong);
+  }
+
+  &--override {
+    color: rgba(196, 16, 123, 0.95);
+  }
+}
+
+// CHO-2379: the plain status badge that replaced the "override · status"
+// compound on gated rows. Deliberately NOT named __status - that class is
+// already the loading/error/forbidden message block above.
+// Every colour here is an AA-safe TEXT token (text-token-contrast.spec.ts is
+// the gate): the brand --chora-color-warning and --chora-color-danger are
+// surface colours and fail as text.
+.oplus-prompt-modal__state {
+  font-weight: 700;
+  color: var(--chora-color-text-secondary);
+
+  &--active {
+    color: var(--chora-color-success);
+  }
+
+  &--rejected {
+    color: var(--chora-color-error);
+  }
+
+  &--pending_eval,
+  &--pending_hitl {
+    color: var(--chora-color-warning-text);
+  }
+}
+
+.oplus-prompt-modal__segments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.oplus-prompt-modal__segment {
+  border: 1px solid rgba(123, 45, 142, 0.18);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.oplus-prompt-modal__segment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.oplus-prompt-modal__segment-id {
+  font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--chora-color-primary-strong);
+}
+
+.oplus-prompt-modal__locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(123, 45, 142, 0.12);
+  color: var(--chora-color-primary-strong);
+}
+
+.oplus-prompt-modal__segment-note {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  color: var(--chora-color-text-muted);
+}
+
+.oplus-prompt-modal__segment-body {
+  margin: 0;
+  font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--chora-color-text-primary);
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oplus-prompt-modal__overlay,
+  .oplus-prompt-modal__panel {
+    animation: none;
+  }
+}

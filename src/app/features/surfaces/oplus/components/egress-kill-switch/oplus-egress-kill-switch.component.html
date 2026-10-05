@@ -1,0 +1,182 @@
+<section class="oplus-ks">
+  <header class="oplus-ks__head">
+    <h1 class="oplus-ks__title">
+      {{ 'oplus.egressKillSwitch.title' | translate }}
+    </h1>
+    <p class="oplus-ks__lede">
+      {{ 'oplus.egressKillSwitch.lede' | translate }}
+    </p>
+    <!-- Recent decisions live on the auditor-reachable egress-audit page: this
+         page CONTROLS egress (operator-only), that page AUDITS it (auditor /
+         admin / owner). The two gates are disjoint, so they are separate pages. -->
+    <a
+      class="oplus-ks__audit-link"
+      routerLink="/o/egress-audit"
+      data-testid="oplus-ks-audit-link"
+    >
+      {{ 'oplus.egressKillSwitch.viewAudit' | translate }}
+    </a>
+  </header>
+
+  @if (!isOperator()) {
+    <!-- The API is the real gate (gateway + observability both fail closed).
+         This only avoids showing an operator control to someone who cannot use
+         it. -->
+    <p class="oplus-ks__alert" role="alert" data-testid="oplus-ks-not-operator">
+      {{ 'oplus.egressKillSwitch.operatorOnly' | translate }}
+    </p>
+  } @else {
+    @switch (loadState().status) {
+      @case ('loading') {
+        <p class="oplus-ks__status" role="status" aria-live="polite">
+          {{ 'oplus.egressKillSwitch.loading' | translate }}
+        </p>
+      }
+
+      @case ('error') {
+        <!-- Loud. A failed READ is never rendered as "not engaged" — an operator
+             could otherwise believe the platform is open when we simply could
+             not read the switch. -->
+        @if (loadErrorKey(); as key) {
+          <div
+            class="oplus-ks__alert"
+            role="alert"
+            data-testid="oplus-ks-load-error"
+          >
+            <p>{{ key | translate }}</p>
+            <button type="button" class="btn btn-secondary" (click)="load()">
+              {{ 'oplus.egressKillSwitch.retry' | translate }}
+            </button>
+          </div>
+        }
+      }
+
+      @case ('success') {
+        <!-- The state must be unmistakable at a glance. -->
+        @if (engaged()) {
+          <div
+            class="oplus-ks__banner oplus-ks__banner--engaged"
+            role="status"
+            data-testid="oplus-ks-engaged-banner"
+          >
+            <strong>{{ 'oplus.egressKillSwitch.engagedTitle' | translate }}</strong>
+            <p>{{ 'oplus.egressKillSwitch.engagedBody' | translate }}</p>
+          </div>
+        } @else {
+          <div
+            class="oplus-ks__banner oplus-ks__banner--clear"
+            role="status"
+            data-testid="oplus-ks-clear-banner"
+          >
+            <strong>{{ 'oplus.egressKillSwitch.clearTitle' | translate }}</strong>
+            <p>{{ 'oplus.egressKillSwitch.clearBody' | translate }}</p>
+          </div>
+        }
+
+        @if (killSwitch(); as ks) {
+          @if (ks.updated_at) {
+            <p class="oplus-ks__audit" data-testid="oplus-ks-audit">
+              {{ 'oplus.egressKillSwitch.lastChanged' | translate }}:
+              {{ ks.updated_at }}
+              @if (ks.reason) {
+                ({{ ks.reason }})
+              }
+            </p>
+          }
+        }
+
+        <div class="oplus-ks__panel glass-panel">
+          <label class="oplus-ks__reason">
+            <span>{{ 'oplus.egressKillSwitch.reasonLabel' | translate }}</span>
+            <input
+              type="text"
+              maxlength="200"
+              [value]="reasonDraft()"
+              (input)="onReasonInput($any($event.target).value)"
+              [placeholder]="'oplus.egressKillSwitch.reasonPlaceholder' | translate"
+              data-testid="oplus-ks-reason"
+            />
+          </label>
+
+          @if (!confirming()) {
+            @if (engaged()) {
+              <button
+                type="button"
+                class="btn btn-secondary"
+                [disabled]="writing()"
+                (click)="requestChange(false)"
+                data-testid="oplus-ks-disengage"
+              >
+                {{ 'oplus.egressKillSwitch.disengage' | translate }}
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-danger"
+                [disabled]="writing()"
+                (click)="requestChange(true)"
+                data-testid="oplus-ks-engage"
+              >
+                {{ 'oplus.egressKillSwitch.engage' | translate }}
+              </button>
+            }
+          } @else {
+            <!-- Step 2. A single mis-click must never take web egress away from
+                 every tenant on the platform. -->
+            <div
+              class="oplus-ks__confirm"
+              role="alertdialog"
+              aria-live="assertive"
+              data-testid="oplus-ks-confirm"
+            >
+              @if (pendingChange()) {
+                <p class="oplus-ks__confirm-text">
+                  {{ 'oplus.egressKillSwitch.confirmEngage' | translate }}
+                </p>
+              } @else {
+                <p class="oplus-ks__confirm-text">
+                  {{ 'oplus.egressKillSwitch.confirmDisengage' | translate }}
+                </p>
+              }
+              <div class="oplus-ks__confirm-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [disabled]="writing()"
+                  (click)="cancel()"
+                  data-testid="oplus-ks-cancel"
+                >
+                  {{ 'oplus.egressKillSwitch.cancel' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  [disabled]="writing()"
+                  (click)="confirm()"
+                  data-testid="oplus-ks-confirm-yes"
+                >
+                  @if (writing()) {
+                    {{ 'oplus.egressKillSwitch.applying' | translate }}
+                  } @else {
+                    {{ 'oplus.egressKillSwitch.confirmYes' | translate }}
+                  }
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Loud. A failed flip must not look like it took effect. -->
+          @if (writeErrorKey(); as key) {
+            <p
+              class="oplus-ks__inline-error"
+              role="alert"
+              data-testid="oplus-ks-write-error"
+            >
+              {{ key | translate }}
+            </p>
+          }
+        </div>
+      }
+    }
+  }
+</section>

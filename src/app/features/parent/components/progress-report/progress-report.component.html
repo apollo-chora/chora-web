@@ -1,0 +1,135 @@
+<section
+  class="progress-report"
+  role="main"
+  [attr.aria-label]="'parent.progress_report_title' | translate"
+  data-testid="progress-report">
+
+  <!-- Page Header -->
+  <header class="progress-report__header">
+    <h1 class="progress-report__title" data-testid="progress-title">
+      {{ 'parent.progress_report_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Loading -->
+  @if (dashboardState().status === 'loading') {
+    <div class="progress-report__loading" data-testid="progress-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="progress-report__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error / Consent Denied -->
+  @if (dashboardState().status === 'error') {
+    <div class="progress-report__error" data-testid="progress-error" role="alert">
+      @if (isConsentDenied()) {
+        <p class="progress-report__error-text">
+          {{ 'parent.consent_required' | translate }}
+        </p>
+      } @else {
+        <p class="progress-report__error-text">
+          {{ 'parent.progress_load_error' | translate }}
+        </p>
+      }
+    </div>
+  }
+
+  <!-- Dashboard Content -->
+  @if (dashboardState().status === 'success' && dashboard()) {
+    <!-- Learner Info -->
+    <div class="progress-report__learner-info" data-testid="learner-info">
+      @if (dashboard()!.learner_display_name) {
+        <h2 class="progress-report__learner-name" data-testid="learner-name">
+          {{ dashboard()!.learner_display_name }}
+        </h2>
+      }
+      @if (dashboard()!.last_activity_at) {
+        <p class="progress-report__last-activity" data-testid="last-activity">
+          {{ 'parent.last_activity' | translate }}:
+          {{ formatDateTime(dashboard()!.last_activity_at) }}
+        </p>
+      }
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="progress-report__stats" data-testid="stats-grid">
+      <div class="progress-report__stat-card" data-testid="stat-atoms">
+        <span class="progress-report__stat-value">{{ dashboard()!.total_atoms_completed }}</span>
+        <span class="progress-report__stat-label">
+          {{ 'parent.total_atoms_completed' | translate }}
+        </span>
+      </div>
+      <div class="progress-report__stat-card" data-testid="stat-xp">
+        <span class="progress-report__stat-value">{{ dashboard()!.total_xp }}</span>
+        <span class="progress-report__stat-label">
+          {{ 'parent.total_xp' | translate }}
+        </span>
+      </div>
+      <div class="progress-report__stat-card" data-testid="stat-score">
+        <span class="progress-report__stat-value" [class]="scoreColor()">
+          {{ formatScore(dashboard()!.average_score_pct) }}
+        </span>
+        <span class="progress-report__stat-label">
+          {{ 'parent.average_score' | translate }}
+        </span>
+      </div>
+      <div class="progress-report__stat-card" data-testid="stat-streak">
+        <span class="progress-report__stat-value">{{ dashboard()!.current_streak_days }}</span>
+        <span class="progress-report__stat-label">
+          {{ 'parent.current_streak' | translate }}
+        </span>
+      </div>
+      <div class="progress-report__stat-card" data-testid="stat-longest-streak">
+        <span class="progress-report__stat-value">{{ dashboard()!.longest_streak_days }}</span>
+        <span class="progress-report__stat-label">
+          {{ 'parent.longest_streak' | translate }}
+        </span>
+      </div>
+      <div class="progress-report__stat-card" data-testid="stat-active-paths">
+        <span class="progress-report__stat-value">{{ dashboard()!.active_paths_count }}</span>
+        <span class="progress-report__stat-label">
+          {{ 'parent.active_paths' | translate }}
+        </span>
+      </div>
+      <div class="progress-report__stat-card" data-testid="stat-completed-paths">
+        <span class="progress-report__stat-value">{{ dashboard()!.completed_paths_count }}</span>
+        <span class="progress-report__stat-label">
+          {{ 'parent.completed_paths' | translate }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Streak Progress Bar -->
+    <div class="progress-report__streak-section" data-testid="streak-section">
+      <h3 class="progress-report__streak-heading">
+        {{ 'parent.streak_progress' | translate }}
+      </h3>
+      <div
+        class="progress-report__streak-bar"
+        role="progressbar"
+        [attr.aria-valuenow]="dashboard()!.current_streak_days"
+        [attr.aria-valuemin]="0"
+        [attr.aria-valuemax]="dashboard()!.longest_streak_days"
+        [attr.aria-label]="'parent.streak_progress' | translate">
+        <div
+          class="progress-report__streak-fill"
+          data-testid="streak-fill"
+          [style.width.%]="streakPercentage()">
+        </div>
+      </div>
+      <p class="progress-report__streak-label">
+        {{ dashboard()!.current_streak_days }} / {{ dashboard()!.longest_streak_days }}
+        {{ 'parent.days' | translate }}
+      </p>
+    </div>
+
+    <!-- Generated At -->
+    <footer class="progress-report__footer" data-testid="report-footer">
+      <p class="progress-report__generated-at">
+        {{ 'parent.report_generated_at' | translate }}:
+        {{ formatDateTime(dashboard()!.generated_at) }}
+      </p>
+    </footer>
+  }
+</section>

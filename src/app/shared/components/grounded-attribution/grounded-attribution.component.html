@@ -1,0 +1,95 @@
+@if (hasGroundedOutput()) {
+  <div class="grounded-attribution" data-testid="grounded-attribution">
+    <!-- SOURCES — named by the DURABLE domain, linked by the expiring uri (D4) -->
+    @if (citations().length > 0) {
+      <div
+        class="grounded-attribution__sources grounded-attribution__reveal grounded-attribution__reveal--t1"
+        data-testid="grounded-sources">
+        <h2 class="grounded-attribution__sources-title">{{ 'grounded.sources' | translate }}</h2>
+        <ul class="grounded-attribution__source-list">
+          <!--
+            track by $index, NOT by url: a citation replayed from a PERSISTED note
+            has no url at all (CHO-2185), so several would share the key ''.
+          -->
+          @for (c of citations(); track $index) {
+            <li class="grounded-attribution__source">
+              @if (hasLink(c)) {
+                <a
+                  class="grounded-attribution__source-link"
+                  [href]="c.url"
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  [attr.data-testid]="'grounded-source-' + sourceName(c)">
+                  <span class="grounded-attribution__source-domain">{{ sourceName(c) }}</span>
+                  <!--
+                    Only when the title is a REAL headline. Vertex usually sets the
+                    chunk title to the site name, which would print the domain twice.
+                  -->
+                  @if (headlineFor(c); as headline) {
+                    <span class="grounded-attribution__source-headline">{{ headline }}</span>
+                  }
+                </a>
+              } @else {
+                <!--
+                  DURABLE re-display (CHO-2185). The persisted note kept
+                  domain+title+snippet but never the uri, because the uri expires
+                  (~30d, D4). So there is nothing to link to — and an <a href="">
+                  would resolve to the current page: a source that LOOKS clickable
+                  and goes nowhere, which is the dead link D4 exists to prevent.
+                  The domain is still the learner's handle on the source; it just
+                  is not a hyperlink.
+                -->
+                <span
+                  class="grounded-attribution__source-link grounded-attribution__source-link--unlinked"
+                  [attr.data-testid]="'grounded-source-' + sourceName(c)">
+                  <span class="grounded-attribution__source-domain">{{ sourceName(c) }}</span>
+                  @if (headlineFor(c); as headline) {
+                    <span class="grounded-attribution__source-headline">{{ headline }}</span>
+                  }
+                </span>
+              }
+              @if (c.snippet) {
+                <p class="grounded-attribution__source-snippet">{{ c.snippet }}</p>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    <!--
+      SEARCHED — what the Companion actually typed into the web.
+      Metadata, not knowledge: small, secondary, explicitly labelled. It sits
+      BELOW the sources and ABOVE the chip so it never reads as part of the answer.
+    -->
+    @if (webSearchQueries().length > 0) {
+      <p
+        class="grounded-attribution__queries grounded-attribution__reveal grounded-attribution__reveal--t2"
+        data-testid="grounded-queries">
+        <span class="grounded-attribution__queries-label">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          {{ 'grounded.searched_for' | translate }}
+        </span>
+        @for (query of webSearchQueries(); track query) {
+          <span class="grounded-attribution__query">{{ query }}</span>
+        }
+      </p>
+    }
+
+    <!-- CHIP — Google's HTML, verbatim (ToS display obligation, ADR-231 D5) -->
+    @if (chip(); as chipHtml) {
+      <div
+        class="grounded-attribution__chip grounded-attribution__reveal grounded-attribution__reveal--t3"
+        data-testid="grounded-chip"
+        [innerHTML]="chipHtml"></div>
+    }
+
+    <!-- DISCLOSURE — ADR-225 / EU AI Act Art 50: this came off the live web -->
+    <p
+      class="grounded-attribution__disclosure grounded-attribution__reveal grounded-attribution__reveal--t3"
+      data-testid="grounded-disclosure">
+      <i class="fa-solid fa-globe" aria-hidden="true"></i>
+      {{ 'grounded.disclosure' | translate }}
+    </p>
+  </div>
+}

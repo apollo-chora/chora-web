@@ -1,0 +1,323 @@
+<section class="surface-hplus change-tier" data-testid="hplus-change-tier">
+  <main class="change-tier__main">
+    <nav
+      class="change-tier__breadcrumb"
+      [attr.aria-label]="'hplus.addons.changeTier.breadcrumbLabel' | translate">
+      <a
+        class="change-tier__back"
+        data-testid="change-tier-back"
+        routerLink="/h/addons">
+        ‹ {{ 'hplus.addons.changeTier.backToDashboard' | translate }}
+      </a>
+    </nav>
+
+    <header class="change-tier__hero">
+      <h1
+        class="change-tier__title"
+        data-testid="change-tier-title">
+        {{ 'hplus.addons.changeTier.title' | translate }}
+      </h1>
+      <p class="change-tier__subtitle">
+        {{ 'hplus.addons.changeTier.subtitle' | translate }}
+      </p>
+    </header>
+
+    @if (result(); as r) {
+      <section
+        class="glass-panel change-tier__result"
+        role="status"
+        aria-live="polite"
+        data-testid="change-tier-result">
+        <h2>{{ 'hplus.addons.changeTier.result.title' | translate }}</h2>
+        @if (r.from_tier && r.to_tier) {
+          <p class="change-tier__result-tier-line">
+            <span class="change-tier__tier change-tier__tier--from">
+              {{ r.from_tier }}
+            </span>
+            <span aria-hidden="true"> → </span>
+            <span class="change-tier__tier change-tier__tier--to">
+              {{ r.to_tier }}
+            </span>
+          </p>
+        }
+        <dl class="change-tier__result-grid">
+          <div>
+            <dt>
+              {{
+                isCredit(r.billing_delta_cents)
+                  ? ('hplus.addons.changeTier.result.creditLabel' | translate)
+                  : ('hplus.addons.changeTier.result.chargeLabel' | translate)
+              }}
+            </dt>
+            <dd>{{ formatCurrency(r.billing_delta_cents, r.currency) }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'hplus.addons.changeTier.result.effectiveAt' | translate }}</dt>
+            <dd>{{ r.effective_at }}</dd>
+          </div>
+          @if (r.schedule_id) {
+            <div>
+              <dt>{{ 'hplus.addons.changeTier.result.scheduleId' | translate }}</dt>
+              <dd>{{ r.schedule_id }}</dd>
+            </div>
+          }
+        </dl>
+        <p class="change-tier__result-cta">
+          <a routerLink="/h/addons">
+            {{ 'hplus.addons.changeTier.result.backToDashboard' | translate }}
+          </a>
+        </p>
+      </section>
+    } @else if (detailLoading()) {
+      <p
+        class="change-tier__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="change-tier-detail-loading">
+        {{ 'hplus.addons.changeTier.detailLoading' | translate }}
+      </p>
+    } @else if (detailLoadError()) {
+      <p
+        class="change-tier__error"
+        role="alert"
+        data-testid="change-tier-detail-error">
+        {{ 'hplus.addons.changeTier.detailError' | translate }}
+      </p>
+    } @else {
+      <form
+        class="glass-panel change-tier__form"
+        (ngSubmit)="submit()">
+
+        <!-- CHO-1766 — tier-card picker replaces the v1 text input. -->
+        <fieldset
+          class="change-tier__field"
+          data-testid="change-tier-tier-picker">
+          <legend class="change-tier__label">
+            {{ 'hplus.addons.changeTier.pickerLabel' | translate }}
+          </legend>
+          <p class="change-tier__hint">
+            {{ 'hplus.addons.changeTier.pickerHint' | translate }}
+          </p>
+          <ul
+            class="change-tier__tiers"
+            role="radiogroup"
+            [attr.aria-label]="'hplus.addons.changeTier.pickerLabel' | translate">
+            @for (tier of tiers(); track trackByTier($index, tier)) {
+              <li
+                class="glass-panel change-tier__tier-card"
+                [class.change-tier__tier-card--selected]="selectedTier() === tier.tier_code"
+                [class.change-tier__tier-card--current]="currentTier() === tier.tier_code"
+                [class.change-tier__tier-card--disabled]="currentTier() === tier.tier_code"
+                role="radio"
+                [attr.aria-checked]="selectedTier() === tier.tier_code ? 'true' : 'false'"
+                [attr.aria-disabled]="currentTier() === tier.tier_code ? 'true' : null"
+                [attr.tabindex]="currentTier() === tier.tier_code ? -1 : 0"
+                [attr.data-testid]="'change-tier-card-' + tier.tier_code"
+                (click)="selectTier(tier.tier_code)"
+                (keydown.enter)="selectTier(tier.tier_code)"
+                (keydown.space)="selectTier(tier.tier_code); $event.preventDefault()">
+                <h3 class="change-tier__tier-card-label">{{ tier.label }}</h3>
+                <p class="change-tier__tier-card-price">{{ formatTierPrice(tier) }}</p>
+                @if (currentTier() === tier.tier_code) {
+                  <span
+                    class="change-tier__tier-card-badge"
+                    data-testid="change-tier-current-badge">
+                    {{ 'hplus.addons.changeTier.currentBadge' | translate }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </fieldset>
+
+        <!-- CHO-1766 — preview card (Stripe Invoice.upcoming delta). -->
+        @if (previewLoading()) {
+          <p
+            class="change-tier__preview-loading"
+            role="status"
+            aria-busy="true"
+            data-testid="change-tier-preview-loading">
+            {{ 'hplus.addons.changeTier.previewLoading' | translate }}
+          </p>
+        } @else if (preview(); as p) {
+          <section
+            class="glass-panel change-tier__preview"
+            role="status"
+            aria-live="polite"
+            data-testid="change-tier-preview">
+            @if (isCredit(p.billing_delta_cents)) {
+              <p
+                class="change-tier__preview-line change-tier__preview-line--credit"
+                data-testid="change-tier-preview-credit">
+                {{ formatPreviewCredit(p.billing_delta_cents, p.currency) }}
+              </p>
+            } @else if (p.billing_delta_cents > 0) {
+              <p
+                class="change-tier__preview-line change-tier__preview-line--charge"
+                data-testid="change-tier-preview-charge">
+                {{ formatPreviewCharge(p.billing_delta_cents, p.currency) }}
+              </p>
+            } @else {
+              <p
+                class="change-tier__preview-line change-tier__preview-line--zero"
+                data-testid="change-tier-preview-zero">
+                {{ 'hplus.addons.changeTier.previewZero' | translate }}
+              </p>
+            }
+            <p class="change-tier__preview-meta">
+              {{ 'hplus.addons.changeTier.previewNextInvoice' | translate }}
+              <strong>{{ formatCurrency(p.next_invoice_total_cents, p.currency) }}</strong>
+            </p>
+          </section>
+        } @else if (previewError()) {
+          <p
+            class="change-tier__preview-error"
+            role="alert"
+            [attr.data-testid]="'change-tier-preview-error-' + previewError()">
+            @switch (previewError()) {
+              @case ('no-stripe-subscription') {
+                {{ 'hplus.addons.changeTier.error.noStripeSubscription' | translate }}
+              }
+              @case ('stripe-price-missing') {
+                {{ 'hplus.addons.changeTier.error.stripePriceMissing' | translate }}
+              }
+              @default {
+                {{ 'hplus.addons.changeTier.error.previewFailed' | translate }}
+              }
+            }
+          </p>
+        }
+
+        <!-- CHO-1772 follow-up — binary selector styled as cards to
+             match the tier-card visual treatment above. Native radio
+             inputs are visually hidden but remain keyboard-focusable
+             + screen-reader accessible; :has(input:checked) drives
+             the selected state on the label. -->
+        <fieldset
+          class="change-tier__field"
+          role="radiogroup"
+          [attr.aria-label]="'hplus.addons.changeTier.changeModeLabel' | translate"
+          data-testid="change-tier-change-mode-group">
+          <legend class="change-tier__label">
+            {{ 'hplus.addons.changeTier.changeModeLabel' | translate }}
+          </legend>
+          <div class="change-tier__radio-grid">
+            <label class="glass-panel change-tier__radio change-tier__radio-card">
+              <input
+                class="sr-only"
+                type="radio"
+                name="changeMode"
+                value="immediate"
+                data-testid="change-tier-change-mode-immediate"
+                [checked]="changeMode() === 'immediate'"
+                (change)="setChangeMode('immediate')" />
+              <span class="change-tier__radio-title">
+                {{ 'hplus.addons.changeTier.changeMode.immediate.title' | translate }}
+              </span>
+              <span class="change-tier__radio-hint">
+                {{ 'hplus.addons.changeTier.changeMode.immediate.hint' | translate }}
+              </span>
+            </label>
+            <label class="glass-panel change-tier__radio change-tier__radio-card">
+              <input
+                class="sr-only"
+                type="radio"
+                name="changeMode"
+                value="end-of-cycle"
+                data-testid="change-tier-change-mode-end-of-cycle"
+                [checked]="changeMode() === 'end-of-cycle'"
+                (change)="setChangeMode('end-of-cycle')" />
+              <span class="change-tier__radio-title">
+                {{ 'hplus.addons.changeTier.changeMode.end-of-cycle.title' | translate }}
+              </span>
+              <span class="change-tier__radio-hint">
+                {{ 'hplus.addons.changeTier.changeMode.end-of-cycle.hint' | translate }}
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        @switch (error()) {
+          @case ('conflict') {
+            <p
+              class="change-tier__error"
+              role="alert"
+              data-testid="change-tier-error-conflict">
+              {{ 'hplus.addons.changeTier.error.conflict' | translate }}
+            </p>
+          }
+          @case ('validation-error') {
+            <p
+              class="change-tier__error"
+              role="alert"
+              data-testid="change-tier-error-validation">
+              {{ 'hplus.addons.changeTier.error.validation' | translate }}
+            </p>
+          }
+          @case ('not-found') {
+            <p
+              class="change-tier__error"
+              role="alert"
+              data-testid="change-tier-error-not-found">
+              {{ 'hplus.addons.changeTier.error.notFound' | translate }}
+            </p>
+          }
+          @case ('no-stripe-subscription') {
+            <p
+              class="change-tier__error"
+              role="alert"
+              data-testid="change-tier-error-no-stripe-subscription">
+              {{ 'hplus.addons.changeTier.error.noStripeSubscription' | translate }}
+            </p>
+          }
+          @case ('stripe-price-missing') {
+            <p
+              class="change-tier__error"
+              role="alert"
+              data-testid="change-tier-error-stripe-price-missing">
+              {{ 'hplus.addons.changeTier.error.stripePriceMissing' | translate }}
+            </p>
+          }
+          @case ('unauthenticated') {
+            <p
+              class="change-tier__error"
+              role="alert"
+              data-testid="change-tier-error-unauthenticated">
+              {{ 'hplus.addons.changeTier.error.unauthenticated' | translate }}
+            </p>
+          }
+          @case ('server-error') {
+            <p
+              class="change-tier__error"
+              role="alert"
+              data-testid="change-tier-error-server">
+              {{ 'hplus.addons.changeTier.error.server' | translate }}
+            </p>
+          }
+          @case ('network-error') {
+            <p
+              class="change-tier__error"
+              role="alert"
+              data-testid="change-tier-error-network">
+              {{ 'hplus.addons.changeTier.error.network' | translate }}
+            </p>
+          }
+        }
+
+        <footer class="change-tier__actions">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            data-testid="change-tier-submit"
+            [disabled]="!canSubmit()">
+            @if (submitting()) {
+              {{ 'hplus.addons.changeTier.submitting' | translate }}
+            } @else {
+              {{ 'hplus.addons.changeTier.submit' | translate }}
+            }
+          </button>
+        </footer>
+      </form>
+    }
+  </main>
+</section>

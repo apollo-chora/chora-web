@@ -1,0 +1,186 @@
+<section
+  class="surface-rplus catalog"
+  data-testid="rplus-catalog">
+  <header class="catalog__header glass-panel">
+    <div class="catalog__breadcrumb">
+      <span>{{ 'rplus.catalog.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.catalog.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <div class="catalog__title-row">
+      <h1 class="catalog__title">
+        {{ 'rplus.catalog.title' | translate }}
+      </h1>
+      <span class="catalog__tenant-pill" data-testid="catalog-tenant">
+        <i class="fa-solid fa-building" aria-hidden="true"></i>
+        {{ 'rplus.catalog.tenant_label' | translate }}:
+        <strong>{{ tenantName() }}</strong>
+      </span>
+    </div>
+    <div class="catalog__meta">
+      <span class="catalog__total" data-testid="catalog-total">
+        <strong>{{ totalCourses() }}</strong>
+        {{ 'rplus.catalog.total_courses' | translate }}
+      </span>
+      <!--
+        Owner R44 (D9): hide what the role cannot do. `catalog/new` is guarded by
+        `roleGuard('course:author')`, and `course:author` is admin-only by the
+        2026-07-16 owner ruling recorded on `TENANT_ADMIN_CAPS`, so an instructor
+        clicking this only ever reached /unauthorized. The gate mirrors the route
+        guard exactly rather than naming a role list of its own: one source, so a
+        capability change cannot leave the two disagreeing.
+      -->
+      @if (canAuthorCourses()) {
+        <a
+          class="btn btn-primary catalog__create-cta"
+          data-testid="catalog-create-cta"
+          routerLink="/r/catalog/new"
+          [attr.aria-label]="'rplus.catalog.create_aria' | translate">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{ 'rplus.catalog.create_cta' | translate }}
+        </a>
+      }
+    </div>
+
+    <div
+      class="catalog__filters"
+      role="group"
+      [attr.aria-label]="'rplus.catalog.filter.aria' | translate">
+      @for (f of statusFilters; track f.value) {
+        <button
+          type="button"
+          class="btn btn-ghost catalog__filter"
+          [class.catalog__filter--active]="statusFilter() === f.value"
+          [attr.data-testid]="'catalog-filter-' + f.value"
+          [attr.aria-pressed]="statusFilter() === f.value"
+          (click)="setStatusFilter(f.value)">
+          {{ f.labelKey | translate }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (loadState() === 'loading') {
+    <!-- J2 — skeleton placeholders while the catalog GET is in flight, so a
+         genuinely-empty list and a still-loading list are visually distinct. -->
+    <div
+      class="catalog__loading"
+      data-testid="catalog-loading"
+      aria-live="polite"
+      aria-busy="true">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="catalog__skeleton-card" aria-hidden="true"></div>
+      }
+    </div>
+  } @else if (loadState() === 'error') {
+    <!-- J1 — fail-loud error banner (never a silent empty list on failure). -->
+    <div class="catalog__error" role="alert" data-testid="catalog-error">
+      <i
+        class="fa-solid fa-triangle-exclamation catalog__error-icon"
+        aria-hidden="true"></i>
+      <p class="catalog__error-text">
+        {{ 'rplus.catalog.error' | translate }}
+        @if (loadError(); as err) {
+          <span class="catalog__error-detail">{{ err }}</span>
+        }
+      </p>
+      <button
+        type="button"
+        class="btn btn-ghost"
+        data-testid="catalog-retry"
+        (click)="onRetry()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        {{ 'rplus.catalog.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    <div class="catalog__grid">
+      @for (course of courses(); track course.courseId) {
+        <article
+          class="catalog__card glass-panel"
+          [attr.data-testid]="'catalog-card-' + course.courseId">
+          <div class="catalog__card-main">
+            <div class="catalog__card-head">
+              <span
+                class="badge"
+                [class]="'badge ' + badge(course.status)"
+                [attr.data-testid]="'status-' + course.courseId">
+                {{ course.status }}
+              </span>
+              <code class="catalog__code">{{ course.code }}</code>
+            </div>
+            <h2 class="catalog__card-title">
+              <a
+                class="catalog__card-title-link"
+                [routerLink]="['/r/catalog', course.courseId]"
+                [attr.data-testid]="'catalog-title-link-' + course.courseId">
+                {{ course.title }}
+              </a>
+            </h2>
+            <p class="catalog__summary">{{ course.summary }}</p>
+            <span class="catalog__owner">
+              <i class="fa-solid fa-user" aria-hidden="true"></i>
+              {{ course.owner }} · {{ course.lastUpdated }}
+            </span>
+          </div>
+
+          <dl class="catalog__metrics">
+            <!--
+              Cohorts and Enrolments REMOVED (R1 slice 3a): both were hardcoded
+              0 in the mapper, so every card in every tenant read 0 forever, and
+              a zero meaning "never built" is indistinguishable from a zero
+              meaning "none yet". Nothing answers either: offerings are the
+              cohorts and the offering handler has no course filter, and there
+              is no per-course enrolment read for an admin. Atoms stays because
+              it is real, derived from `test_set_ids.length`.
+            -->
+            <div class="catalog__metric">
+              <dt>{{ 'rplus.catalog.metric.atoms' | translate }}</dt>
+              <dd>{{ course.atomCount }}</dd>
+            </div>
+          </dl>
+
+          <div class="catalog__actions">
+            @if (course.status === 'Awaiting Review') {
+              <!-- Per-course review moved off the global sidebar queue: an
+                   Awaiting Review card links to the detail page where the
+                   training-admin releases or rejects it. -->
+              <a
+                class="btn btn-primary catalog__action"
+                [routerLink]="['/r/catalog', course.courseId]"
+                [attr.data-testid]="'catalog-review-' + course.courseId"
+                [attr.aria-label]="'rplus.catalog.review.aria' | translate">
+                <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+                {{ 'rplus.catalog.review.cta' | translate }}
+              </a>
+            }
+            <!-- EDIT-1 fix: Edit opens the curriculum editor (UX-first distinct
+                 affordance from the title link, owner steer 2026-06-23). -->
+            <a
+              class="btn btn-ghost catalog__action"
+              [routerLink]="['/r/catalog', course.courseId, 'content']"
+              [attr.data-testid]="'catalog-edit-' + course.courseId"
+              [attr.aria-label]="'rplus.catalog.edit_aria' | translate">
+              <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+              {{ 'rplus.catalog.edit_cta' | translate }}
+            </a>
+            <!--
+              Archive REMOVED (R1 slice 2). It bound no `(click)` and the
+              component had no archive method, so it did nothing; and there is
+              nothing for it to do, because no endpoint performs the transition.
+              `/api/v1/courses/{id}/{action}` dispatches publish, release and
+              reject only (`course_cj2_handler.go:196-215`). ARCHIVED is a
+              reachable STATE, which the filter chips above still select, but
+              nothing moves a course into it. Restoring the button is a BACKEND
+              row first: a transition and its guard.
+            -->
+          </div>
+        </article>
+      } @empty {
+        <p class="catalog__empty">{{ 'rplus.catalog.empty' | translate }}</p>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,228 @@
+<chora-cplus-page-header
+  [title]="'cplus.interests.page_title' | translate"
+  [description]="'cplus.interests.page_subtitle' | translate"
+  [breadcrumb]="breadcrumb"
+></chora-cplus-page-header>
+
+<div class="cplus-interests">
+  <!-- Bio + generate -->
+  <chora-cplus-card [title]="'cplus.interests.input_title' | translate">
+    <div class="cplus-interests-form">
+      <div class="cplus-interests-form__field">
+        <label class="cplus-interests-form__label" for="interests-bio">
+          {{ 'cplus.interests.bio_label' | translate }}
+        </label>
+        <textarea
+          id="interests-bio"
+          class="cplus-interests-form__textarea"
+          [value]="bio()"
+          (input)="bio.set($any($event.target).value)"
+          [placeholder]="'cplus.interests.bio_placeholder' | translate"
+          rows="4"
+        ></textarea>
+      </div>
+
+      <div class="cplus-interests-form__field">
+        <label class="cplus-interests-form__label">
+          {{ 'cplus.interests.courses_label' | translate }}
+        </label>
+        @if (completedCourses().length > 0) {
+          <div class="cplus-interests-form__courses" role="list">
+            @for (course of completedCourses(); track course) {
+              <span class="cplus-interests-form__course-chip" role="listitem">{{ course }}</span>
+            }
+          </div>
+        } @else {
+          <p class="cplus-interests-form__courses-empty">
+            {{ 'cplus.interests.no_courses' | translate }}
+          </p>
+        }
+      </div>
+
+      <div class="cplus-interests-form__actions">
+        <button
+          type="button"
+          class="cplus-interests-btn cplus-interests-btn--primary"
+          [disabled]="generateState().status === 'generating' || !bio().trim()"
+          (click)="generateProfile()"
+        >
+          @if (generateState().status === 'generating') {
+            <span class="cplus-interests-btn__spinner" aria-hidden="true"></span>
+            {{ 'cplus.interests.generating' | translate }}
+          } @else {
+            {{ 'cplus.interests.generate' | translate }}
+          }
+        </button>
+      </div>
+
+      @if (generateState().status === 'generating') {
+        <p class="cplus-interests-form__generating-hint" role="status">
+          {{ 'cplus.interests.generating_hint' | translate }}
+        </p>
+      }
+
+      @if (generateState().status === 'error') {
+        <p class="cplus-interests-form__error" role="alert">
+          {{ $any(generateState()).message | translate }}
+        </p>
+      }
+    </div>
+  </chora-cplus-card>
+
+  <!-- Interest tags -->
+  @if (hasProfile()) {
+    <chora-cplus-card [title]="'cplus.interests.tags_title' | translate">
+      <div class="cplus-interests-tags">
+        <div class="cplus-interests-tags__meta">
+          <p class="cplus-interests-tags__hint">
+            {{ 'cplus.interests.tags_hint' | translate }}
+          </p>
+          <span class="cplus-interests-tags__count" aria-live="polite">
+            {{ tagCount() }}
+            {{
+              tagCount() === 1
+                ? ('cplus.interests.tag_count_one' | translate)
+                : ('cplus.interests.tag_count_many' | translate)
+            }}
+          </span>
+        </div>
+
+        @if (!hasAnyTags()) {
+          <div class="cplus-interests-tags__empty">
+            <p class="cplus-interests-tags__empty-title">
+              {{
+                generateState().status === 'success'
+                  ? ('cplus.interests.no_tags_identified' | translate)
+                  : ('cplus.interests.no_tags' | translate)
+              }}
+            </p>
+            <p class="cplus-interests-tags__empty-body">
+              {{ 'cplus.interests.no_tags_hint' | translate }}
+            </p>
+          </div>
+        } @else {
+          <div class="cplus-interests-tags__groups">
+            @for (group of groupedTags(); track group.key) {
+              <section
+                class="cplus-interests-tags__group"
+                [attr.data-category]="group.key"
+                [attr.aria-label]="group.label"
+              >
+                <header class="cplus-interests-tags__group-header">
+                  <span
+                    class="cplus-interests-tags__group-dot"
+                    aria-hidden="true"
+                  ></span>
+                  <h3 class="cplus-interests-tags__group-title">{{ group.label }}</h3>
+                  <span class="cplus-interests-tags__group-count">{{ group.tags.length }}</span>
+                </header>
+                <ul class="cplus-interests-tags__pills">
+                  @for (tag of group.tags; track tag.category + '-' + tag.tag) {
+                    <li>
+                      <span class="cplus-interests-pill cplus-interests-pill--selected">
+                        <span class="cplus-interests-pill__label">{{ labelForTag(tag.tag) }}</span>
+                        <button
+                          type="button"
+                          class="cplus-interests-pill__remove"
+                          (click)="removeTag(tag.category, tag.tag)"
+                          [attr.aria-label]="('cplus.interests.remove_tag' | translate) + ': ' + labelForTag(tag.tag)"
+                        >
+                          <span aria-hidden="true">×</span>
+                        </button>
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+          </div>
+        }
+
+        <!-- Taxonomy picker: category tabs + toggleable pills -->
+        <div class="cplus-interests-picker">
+          <p class="cplus-interests-picker__label">
+            {{ 'cplus.interests.add_tags_section' | translate }}
+          </p>
+
+          <div
+            class="cplus-interests-picker__tabs"
+            role="tablist"
+            [attr.aria-label]="'cplus.interests.categories' | translate"
+          >
+            @for (cat of categoryOrder; track cat) {
+              <button
+                type="button"
+                class="cplus-interests-picker__tab"
+                role="tab"
+                [attr.data-category]="cat"
+                [class.cplus-interests-picker__tab--active]="activePickerCategory() === cat"
+                [attr.aria-selected]="activePickerCategory() === cat"
+                (click)="selectPickerCategory(cat)"
+              >
+                {{ labelForCategory(cat) }}
+              </button>
+            }
+          </div>
+
+          <div
+            class="cplus-interests-picker__input-row"
+            role="group"
+            [attr.aria-label]="labelForCategory(activePickerCategory())"
+          >
+            <input
+              type="text"
+              class="cplus-interests-picker__input"
+              [value]="newTagInput()"
+              (input)="newTagInput.set($any($event.target).value)"
+              (keyup.enter)="addCustomTag()"
+              [placeholder]="'cplus.interests.add_tag_placeholder' | translate"
+              [attr.aria-label]="'cplus.interests.add_tag_label' | translate"
+            />
+            <button
+              type="button"
+              class="cplus-interests-btn cplus-interests-btn--secondary"
+              [disabled]="newTagInput().trim() === ''"
+              (click)="addCustomTag()"
+            >
+              {{ 'cplus.interests.add_tag' | translate }}
+            </button>
+          </div>
+          <p class="cplus-interests-picker__hint">
+            {{ 'cplus.interests.free_form_hint' | translate }}
+          </p>
+        </div>
+
+        <div class="cplus-interests-tags__footer">
+          <button
+            type="button"
+            class="cplus-interests-btn cplus-interests-btn--primary"
+            [disabled]="!isDirty() || saveState().status === 'saving'"
+            (click)="saveTags()"
+          >
+            @if (saveState().status === 'saving') {
+              {{ 'cplus.interests.saving' | translate }}
+            } @else {
+              {{ 'cplus.interests.save_tags' | translate }}
+            }
+          </button>
+
+          @if (saveState().status === 'saved' && !isDirty()) {
+            <span class="cplus-interests-tags__saved" role="status">
+              {{ 'cplus.interests.saved' | translate }}
+            </span>
+          }
+          @if (isDirty()) {
+            <span class="cplus-interests-tags__dirty">
+              {{ 'cplus.interests.unsaved' | translate }}
+            </span>
+          }
+          @if (saveState().status === 'error') {
+            <p class="cplus-interests-form__error" role="alert">
+              {{ $any(saveState()).message | translate }}
+            </p>
+          }
+        </div>
+      </div>
+    </chora-cplus-card>
+  }
+</div>

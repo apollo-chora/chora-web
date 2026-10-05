@@ -1,0 +1,121 @@
+<section
+  class="enrolment-success surface-aplus"
+  aria-labelledby="aplus-enrolment-success-heading"
+  data-testid="aplus-enrolment-success">
+  <article class="enrolment-success__panel glass-panel">
+    @switch (state().status) {
+      @case ('polling') {
+        <div role="status" aria-busy="true" data-testid="aplus-enrolment-success-polling">
+          <div class="enrolment-success__spinner-wrap">
+            <i class="fa-solid fa-circle-notch fa-spin enrolment-success__spinner" aria-hidden="true"></i>
+          </div>
+          <h1 id="aplus-enrolment-success-heading" class="enrolment-success__title">
+            {{ 'aplus.course_enrolment_success.confirming_heading' | translate }}
+          </h1>
+          <p class="enrolment-success__body">
+            {{ 'aplus.course_enrolment_success.confirming_body' | translate }}
+          </p>
+
+          <!-- Progress bar — visual indicator of polling progress -->
+          <div
+            class="enrolment-success__progress-wrap"
+            role="progressbar"
+            [attr.aria-valuenow]="progressPct()"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="'aplus.course_enrolment_success.progress_label' | translate"
+            data-testid="aplus-enrolment-success-progress">
+            <div
+              class="enrolment-success__progress-bar"
+              [style.width.%]="progressPct()"></div>
+          </div>
+
+          <p class="enrolment-success__eta" data-testid="aplus-enrolment-success-eta">
+            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+            ~{{ etaSeconds() }}s
+          </p>
+          <p class="enrolment-success__attempt" data-testid="aplus-enrolment-success-attempt">
+            {{ 'aplus.course_enrolment_success.attempt' | translate }}
+            {{ attempts() }}
+          </p>
+        </div>
+      }
+      @case ('success') {
+        <div role="status" data-testid="aplus-enrolment-success-confirmed">
+          <div class="enrolment-success__icon-wrap enrolment-success__icon-wrap--ok">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+          </div>
+          <h1 id="aplus-enrolment-success-heading" class="enrolment-success__title">
+            {{ 'aplus.course_enrolment_success.confirmed_heading' | translate }}
+          </h1>
+          <p class="enrolment-success__body">
+            {{ 'aplus.course_enrolment_success.confirmed_body' | translate }}
+          </p>
+          <div class="enrolment-success__actions">
+            <a
+              [routerLink]="['/a/courses', courseId, 'learn']"
+              class="btn btn-primary"
+              data-testid="aplus-enrolment-success-open-course">
+              {{ 'aplus.course_enrolment_success.open_course' | translate }}
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
+            <a
+              routerLink="/a/dashboard"
+              class="btn btn-secondary"
+              data-testid="aplus-enrolment-success-back-to-dashboard">
+              {{ 'aplus.course_enrolment_success.back_to_dashboard' | translate }}
+            </a>
+          </div>
+        </div>
+      }
+      @case ('timeout') {
+        <!-- Fail-loud timeout with explicit "contact support" per feedback_no_stubs_real_wiring. -->
+        <div role="alert" data-testid="aplus-enrolment-success-timeout">
+          <div class="enrolment-success__icon-wrap enrolment-success__icon-wrap--warn">
+            <i class="fa-solid fa-clock" aria-hidden="true"></i>
+          </div>
+          <h1 id="aplus-enrolment-success-heading" class="enrolment-success__title">
+            {{ 'aplus.course_enrolment_success.timeout_heading' | translate }}
+          </h1>
+          <p class="enrolment-success__body">
+            {{ 'aplus.course_enrolment_success.timeout_body_contact_support' | translate }}
+          </p>
+          <div class="enrolment-success__actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="retry()"
+              data-testid="aplus-enrolment-success-retry">
+              {{ 'aplus.course_enrolment_success.retry' | translate }}
+            </button>
+            <a
+              routerLink="/a/dashboard"
+              class="btn btn-secondary"
+              data-testid="aplus-enrolment-success-back-to-dashboard">
+              {{ 'aplus.course_enrolment_success.back_to_dashboard' | translate }}
+            </a>
+          </div>
+        </div>
+      }
+      @case ('error') {
+        <div role="alert" data-testid="aplus-enrolment-success-error">
+          <div class="enrolment-success__icon-wrap enrolment-success__icon-wrap--err">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          </div>
+          <h1 id="aplus-enrolment-success-heading" class="enrolment-success__title">
+            {{ 'aplus.course_enrolment_success.error_heading' | translate }}
+          </h1>
+          <p class="enrolment-success__body">{{ errorKey() | translate }}</p>
+          <div class="enrolment-success__actions">
+            <a
+              routerLink="/a/catalog"
+              class="btn btn-secondary"
+              data-testid="aplus-enrolment-success-back-to-catalog">
+              {{ 'aplus.course_enrolment_success.back_to_catalog' | translate }}
+            </a>
+          </div>
+        </div>
+      }
+    }
+  </article>
+</section>

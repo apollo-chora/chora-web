@@ -1,0 +1,82 @@
+<section
+  class="appeal-timeline"
+  role="main"
+  [attr.aria-label]="'governance.appeal_status_title' | translate"
+  data-testid="appeal-timeline">
+
+  <header class="appeal-timeline__header">
+    <h1 class="appeal-timeline__title" data-testid="appeal-title">
+      {{ 'governance.appeal_status_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="appeal-timeline__loading" aria-live="polite" data-testid="appeal-loading">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="appeal-timeline__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (isError()) {
+    <div class="appeal-timeline__error" role="alert" data-testid="appeal-error">
+      <p class="appeal-timeline__error-text">
+        {{ 'governance.appeal_timeline_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Timeline -->
+  @if (timeline()) {
+    <div class="appeal-timeline__stages" data-testid="appeal-stages"
+         role="list" [attr.aria-label]="'governance.appeal_stages' | translate">
+
+      @for (stage of stages(); track stage.label_key; let idx = $index) {
+        <div
+          [class]="stageClass(stage, idx)"
+          role="listitem"
+          [attr.aria-current]="stage.status === 'active' ? 'step' : null"
+          data-testid="timeline-stage">
+
+          <!-- Timeline connector -->
+          <div class="appeal-timeline__connector">
+            <span class="appeal-timeline__marker"></span>
+            @if (idx < stages().length - 1) {
+              <span class="appeal-timeline__line"></span>
+            }
+          </div>
+
+          <!-- Stage content -->
+          <div class="appeal-timeline__content">
+            <div class="appeal-timeline__stage-header">
+              <span class="appeal-timeline__stage-label" data-testid="stage-label">
+                {{ stage.label_key | translate }}
+              </span>
+              <span class="appeal-timeline__stage-date" data-testid="stage-date">
+                {{ formatDate(stage.date) }}
+              </span>
+            </div>
+
+            @if (stage.notes) {
+              <p class="appeal-timeline__stage-notes" data-testid="stage-notes">
+                {{ stage.notes }}
+              </p>
+            }
+
+            @if (isResolved(stage) && stage.decision) {
+              <div class="appeal-timeline__decision-section" data-testid="stage-decision">
+                <span
+                  class="appeal-timeline__decision"
+                  [class]="decisionClass(stage.decision)">
+                  {{ decisionLabels[stage.decision] | translate }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

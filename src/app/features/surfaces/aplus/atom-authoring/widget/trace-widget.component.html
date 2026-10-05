@@ -1,0 +1,212 @@
+<aside
+  class="trace-widget glass-panel"
+  role="complementary"
+  [class.is-live]="live()"
+  [class.is-collapsed]="effectiveCollapsed()"
+  [attr.aria-label]="'aplus.atom_authoring.trace.aria' | translate"
+  data-testid="aplus-trace-widget">
+  <button
+    type="button"
+    class="trace-widget__header"
+    [attr.aria-expanded]="!effectiveCollapsed()"
+    aria-controls="trace-widget-body"
+    (click)="toggleCollapsed()"
+    (keydown)="onHeaderKeydown($event)"
+    data-testid="aplus-trace-widget-toggle">
+    <span class="trace-widget__head-text">
+      <span class="trace-widget__title">
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        {{ 'aplus.atom_authoring.trace.title' | translate }}
+      </span>
+      <span class="trace-widget__subtitle">
+        {{ 'aplus.atom_authoring.trace.subtitle' | translate }}
+      </span>
+    </span>
+
+    <span class="trace-widget__head-aside">
+      @if (live()) {
+        <span class="trace-widget__live-pill" data-testid="aplus-trace-live-pill">
+          <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+          {{ 'aplus.atom_authoring.trace.live_badge' | translate }}
+        </span>
+      } @else if (effectiveCollapsed() && hasTrace()) {
+        <span class="trace-widget__summary" data-testid="aplus-trace-summary">
+          <span class="trace-widget__summary-count">
+            {{ totalStages() }}
+            {{ (totalStages() === 1
+                  ? 'aplus.atom_authoring.trace.stage_singular'
+                  : 'aplus.atom_authoring.trace.stage_plural') | translate }}
+          </span>
+          @if (collapsedOutcome(); as outcome) {
+            <span
+              class="trace-widget__summary-badge"
+              [attr.data-variant]="terminalVariant(outcome)">
+              {{ outcome }}
+            </span>
+          }
+        </span>
+      }
+      <i
+        class="trace-widget__chevron fa-solid"
+        [class.fa-chevron-down]="effectiveCollapsed()"
+        [class.fa-chevron-up]="!effectiveCollapsed()"
+        aria-hidden="true"></i>
+    </span>
+  </button>
+
+  <div
+    class="trace-widget__body"
+    id="trace-widget-body"
+    [class.is-collapsed]="effectiveCollapsed()"
+    [attr.aria-hidden]="effectiveCollapsed() ? 'true' : null"
+    [attr.inert]="effectiveCollapsed() ? '' : null">
+    <div class="trace-widget__body-inner">
+      @if (!hasTrace()) {
+        <chora-empty-state
+          class="trace-widget__empty"
+          icon="fa-solid fa-wand-magic-sparkles"
+          [heading]="'aplus.atom_authoring.trace.empty' | translate"
+          testId="aplus-trace-widget-empty" />
+      } @else {
+        <ol class="trace-widget__groups" data-testid="aplus-trace-widget-groups">
+          @for (group of groups(); track group.pipelineGroup) {
+            @if (group.events.length > 0) {
+              <li class="trace-group" [attr.data-pipeline]="group.pipelineGroup">
+                <button
+                  type="button"
+                  class="trace-group__header"
+                  [attr.aria-expanded]="group.expanded"
+                  [attr.aria-controls]="'trace-group-' + group.pipelineGroup"
+                  (click)="toggleGroup(group.pipelineGroup)"
+                  (keydown)="onGroupKeydown($event, group.pipelineGroup)"
+                  [attr.data-testid]="'aplus-trace-group-' + group.pipelineGroup">
+                  <span
+                    class="trace-group__dot"
+                    [class.is-in-flight]="group.status === 'in_flight'"
+                    [class.is-failed]="group.status === 'failed'"
+                    [style.borderColor]="group.accentColor"
+                    [style.color]="group.accentColor"
+                    aria-hidden="true">
+                    <i
+                      [class]="group.status === 'in_flight'
+                        ? 'fa-solid fa-spinner fa-spin'
+                        : group.icon"></i>
+                  </span>
+
+                  <span class="trace-group__head-text">
+                    <span class="trace-group__agent">{{ group.agentLabel }}</span>
+                    <span class="trace-group__meta">
+                      <span
+                        class="trace-group__pipeline-chip"
+                        [style.background]="group.accentColor + '14'"
+                        [style.color]="group.accentColor">
+                        <i class="fa-solid fa-circle-nodes" aria-hidden="true"></i>
+                        {{ group.pipelineLabel }}
+                      </span>
+                      <span class="trace-group__stages">
+                        {{ group.events.length }}
+                        {{ (group.events.length === 1
+                              ? 'aplus.atom_authoring.trace.stage_singular'
+                              : 'aplus.atom_authoring.trace.stage_plural') | translate }}
+                      </span>
+                    </span>
+                  </span>
+
+                  <span class="trace-group__terminal">
+                    @if (group.terminalSignal) {
+                      <span
+                        class="trace-group__terminal-badge"
+                        [attr.data-variant]="terminalVariant(group.terminalSignal.status)">
+                        {{ group.terminalSignal.status }}
+                      </span>
+                    }
+                    <i
+                      class="trace-group__chevron"
+                      [class]="group.expanded
+                        ? 'fa-solid fa-chevron-up'
+                        : 'fa-solid fa-chevron-down'"
+                      aria-hidden="true"></i>
+                  </span>
+                </button>
+
+                @if (group.expanded) {
+                  <ol
+                    class="trace-group__events"
+                    [id]="'trace-group-' + group.pipelineGroup"
+                    [attr.data-testid]="'aplus-trace-events-' + group.pipelineGroup">
+                    @for (event of group.events; track event.eventId) {
+                      <li
+                        class="trace-event"
+                        [class.is-in-flight]="event.status === 'in_flight'"
+                        [class.is-failed]="event.status === 'failed'"
+                        [attr.data-testid]="'aplus-trace-event-' + event.eventId">
+                        <span
+                          class="trace-event__dot"
+                          [style.background]="stageBadgeColor(event.pipelineGroup, event.stage, event.accentColor) + '12'"
+                          [style.borderColor]="stageBadgeColor(event.pipelineGroup, event.stage, event.accentColor) + '40'"
+                          [style.color]="stageBadgeColor(event.pipelineGroup, event.stage, event.accentColor)"
+                          aria-hidden="true">
+                          <i
+                            [class]="event.status === 'in_flight'
+                              ? 'fa-solid fa-spinner fa-spin'
+                              : stageIcon(event.pipelineGroup, event.stage, event.icon)"></i>
+                        </span>
+                        <div class="trace-event__body">
+                          <p class="trace-event__label">
+                            {{ stageLabel(event.pipelineGroup, event.stage) || event.phase }}
+                          </p>
+                          <p class="trace-event__metric">{{ stageMetric(event) }}</p>
+                          <div class="trace-event__badges">
+                            @if (event.modelId) {
+                              @let model = getModel(event.modelId);
+                              <span
+                                class="trace-event__model"
+                                [style.background]="model.color + '12'"
+                                [style.color]="model.color"
+                                [style.borderColor]="model.color + '30'"
+                                [attr.title]="event.modelId + ': ' + model.description">
+                                {{ model.abbr }}
+                              </span>
+                            }
+                            @for (badge of stageBadges(event.pipelineGroup, event.stage); track badge.variant) {
+                              @let style = badgeStyle(badge.variant);
+                              <span
+                                class="trace-event__tool-badge"
+                                [style.background]="style.background"
+                                [style.color]="style.color"
+                                [style.borderColor]="style.border">
+                                <span aria-hidden="true">{{ badge.icon }}</span>
+                                {{ badge.text }}
+                              </span>
+                            }
+                            @if (event.badgeText) {
+                              <span
+                                class="trace-event__stage-badge"
+                                [attr.data-variant]="event.badgeVariant ?? 'info'">
+                                {{ event.badgeText }}
+                              </span>
+                            }
+                            <time class="trace-event__time" [attr.dateTime]="event.timestamp">
+                              {{ formatTime(event.timestamp) }}
+                            </time>
+                          </div>
+                        </div>
+                      </li>
+                    }
+                  </ol>
+                }
+              </li>
+            }
+          }
+        </ol>
+
+        @if (live()) {
+          <p class="trace-widget__ghost" data-testid="aplus-trace-ghost">
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            {{ 'aplus.atom_authoring.trace.stage_running' | translate }}
+          </p>
+        }
+      }
+    </div>
+  </div>
+</aside>

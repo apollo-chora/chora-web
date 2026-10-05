@@ -1,0 +1,142 @@
+<section
+  class="notification-preferences"
+  role="main"
+  [attr.aria-label]="'admin.communication.preferences_title' | translate"
+  data-testid="notification-preferences">
+
+  <!-- Header -->
+  <header class="notification-preferences__header">
+    <h1 class="notification-preferences__title" data-testid="preferences-title">
+      {{ 'admin.communication.preferences_title' | translate }}
+    </h1>
+    <p class="notification-preferences__subtitle">
+      {{ 'admin.communication.preferences_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="notification-preferences__loading" data-testid="preferences-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="notification-preferences__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Device push opt-in was removed with the FCM/Firebase extraction
+       (the browser-level push registration lived inside the Firebase
+       Messaging SDK; the gateway publishes no push-subscription routes). -->
+
+  <!-- Toggle Grid -->
+  @if (!loading()) {
+    <div class="notification-preferences__grid" data-testid="preferences-grid" role="grid"
+      [attr.aria-label]="'admin.communication.preferences_grid' | translate">
+
+      <!-- Header Row -->
+      <div class="notification-preferences__grid-header" role="row">
+        <div class="notification-preferences__grid-cell notification-preferences__grid-cell--label" role="columnheader">
+          {{ 'admin.communication.event_category' | translate }}
+        </div>
+        @for (channel of allChannels; track channel) {
+          <div class="notification-preferences__grid-cell notification-preferences__grid-cell--header" role="columnheader">
+            {{ channelLabels[channel] | translate }}
+          </div>
+        }
+      </div>
+
+      <!-- Category Rows -->
+      @for (category of allCategories; track category) {
+        <div class="notification-preferences__grid-row" role="row"
+          [attr.data-testid]="'pref-row-' + category">
+          <div class="notification-preferences__grid-cell notification-preferences__grid-cell--label" role="rowheader">
+            {{ categoryLabels[category] | translate }}
+          </div>
+          @for (channel of allChannels; track channel) {
+            <div class="notification-preferences__grid-cell notification-preferences__grid-cell--toggle" role="gridcell">
+              @if (isCritical(category, channel)) {
+                <span class="notification-preferences__locked-indicator"
+                      [title]="'admin.communication.critical_always_on' | translate"
+                      data-testid="critical-indicator">
+                  &#128274;
+                </span>
+              } @else if (isLocked(category, channel)) {
+                <span class="notification-preferences__locked-indicator"
+                      [title]="'admin.communication.tenant_override' | translate"
+                      data-testid="locked-indicator">
+                  &#128275;
+                </span>
+              } @else {
+                <label class="notification-preferences__switch"
+                  [for]="toggleId(category, channel)">
+                  <input
+                    type="checkbox"
+                    class="notification-preferences__switch-input"
+                    [id]="toggleId(category, channel)"
+                    [checked]="isEnabled(category, channel)"
+                    (change)="onToggle(category, channel)"
+                    [attr.data-testid]="'toggle-' + category + '-' + channel"
+                    [attr.aria-label]="(categoryLabels[category] | translate) + ' ' + (channelLabels[channel] | translate)"
+                    role="switch"
+                    [attr.aria-checked]="isEnabled(category, channel)" />
+                  <span class="notification-preferences__switch-slider"></span>
+                </label>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Quiet Hours -->
+    <div class="notification-preferences__quiet-hours" data-testid="quiet-hours">
+      <h2 class="notification-preferences__section-title">
+        {{ 'admin.communication.quiet_hours' | translate }}
+      </h2>
+      <p class="notification-preferences__section-desc">
+        {{ 'admin.communication.quiet_hours_desc' | translate }}
+      </p>
+
+      <div class="notification-preferences__quiet-hours-inputs">
+        <div class="notification-preferences__time-group">
+          <label for="quiet-start" class="notification-preferences__time-label">
+            {{ 'admin.communication.quiet_hours_start' | translate }}
+          </label>
+          <input
+            type="time"
+            id="quiet-start"
+            class="notification-preferences__time-input"
+            [value]="quietHoursStart()"
+            (change)="onQuietHoursStartChange($any($event.target).value)"
+            data-testid="quiet-hours-start"
+            [attr.aria-label]="'admin.communication.quiet_hours_start' | translate" />
+        </div>
+        <div class="notification-preferences__time-group">
+          <label for="quiet-end" class="notification-preferences__time-label">
+            {{ 'admin.communication.quiet_hours_end' | translate }}
+          </label>
+          <input
+            type="time"
+            id="quiet-end"
+            class="notification-preferences__time-input"
+            [value]="quietHoursEnd()"
+            (change)="onQuietHoursEndChange($any($event.target).value)"
+            data-testid="quiet-hours-end"
+            [attr.aria-label]="'admin.communication.quiet_hours_end' | translate" />
+        </div>
+        <div class="notification-preferences__time-group">
+          <label for="quiet-tz" class="notification-preferences__time-label">
+            {{ 'admin.communication.quiet_hours_timezone' | translate }}
+          </label>
+          <input
+            type="text"
+            id="quiet-tz"
+            class="notification-preferences__time-input notification-preferences__time-input--tz"
+            [value]="quietHoursTimezone()"
+            (change)="onTimezoneChange($any($event.target).value)"
+            data-testid="quiet-hours-timezone"
+            [attr.aria-label]="'admin.communication.quiet_hours_timezone' | translate" />
+        </div>
+      </div>
+    </div>
+  }
+</section>

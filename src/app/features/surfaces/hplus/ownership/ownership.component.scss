@@ -1,0 +1,206 @@
+// =====================================================================
+// H+ ownership handover (/h/ownership). UX Track U, package E3, S7a to S7c.
+// Tablet-first (>=768px primary, >=1280px desktop enhanced).
+// Polyglass tokens; the .surface-hplus accent is applied on the root.
+//
+// The Owner chip is the design point. Ownership is a stored role, not a
+// decoration and not a computed badge, and the chip reads as a FACT about the
+// row rather than an action on it: it carries no affordance, because nothing on
+// this table can change it. Handing over is a separate, deliberate act below.
+//
+// Colours come from --chora-color-* only. The legacy --text-muted resolves to
+// #64748b, which fails AA at 4.37:1 on the #f5f5f5 ground.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.ownership {
+  display: block;
+  padding: 1.5rem;
+  min-height: 100%;
+
+  &__head {
+    margin-bottom: 1.5rem;
+  }
+
+  &__eyebrow {
+    margin: 0 0 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__title {
+    margin: 0 0 0.4rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__lede {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__status {
+    color: var(--chora-color-text-muted);
+  }
+
+  &__panel {
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    border: 1px solid var(--chora-color-border-subtle);
+    border-radius: 12px;
+    background: var(--chora-color-surface-1);
+    backdrop-filter: blur(12px);
+
+    // A refusal is a stop, not a decoration: the left rule carries the weight
+    // so the copy itself stays readable rather than being tinted to failure.
+    &--stop {
+      border-left: 4px solid var(--chora-color-accent-coral-fill);
+    }
+  }
+
+  &__h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__muted {
+    margin: 0 0 0.6rem;
+    max-width: 68ch;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__note {
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    max-width: 68ch;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__hint {
+    display: block;
+    margin: 0.2rem 0 0.9rem;
+    font-size: 0.8rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__quote {
+    margin: 0 0 0.6rem;
+    padding: 0.5rem 0.9rem;
+    border-left: 3px solid var(--chora-color-border-subtle);
+    color: var(--chora-color-text-primary);
+  }
+
+  // Wide content scrolls inside its own container; the page never scrolls
+  // sideways.
+  &__table-wrap {
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 0.5rem 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid var(--chora-color-border-subtle);
+    }
+
+    th {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--chora-color-text-muted);
+    }
+
+    td {
+      color: var(--chora-color-text-primary);
+    }
+  }
+
+  &__chip {
+    display: inline-block;
+    margin-left: 0.45rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: var(--chora-color-surface-1);
+    border: 1px solid var(--chora-color-border-subtle);
+    color: var(--chora-color-text-primary);
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    max-width: 44rem;
+  }
+
+  &__label {
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__input {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--chora-color-border-subtle);
+    border-radius: 8px;
+    font: inherit;
+    background: var(--chora-color-surface-1);
+    color: var(--chora-color-text-primary);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 0.9rem;
+  }
+
+  &__btn {
+    padding: 0.45rem 0.95rem;
+    border: 1px solid var(--chora-color-border-subtle);
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--chora-color-surface-1);
+    color: var(--chora-color-text-primary);
+    text-decoration: none;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    &--primary {
+      background: var(--chora-color-primary);
+      border-color: var(--chora-color-primary);
+      color: var(--chora-color-on-primary);
+    }
+
+    &--quiet {
+      background: transparent;
+    }
+  }
+}
+
+@media (min-width: 1280px) {
+  .ownership {
+    padding: 2rem 2.5rem;
+  }
+}

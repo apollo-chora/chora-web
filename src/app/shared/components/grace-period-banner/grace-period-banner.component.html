@@ -1,0 +1,35 @@
+@if (!isExpired()) {
+  <div
+    class="grace-period-banner"
+    [class]="urgencyClass()"
+    role="alert"
+    aria-live="polite"
+    data-testid="grace-period-banner">
+
+    <div class="grace-period-banner__content">
+      <span
+        class="grace-period-banner__icon"
+        aria-hidden="true"
+        data-testid="grace-period-icon">
+        &#9888;
+      </span>
+
+      <span
+        class="grace-period-banner__message"
+        data-testid="grace-period-message">
+        {{ bannerMessageKey() | translate }}
+        <strong data-testid="grace-period-days">{{ daysRemaining() }}</strong>
+        {{ 'grace_period.days_remaining' | translate }}
+      </span>
+    </div>
+
+    <button
+      type="button"
+      class="grace-period-banner__cancel-btn"
+      data-testid="grace-period-cancel-btn"
+      (click)="handleCancel()"
+      [attr.aria-label]="'grace_period.cancel_' + type() | translate">
+      {{ 'grace_period.cancel_deletion' | translate }}
+    </button>
+  </div>
+}

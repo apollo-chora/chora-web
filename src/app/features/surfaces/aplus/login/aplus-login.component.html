@@ -1,0 +1,98 @@
+<section class="aplus-login surface-aplus" aria-labelledby="aplus-login-heading" data-testid="aplus-login-page">
+  <div class="glass-panel status-pill" aria-hidden="true" data-testid="aplus-login-status">
+    <span class="led"></span>
+    <span>{{ 'identity.login.systems_operational' | translate }}</span>
+  </div>
+
+  <main class="glass-panel login-card">
+    <header class="login-header">
+      <h1 id="aplus-login-heading" class="login-title">{{ 'identity.login.brand' | translate }}</h1>
+      <p class="login-tagline">{{ 'identity.login.tagline' | translate }}</p>
+    </header>
+
+    @if (errorMessage()) {
+      <div class="login-error" role="alert" aria-live="polite" data-testid="aplus-login-error">
+        {{ errorMessage()! | translate }}
+      </div>
+    }
+
+    <form class="login-form" (ngSubmit)="loginWithPassword()">
+      <div class="field-group">
+        <label class="field-label" for="aplus-login-username">
+          {{ 'identity.login.username_label' | translate }}
+        </label>
+        <input
+          id="aplus-login-username"
+          class="form-control"
+          type="text"
+          autocomplete="username"
+          [attr.placeholder]="'identity.login.username_placeholder' | translate"
+          [ngModel]="username()"
+          (ngModelChange)="username.set($event)"
+          [disabled]="isLoading()"
+          name="username"
+          data-testid="aplus-login-username" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="aplus-login-password">
+          {{ 'identity.login.password_label' | translate }}
+        </label>
+        <div class="password-wrap">
+          <input
+            id="aplus-login-password"
+            class="form-control"
+            [type]="passwordVisible() ? 'text' : 'password'"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            [disabled]="isLoading()"
+            name="password"
+            data-testid="aplus-login-password" />
+          <button
+            class="password-toggle"
+            type="button"
+            [attr.aria-label]="(passwordVisible()
+              ? 'identity.login.hide_password'
+              : 'identity.login.show_password') | translate"
+            [attr.aria-pressed]="passwordVisible()"
+            (click)="togglePasswordVisibility()"
+            data-testid="aplus-login-password-toggle">
+            <i [class]="passwordVisible() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <button
+        class="btn btn-primary btn-full"
+        type="submit"
+        [disabled]="isLoading()"
+        data-testid="aplus-login-submit-btn">
+        @if (isLoading()) {
+          <span class="login-spinner" aria-hidden="true"></span>
+        } @else {
+          <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+        }
+        {{ 'identity.login.login_btn' | translate }}
+      </button>
+
+      @if (webAuthnSupported()) {
+        <button
+          class="btn btn-secondary btn-full"
+          type="button"
+          (click)="loginWithPasskey()"
+          [disabled]="isLoading()"
+          data-testid="aplus-login-passkey-btn">
+          <i class="fa-solid fa-key" aria-hidden="true"></i>
+          {{ 'identity.login.passkey_btn' | translate }}
+        </button>
+      }
+    </form>
+  </main>
+
+  <div class="powered-by" aria-hidden="true">
+    <div class="powered-by__label">{{ 'identity.login.powered_by_label' | translate }}</div>
+    <div class="powered-by__name">{{ 'identity.login.powered_by_name' | translate }}</div>
+  </div>
+</section>

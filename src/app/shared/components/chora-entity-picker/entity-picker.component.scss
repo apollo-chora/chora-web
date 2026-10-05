@@ -1,0 +1,259 @@
+:host {
+  display: block;
+}
+
+.entity-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm, 8px);
+  position: relative;
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--chora-color-text, inherit);
+  }
+
+  &__input {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, rgba(255, 255, 255, 0.16));
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+    color: inherit;
+    font: inherit;
+
+    &:focus {
+      outline: 2px solid var(--chora-color-primary, #5b7fff);
+      outline-offset: 2px;
+    }
+  }
+
+  // ── chips (multi) ────────────────────────────────────────────────────────
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-xs, 4px);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: 2px var(--chora-space-sm, 8px);
+    background: var(--chora-color-primary, #5b7fff);
+    color: var(--chora-color-on-primary, #fff);
+    border-radius: 999px;
+    font-size: 0.875rem;
+  }
+
+  &__chip-label {
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__chip-remove,
+  &__selected-clear {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 1.125rem;
+    line-height: 1;
+    padding: 0;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #5b7fff);
+      outline-offset: 2px;
+    }
+  }
+
+  // ── selected line (single) ───────────────────────────────────────────────
+  &__selected {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, rgba(255, 255, 255, 0.16));
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+  }
+
+  &__selected-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // ── async states ─────────────────────────────────────────────────────────
+  &__loading,
+  &__error {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+    font-size: 0.875rem;
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-sm, 8px);
+    background: var(--chora-color-danger-surface, rgba(220, 38, 38, 0.08));
+    color: var(--chora-color-danger, #dc2626);
+  }
+
+  &__retry {
+    background: transparent;
+    border: 1px solid currentcolor;
+    border-radius: var(--chora-radius-sm, 4px);
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    padding: 2px var(--chora-space-sm, 8px);
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #5b7fff);
+      outline-offset: 2px;
+    }
+  }
+
+  // ── overlay panel (CHO-2291) ─────────────────────────────────────────────
+  // POSITIONING IS NOT HERE. The panel is rendered through a CDK connected
+  // overlay into a body-level container, which positions it against the input
+  // and repositions it on scroll. This rule supplies chrome only.
+  //
+  // Portaling is required, not cosmetic: the picker's ancestor `.glass-panel`
+  // has `backdrop-filter`, which creates a stacking context and a containing
+  // block, so an in-place panel was painted under the following card at ANY
+  // z-index (and `position: fixed` was trapped by it too).
+  //
+  // NOTE this rule compiles to a flat `.entity-picker__panel` selector, so it
+  // still matches once the node lives outside `.entity-picker`. Angular's
+  // emulated encapsulation attribute travels with the overlay template.
+  &__panel {
+    background: var(--chora-color-surface-1, #ffffff);
+    border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+    border-radius: var(--chora-radius-md, 8px);
+    box-shadow: var(--chora-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.16));
+    overflow: hidden;
+
+    // The command variant's darker overlay skin. Carried on the panel itself
+    // because `.entity-picker--command .entity-picker__panel` would no longer
+    // match once the panel is portaled out of the host subtree.
+    &--command {
+      background: var(--chora-color-surface-2, rgba(20, 22, 32, 0.96));
+      box-shadow: var(--chora-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.32));
+    }
+  }
+
+  // ── results listbox ──────────────────────────────────────────────────────
+  &__results {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    // No border/radius of its own — `&__panel` now supplies the chrome, and a
+    // second border inside it reads as a double outline.
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  &__option-row {
+    display: block;
+
+    & + & {
+      border-top: 1px solid var(--chora-color-border, rgba(255, 255, 255, 0.16));
+    }
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-sm, 8px);
+    width: 100%;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+
+    &--active {
+      background: var(--chora-color-surface-2, rgba(255, 255, 255, 0.08));
+    }
+
+    &--disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__option-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__option-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__option-sublabel {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, rgba(255, 255, 255, 0.6));
+  }
+
+  &__option-badge {
+    flex: none;
+    padding: 1px var(--chora-space-sm, 8px);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    background: var(--chora-color-surface-2, rgba(255, 255, 255, 0.08));
+    color: var(--chora-color-text-muted, rgba(255, 255, 255, 0.7));
+  }
+
+  &__load-more {
+    align-self: stretch;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: transparent;
+    border: 1px solid var(--chora-color-border, rgba(255, 255, 255, 0.16));
+    border-radius: var(--chora-radius-sm, 4px);
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #5b7fff);
+      outline-offset: 2px;
+    }
+  }
+
+  // ── command variant: floating overlay panel ──────────────────────────────
+  &--command {
+    .entity-picker__results,
+    .entity-picker__loading,
+    .entity-picker__error {
+      box-shadow: var(--chora-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.32));
+      background: var(--chora-color-surface-2, rgba(20, 22, 32, 0.96));
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entity-picker * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

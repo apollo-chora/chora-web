@@ -1,0 +1,122 @@
+<section
+  class="aplus-egg surface-aplus"
+  aria-labelledby="aplus-egg-heading"
+  data-testid="aplus-familiar-egg">
+  <header class="aplus-egg__header glass-panel">
+    <h1 id="aplus-egg-heading" class="aplus-egg__title">
+      {{ 'aplus.familiar_egg.heading' | translate }}
+    </h1>
+    <p class="aplus-egg__tagline">
+      {{ 'aplus.familiar_egg.tagline' | translate }}
+    </p>
+  </header>
+
+  @if (viewState() === 'error') {
+    <div class="aplus-egg__error glass-panel" role="alert" data-testid="aplus-egg-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      {{ 'aplus.familiar_egg.load_error' | translate }}
+      <a [routerLink]="['/a/companion']" class="aplus-egg__error-link">
+        {{ 'aplus.familiar_egg.back_to_cast' | translate }}
+      </a>
+    </div>
+  } @else if (viewState() === 'ready') {
+    <div
+      class="aplus-egg__canvas"
+      [class.aplus-egg__canvas--stirring]="stirring()">
+      <div class="aplus-egg__halo" aria-hidden="true"></div>
+      <img
+        class="aplus-egg__art"
+        src="/assets/familiars/pods/pod-standard.png"
+        [alt]="'aplus.familiar_egg.pod_alt' | translate"
+        width="240"
+        height="260"
+        loading="lazy" />
+      @if (stirring()) {
+        <p
+          class="aplus-egg__stirring"
+          role="status"
+          aria-live="polite"
+          data-testid="aplus-egg-stirring">
+          <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+          {{ 'aplus.familiar_egg.stirring_ready' | translate }}
+        </p>
+      }
+    </div>
+
+    <!-- ── The incubation card (CHO-2089, ADR-228 D2/D6) ─────────────── -->
+    <div class="aplus-egg__card glass-panel" data-testid="aplus-egg-card">
+      <!-- Bound goal -->
+      @if (boundGoalTheme()) {
+        <p class="aplus-egg__goal" data-testid="aplus-egg-goal">
+          <i class="fa-solid fa-map" aria-hidden="true"></i>
+          {{ 'aplus.familiar_egg.goal_bound' | translate: { goal: boundGoalTheme() } }}
+        </p>
+      } @else {
+        <a
+          class="aplus-egg__goal aplus-egg__goal--nudge"
+          [routerLink]="['/a/knowledge']"
+          data-testid="aplus-egg-goal-nudge">
+          <i class="fa-solid fa-map" aria-hidden="true"></i>
+          {{ 'aplus.familiar_egg.goal_unbound_nudge' | translate }}
+        </a>
+      }
+
+      <!-- Species: a mystery until the reveal, always (D4 / CHO-2227). -->
+      <p class="aplus-egg__species" data-testid="aplus-egg-species-mystery">
+        {{ 'aplus.familiar_egg.species_mystery' | translate }}
+      </p>
+
+      <!-- Warming bar -->
+      <div class="aplus-egg__warming">
+        <span
+          class="aplus-egg__warming-label"
+          id="aplus-egg-warming-label"
+          data-testid="aplus-egg-warming-label">
+          {{
+            'aplus.familiar_egg.warming_label'
+              | translate: { exp: warmExp(), threshold: warmThreshold() }
+          }}
+        </span>
+        <div
+          class="aplus-egg__warming-bar"
+          role="progressbar"
+          aria-labelledby="aplus-egg-warming-label"
+          [attr.aria-valuenow]="warmExp()"
+          aria-valuemin="0"
+          [attr.aria-valuemax]="warmThreshold()"
+          data-testid="aplus-egg-warming-bar">
+          <div
+            class="aplus-egg__warming-fill"
+            [class.aplus-egg__warming-fill--stirring]="stirring()"
+            [style.width.%]="warmPct()"></div>
+        </div>
+      </div>
+
+      <!-- Hatch gate -->
+      @if (stirring()) {
+        <a
+          [routerLink]="['/a/companion/hatching', familiarId()]"
+          class="aplus-egg__hatch-cta aplus-egg__hatch-cta--ready"
+          data-testid="aplus-egg-hatch-cta">
+          <i class="fa-solid fa-egg" aria-hidden="true"></i>
+          {{ 'aplus.familiar_egg.nourish_cta' | translate }}
+        </a>
+      } @else {
+        <p class="aplus-egg__hatch-locked" data-testid="aplus-egg-hatch-locked">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          {{ 'aplus.familiar_egg.hatch_locked_hint' | translate }}
+        </p>
+      }
+    </div>
+  } @else {
+    <div class="aplus-egg__loading glass-panel" data-testid="aplus-egg-loading">
+      {{ 'aplus.familiar_egg.loading' | translate }}
+    </div>
+  }
+
+  <!-- Lootbox transparency footer per HANDOFF §4.4 -->
+  <footer class="aplus-egg__footer" data-testid="aplus-egg-footer">
+    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+    <p>{{ 'aplus.familiar_marketplace.transparency_body' | translate }}</p>
+  </footer>
+</section>

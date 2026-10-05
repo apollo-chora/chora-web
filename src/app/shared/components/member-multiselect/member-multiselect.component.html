@@ -1,0 +1,115 @@
+<section class="member-multiselect" data-testid="member-multiselect">
+  <h3 class="member-multiselect__title" [id]="titleId">
+    {{ 'shared.member_multiselect.title' | translate }}
+  </h3>
+
+  @switch (loadState().status) {
+    @case ('loading') {
+      <p
+        class="member-multiselect__status"
+        role="status"
+        aria-live="polite"
+        data-testid="member-multiselect-loading">
+        {{ 'shared.member_multiselect.loading' | translate }}
+      </p>
+    }
+
+    @case ('error') {
+      <div
+        class="member-multiselect__status member-multiselect__status--error"
+        role="alert"
+        data-testid="member-multiselect-error">
+        <span>{{ 'shared.member_multiselect.error' | translate }}</span>
+        <button
+          type="button"
+          class="btn btn-ghost member-multiselect__retry"
+          data-testid="member-multiselect-retry"
+          (click)="load()">
+          {{ 'shared.member_multiselect.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    @default {
+      @if (members().length === 0) {
+        <p
+          class="member-multiselect__status"
+          data-testid="member-multiselect-empty">
+          {{ 'shared.member_multiselect.empty' | translate }}
+        </p>
+      } @else {
+        <div class="member-multiselect__controls">
+          <input
+            #searchBox
+            type="search"
+            class="form-control member-multiselect__search"
+            data-testid="member-multiselect-search"
+            [value]="searchTerm()"
+            [attr.aria-label]="
+              'shared.member_multiselect.search_placeholder' | translate
+            "
+            [attr.placeholder]="
+              'shared.member_multiselect.search_placeholder' | translate
+            "
+            (input)="onSearch(searchBox.value)" />
+
+          <div class="member-multiselect__controls-row">
+            <label class="member-multiselect__select-all">
+              <input
+                type="checkbox"
+                data-testid="member-multiselect-select-all"
+                [checked]="allFilteredSelected()"
+                [disabled]="filteredMembers().length === 0"
+                (change)="toggleSelectAllFiltered()" />
+              <span>{{ 'shared.member_multiselect.select_all' | translate }}</span>
+            </label>
+
+            <p
+              class="member-multiselect__count"
+              data-testid="member-multiselect-count"
+              [attr.data-count]="selectedCount()"
+              aria-live="polite">
+              {{
+                'shared.member_multiselect.selected_count'
+                  | translate: { count: selectedCount() }
+              }}
+            </p>
+          </div>
+        </div>
+
+        @if (filteredMembers().length === 0) {
+          <p
+            class="member-multiselect__status"
+            data-testid="member-multiselect-no-matches">
+            {{ 'shared.member_multiselect.empty' | translate }}
+          </p>
+        } @else {
+          <ul
+            class="member-multiselect__list"
+            role="group"
+            [attr.aria-labelledby]="titleId"
+            data-testid="member-multiselect-list">
+            @for (member of filteredMembers(); track member.gcid) {
+              <li class="member-multiselect__row">
+                <label class="member-multiselect__option">
+                  <input
+                    type="checkbox"
+                    class="member-multiselect__checkbox"
+                    [attr.data-testid]="
+                      'member-multiselect-option-' + member.gcid
+                    "
+                    [checked]="isSelected(member.gcid)"
+                    [disabled]="isDisabled(member.gcid)"
+                    (change)="toggle(member.gcid)" />
+                  <span class="member-multiselect__option-label">{{
+                    rowLabel(member)
+                  }}</span>
+                </label>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  }
+</section>

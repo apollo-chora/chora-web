@@ -1,0 +1,254 @@
+<section
+  class="fmemory"
+  [attr.aria-label]="'aplus.discovery.familiar.memory_title' | translate"
+  data-testid="familiar-map-memory">
+  @switch (state().status) {
+    @case ('idle') {
+      <p class="fmemory__idle" data-testid="fmemory-idle">
+        {{ 'aplus.discovery.familiar.memory_idle' | translate }}
+      </p>
+    }
+    @case ('loading') {
+      <p
+        class="fmemory__loading"
+        role="status"
+        aria-live="polite"
+        data-testid="fmemory-loading">
+        {{ 'aplus.discovery.familiar.memory_loading' | translate }}
+      </p>
+    }
+    @case ('error') {
+      <p class="fmemory__error" role="alert" data-testid="fmemory-error">
+        {{ 'aplus.discovery.familiar.memory_error' | translate }}
+      </p>
+    }
+    @default {
+      @if (memory(); as m) {
+        <header class="fmemory__header">
+          @if (portrait(); as art) {
+            <span class="fmemory__portrait" data-testid="fmemory-portrait">
+              <chora-breed-art
+                [species]="art.species"
+                [stage]="art.stage"
+                size="xs"
+                [bare]="true"
+                [altText]="m.name" />
+            </span>
+          }
+          <div class="fmemory__ident">
+            <h3 class="fmemory__name" data-testid="fmemory-name">{{ m.name }}</h3>
+            <span class="fmemory__tier" data-testid="fmemory-tier">
+              <i class="fa-solid fa-star" aria-hidden="true"></i>
+              {{ m.evolutionTier }}
+            </span>
+          </div>
+        </header>
+
+        <dl class="fmemory__meta" data-testid="fmemory-stats">
+          <div class="fmemory__stat">
+            <dt>
+              <i class="fa-solid fa-bullseye" aria-hidden="true"></i>
+              {{ 'aplus.discovery.familiar.focus' | translate }}
+            </dt>
+            <dd data-testid="fmemory-focus">{{ m.focus }}</dd>
+          </div>
+          <div class="fmemory__stat">
+            <dt>
+              <i class="fa-solid fa-masks-theater" aria-hidden="true"></i>
+              {{ 'aplus.discovery.familiar.persona' | translate }}
+            </dt>
+            <dd>{{ m.persona }}</dd>
+          </div>
+        </dl>
+
+        @if (m.skills.length > 0) {
+          <ul class="fmemory__skills" data-testid="fmemory-skills">
+            @for (s of m.skills; track s) {
+              <li class="fmemory__skill">{{ s }}</li>
+            }
+          </ul>
+        }
+
+        @if (ruleEntries().length > 0) {
+          <dl class="fmemory__rules" data-testid="fmemory-rules">
+            @for (r of ruleEntries(); track r.key) {
+              <div>
+                <dt>{{ r.key }}</dt>
+                <dd>{{ r.value }}</dd>
+              </div>
+            }
+          </dl>
+        }
+
+        @if (!m.hasMemory) {
+          <p class="fmemory__empty" role="status" data-testid="fmemory-empty">
+            {{ 'aplus.discovery.familiar.memory_empty' | translate }}
+          </p>
+        }
+
+        <!--
+          RESEARCH NOTES (CHO-2185 / ADR-231 D4). When the Companion went out to
+          the live web on the learner's behalf, it owes them an account of it —
+          months later, when the links it used are long dead (IMDA D2).
+
+          ⚠ NOT the recap laundry list CHO-2116 removed: that was every raw
+          remembered fact. These are ONLY the grounded notes, which are exactly the
+          ones that made a search and therefore carry provenance.
+        -->
+        @if (researchNotes().length > 0) {
+          <div class="fmemory__research" data-testid="fmemory-research">
+            <h4>{{ 'aplus.discovery.familiar.research_heading' | translate }}</h4>
+
+            @for (note of researchNotes(); track note.id) {
+              <article class="fmemory__research-note">
+                <p class="fmemory__research-prose">{{ note.content }}</p>
+
+                @if (note.hasProvenance) {
+                  <!--
+                    The ONE shared attribution component. searchEntryPointHtml is
+                    deliberately EMPTY: it renders the durable sources + "Searched
+                    for" and NO Google chip. A persisted chip would be a wall of
+                    links that expired ~30 days after the note was written — worse
+                    than none, because a dead link still looks like a live one.
+                  -->
+                  <chora-grounded-attribution
+                    [citations]="note.citations"
+                    [webSearchQueries]="note.webSearchQueries"
+                    searchEntryPointHtml="" />
+                } @else {
+                  <!--
+                    Written before mig 0094. Its sources are genuinely unrecoverable
+                    and we will not invent them — NULL is the honest state (ADR-207:
+                    unknown IS a state).
+                  -->
+                  <p
+                    class="fmemory__research-unrecorded"
+                    data-testid="fmemory-research-unrecorded">
+                    {{ 'aplus.discovery.familiar.research_unrecorded' | translate }}
+                  </p>
+                }
+              </article>
+            }
+          </div>
+        }
+
+        <!-- Goal-scoped knowledge, in two tiers. TIER 1 (CHO-2116) = the
+             deterministic lists, derived by the host from the map's
+             already-painted concepts (recap laundry list REMOVED per owner
+             ruling 2026-07-10). TIER 2 (CHO-2118) = the Companion's cached LLM
+             reflection, read from chora-consumption. Tier 2 is ADDITIVE and
+             fails soft TO tier 1: an absent reflection costs the prose and
+             nothing else. Renders only when the host passes a goal context. -->
+        @if (goalKnowledge(); as k) {
+          <div class="fmemory__knowledge" data-testid="fmemory-goal-knowledge">
+            <h4>{{ 'aplus.discovery.familiar.knowledge_heading' | translate }}</h4>
+
+            @if (reflectionText(); as prose) {
+              <blockquote
+                class="fmemory__reflection"
+                data-testid="fmemory-reflection">
+                {{ prose }}
+              </blockquote>
+              <!-- IMDA D2 (owner decision 5): always name this as the
+                   Companion's own synthesis, shaped by what it remembers. It is
+                   never presented to the learner as established fact. -->
+              <p
+                class="fmemory__reflection-disclosure"
+                data-testid="fmemory-reflection-disclosure">
+                {{ 'aplus.discovery.familiar.reflection_disclosure' | translate }}
+              </p>
+            }
+            @if (isReflecting()) {
+              <p
+                class="fmemory__reflection-pending"
+                role="status"
+                data-testid="fmemory-reflection-pending">
+                {{ 'aplus.discovery.familiar.reflection_pending' | translate }}
+              </p>
+            }
+            @if (showNoReflection()) {
+              <p
+                class="fmemory__empty"
+                role="status"
+                data-testid="fmemory-reflection-none">
+                {{ 'aplus.discovery.familiar.reflection_none' | translate }}
+              </p>
+            }
+
+            @if (knowledgeIsEmpty()) {
+              <p
+                class="fmemory__empty"
+                role="status"
+                data-testid="fmemory-knowledge-empty">
+                {{ 'aplus.discovery.familiar.knowledge_empty' | translate }}
+              </p>
+            }
+            @if (k.shaky.length > 0) {
+              <p class="fmemory__knowledge-label">
+                {{ 'aplus.discovery.familiar.knowledge_shaky' | translate }}
+              </p>
+              <ul class="fmemory__knowledge-list">
+                @for (s of k.shaky; track s.title) {
+                  <li class="fmemory__knowledge-item">
+                    {{ s.title }}
+                    @if (s.due) {
+                      <span
+                        class="fmemory__knowledge-due"
+                        data-testid="fmemory-knowledge-due">
+                        {{ 'aplus.discovery.familiar.knowledge_due' | translate }}
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+            @if (k.mastered.length > 0) {
+              <p class="fmemory__knowledge-label">
+                {{ 'aplus.discovery.familiar.knowledge_mastered' | translate }}
+              </p>
+              <ul class="fmemory__knowledge-list fmemory__knowledge-list--mastered">
+                @for (t of k.mastered; track t) {
+                  <li class="fmemory__knowledge-item">{{ t }}</li>
+                }
+              </ul>
+            }
+          </div>
+        }
+
+        @if (m.visibleNeighbors.length > 0) {
+          <div class="fmemory__neighbors" data-testid="fmemory-neighbors">
+            <h4>{{ 'aplus.discovery.familiar.visible_heading' | translate }}</h4>
+            <p class="fmemory__explain">
+              {{ 'aplus.discovery.familiar.visible_explain' | translate }}
+            </p>
+            @for (n of m.visibleNeighbors; track n.conceptId) {
+              <div
+                class="fmemory__neighbor"
+                [attr.data-testid]="'fmemory-neighbor-' + n.conceptId">
+                <span class="fmemory__neighbor-title">{{ n.conceptTitle }}</span>
+                @if (n.citations.length > 0) {
+                  <ul class="fmemory__citations">
+                    @for (c of n.citations; track c.atomId) {
+                      <li
+                        class="fmemory__citation"
+                        [attr.data-testid]="'fmemory-citation-' + c.atomId">
+                        <span class="fmemory__citation-title">
+                          {{ c.atomTitle || c.atomId }}
+                        </span>
+                        @if (c.topicNodePath) {
+                          <span class="fmemory__citation-path">
+                            {{ c.topicNodePath }}
+                          </span>
+                        }
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+  }
+</section>

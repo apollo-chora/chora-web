@@ -1,0 +1,80 @@
+:host {
+  display: block;
+}
+
+.leaderboard-widget {
+  padding: var(--chora-space-md, 16px);
+  border-radius: var(--chora-radius-md, 8px);
+  background: var(--chora-color-surface-1, #ffffff);
+  border: 1px solid var(--chora-color-border, #e0e0e0);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--chora-space-sm, 8px);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  &__periods {
+    display: flex;
+    gap: 4px;
+  }
+
+  &__period-btn {
+    padding: 4px 8px;
+    border: 1px solid var(--chora-color-border, #e0e0e0);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: transparent;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--chora-color-text-secondary, #757575);
+
+    &--active {
+      background: var(--chora-color-primary, #1976d2);
+      color: #ffffff;
+      border-color: var(--chora-color-primary, #1976d2);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #1976d2);
+      outline-offset: 2px;
+    }
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+
+    th {
+      text-align: left;
+      padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--chora-color-text-secondary, #757575);
+      border-bottom: 1px solid var(--chora-color-border, #e0e0e0);
+    }
+
+    td {
+      padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    }
+  }
+
+  &__row--current {
+    background: rgba(25, 118, 210, 0.08);
+    font-weight: 600;
+  }
+
+  &__user-rank {
+    margin-top: var(--chora-space-sm, 8px);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chora-color-primary, #1976d2);
+  }
+}

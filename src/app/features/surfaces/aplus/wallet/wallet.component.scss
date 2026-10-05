@@ -1,0 +1,244 @@
+:host {
+  display: block;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--chora-space-lg, 24px);
+}
+
+/* Vertical rhythm — every section is a distinct card separated by a clear gap,
+   so the balance, top-up and history read as three discrete modules. */
+.wallet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg, 24px);
+}
+
+.wallet__header {
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    color: var(--text-main, #1e293b);
+  }
+}
+
+.wallet__subtitle {
+  margin: 4px 0 0;
+  color: var(--chora-color-text-muted);
+}
+
+.wallet__banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--chora-radius-md, 8px);
+  font-weight: 600;
+
+  &--pending {
+    background: var(--info-bg, rgba(59, 130, 246, 0.1));
+    color: var(--info, #3b82f6);
+  }
+  &--success {
+    background: var(--success-bg, rgba(16, 185, 129, 0.1));
+    color: var(--success, #10b981);
+  }
+  &--info {
+    background: var(--warning-bg, rgba(245, 158, 11, 0.1));
+    color: var(--warning, #f59e0b);
+  }
+}
+
+.wallet__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: wallet-spin 0.7s linear infinite;
+}
+
+@keyframes wallet-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet__spinner {
+    animation: none;
+  }
+}
+
+/* ── Card shell — shared by Balance / Top up / Transaction history ──────── */
+.wallet__card {
+  padding: var(--chora-space-lg, 24px);
+}
+
+.wallet__card-title {
+  margin: 0 0 var(--chora-space-md, 16px);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-main, #1e293b);
+}
+
+/* ── ① Balance (hero) + breakdown accordion ────────────────────────────── */
+.wallet__balance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--chora-space-xl, 32px) var(--chora-space-lg, 24px);
+}
+
+.wallet__balance-units {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--primary, #1976d2);
+}
+
+.wallet__balance-label {
+  margin-top: 8px;
+  color: var(--chora-color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8rem;
+}
+
+.wallet__balance-error {
+  color: var(--danger, #ef4444);
+}
+
+.wallet__breakdown-toggle {
+  margin-top: var(--chora-space-md, 16px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--chora-color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--chora-transition-fast, 0.15s ease-in-out),
+    color var(--chora-transition-fast, 0.15s ease-in-out);
+
+  &:hover {
+    color: var(--primary, #1976d2);
+    background: var(--glass-bg, rgba(255, 255, 255, 0.5));
+  }
+}
+
+.wallet__breakdown-caret {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+
+  &.is-open {
+    transform: rotate(180deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet__breakdown-caret {
+    transition: none;
+  }
+}
+
+.wallet__breakdown {
+  width: 100%;
+  max-width: 360px;
+  margin-top: var(--chora-space-md, 16px);
+  padding-top: var(--chora-space-md, 16px);
+  border-top: 1px solid var(--chora-color-border, #e2e8f0);
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--chora-space-md, 16px);
+    padding: 7px 0;
+    font-size: 0.9rem;
+
+    & + li {
+      border-top: 1px solid rgba(100, 116, 139, 0.12);
+    }
+  }
+}
+
+.wallet__subsidy-source {
+  color: var(--chora-color-text-muted);
+}
+
+.wallet__subsidy-units {
+  font-weight: 600;
+  color: var(--text-main, #1e293b);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── ② Top up ──────────────────────────────────────────────────────────── */
+.wallet__topup-hint {
+  color: var(--chora-color-text-muted);
+  margin: 0 0 var(--chora-space-md, 16px);
+}
+
+.wallet__topup-error {
+  color: var(--danger, #ef4444);
+  margin-bottom: 12px;
+}
+
+.wallet__packs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--chora-space-md, 16px);
+}
+
+.wallet__pack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--chora-space-lg, 24px);
+  cursor: pointer;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.5));
+  transition: transform var(--chora-transition-fast, 0.15s ease-in-out);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: var(--glass-bg-hover, rgba(255, 255, 255, 0.8));
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.wallet__pack-units {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary, #1976d2);
+}
+
+.wallet__pack-price {
+  color: var(--chora-color-text-muted);
+}
+
+.wallet__redirecting {
+  margin-top: 12px;
+  color: var(--chora-color-text-muted);
+}
+
+/* ── ③ Transaction history → unified timeline (ADR-205 / CHO-1948) ──────── */
+.wallet__history-hint {
+  margin: 0 0 var(--chora-space-md, 16px);
+  // CHO-2238: was legacy --text-muted (#64748b), which FAILS WCAG AA at
+  // 4.36:1 over surface-2 (the exact CHO-2226 lesson); the canonical
+  // token (#616161) passes.
+  color: var(--chora-color-text-muted);
+}

@@ -1,0 +1,471 @@
+@if (mode === 'list') {
+  <section
+    class="test-set-list surface-aplus"
+    data-testid="aplus-test-set-list"
+    role="region"
+    aria-labelledby="aplus-test-set-list-heading"
+  >
+    <chora-studio-sub-nav />
+    <header class="test-set-list__header">
+      <h1 id="aplus-test-set-list-heading" class="test-set-list__title">
+        {{ 'aplus.test_set_editor.list_title' | translate }}
+      </h1>
+      <button
+        type="button"
+        class="test-set-list__new-cta"
+        data-testid="aplus-test-set-new-cta"
+        (click)="newTestSet()"
+        [disabled]="createAction().status === 'submitting'"
+      >
+        {{ 'aplus.test_set_editor.new_cta' | translate }}
+      </button>
+    </header>
+
+    @if (listIsLoading()) {
+      <div
+        class="test-set-list__loading"
+        data-testid="aplus-test-set-list-loading"
+        role="status"
+        aria-busy="true"
+      >
+        {{ 'aplus.test_set_editor.loading' | translate }}
+      </div>
+    } @else if (listIsError()) {
+      <div
+        class="test-set-list__error"
+        data-testid="aplus-test-set-error"
+        role="alert"
+      >
+        <p>{{ listErrorKey() | translate }}</p>
+        <button
+          type="button"
+          class="test-set-list__retry"
+          data-testid="aplus-test-set-list-retry"
+          (click)="retryList()"
+        >
+          {{ 'aplus.test_set_editor.retry' | translate }}
+        </button>
+      </div>
+    } @else if (listIsEmpty()) {
+      <div
+        class="test-set-list__empty"
+        data-testid="aplus-test-set-empty"
+        role="status"
+      >
+        {{ 'aplus.test_set_editor.empty' | translate }}
+      </div>
+    } @else {
+      <ul
+        class="test-set-list__grid"
+        data-testid="aplus-test-set-list-grid"
+        role="list"
+      >
+        @for (ts of listSets(); track ts.test_set_id) {
+          <li class="test-set-list__row" role="listitem">
+            <a
+              class="test-set-list__card"
+              [attr.data-testid]="'aplus-test-set-card-' + ts.test_set_id"
+              [attr.href]="'/a/studio/test-sets/' + ts.test_set_id + '/edit'"
+            >
+              <span class="test-set-list__card-title">{{ ts.title }}</span>
+              <span
+                class="test-set-list__state"
+                [attr.data-state]="ts.state"
+              >
+                {{ ts.state }}
+              </span>
+              <span class="test-set-list__card-meta">
+                {{ ts.question_count }}
+                {{ 'aplus.test_set_editor.questions_count_suffix' | translate }}
+                · {{ ts.total_points }}
+                {{ 'aplus.test_set_editor.points_suffix' | translate }}
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}
+
+@if (mode === 'new') {
+  <section class="test-set-new surface-aplus" data-testid="aplus-test-set-new">
+    @if (createAction().status === 'submitting') {
+      <div role="status" aria-busy="true">
+        {{ 'aplus.test_set_editor.creating' | translate }}
+      </div>
+    }
+    @if (createAction().status === 'error') {
+      <div role="alert" data-testid="aplus-test-set-new-error">
+        <p>{{ 'aplus.test_set_editor.error_create_generic' | translate }}</p>
+      </div>
+    }
+  </section>
+}
+
+@if (mode === 'edit') {
+  <section
+    class="test-set-editor surface-aplus"
+    data-testid="aplus-test-set-editor"
+    role="region"
+    aria-labelledby="aplus-test-set-editor-heading"
+  >
+    @if (editorIsLoading()) {
+      <div
+        class="test-set-editor__loading"
+        data-testid="aplus-test-set-editor-loading"
+        role="status"
+        aria-busy="true"
+      >
+        {{ 'aplus.test_set_editor.loading' | translate }}
+      </div>
+    } @else if (editorIsError()) {
+      <div
+        class="test-set-editor__error"
+        data-testid="aplus-test-set-editor-error"
+        role="alert"
+      >
+        <p>{{ editorErrorKey() | translate }}</p>
+        <button
+          type="button"
+          class="test-set-editor__retry"
+          data-testid="aplus-test-set-editor-retry"
+          (click)="retryEditor()"
+        >
+          {{ 'aplus.test_set_editor.retry' | translate }}
+        </button>
+      </div>
+    } @else if (testSet() !== null) {
+      <header class="test-set-editor__header">
+        <div class="test-set-editor__title-row">
+          @if (canEdit()) {
+            <label
+              class="test-set-editor__title-label"
+              for="aplus-test-set-editor-title-input"
+            >
+              {{ 'aplus.test_set_editor.title_label' | translate }}
+            </label>
+            <input
+              id="aplus-test-set-editor-title-input"
+              class="test-set-editor__title-input test-set-editor__title-input--heading"
+              data-testid="aplus-test-set-title-input"
+              type="text"
+              [value]="titleDraft()"
+              (input)="onTitleInput($any($event.target).value)"
+              (blur)="saveTitle()"
+              (keydown.enter)="saveTitle(); $event.preventDefault()"
+              name="testSetTitle"
+              maxlength="256"
+              [placeholder]="'aplus.test_set_editor.title_placeholder' | translate"
+              [attr.aria-label]="'aplus.test_set_editor.title_aria' | translate"
+            />
+            @if (titleAction().status === 'submitting') {
+              <span
+                class="test-set-editor__title-saving"
+                data-testid="aplus-test-set-title-saving"
+                role="status"
+              >
+                {{ 'aplus.test_set_editor.title_saving' | translate }}
+              </span>
+            }
+          } @else {
+            <h1
+              id="aplus-test-set-editor-heading"
+              class="test-set-editor__title"
+              data-testid="aplus-test-set-title"
+            >
+              {{ testSet()?.title }}
+            </h1>
+          }
+          <span
+            class="test-set-editor__state"
+            [attr.data-state]="testSet()?.state"
+          >
+            {{ testSet()?.state }}
+          </span>
+        </div>
+        <span class="test-set-editor__points-summary">
+          {{ testSet()?.total_points }}
+          {{ 'aplus.test_set_editor.total_points_suffix' | translate }}
+          · {{ testSet()?.question_count }}
+          {{ 'aplus.test_set_editor.questions_count_suffix' | translate }}
+        </span>
+      </header>
+
+      @if (isPublished()) {
+        <aside
+          class="test-set-editor__published-explainer"
+          role="note"
+          data-testid="aplus-test-set-published-explainer"
+        >
+          <strong class="test-set-editor__published-explainer-title">
+            {{ 'aplus.test_set_editor.published_explainer_title' | translate }}
+          </strong>
+          <p class="test-set-editor__published-explainer-body">
+            {{ 'aplus.test_set_editor.published_explainer_body' | translate }}
+          </p>
+        </aside>
+      }
+
+      <section
+        class="test-set-editor__questions"
+        data-testid="aplus-test-set-editor-questions"
+        aria-labelledby="aplus-test-set-editor-questions-heading"
+      >
+        <h2
+          id="aplus-test-set-editor-questions-heading"
+          class="test-set-editor__section-title"
+        >
+          {{ 'aplus.test_set_editor.questions_heading' | translate }}
+        </h2>
+
+        @if (testSetQuestions().length === 0) {
+          <p
+            class="test-set-editor__no-questions"
+            data-testid="aplus-test-set-editor-no-questions"
+          >
+            {{ 'aplus.test_set_editor.no_questions' | translate }}
+          </p>
+        } @else {
+          <ul
+            class="test-set-editor__question-list"
+            role="list"
+            data-testid="aplus-test-set-editor-question-list"
+            cdkDropList
+            [cdkDropListData]="testSetQuestions()"
+            (cdkDropListDropped)="onReorder($event)"
+          >
+            @for (q of testSetQuestions(); track trackByTsq($index, q)) {
+              <li
+                class="test-set-editor__question-row"
+                role="listitem"
+                cdkDrag
+                [cdkDragDisabled]="!canEdit()"
+                [attr.data-testid]="'aplus-tsq-card-' + q.test_set_question_id"
+              >
+                @if (canEdit()) {
+                  <button
+                    type="button"
+                    class="test-set-editor__drag-handle"
+                    cdkDragHandle
+                    [attr.data-testid]="'aplus-tsq-drag-' + q.test_set_question_id"
+                    [attr.aria-label]="'aplus.test_set_editor.drag_to_reorder' | translate"
+                  >
+                    <span aria-hidden="true">&#9776;</span>
+                  </button>
+                }
+                <span
+                  class="test-set-editor__question-type"
+                  [attr.data-question-type]="q.snapshot?.question_type ?? q.question_type"
+                >
+                  {{ q.snapshot?.question_type ?? q.question_type }}
+                </span>
+                <span class="test-set-editor__question-stem">
+                  @if (pinnedStemFor(q); as pinned) {
+                    {{ pinned }}
+                  } @else if (q.snapshot?.prompt_preview) {
+                    {{ q.snapshot?.prompt_preview }}
+                  } @else if (q.snapshot?.atom_title) {
+                    {{ q.snapshot?.atom_title }}
+                  } @else if (atomStemFor(q.question_atom_id); as stem) {
+                    {{ stem }}
+                  } @else if (atomTitleFor(q.question_atom_id); as title) {
+                    {{ title }}
+                  } @else {
+                    <em class="test-set-editor__question-stem-fallback">
+                      {{ 'aplus.test_set_editor.question_stem_loading' | translate }}
+                    </em>
+                  }
+                </span>
+                @if (canEdit()) {
+                  <label
+                    class="test-set-editor__points-label"
+                    [attr.for]="'aplus-tsq-points-' + q.test_set_question_id"
+                  >
+                    {{ 'aplus.test_set_editor.points_label' | translate }}
+                  </label>
+                  <input
+                    type="number"
+                    inputmode="numeric"
+                    class="test-set-editor__points-input"
+                    [id]="'aplus-tsq-points-' + q.test_set_question_id"
+                    [attr.data-testid]="'aplus-tsq-points-' + q.test_set_question_id"
+                    [min]="pointsMin"
+                    [max]="pointsMax"
+                    step="1"
+                    [value]="q.points"
+                    (change)="onPointsChange(q.test_set_question_id, $event)"
+                    [attr.aria-label]="'aplus.test_set_editor.points_aria' | translate"
+                  />
+                  <button
+                    type="button"
+                    class="test-set-editor__remove"
+                    [attr.data-testid]="'aplus-tsq-remove-' + q.test_set_question_id"
+                    [attr.aria-label]="'aplus.test_set_editor.remove_question' | translate"
+                    (click)="onRemoveQuestion(q.test_set_question_id)"
+                  >
+                    {{ 'aplus.test_set_editor.remove' | translate }}
+                  </button>
+                } @else {
+                  <span class="test-set-editor__points-readonly">
+                    {{ 'aplus.test_set_editor.points_label' | translate }}: {{ q.points }}
+                  </span>
+                }
+
+                @if (editableFor(q.test_set_question_id); as editable) {
+                  <chora-question-editor
+                    class="test-set-editor__question-review"
+                    [question]="editable"
+                    (questionChange)="onQuestionEdited(q.test_set_question_id, $event)"
+                    [testIdPrefix]="'aplus-tsq-' + q.test_set_question_id">
+                    <!-- Generated stem illustration (CHO-1638) projected below
+                         the stem, above the options — author still SEES it while
+                         editing. -->
+                    @if (
+                      questionReviewFor(q.question_atom_id)?.question_image_url;
+                      as imgUrl
+                    ) {
+                      <chora-question-image
+                        stemMedia
+                        class="test-set-editor__question-image"
+                        [src]="imgUrl"
+                        [alt]="'aplus.test_set_editor.question_image_alt' | translate"
+                        [testIdPrefix]="'aplus-tsq-' + q.test_set_question_id" />
+                    }
+                  </chora-question-editor>
+                  @if (
+                    questionReviewFor(q.question_atom_id)?.answer_image_url;
+                    as answerImgUrl
+                  ) {
+                    <chora-question-image
+                      class="test-set-editor__answer-image"
+                      [src]="answerImgUrl"
+                      [alt]="'aplus.test_set_editor.answer_image_alt' | translate"
+                      [caption]="'aplus.test_set_editor.answer_image_caption' | translate"
+                      [testIdPrefix]="
+                        'aplus-tsq-' + q.test_set_question_id + '-answer-image'
+                      " />
+                  }
+                  <div class="test-set-editor__question-save-row">
+                    <button
+                      type="button"
+                      class="test-set-editor__question-save"
+                      [disabled]="!canSaveQuestion(q.test_set_question_id)"
+                      (click)="saveQuestion(q)"
+                      [attr.data-testid]="'aplus-tsq-save-' + q.test_set_question_id"
+                    >
+                      @if (questionSaveState(q.test_set_question_id) === 'saving') {
+                        {{ 'aplus.test_set_editor.q_saving' | translate }}
+                      } @else {
+                        {{ 'aplus.test_set_editor.q_save' | translate }}
+                      }
+                    </button>
+                    @if (
+                      questionSaveState(q.test_set_question_id) === 'saved' &&
+                      !isQuestionDirty(q.test_set_question_id)
+                    ) {
+                      <span class="test-set-editor__question-saved" role="status">
+                        {{ 'aplus.test_set_editor.q_saved' | translate }}
+                      </span>
+                    }
+                    @if (questionSaveState(q.test_set_question_id) === 'error') {
+                      <span class="test-set-editor__question-save-error" role="alert">
+                        {{ 'aplus.test_set_editor.q_save_error' | translate }}
+                      </span>
+                    }
+                  </div>
+                } @else if (questionReviewFor(q.question_atom_id); as review) {
+                  <chora-question-review
+                    class="test-set-editor__question-review"
+                    [review]="review"
+                    [testIdPrefix]="'aplus-tsq-' + q.test_set_question_id" />
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      @if (canEdit()) {
+        <section
+          class="test-set-editor__picker"
+          aria-labelledby="aplus-test-set-editor-picker-heading"
+        >
+          <h2
+            id="aplus-test-set-editor-picker-heading"
+            class="test-set-editor__section-title"
+          >
+            {{ 'aplus.test_set_editor.picker_heading' | translate }}
+          </h2>
+          <chora-aplus-atom-question-picker
+            (pickedQuestion)="onPickedQuestion($event)"
+            (pickedQuestions)="onPickedQuestions($event)"
+          />
+        </section>
+      }
+
+      <footer class="test-set-editor__footer">
+        @if (canEdit()) {
+          <button
+            type="button"
+            class="test-set-editor__publish-cta"
+            data-testid="aplus-test-set-publish-cta"
+            [disabled]="publishAction().status === 'submitting' || testSetQuestions().length === 0"
+            (click)="publish()"
+          >
+            {{ 'aplus.test_set_editor.publish_cta' | translate }}
+          </button>
+          <button
+            type="button"
+            class="test-set-editor__archive-cta"
+            data-testid="aplus-test-set-archive-cta"
+            [disabled]="archiveAction().status === 'submitting'"
+            (click)="archive()"
+          >
+            {{ 'aplus.test_set_editor.archive_cta' | translate }}
+          </button>
+        }
+
+        @if (isPublished()) {
+          <p class="test-set-editor__published-notice">
+            {{ 'aplus.test_set_editor.published_notice' | translate }}
+          </p>
+          <button
+            type="button"
+            class="test-set-editor__archive-and-new-cta"
+            data-testid="aplus-test-set-archive-and-create-new-cta"
+            [disabled]="archiveAction().status === 'submitting'"
+            (click)="archiveAndCreateNew()"
+          >
+            {{ 'aplus.test_set_editor.archive_and_create_new_cta' | translate }}
+          </button>
+        }
+
+        @if (isArchived()) {
+          <p class="test-set-editor__archived-notice" role="status">
+            {{ 'aplus.test_set_editor.archived_notice' | translate }}
+          </p>
+        }
+
+        @if (publishAction().status === 'error') {
+          <p
+            class="test-set-editor__action-error"
+            role="alert"
+            data-testid="aplus-test-set-publish-error"
+          >
+            {{ 'aplus.test_set_editor.error_publish_generic' | translate }}
+          </p>
+        }
+        @if (archiveAction().status === 'error') {
+          <p
+            class="test-set-editor__action-error"
+            role="alert"
+            data-testid="aplus-test-set-archive-error"
+          >
+            {{ 'aplus.test_set_editor.error_archive_generic' | translate }}
+          </p>
+        }
+      </footer>
+    }
+  </section>
+}

@@ -1,0 +1,167 @@
+<div
+  class="addon-deactivate-modal__backdrop"
+  data-testid="addon-deactivate-backdrop"
+  (click)="cancel()">
+  <div
+    class="glass-panel addon-deactivate-modal"
+    role="alertdialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'addon-deactivate-title'"
+    [attr.aria-describedby]="'addon-deactivate-desc'"
+    data-testid="addon-deactivate-modal"
+    (click)="$event.stopPropagation()">
+    <header class="addon-deactivate-modal__head">
+      <h2
+        id="addon-deactivate-title"
+        class="addon-deactivate-modal__title"
+        data-testid="addon-deactivate-title">
+        {{ 'hplus.addons.deactivate.title' | translate }}
+        <span class="addon-deactivate-modal__name">{{ displayName() }}</span>
+        <span class="addon-deactivate-modal__code">{{ addonCode() }}</span>
+      </h2>
+      <button
+        type="button"
+        class="addon-deactivate-modal__close"
+        data-testid="addon-deactivate-close"
+        [attr.aria-label]="'hplus.addons.deactivate.close' | translate"
+        (click)="cancel()">
+        ×
+      </button>
+    </header>
+
+    <p
+      id="addon-deactivate-desc"
+      class="addon-deactivate-modal__warning">
+      {{ 'hplus.addons.deactivate.warning' | translate }}
+    </p>
+
+    @if (billingCycleEnd(); as cycleEnd) {
+      <p
+        class="addon-deactivate-modal__refund-notice"
+        data-testid="addon-deactivate-refund-notice">
+        {{ 'hplus.addons.deactivate.refundNotice' | translate }} {{ cycleEnd }}
+      </p>
+    }
+
+    <fieldset class="addon-deactivate-modal__field">
+      <label
+        class="addon-deactivate-modal__label"
+        for="addon-deactivate-reason">
+        {{ 'hplus.addons.deactivate.reasonLabel' | translate }}
+      </label>
+      <select
+        id="addon-deactivate-reason"
+        class="addon-deactivate-modal__select"
+        data-testid="addon-deactivate-reason"
+        [ngModel]="reason()"
+        (ngModelChange)="setReason($event)"
+        name="reason">
+        <option value="" disabled>
+          {{ 'hplus.addons.deactivate.reasonPlaceholder' | translate }}
+        </option>
+        @for (r of reasons; track r) {
+          <option [value]="r">
+            {{ 'hplus.addons.deactivate.reason.' + r | translate }}
+          </option>
+        }
+      </select>
+    </fieldset>
+
+    @if (reason() === 'other') {
+      <fieldset class="addon-deactivate-modal__field">
+        <label
+          class="addon-deactivate-modal__label"
+          for="addon-deactivate-reason-text">
+          {{ 'hplus.addons.deactivate.reasonTextLabel' | translate }}
+        </label>
+        <textarea
+          id="addon-deactivate-reason-text"
+          class="addon-deactivate-modal__textarea"
+          data-testid="addon-deactivate-reason-text"
+          [ngModel]="reasonText()"
+          (ngModelChange)="reasonText.set($event)"
+          name="reasonText"
+          rows="3"
+          [maxlength]="reasonTextMax"></textarea>
+      </fieldset>
+    }
+
+    <fieldset
+      class="addon-deactivate-modal__field"
+      role="radiogroup"
+      [attr.aria-label]="'hplus.addons.deactivate.effectiveAtLabel' | translate">
+      <legend class="addon-deactivate-modal__label">
+        {{ 'hplus.addons.deactivate.effectiveAtLabel' | translate }}
+      </legend>
+      <label class="addon-deactivate-modal__radio">
+        <input
+          type="radio"
+          name="effectiveAt"
+          value="end_of_cycle"
+          data-testid="addon-deactivate-effective-end_of_cycle"
+          [checked]="effectiveAt() === 'end_of_cycle'"
+          (change)="setEffectiveAt('end_of_cycle')" />
+        {{ 'hplus.addons.deactivate.effectiveAt.endOfCycle' | translate }}
+      </label>
+      <label class="addon-deactivate-modal__radio">
+        <input
+          type="radio"
+          name="effectiveAt"
+          value="immediate"
+          data-testid="addon-deactivate-effective-immediate"
+          [checked]="effectiveAt() === 'immediate'"
+          (change)="setEffectiveAt('immediate')" />
+        {{ 'hplus.addons.deactivate.effectiveAt.immediate' | translate }}
+      </label>
+    </fieldset>
+
+    <fieldset class="addon-deactivate-modal__field">
+      <label
+        class="addon-deactivate-modal__label"
+        for="addon-deactivate-confirm-name">
+        {{ 'hplus.addons.deactivate.confirmNameLabel' | translate }}
+        <span class="addon-deactivate-modal__name-hint">{{ displayName() }}</span>
+      </label>
+      <input
+        id="addon-deactivate-confirm-name"
+        type="text"
+        class="addon-deactivate-modal__input"
+        data-testid="addon-deactivate-confirm-name"
+        [ngModel]="typeToConfirm()"
+        (ngModelChange)="typeToConfirm.set($event)"
+        name="confirmName"
+        autocomplete="off" />
+    </fieldset>
+
+    @if (error(); as msg) {
+      <p
+        class="addon-deactivate-modal__error"
+        role="alert"
+        data-testid="addon-deactivate-error">
+        {{ msg | translate }}
+      </p>
+    }
+
+    <footer class="addon-deactivate-modal__actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        data-testid="addon-deactivate-cancel"
+        (click)="cancel()">
+        {{ 'hplus.addons.deactivate.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger"
+        data-testid="addon-deactivate-submit"
+        [disabled]="!canSubmit()"
+        (click)="submit()">
+        @if (submitting()) {
+          {{ 'hplus.addons.deactivate.submitting' | translate }}
+        } @else {
+          {{ 'hplus.addons.deactivate.submit' | translate }}
+        }
+      </button>
+    </footer>
+  </div>
+</div>

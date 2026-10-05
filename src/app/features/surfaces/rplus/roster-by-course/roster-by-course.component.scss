@@ -1,0 +1,275 @@
+// R+ RosterByCourse — polyglass BEM, tablet-first (>=768px primary,
+// >=1280px desktop enhanced). Surface accent: amber (#b45309 / #ea580c).
+
+:host {
+  display: block;
+}
+
+// WCAG-safe skip link — visually hidden until focused.
+.visually-hidden-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+
+  &:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface-rplus-accent, #b45309);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.roster-by-course {
+  padding: 1.5rem;
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    i {
+      font-size: 0.625rem;
+    }
+  }
+
+  &__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  &__course-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  &__course-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--text-main);
+    font-weight: 600;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__total {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    strong {
+      font-size: 1.25rem;
+      color: var(--text-main);
+      font-weight: 800;
+      margin-inline-end: 0.25rem;
+    }
+  }
+
+  &__loading,
+  &__error,
+  &__empty {
+    padding: 1.5rem;
+    border-radius: 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 0;
+  }
+
+  &__error {
+    color: #b91c1c;
+    font-style: normal;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgba(254, 226, 226, 0.6);
+  }
+
+  &__table-wrap {
+    padding: 1rem;
+    border-radius: 16px;
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead th {
+      text-align: start;
+      padding: 0.75rem 0.5rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    tbody tr {
+      transition: background-color 120ms ease;
+      &:hover {
+        background: rgba(255, 255, 255, 0.35);
+      }
+    }
+
+    tbody td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  &__cell-name {
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  &__gcid {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.5);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    word-break: break-all;
+  }
+
+  &__progress {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 160px;
+  }
+
+  &__progress-bar {
+    display: block;
+    height: 8px;
+    background: linear-gradient(
+      90deg,
+      var(--surface-rplus-accent, #b45309) 0%,
+      var(--surface-rplus-accent-2, #ea580c) 100%
+    );
+    border-radius: 4px;
+    flex-shrink: 0;
+    min-width: 4px;
+  }
+
+  // Wrap the bar so the % label always sits beside it; ensures meters
+  // with width 0% still render a visible affordance for screen readers.
+  &__progress {
+    &::before {
+      content: '';
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      width: 100%;
+      max-width: 220px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 4px;
+      pointer-events: none;
+    }
+  }
+
+  &__progress-label {
+    margin-inline-start: auto;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    z-index: 1;
+  }
+}
+
+@media (min-width: 1280px) {
+  .roster-by-course {
+    padding: 2rem;
+
+    &__table {
+      tbody td,
+      thead th {
+        padding: 0.875rem 0.75rem;
+      }
+    }
+  }
+}
+
+// prefers-reduced-motion — disable the tbody-row hover transition.
+@media (prefers-reduced-motion: reduce) {
+  .roster-by-course__table tbody tr {
+    transition: none;
+  }
+}

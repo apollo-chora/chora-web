@@ -1,0 +1,96 @@
+:host {
+  display: block;
+}
+
+.chora-question-review {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.chora-question-review__options {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chora-question-review__label {
+  margin: 0 0 0.35rem;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.chora-question-review__model-answer {
+  padding: 0.75rem 0.9rem;
+  background: rgba(15, 118, 110, 0.06);
+  border-left: 3px solid rgba(15, 118, 110, 0.45);
+  border-radius: 8px;
+}
+
+.chora-question-review__model-answer-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-main);
+  white-space: pre-wrap;
+}
+
+.chora-question-review__rubric-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.chora-question-review__rubric-row {
+  padding: 0.55rem 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+}
+
+.chora-question-review__rubric-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chora-question-review__rubric-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.chora-question-review__rubric-weight {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.chora-question-review__rubric-desc {
+  margin: 0.3rem 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.chora-question-review__empty {
+  margin: 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+// Question + model-answer illustrations now render via the shared
+// `<chora-question-image>` (width-primary, aspect-aware, click-to-zoom) — the
+// old fixed `max-height: 18rem` cap that crushed portrait diagrams is gone.

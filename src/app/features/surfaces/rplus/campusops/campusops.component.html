@@ -1,0 +1,218 @@
+<section
+  class="surface-rplus campusops"
+  data-testid="rplus-campusops">
+  <header class="campusops__header glass-panel">
+    <div class="campusops__breadcrumb">
+      <span>{{ 'rplus.campusops.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.campusops.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <div class="campusops__title-row">
+      <h1 class="campusops__title">
+        {{ 'rplus.campusops.title' | translate }}
+      </h1>
+      <span class="campusops__tenant-pill" data-testid="campusops-tenant">
+        <i class="fa-solid fa-building" aria-hidden="true"></i>
+        {{ 'rplus.campusops.tenant_label' | translate }}:
+        <strong>{{ tenantName() }}</strong>
+      </span>
+    </div>
+    <div class="campusops__meta">
+      <span class="campusops__total" data-testid="campusops-total">
+        <strong>{{ totalCampuses() }}</strong>
+        {{ 'rplus.campusops.total_campuses' | translate }}
+      </span>
+      <!-- CHO-2294: rooms are TENANT-scoped, so their entry point lives in the
+           header. The per-card CTA is a shortcut; this is the one that still
+           works when the tenant has no campuses yet. -->
+      <a
+        class="btn btn-ghost"
+        routerLink="/r/campusops/rooms"
+        data-testid="campusops-rooms-all"
+        [attr.aria-label]="'rplus.campusops.rooms_all_aria' | translate">
+        <i class="fa-solid fa-door-open" aria-hidden="true"></i>
+        {{ 'rplus.campusops.rooms_all_cta' | translate }}
+      </a>
+      <button
+        type="button"
+        class="btn btn-primary campusops__create-cta"
+        data-testid="campusops-create-cta"
+        (click)="onCreateClicked()"
+        [attr.aria-label]="'rplus.campusops.create_aria' | translate">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{ 'rplus.campusops.create_cta' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (createFormOpen()) {
+    <form
+      class="campusops__create-form glass-panel"
+      data-testid="campusops-create-form"
+      (ngSubmit)="onCreateSubmit()">
+      <h2 class="campusops__form-title">
+        {{ 'rplus.campusops.form.title' | translate }}
+      </h2>
+      <div class="campusops__form-grid">
+        <label class="campusops__form-field campusops__form-field--wide">
+          <span>{{ 'rplus.campusops.form.name_label' | translate }}</span>
+          <input
+            type="text"
+            name="name"
+            class="campusops__form-input"
+            data-testid="campusops-form-name"
+            [ngModel]="formName()"
+            (ngModelChange)="formName.set($event)"
+            [attr.placeholder]="'rplus.campusops.form.name_placeholder' | translate"
+            required />
+        </label>
+        <label class="campusops__form-field">
+          <span>{{ 'rplus.campusops.form.country_label' | translate }}</span>
+          <input
+            type="text"
+            name="country"
+            class="campusops__form-input"
+            data-testid="campusops-form-country"
+            maxlength="2"
+            autocapitalize="characters"
+            [ngModel]="formCountry()"
+            (ngModelChange)="formCountry.set($event)"
+            [attr.placeholder]="'rplus.campusops.form.country_placeholder' | translate"
+            required />
+        </label>
+        <label class="campusops__form-field">
+          <span>{{ 'rplus.campusops.form.city_label' | translate }}</span>
+          <input
+            type="text"
+            name="city"
+            class="campusops__form-input"
+            data-testid="campusops-form-city"
+            [ngModel]="formCity()"
+            (ngModelChange)="formCity.set($event)"
+            [attr.placeholder]="'rplus.campusops.form.city_placeholder' | translate" />
+        </label>
+        <label class="campusops__form-field">
+          <span>{{ 'rplus.campusops.form.address_l1_label' | translate }}</span>
+          <input
+            type="text"
+            name="addressL1"
+            class="campusops__form-input"
+            data-testid="campusops-form-address-l1"
+            [ngModel]="formAddressLine1()"
+            (ngModelChange)="formAddressLine1.set($event)"
+            [attr.placeholder]="'rplus.campusops.form.address_l1_placeholder' | translate" />
+        </label>
+        <label class="campusops__form-field">
+          <span>{{ 'rplus.campusops.form.address_l2_label' | translate }}</span>
+          <input
+            type="text"
+            name="addressL2"
+            class="campusops__form-input"
+            data-testid="campusops-form-address-l2"
+            [ngModel]="formAddressLine2()"
+            (ngModelChange)="formAddressLine2.set($event)"
+            [attr.placeholder]="'rplus.campusops.form.address_l2_placeholder' | translate" />
+        </label>
+      </div>
+
+      @if (createError(); as err) {
+        <p
+          class="campusops__form-error"
+          role="alert"
+          data-testid="campusops-create-error">
+          {{ err }}
+        </p>
+      }
+
+      <div class="campusops__form-actions">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="campusops-create-cancel"
+          (click)="onCancelCreate()">
+          {{ 'rplus.campusops.form.cancel' | translate }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-testid="campusops-create-submit"
+          [disabled]="!canSubmit()">
+          {{
+            submitting()
+              ? ('rplus.campusops.form.submitting' | translate)
+              : ('rplus.campusops.form.submit' | translate)
+          }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <div class="campusops__grid">
+    @for (campus of campuses(); track campus.campusId) {
+      <article
+        class="campusops__card glass-panel"
+        [attr.data-testid]="'campusops-card-' + campus.campusId">
+        <div class="campusops__card-head">
+          <span
+            class="badge badge-info"
+            [attr.data-testid]="'campusops-country-' + campus.campusId">
+            <i class="fa-solid fa-flag" aria-hidden="true"></i>
+            {{ campus.country }}
+          </span>
+          <code class="campusops__code">{{ shortId(campus.campusId) }}</code>
+        </div>
+        <h2 class="campusops__card-title">{{ campus.name }}</h2>
+        <p class="campusops__address">
+          <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+          {{ campus.displayAddress }}
+        </p>
+
+        <dl class="campusops__metrics">
+          <div class="campusops__metric">
+            <dt>{{ 'rplus.campusops.metric.rooms' | translate }}</dt>
+            <dd>-</dd>
+          </div>
+          <div class="campusops__metric">
+            <dt>{{ 'rplus.campusops.metric.equipment' | translate }}</dt>
+            <dd>-</dd>
+          </div>
+          <div class="campusops__metric">
+            <dt>{{ 'rplus.campusops.metric.incidents' | translate }}</dt>
+            <dd>-</dd>
+          </div>
+        </dl>
+
+        <footer class="campusops__card-foot">
+          <span class="campusops__city">
+            <i class="fa-solid fa-city" aria-hidden="true"></i>
+            {{ campus.city }}
+          </span>
+          <div class="campusops__actions">
+            <a
+              class="btn btn-ghost campusops__action"
+              routerLink="/r/campusops/rooms"
+              [attr.data-testid]="'campusops-rooms-' + campus.campusId"
+              [attr.aria-label]="'rplus.campusops.rooms_aria' | translate">
+              <i class="fa-solid fa-door-open" aria-hidden="true"></i>
+              {{ 'rplus.campusops.rooms_cta' | translate }}
+            </a>
+            <button
+              type="button"
+              class="btn btn-ghost campusops__action"
+              [attr.data-testid]="'campusops-incidents-' + campus.campusId"
+              [attr.aria-label]="'rplus.campusops.incidents_aria' | translate">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'rplus.campusops.incidents_cta' | translate }}
+            </button>
+          </div>
+        </footer>
+      </article>
+    } @empty {
+      <p class="campusops__empty" data-testid="campusops-empty">
+        {{ 'rplus.campusops.empty' | translate }}
+      </p>
+    }
+  </div>
+</section>

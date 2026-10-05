@@ -1,0 +1,2000 @@
+// =====================================================================
+// MapCanvasComponent — "My Knowledge" L1 unified canvas (WS-C).
+// Directly-manipulable hex fisheye + trail/Back + overflow drawer +
+// detail rail. Glassmorphism, tablet-first, design tokens.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.map-canvas {
+  // Single source of truth for the detail drawer width — the drawer uses it, and
+  // (on wide screens) the content reflows left by the same amount so nothing hides
+  // behind the drawer.
+  // ~half the canvas — the 4 tabs segregate content, so the drawer no longer
+  // needs to be wide; a narrower drawer leaves more of the map visible.
+  --mc-drawer-w: clamp(380px, 40vw, 600px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.5rem;
+  max-width: 1440px;
+}
+
+// ─── State panels ───────────────────────────────────────────────────
+.mc-state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.75rem;
+  color: var(--text-muted);
+
+  &--error {
+    flex-direction: column;
+    align-items: flex-start;
+    color: var(--text-main);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.mc-spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--glass-border);
+  border-top-color: var(--primary);
+  animation: mc-spin 0.8s linear infinite;
+}
+
+@keyframes mc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ─── Header + breadcrumb ────────────────────────────────────────────
+.mc-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.mc-titlebar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.mc-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+// ─── Map switcher (overlay drawer, SP1) ─────────────────────────────
+// A left drawer + a MODAL (clickable) scrim — opening it closes the concept
+// detail drawer (mutually exclusive), so the two never collide.
+.mc-switch-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+
+  i {
+    font-size: 0.8rem;
+  }
+  &:hover {
+    background: var(--primary-wash, rgba(25, 118, 210, 0.08));
+    border-color: var(--primary);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.mc-switcher-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1510;
+  background: rgba(2, 6, 23, 0.32);
+  border: 0;
+  cursor: pointer;
+  animation: mc-detail-fade 0.2s ease;
+}
+
+.mc-switcher {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1520;
+  width: clamp(300px, 32vw, 420px);
+  max-width: 92vw;
+  display: flex;
+  flex-direction: column;
+  // Glass drawer (owner CR 2026-07-06 — was an opaque white slab; now on-brand glass).
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+  border-right: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-border-top, rgba(255, 255, 255, 0.85));
+  box-shadow: 14px 0 44px -8px rgba(31, 38, 135, 0.28);
+  border-radius: 0 18px 18px 0;
+  overflow: hidden;
+  transform: translate3d(-100%, 0, 0);
+  transition: transform var(--chora-reveal-slide, 200ms)
+    var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &.is-open {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.mc-switcher__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+.mc-switcher__title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text-main);
+}
+.mc-switcher__close {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  display: inline-grid;
+  place-items: center;
+  &:hover {
+    background: rgba(2, 6, 23, 0.06);
+    color: var(--text-main);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.mc-switcher__list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.mc-switcher__row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+  border-radius: 12px;
+  transition: background 0.15s var(--chora-ease-reveal, ease);
+  &:hover {
+    background: rgba(25, 118, 210, 0.05);
+  }
+  &.is-current {
+    background: var(--primary-wash, rgba(25, 118, 210, 0.08));
+    box-shadow: inset 3px 0 0 var(--primary);
+  }
+}
+.mc-switcher__pick {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  &:hover {
+    background: rgba(2, 6, 23, 0.05);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+  }
+}
+.mc-switcher__name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mc-switcher__meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.mc-switcher__current {
+  color: var(--primary);
+  font-weight: 700;
+}
+.mc-switcher__trash {
+  flex: none;
+  align-self: center;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 10px;
+  display: inline-grid;
+  place-items: center;
+  &:hover {
+    color: #c5221f;
+    background: rgba(197, 34, 31, 0.09);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.mc-switcher__danger {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(197, 34, 31, 0.3);
+  border-radius: 12px;
+  background: rgba(197, 34, 31, 0.05);
+}
+.mc-switcher__danger-ask {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.mc-switcher__danger-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+.mc-switcher__danger-yes {
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.85rem;
+  background: #c5221f;
+  color: #fff;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  &:not(:disabled):hover {
+    background: #a51b18;
+  }
+  &:focus-visible {
+    outline: 2px solid #c5221f;
+    outline-offset: 2px;
+  }
+}
+.mc-switcher__danger-no {
+  border: 1px solid var(--glass-border);
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.85rem;
+  background: transparent;
+  color: var(--text-muted);
+  &:hover {
+    color: var(--text-main);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+.mc-switcher__danger-error {
+  font-size: 0.8rem;
+  color: #c5221f;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-switcher {
+    transition: none;
+  }
+}
+
+.mc-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.mc-sep {
+  color: var(--text-muted);
+}
+
+.mc-crumb {
+  color: var(--text-muted);
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  padding: 0.15rem 0.35rem;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &--home {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 700;
+    color: var(--primary);
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &--link:hover {
+    color: var(--text-main);
+    text-decoration: underline;
+  }
+
+  &--current {
+    color: var(--text-main);
+    font-weight: 700;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.mc-back {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text-main);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  i {
+    font-size: 0.75rem;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  &:not(:disabled):hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+// ─── Buttons (solid, no gradients) ──────────────────────────────────
+.mc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-main);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: transparent;
+  }
+
+  &--attach {
+    margin-top: 0.75rem;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  &:not(:disabled):hover {
+    opacity: 0.92;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+  }
+}
+
+// ─── Create-concept form ────────────────────────────────────────────
+.mc-create {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.mc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &__label {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.9rem;
+  }
+}
+
+.mc-input {
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.7);
+  font: inherit;
+  color: var(--text-main);
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+}
+
+.mc-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.mc-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+// ─── Connect panel ──────────────────────────────────────────────────
+.mc-connect {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--primary);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__hint {
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__class {
+    display: inline-flex;
+    gap: 0.4rem;
+  }
+
+  &__nodes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+.mc-toggle {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &.is-active {
+    background: var(--primary);
+    color: #fff;
+    border-color: transparent;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.mc-node {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--text-main);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &.is-source {
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.18);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+// ─── Empty state ────────────────────────────────────────────────────
+.mc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 2rem 1.75rem;
+  border: 1px dashed var(--glass-border);
+  border-radius: 16px;
+
+  &__title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+  &__body {
+    margin: 0;
+    color: var(--text-muted);
+    max-width: 52ch;
+  }
+}
+
+// ─── Two-column layout: canvas + detail rail ────────────────────────
+.mc-layout {
+  // The detail panel is now a right-side DRAWER (position: fixed, out of flow),
+  // so the canvas always spans the full content width — no reserved 2nd column
+  // and no page-tall detail rail behind it.
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.mc-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+// ─── Canvas toolbar ─────────────────────────────────────────────────
+.mc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.mc-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.05rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--text-main);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  &:not(:disabled):hover {
+    border-color: var(--primary);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+// ─── Detail rail ────────────────────────────────────────────────────
+.mc-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  &__title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1.25;
+  }
+}
+
+// ─── Detail DRAWER (map-canvas-detail) ──────────────────────────────
+// Closed by default; slides in from the right on open. Fixed + full-height with
+// its OWN scroll, so long detail content (Familiar suggestions, diagnose, atoms)
+// never stretches the page. A light backdrop dims the map and closes on click.
+.mc-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1490;
+  // Non-modal: a light dark dim that recedes the map but does NOT block it
+  // (pointer-events: none) so the lens + toolbar stay usable. No blur.
+  background: rgba(2, 6, 23, 0.28);
+  pointer-events: none;
+  border: 0;
+  animation: mc-detail-fade 0.2s ease;
+}
+
+// While the drawer is open, keep the lens selector + toolbar above the dim so
+// they stay bright and clickable — switch lens and the open drawer updates live.
+.map-canvas[data-drawer='open'] {
+  .mc-header,
+  .mc-toolbar {
+    position: relative;
+    z-index: 1495;
+  }
+}
+
+// NB: the drawer OVERLAYS the canvas (it does not reflow it). Reserving a
+// right column would shrink the lens SVG when the drawer opens — that made the
+// focus node jump smaller and masked the re-focus ease. Keeping the canvas at
+// full width holds the focus at a stable, maximal size; the drawer covering the
+// right edge only clips peripheral nodes, which is acceptable (owner 2026-07-03).
+
+.mc-detail--drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1500;
+  // Readable, generous width (a var so the content padding can match it).
+  width: var(--mc-drawer-w);
+  max-width: 94vw;
+  margin: 0;
+  border-radius: 16px 0 0 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: -12px 0 40px rgba(2, 6, 23, 0.22);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  // Progressive-reveal slide-in (design-language.md §6.9): hardware-accelerated
+  // translate3d on the owner's first-class reveal easing (~200ms) — never linear.
+  transform: translate3d(100%, 0, 0);
+  transition: transform var(--chora-reveal-slide, 200ms)
+    var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &.is-open {
+    transform: translate3d(0, 0, 0);
+  }
+
+  // Staggered content entrance: once open, tier-1 (title) → tier-2 (tabs) →
+  // tier-3 (panel) reveal in sequence so the eye follows the hierarchy. Re-runs
+  // whenever .is-open is (re)applied; the panel re-animates per tab switch.
+  &.is-open {
+    .mc-detail__title {
+      animation: mc-reveal var(--chora-reveal-slide, 200ms)
+        var(--chora-ease-reveal, ease) both;
+    }
+    .mc-tabs {
+      animation: mc-reveal var(--chora-reveal-slide, 200ms)
+        var(--chora-ease-reveal, ease) both;
+      animation-delay: var(--chora-reveal-stagger, 120ms);
+    }
+    .mc-tabpanel {
+      animation: mc-reveal var(--chora-reveal-slide, 200ms)
+        var(--chora-ease-reveal, ease) both;
+      animation-delay: calc(var(--chora-reveal-stagger, 120ms) * 2);
+    }
+  }
+}
+
+// Drawer header bar (BEM element of .mc-detail — the aside always carries it).
+.mc-detail__bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: -1.25rem -1.35rem 0.25rem;
+  padding: 0.85rem 1.35rem;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.mc-detail__bar-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.mc-detail__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-main);
+  font-size: 1rem;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+// ─── Drawer tabs (owner: declutter → tabs) ──────────────────────────
+.mc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.25rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.mc-tab {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+
+  i {
+    font-size: 0.8rem;
+  }
+
+  &.is-active {
+    background: var(--primary);
+    color: #fff;
+  }
+  &:not(.is-active):hover {
+    color: var(--text-main);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.mc-tabpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 4px;
+    border-radius: 12px;
+  }
+}
+
+// "Practice today's dose" link (Overview tab → the live drill / dose surface).
+.mc-dose-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+
+  i {
+    font-size: 0.85rem;
+  }
+  &:hover {
+    opacity: 0.92;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+  }
+}
+
+// ── Danger zone: remove-concept (low-emphasis; two-step inline confirm) ──
+.mc-danger {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--glass-border, rgba(84, 90, 150, 0.16));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+
+  &__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted, #6b7280);
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+
+    &:hover {
+      color: #c5221f; // the shaky red — "destructive" without shouting
+      background: rgba(197, 34, 31, 0.08);
+    }
+    &:focus-visible {
+      outline: 2px solid #c5221f;
+      outline-offset: 2px;
+    }
+    i {
+      font-size: 0.8rem;
+    }
+  }
+
+  &__ask {
+    color: #c5221f;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  &__actions {
+    display: inline-flex;
+    gap: 0.4rem;
+  }
+
+  &__yes,
+  &__no {
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  &__yes {
+    border: 1px solid #c5221f;
+    background: #c5221f;
+    color: #fff;
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+  &__no {
+    border: 1px solid var(--glass-border, rgba(84, 90, 150, 0.2));
+    background: transparent;
+    color: var(--text-muted, #6b7280);
+  }
+  &__yes:focus-visible,
+  &__no:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes mc-detail-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Progressive tier reveal (title → tabs → panel). Slight rise + fade on the
+// owner's reveal easing so the content resolves into place, never pops.
+@keyframes mc-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-detail--drawer {
+    transition: none;
+
+    &.is-open .mc-detail__title,
+    &.is-open .mc-tabs,
+    &.is-open .mc-tabpanel {
+      animation: none;
+    }
+  }
+  .mc-detail-backdrop {
+    animation: none;
+  }
+}
+
+.mc-prov {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--text-muted);
+
+  &[data-provenance='you'] {
+    background: rgba(25, 118, 210, 0.12);
+    color: var(--primary);
+  }
+  &[data-provenance='familiar'] {
+    background: rgba(236, 72, 153, 0.12);
+    color: #b3245f;
+  }
+}
+
+.mc-terrain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-height: 0;
+}
+
+.mc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  &--shaky {
+    background: rgba(197, 34, 31, 0.12);
+    color: #c5221f;
+  }
+  &--due {
+    background: rgba(217, 119, 6, 0.14);
+    color: #b45309;
+  }
+  &--mastered {
+    background: rgba(27, 135, 63, 0.14);
+    color: #1b873f;
+  }
+  // Ceremony learning-edge intents (CHO-2038). remediate = an indigo "shore up
+  // this weakness" focus (a remediate node needs no evidenced growthEdge to read
+  // shaky); explore = a teal "adjacent curiosity" the learner chose to pursue.
+  &--remediate {
+    background: rgba(25, 118, 210, 0.12);
+    color: #1565c0;
+  }
+  &--explore {
+    background: rgba(13, 148, 136, 0.12);
+    color: #0f766e;
+  }
+}
+
+// ─── Per-node objective / sub-goal (ADR-247, CHO-2328) ───────────────
+// The focal concept's course roads (C4 slice 2): "also on <course>, module N".
+// Sits between the terrain chips and the sub-goal, so the drawer reads: what
+// this concept is, where else it appears, then what you want from it.
+.mc-roads {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  &__head {
+    margin: 0.4rem 0 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+  }
+
+  &__link {
+    color: var(--surface-accent, var(--primary));
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+
+    // An unresolved course is a raw identifier, not a name. Monospace and a
+    // quieter colour so it never reads as a course actually called that; the
+    // aria-label says the same thing to a screen reader.
+    &.is-unresolved {
+      font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+      font-weight: 500;
+      color: var(--chora-color-text-muted);
+    }
+  }
+
+  &__module {
+    color: var(--chora-color-text-muted);
+  }
+}
+
+.mc-subgoal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &__head {
+    margin: 0.4rem 0 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  // Read mode: the objective + its provenance pill on one clickable row. A
+  // whole-row button (direct manipulation, click anywhere to edit).
+  &__display {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.5rem;
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--glass-border, rgba(84, 90, 150, 0.16));
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:hover {
+      border-color: var(--primary, #1976d2);
+      background: rgba(25, 118, 210, 0.06);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--primary, #1976d2);
+      outline-offset: 2px;
+    }
+  }
+
+  // AA-safe: the objective is meaningful content, so it uses the main text
+  // token (NEVER the muted token, which fails AA for body text).
+  &__text {
+    flex: 1 1 auto;
+    color: var(--text-main);
+    font-size: 0.92rem;
+    line-height: 1.35;
+  }
+
+  &__edit-icon {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    color: var(--chora-color-primary-strong, #0d47a1);
+    opacity: 0.7;
+  }
+
+  // Unset affordance: a subtle-but-AA-safe "set an objective" prompt. Subtlety
+  // comes from weight + a dashed frame, not a muted colour (which would fail AA).
+  &__set {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    align-self: flex-start;
+    padding: 0.4rem 0.7rem;
+    border: 1px dashed var(--glass-border, rgba(84, 90, 150, 0.3));
+    border-radius: 999px;
+    background: transparent;
+    color: var(--chora-color-primary-strong, #0d47a1);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:hover {
+      border-color: var(--primary, #1976d2);
+      background: rgba(25, 118, 210, 0.06);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--primary, #1976d2);
+      outline-offset: 2px;
+    }
+    i {
+      font-size: 0.8rem;
+    }
+  }
+
+  &__edit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  // A touch smaller than the concept provenance badge; it reads as a chip
+  // ADJACENT to the objective, not the heading pill. Colours come from the
+  // shared `.mc-prov[data-provenance=...]` idiom (this block is later in source
+  // so these equal-specificity overrides win).
+  &__pill {
+    flex: 0 0 auto;
+    align-self: center;
+    font-size: 0.72rem;
+    padding: 0.12rem 0.5rem;
+  }
+}
+
+.mc-atoms {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &__head {
+    margin: 0.4rem 0 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.mc-atom-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  // Single column (owner: "one column not two") — atom rows stack.
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mc-atom {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &__id {
+    flex: 1 1 auto;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: rgba(148, 163, 184, 0.12);
+    padding: 0.2rem 0.45rem;
+    border-radius: 8px;
+  }
+
+  &__detach {
+    flex: 0 0 auto;
+    width: 1.7rem;
+    height: 1.7rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.65);
+    color: var(--text-muted);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    &:not(:disabled):hover {
+      color: #c5221f;
+      border-color: #c5221f;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.mc-picker {
+  margin-top: 0.6rem;
+}
+
+.mc-muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+// ─── Lens layer (WS-D) — composable overlays, not modes ─────────────
+.mc-lensbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+// Goal-level Diagnose entry (ADR-238 D2) — a prominent accent action that sits
+// under the lens selector. Aligned to the start so it hugs its content rather
+// than stretching across the lensbar's column.
+.mc-diagnose-map {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    filter 0.18s ease;
+
+  i {
+    font-size: 0.8rem;
+  }
+  &:hover {
+    filter: brightness(1.06);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.mc-lens {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+
+  &__legend {
+    padding: 0;
+    margin: 0 0 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  &__opts {
+    // One clean row — never wrap into a broken 2-row rounded blob when the
+    // master-detail reflow narrows the header. 3 compact pills always fit.
+    display: inline-flex;
+    flex-wrap: nowrap;
+    max-width: 100%;
+    gap: 0.3rem;
+    padding: 0.25rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  &__opt {
+    position: relative;
+    display: inline-flex;
+    border-radius: 999px;
+    cursor: pointer;
+
+    &:focus-within {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    &.is-active .mc-lens__pill {
+      background: var(--primary);
+      color: #fff;
+    }
+  }
+
+  // sr-only radio: focusable + in the a11y tree, visually hidden.
+  &__radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.38rem 0.72rem;
+    border-radius: 999px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--text-muted);
+
+    i {
+      font-size: 0.8rem;
+    }
+  }
+
+  &__caption {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    max-width: 60ch;
+  }
+}
+
+// Lens re-emphasis: strengthen the ALWAYS-ON faint node cues per active lens.
+// The cues never disappear (no-toggles §5.1) — the active lens just amplifies.
+.map-canvas[data-lens='growth'] {
+  .mc-chip--shaky,
+  .mc-chip--due {
+    box-shadow: 0 0 0 2px rgba(197, 34, 31, 0.25);
+  }
+}
+
+.map-canvas[data-lens='mastery'] {
+  .mc-chip--mastered {
+    box-shadow: 0 0 0 2px rgba(27, 135, 63, 0.28);
+  }
+}
+
+// ─── Growth lens: diagnosis block ────────────────────────────────────
+.mc-diagnosis {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(197, 34, 31, 0.25);
+  border-radius: 12px;
+  background: rgba(197, 34, 31, 0.05);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #c5221f;
+  }
+
+  &__summary {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__label {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  &__list {
+    margin: 0;
+    padding-inline-start: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    color: var(--text-main);
+    font-size: 0.9rem;
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.3rem;
+    height: 1.3rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.6);
+    color: #c5221f;
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+}
+
+.mc-btn--practice {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  border-color: #c5221f;
+  color: #c5221f;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+// ─── Mastery lens: per-node consolidation band ──────────────────────
+.mc-band {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(27, 135, 63, 0.25);
+  border-radius: 12px;
+  background: rgba(27, 135, 63, 0.05);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #1b873f;
+  }
+
+  &__meter {
+    height: 0.55rem;
+    border-radius: 999px;
+    background: rgba(27, 135, 63, 0.15);
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #1b873f;
+  }
+
+  &__note {
+    margin: 0;
+  }
+}
+
+// ─── Mastery lens: map-level "done for me" panel (ADR-213) ──────────
+.mc-mastery-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(27, 135, 63, 0.3);
+  border-radius: 14px;
+  background: rgba(27, 135, 63, 0.06);
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  &__note {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    max-width: 46ch;
+  }
+}
+
+.mc-done-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba(27, 135, 63, 0.16);
+  color: #1b873f;
+}
+
+// ═══ Familiar Campaign (WS-C7) ══════════════════════════════════════
+// HUD strip over the canvas + the drawer ladder panel + the seal ceremony.
+// Always-on overlay chrome; composes with the lens paint beneath it.
+
+.mc-campaign-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: 14px;
+
+  &__lead {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    color: var(--text-main);
+    font-weight: 600;
+
+    > i {
+      color: var(--primary);
+    }
+  }
+
+  &__march {
+    min-width: 0;
+  }
+
+  &__tail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__progress {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  &__seal {
+    padding: 0.45rem 0.9rem;
+  }
+
+  &__error {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #b45309;
+  }
+
+  // Zero-Familiar campaign: an inviting one-liner, not a HUD.
+  &--empty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.6rem 0.9rem;
+    border: 1px dashed var(--glass-border);
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+
+    i {
+      color: var(--primary);
+    }
+  }
+}
+
+// Shared campaign status chip (HUD + drawer). Icon+text, never colour alone.
+.mc-campaign-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--text-muted);
+
+  &--advanced {
+    background: rgba(27, 135, 63, 0.14);
+    color: #1b873f;
+  }
+  &--cooling {
+    background: rgba(59, 130, 246, 0.14);
+    color: #2563eb;
+  }
+  &--province {
+    background: rgba(27, 135, 63, 0.16);
+    color: #1b873f;
+  }
+  &--focus {
+    background: rgba(25, 118, 210, 0.12);
+    color: var(--primary);
+  }
+  &--holds {
+    background: rgba(100, 116, 139, 0.16);
+    color: var(--text-muted);
+  }
+}
+
+// ─── Drawer campaign panel (ladder + actions) ───────────────────────
+.mc-campaign {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(25, 118, 210, 0.22);
+  border-radius: 12px;
+  background: rgba(25, 118, 210, 0.05);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--primary);
+  }
+
+  &__ladder {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  &__pip {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 999px;
+    border: 1.5px solid rgba(25, 118, 210, 0.4);
+    background: transparent;
+
+    &.is-filled {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+  }
+
+  &__next {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  &__won-at {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.2rem;
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #c5221f;
+  }
+
+  &__restructure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  &__restructure-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__pick-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__split-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  &__split-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__split-focus {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+
+    input {
+      cursor: pointer;
+    }
+    &:focus-within {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+  }
+}
+
+// ─── Seal ceremony (Topology C — progressive overlay modal) ─────────
+.mc-seal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  background: rgba(2, 6, 23, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: mc-detail-fade 0.2s ease;
+}
+
+.mc-seal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1610;
+  width: min(440px, 92vw);
+  transform: translate3d(-50%, -50%, 0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.85rem;
+  padding: 1.75rem 1.5rem;
+  border-radius: 18px;
+
+  &__crest {
+    display: inline-grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 999px;
+    background: rgba(27, 135, 63, 0.14);
+    color: #1b873f;
+    font-size: 1.4rem;
+    animation: mc-seal-rise 260ms
+      var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)) both;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-main);
+    animation: mc-seal-rise 260ms
+      var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)) both;
+    animation-delay: 90ms;
+  }
+
+  &__body {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    max-width: 40ch;
+    animation: mc-seal-rise 260ms
+      var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)) both;
+    animation-delay: 180ms;
+  }
+
+  .mc-btn {
+    animation: mc-seal-rise 260ms
+      var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)) both;
+    animation-delay: 270ms;
+  }
+}
+
+@keyframes mc-seal-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+// ─── Motion ─────────────────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .mc-spinner {
+    animation: none;
+  }
+  .mc-seal-backdrop {
+    animation: none;
+  }
+  .mc-seal__crest,
+  .mc-seal__title,
+  .mc-seal__body,
+  .mc-seal .mc-btn {
+    animation: none;
+  }
+}
+
+// ── Roads toggle (C4) ───────────────────────────────────────────────
+// Sits in the lens bar beside the caption. The certificate accent matches the
+// road drawn on the canvas, so the switch and the thing it switches read as one.
+:host {
+  --chora-color-road: #1976d2;
+  --chora-color-road-strong: #0d47a1;
+}
+
+.mc-roads-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--chora-color-road);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--chora-color-road-strong);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &.is-on {
+    background: var(--chora-color-road);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chora-color-road-strong);
+    outline-offset: 2px;
+  }
+}
+
+.mc-roads-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--chora-color-text-muted);
+}

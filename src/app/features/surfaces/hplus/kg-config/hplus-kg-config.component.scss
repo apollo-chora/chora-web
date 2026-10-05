@@ -1,0 +1,157 @@
+// H+ Knowledge Graph config — USR-H-KG-1
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(237, 233, 254, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.hplus-kg-config {
+  padding: 1.5rem clamp(1rem, 3vw, 2rem);
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.hplus-kg-config__header {
+  padding: 1.25rem 1.5rem;
+}
+
+.hplus-kg-config__title {
+  margin: 0 0 0.25rem;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i { color: var(--primary); }
+}
+
+.hplus-kg-config__sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.hplus-kg-config__form {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hplus-kg-config__field {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  legend {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0;
+  }
+}
+
+.hplus-kg-config__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.hplus-kg-config__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hplus-kg-config__input {
+  width: 100px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.65);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.hplus-kg-config__bounds {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.hplus-kg-config__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 1rem;
+}
+
+.hplus-kg-config__audit {
+  font-size: 11px;
+  color: var(--text-muted);
+
+  strong {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.hplus-kg-config__actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.hplus-kg-config__status {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &--ok {
+    background: var(--success-bg);
+    color: var(--success);
+  }
+  &--err {
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+}
+
+.hplus-kg-config__loading {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2rem 1rem;
+}

@@ -1,0 +1,95 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 64px var(--chora-sidebar-width) 1fr;
+  min-height: calc(100vh - var(--chora-top-nav-height));
+  transition: grid-template-columns var(--chora-transition-normal);
+
+  &--sidebar-collapsed {
+    grid-template-columns: 64px var(--chora-sidebar-collapsed-width) 1fr;
+  }
+
+  // The A+ compass bar replaces the sidebar COLUMN entirely: it is horizontal
+  // chrome inside the content column, so the grid drops to rail plus content.
+  &--compass {
+    grid-template-columns: 64px 1fr;
+  }
+
+  &--compass#{&}--no-rail {
+    grid-template-columns: 1fr;
+  }
+
+  // R39: a session with no rail-eligible role renders no rail at all, so the
+  // 64px column would otherwise sit empty against the left edge. Drop it and
+  // the content starts at the edge, which is also where the HUD's bottom-left
+  // anchor moves to.
+  &--no-rail {
+    grid-template-columns: var(--chora-sidebar-width) 1fr;
+  }
+
+  &--no-rail#{&}--sidebar-collapsed {
+    grid-template-columns: var(--chora-sidebar-collapsed-width) 1fr;
+  }
+
+  &--no-rail#{&}--sidebar-collapsed:has(.main-layout__sidebar:hover) {
+    grid-template-columns: var(--chora-sidebar-width) 1fr;
+  }
+
+  // Hover-expand: while collapsed, hovering the sidebar widens its grid
+  // column back to full so the revealed labels aren't clipped. The
+  // existing `transition: grid-template-columns` animates it.
+  &--sidebar-collapsed:has(.main-layout__sidebar:hover) {
+    grid-template-columns: 64px var(--chora-sidebar-width) 1fr;
+  }
+
+  &__rail {
+    position: sticky;
+    top: var(--chora-top-nav-height);
+    height: calc(100vh - var(--chora-top-nav-height));
+    overflow-y: auto;
+  }
+
+  &__sidebar {
+    position: sticky;
+    top: var(--chora-top-nav-height);
+    height: calc(100vh - var(--chora-top-nav-height));
+    overflow-y: auto;
+  }
+
+  &__content {
+    padding: var(--chora-space-lg);
+    min-width: 0;
+  }
+}
+
+@media (min-width: 1280px) {
+  .main-layout {
+    grid-template-columns: 72px var(--chora-sidebar-width) 1fr;
+
+    &--sidebar-collapsed {
+      grid-template-columns: 72px var(--chora-sidebar-collapsed-width) 1fr;
+    }
+
+    &--sidebar-collapsed:has(.main-layout__sidebar:hover) {
+      grid-template-columns: 72px var(--chora-sidebar-width) 1fr;
+    }
+  }
+}
+
+@media (min-width: 1280px) {
+  .main-layout {
+    &__content {
+      padding: var(--chora-space-xl);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-layout {
+    transition: none;
+  }
+}

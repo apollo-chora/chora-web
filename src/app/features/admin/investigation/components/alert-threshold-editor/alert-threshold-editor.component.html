@@ -1,0 +1,219 @@
+<section
+  class="alert-threshold-editor"
+  role="main"
+  [attr.aria-label]="'admin.investigation.alert_config_title' | translate"
+  data-testid="alert-threshold-editor">
+
+  <!-- Page Header -->
+  <header class="alert-threshold-editor__header">
+    <div class="alert-threshold-editor__header-nav">
+      <a
+        routerLink="../"
+        class="alert-threshold-editor__back-link"
+        data-testid="btn-back"
+        [attr.aria-label]="'admin.investigation.back_to_workspace' | translate">
+        &larr; {{ 'admin.investigation.back_to_workspace' | translate }}
+      </a>
+      <h1 class="alert-threshold-editor__title" data-testid="alerts-title">
+        {{ 'admin.investigation.alert_config_title' | translate }}
+      </h1>
+    </div>
+    <button
+      type="button"
+      class="alert-threshold-editor__btn alert-threshold-editor__btn--primary"
+      [disabled]="saving() || !hasUnsavedChanges()"
+      (click)="save()"
+      data-testid="btn-save-config"
+      [attr.aria-label]="'admin.investigation.save_config' | translate">
+      @if (saving()) {
+        {{ 'admin.investigation.saving' | translate }}
+      } @else {
+        {{ 'admin.investigation.save_config' | translate }}
+      }
+    </button>
+  </header>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="alert-threshold-editor__loading" data-testid="alerts-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="alert-threshold-editor__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading()) {
+    <!-- Section: Metric Thresholds -->
+    <section class="alert-threshold-editor__section" aria-labelledby="thresholds-heading">
+      <h2 id="thresholds-heading" class="alert-threshold-editor__section-title">
+        {{ 'admin.investigation.metric_thresholds' | translate }}
+      </h2>
+      <p class="alert-threshold-editor__section-desc">
+        {{ 'admin.investigation.metric_thresholds_desc' | translate }}
+      </p>
+
+      <div class="alert-threshold-editor__thresholds" data-testid="threshold-list">
+        @for (threshold of thresholds(); track threshold.metric_key) {
+          <div class="alert-threshold-editor__threshold-card" [attr.data-testid]="'threshold-' + threshold.metric_key">
+            <div class="alert-threshold-editor__threshold-header">
+              <label
+                [for]="'slider-' + threshold.metric_key"
+                class="alert-threshold-editor__threshold-label">
+                {{ threshold.label | translate }}
+              </label>
+              <span class="alert-threshold-editor__threshold-value" [attr.aria-live]="'polite'">
+                {{ threshold.current }} {{ threshold.unit }}
+              </span>
+            </div>
+            <div class="alert-threshold-editor__threshold-range">
+              <span class="alert-threshold-editor__range-min">{{ threshold.min }}</span>
+              <input
+                type="range"
+                [id]="'slider-' + threshold.metric_key"
+                class="alert-threshold-editor__slider"
+                [min]="threshold.min"
+                [max]="threshold.max"
+                [value]="threshold.current"
+                [attr.aria-label]="(threshold.label | translate) + ' threshold'"
+                [attr.data-testid]="'slider-' + threshold.metric_key"
+                (input)="onThresholdChange(threshold.metric_key, $event)" />
+              <span class="alert-threshold-editor__range-max">{{ threshold.max }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Section: Notification Channels -->
+    <section class="alert-threshold-editor__section" aria-labelledby="channels-heading">
+      <h2 id="channels-heading" class="alert-threshold-editor__section-title">
+        {{ 'admin.investigation.notification_channels' | translate }}
+      </h2>
+      <p class="alert-threshold-editor__section-desc">
+        {{ 'admin.investigation.notification_channels_desc' | translate }}
+      </p>
+
+      <div class="alert-threshold-editor__channels" data-testid="channel-list" [formGroup]="form">
+        <div formGroupName="channels" class="alert-threshold-editor__channel-group">
+          @for (channel of allChannels; track channel.value) {
+            <label class="alert-threshold-editor__channel-item" [for]="'channel-' + channel.value">
+              <input
+                type="checkbox"
+                [id]="'channel-' + channel.value"
+                [formControlName]="channel.value"
+                class="alert-threshold-editor__checkbox"
+                [attr.data-testid]="'channel-' + channel.value"
+                (change)="onChannelChange()" />
+              <span class="alert-threshold-editor__channel-label">
+                {{ channel.label | translate }}
+              </span>
+            </label>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: SLA Breach Rules -->
+    <section class="alert-threshold-editor__section" aria-labelledby="breach-rules-heading">
+      <h2 id="breach-rules-heading" class="alert-threshold-editor__section-title">
+        {{ 'admin.investigation.sla_breach_rules' | translate }}
+      </h2>
+      <p class="alert-threshold-editor__section-desc">
+        {{ 'admin.investigation.sla_breach_rules_desc' | translate }}
+      </p>
+
+      <div class="alert-threshold-editor__rules" data-testid="breach-rules" [formGroup]="form">
+        <div formArrayName="breachRules">
+          @for (rule of breachRules.controls; track $index; let idx = $index) {
+            <div
+              class="alert-threshold-editor__rule-row"
+              [formGroupName]="idx"
+              [attr.data-testid]="'breach-rule-' + idx">
+
+              <!-- Severity -->
+              <div class="alert-threshold-editor__rule-field">
+                <label [for]="'rule-severity-' + idx" class="alert-threshold-editor__field-label">
+                  {{ 'admin.investigation.severity' | translate }}
+                </label>
+                <select
+                  [id]="'rule-severity-' + idx"
+                  formControlName="severity"
+                  class="alert-threshold-editor__select"
+                  [attr.data-testid]="'rule-severity-' + idx">
+                  @for (sev of allSeverities; track sev.value) {
+                    <option [value]="sev.value">{{ sev.label | translate }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Metric -->
+              <div class="alert-threshold-editor__rule-field">
+                <label [for]="'rule-metric-' + idx" class="alert-threshold-editor__field-label">
+                  {{ 'admin.investigation.metric' | translate }}
+                </label>
+                <select
+                  [id]="'rule-metric-' + idx"
+                  formControlName="metric_key"
+                  class="alert-threshold-editor__select"
+                  [attr.data-testid]="'rule-metric-' + idx">
+                  @for (m of metricOptions(); track m.value) {
+                    <option [value]="m.value">{{ m.label | translate }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Threshold -->
+              <div class="alert-threshold-editor__rule-field">
+                <label [for]="'rule-threshold-' + idx" class="alert-threshold-editor__field-label">
+                  {{ 'admin.investigation.threshold' | translate }}
+                </label>
+                <input
+                  type="number"
+                  [id]="'rule-threshold-' + idx"
+                  formControlName="threshold"
+                  class="alert-threshold-editor__input"
+                  [attr.data-testid]="'rule-threshold-' + idx"
+                  min="0" />
+              </div>
+
+              <!-- Action -->
+              <div class="alert-threshold-editor__rule-field">
+                <label [for]="'rule-action-' + idx" class="alert-threshold-editor__field-label">
+                  {{ 'admin.investigation.action' | translate }}
+                </label>
+                <select
+                  [id]="'rule-action-' + idx"
+                  formControlName="action"
+                  class="alert-threshold-editor__select"
+                  [attr.data-testid]="'rule-action-' + idx">
+                  @for (act of allActions; track act.value) {
+                    <option [value]="act.value">{{ act.label | translate }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Remove -->
+              <button
+                type="button"
+                class="alert-threshold-editor__btn alert-threshold-editor__btn--danger alert-threshold-editor__btn--icon"
+                (click)="removeBreachRule(idx)"
+                [attr.data-testid]="'btn-remove-rule-' + idx"
+                [attr.aria-label]="'admin.investigation.remove_rule' | translate">
+                &times;
+              </button>
+            </div>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="alert-threshold-editor__btn alert-threshold-editor__btn--secondary"
+          (click)="addBreachRule()"
+          data-testid="btn-add-rule"
+          [attr.aria-label]="'admin.investigation.add_rule' | translate">
+          + {{ 'admin.investigation.add_rule' | translate }}
+        </button>
+      </div>
+    </section>
+  }
+</section>

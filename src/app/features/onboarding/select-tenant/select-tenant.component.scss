@@ -1,0 +1,88 @@
+:host {
+  display: block;
+}
+
+// ---------------------------------------------------------------------------
+// Page layout — full viewport, centered glass card, no nav chrome.
+// Tablet-first: single centered column at >=768px; widened at >=1280px.
+// Mirrors the no-tenant onboarding page for visual consistency.
+// ---------------------------------------------------------------------------
+
+.select-tenant {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--chora-space-lg, 24px);
+  background: var(--chora-color-surface-1, #f9fafb);
+
+  &__branding {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-end: var(--chora-space-xl, 32px);
+  }
+
+  &__logo {
+    color: var(--chora-color-primary, #2563eb);
+  }
+
+  &__brand-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text-primary, #111);
+    letter-spacing: -0.02em;
+  }
+
+  &__card {
+    background: var(--chora-color-glass-surface, rgba(255, 255, 255, 0.72));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--chora-color-glass-border, rgba(255, 255, 255, 0.5));
+    border-radius: var(--chora-radius-lg, 12px);
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+    padding: var(--chora-space-xl, 32px);
+    max-width: 520px;
+    width: 100%;
+  }
+
+  &__heading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text-primary, #111);
+    margin: 0 0 var(--chora-space-sm, 8px) 0;
+    text-align: center;
+  }
+
+  &__intro {
+    font-size: 0.9375rem;
+    color: var(--chora-color-text-secondary, #555);
+    margin: 0 0 var(--chora-space-lg, 24px) 0;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  &__error {
+    margin: 0 0 var(--chora-space-md, 16px) 0;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--chora-color-danger-surface, rgba(220, 38, 38, 0.08));
+    color: var(--chora-color-danger, #dc2626);
+    font-size: 0.875rem;
+  }
+
+  &__loading {
+    margin: var(--chora-space-md, 16px) 0 0 0;
+    color: var(--chora-color-text-secondary, #555);
+    font-size: 0.875rem;
+    text-align: center;
+  }
+}
+
+@media (min-width: 1280px) {
+  .select-tenant__card {
+    max-width: 560px;
+    padding: var(--chora-space-xl, 32px) calc(var(--chora-space-xl, 32px) * 1.5);
+  }
+}

@@ -1,0 +1,29 @@
+@if (companionId(); as id) {
+  <div
+    class="companion-dock"
+    [attr.aria-label]="'aplus.shell.dock.aria' | translate"
+    role="group"
+    data-testid="companion-dock">
+    <a
+      class="companion-dock__portrait"
+      [routerLink]="['/a/companion', id]"
+      [attr.aria-label]="name() ?? ('aplus.shell.dock.unnamed' | translate)"
+      data-testid="companion-dock-profile">
+      <i class="fa-solid fa-paw" aria-hidden="true"></i>
+    </a>
+    <span class="companion-dock__body">
+      <span class="companion-dock__name" data-testid="companion-dock-name">
+        {{ name() ?? ('aplus.shell.dock.unnamed' | translate) }}
+      </span>
+      <span class="companion-dock__mood" data-testid="companion-dock-mood">
+        {{ moodKey() | translate }}
+      </span>
+    </span>
+    <a
+      class="companion-dock__chat"
+      [routerLink]="['/a/companion', id, 'chat']"
+      data-testid="companion-dock-chat">
+      {{ 'aplus.shell.dock.chat' | translate }}
+    </a>
+  </div>
+}

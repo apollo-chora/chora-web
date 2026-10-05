@@ -1,0 +1,156 @@
+<!--
+  Continue-learning wrapper (SP2.6) — ROW-BY-ROW (never 2-column cards). The 3
+  latest show collapsed (latest on top); "See more" reveals the full list
+  paginated 10/page with a ‹ Page x of N › pager. Self-contained: reads
+  DashboardService.summary(); the shell drops this selector into a cdkDrag group.
+-->
+<section
+  class="continue-learning glass-panel"
+  aria-labelledby="aplus-dashboard-courses-heading"
+  data-testid="aplus-dashboard-courses">
+  <h2 id="aplus-dashboard-courses-heading" class="continue-learning__heading">
+    <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+    {{ 'aplus.dashboard.continue_learning_heading' | translate }}
+  </h2>
+
+  @if (hasCourses()) {
+    <ul class="continue-learning__rows" data-testid="aplus-dashboard-courses-rows">
+      @for (c of visibleCourses(); track c.courseId) {
+        <li
+          class="continue-learning__row"
+          [attr.data-testid]="'aplus-dashboard-course-row-' + c.courseId">
+          <!-- Left: identity — title, role/day meta, retention, instructor. -->
+          <div class="continue-learning__row-main">
+            <div class="continue-learning__row-meta">
+              <span class="continue-learning__chip">
+                {{ 'aplus.dashboard.role_learner' | translate }} ·
+                {{ 'aplus.dashboard.day' | translate }} {{ c.dayNumber }} / {{ c.dayTotal }}
+              </span>
+              <!-- Ebbinghaus retention indicator dot. -->
+              <span
+                class="continue-learning__retention-dot"
+                [style.background]="retentionColor(c.retention_state)"
+                [attr.aria-label]="retentionLabel(c.retention_state) | translate"
+                [attr.data-testid]="'aplus-retention-' + c.courseId"
+                role="img">
+              </span>
+            </div>
+            <h3 class="continue-learning__row-title">{{ c.title }}</h3>
+            @if (c.instructorName) {
+              <p class="continue-learning__row-instructor">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                {{ 'aplus.dashboard.by' | translate }} {{ c.instructorName }}
+              </p>
+            }
+          </div>
+
+          <!-- Middle: progress + mini stats. -->
+          <div class="continue-learning__row-progress">
+            <div class="continue-learning__progress-row">
+              <span>{{ 'aplus.dashboard.progress' | translate }}</span>
+              <span>{{ c.progressPct }}%</span>
+            </div>
+            <div
+              class="progress-track"
+              role="progressbar"
+              [attr.aria-valuenow]="c.progressPct"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-label]="('aplus.dashboard.progress_aria' | translate) + ' ' + c.title">
+              <div class="progress-fill" [style.width.%]="c.progressPct"></div>
+            </div>
+            <div class="continue-learning__stats">
+              <span class="continue-learning__stat">
+                <span class="continue-learning__stat-label">{{ 'aplus.dashboard.remaining' | translate }}</span>
+                <span class="continue-learning__stat-value">{{ c.remainingAtoms }}</span>
+              </span>
+              <span class="continue-learning__stat">
+                <span class="continue-learning__stat-label">{{ 'aplus.dashboard.xp' | translate }}</span>
+                <span class="continue-learning__stat-value">{{ c.xpEarned }}</span>
+              </span>
+              <span class="continue-learning__stat">
+                <span class="continue-learning__stat-label">{{ 'aplus.dashboard.memory' | translate }}</span>
+                <span class="continue-learning__stat-value">{{ c.memoryPct }}%</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Right: the Continue action. Guard a malformed //learn link. -->
+          <div class="continue-learning__row-action">
+            @if (c.courseId) {
+              <a
+                [routerLink]="['/a/courses', c.courseId, 'learn']"
+                class="btn btn-secondary"
+                [attr.data-testid]="'aplus-dashboard-continue-' + c.courseId">
+                {{ 'aplus.dashboard.continue' | translate }}
+                <i class="fa-solid fa-play" aria-hidden="true"></i>
+              </a>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (canExpand()) {
+      <div class="continue-learning__controls">
+        @if (!expanded()) {
+          <button
+            type="button"
+            class="continue-learning__toggle"
+            (click)="expand()"
+            data-testid="aplus-dashboard-courses-see-more">
+            {{ 'aplus.dashboard.courses.see_more' | translate }}
+            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+          </button>
+        } @else {
+          @if (showPagination()) {
+            <nav
+              class="continue-learning__pager"
+              [attr.aria-label]="'aplus.dashboard.courses.pagination_aria' | translate"
+              data-testid="aplus-dashboard-courses-pager">
+              <button
+                type="button"
+                class="continue-learning__pager-btn"
+                (click)="prevPage()"
+                [disabled]="!page().hasPrev"
+                [attr.aria-label]="'aplus.dashboard.courses.prev_page_aria' | translate"
+                data-testid="aplus-dashboard-courses-prev">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <span
+                class="continue-learning__pager-status"
+                aria-live="polite"
+                data-testid="aplus-dashboard-courses-page-status">
+                {{ 'aplus.dashboard.courses.page' | translate }}
+                {{ page().pageIndex + 1 }}
+                {{ 'aplus.dashboard.courses.of' | translate }}
+                {{ page().pageCount }}
+              </span>
+              <button
+                type="button"
+                class="continue-learning__pager-btn"
+                (click)="nextPage()"
+                [disabled]="!page().hasNext"
+                [attr.aria-label]="'aplus.dashboard.courses.next_page_aria' | translate"
+                data-testid="aplus-dashboard-courses-next">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </nav>
+          }
+          <button
+            type="button"
+            class="continue-learning__toggle"
+            (click)="collapse()"
+            data-testid="aplus-dashboard-courses-see-less">
+            {{ 'aplus.dashboard.courses.see_less' | translate }}
+            <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
+    }
+  } @else {
+    <p class="continue-learning__empty" data-testid="aplus-dashboard-courses-empty">
+      {{ 'aplus.dashboard.empty_learner' | translate }}
+    </p>
+  }
+</section>

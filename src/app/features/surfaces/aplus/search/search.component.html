@@ -1,0 +1,367 @@
+<section
+  class="aplus-search surface-aplus"
+  aria-labelledby="aplus-search-heading"
+  data-testid="aplus-search">
+
+  <!-- ── Search input header ── -->
+  <header class="search-hub-header glass-panel">
+    <div class="search-hub-header__inner">
+      <h1 id="aplus-search-heading" class="search-hub-heading">Search</h1>
+      <div class="search-hub-input-wrap">
+        <i class="fa-solid fa-magnifying-glass search-hub-input-icon" aria-hidden="true"></i>
+        <label for="aplus-search-input" class="sr-only">Search atoms, courses, and collections</label>
+        <input
+          id="aplus-search-input"
+          class="form-control search-hub-input"
+          type="search"
+          autocomplete="off"
+          autofocus
+          placeholder="Search atoms, courses, collections…"
+          aria-label="Search atoms, courses, and collections"
+          [value]="inputValue()"
+          (input)="onQueryInput($event)"
+          data-testid="aplus-search-input" />
+        @if (inputValue()) {
+          <button
+            type="button"
+            class="search-hub-clear"
+            aria-label="Clear search"
+            (click)="clearSearch()"
+            data-testid="aplus-search-clear">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Tabs (shown only when results are available) ── -->
+  @if (isSuccess()) {
+    <nav
+      class="search-hub-tabs glass-panel"
+      aria-label="Filter search results by type"
+      data-testid="aplus-search-tabs">
+      <ul role="tablist" class="search-hub-tabs__list">
+        <li role="presentation">
+          <button
+            role="tab"
+            type="button"
+            [attr.aria-selected]="activeTab() === 'all'"
+            [class.active]="activeTab() === 'all'"
+            (click)="selectTab('all')"
+            data-testid="tab-all">
+            All
+            <span class="tab-count" aria-label="{{ totalCount() }} total results">{{ totalCount() }}</span>
+          </button>
+        </li>
+        <li role="presentation">
+          <button
+            role="tab"
+            type="button"
+            [attr.aria-selected]="activeTab() === 'atoms'"
+            [class.active]="activeTab() === 'atoms'"
+            (click)="selectTab('atoms')"
+            data-testid="tab-atoms">
+            <i class="fa-solid fa-atom" aria-hidden="true"></i>
+            Atoms
+            <span class="tab-count" aria-label="{{ atomCount() }} atoms">{{ atomCount() }}</span>
+          </button>
+        </li>
+        <li role="presentation">
+          <button
+            role="tab"
+            type="button"
+            [attr.aria-selected]="activeTab() === 'courses'"
+            [class.active]="activeTab() === 'courses'"
+            (click)="selectTab('courses')"
+            data-testid="tab-courses">
+            <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+            Courses
+            <span class="tab-count" aria-label="{{ courseCount() }} courses">{{ courseCount() }}</span>
+          </button>
+        </li>
+        <li role="presentation">
+          <button
+            role="tab"
+            type="button"
+            [attr.aria-selected]="activeTab() === 'collections'"
+            [class.active]="activeTab() === 'collections'"
+            (click)="selectTab('collections')"
+            data-testid="tab-collections">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            Collections
+            <span class="tab-count" aria-label="{{ collectionCount() }} collections">{{ collectionCount() }}</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  }
+
+  <!-- ── Main content area ── -->
+  <main class="search-hub-main" role="main">
+
+    <!-- Loading state -->
+    @if (isLoading()) {
+      <div
+        class="glass-panel search-hub-status"
+        role="status"
+        aria-busy="true"
+        aria-label="Searching…"
+        data-testid="aplus-search-loading">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        <p>Searching…</p>
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (isError()) {
+      <div
+        class="glass-panel search-hub-status search-hub-status--error"
+        role="alert"
+        data-testid="aplus-search-error">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <p class="search-hub-status__message">{{ errorKey() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="retry()"
+          data-testid="aplus-search-retry">
+          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          Try again
+        </button>
+      </div>
+    }
+
+    <!-- Idle state — recent searches + popular tags -->
+    @if (isIdle()) {
+      <div class="search-hub-idle" data-testid="aplus-search-idle">
+
+        @if (recentSearches().length > 0) {
+          <section
+            class="glass-panel search-hub-idle__section"
+            aria-labelledby="recent-searches-heading">
+            <h2 id="recent-searches-heading" class="search-hub-idle__heading">
+              <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+              Recent searches
+            </h2>
+            <ul class="search-hub-recent" role="list" aria-label="Recent searches">
+              @for (term of recentSearches(); track trackByString($index, term)) {
+                <li>
+                  <button
+                    type="button"
+                    class="search-hub-recent__item"
+                    (click)="onTagClick(term)"
+                    [attr.data-testid]="'recent-' + $index">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    {{ term }}
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        <section
+          class="glass-panel search-hub-idle__section"
+          aria-labelledby="popular-tags-heading">
+          <h2 id="popular-tags-heading" class="search-hub-idle__heading">
+            <i class="fa-solid fa-fire" aria-hidden="true"></i>
+            Popular topics
+          </h2>
+          <ul class="search-hub-tags" role="list" aria-label="Popular topic tags">
+            @for (tag of popularTags; track tag) {
+              <li>
+                <button
+                  type="button"
+                  class="search-hub-tag"
+                  (click)="onTagClick(tag)"
+                  [attr.data-testid]="'tag-' + tag">
+                  {{ tag }}
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      </div>
+    }
+
+    <!-- Results -->
+    @if (isSuccess()) {
+
+      @if (!hasVisibleResults()) {
+        <!-- Empty results -->
+        <div
+          class="glass-panel search-hub-status"
+          role="status"
+          data-testid="aplus-search-empty">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <p>No results for <strong>"{{ currentQuery() }}"</strong></p>
+          <p class="search-hub-status__sub">Try a different search term or browse popular topics below.</p>
+          <ul class="search-hub-tags" role="list" aria-label="Popular topic tags" style="margin-top: 0.75rem;">
+            @for (tag of popularTags.slice(0, 4); track tag) {
+              <li>
+                <button type="button" class="search-hub-tag" (click)="onTagClick(tag)">{{ tag }}</button>
+              </li>
+            }
+          </ul>
+        </div>
+      } @else {
+
+        <div class="search-hub-results" role="tabpanel" data-testid="aplus-search-results">
+
+          <!-- Atom results -->
+          @if (visibleAtoms().length > 0) {
+            <section
+              class="results-group"
+              aria-labelledby="results-atoms-heading">
+              @if (activeTab() === 'all') {
+                <h2 id="results-atoms-heading" class="results-group__heading">
+                  <i class="fa-solid fa-atom" aria-hidden="true"></i>
+                  Atoms
+                </h2>
+              }
+              <ul class="result-grid" role="list" aria-label="Atom results">
+                @for (atom of visibleAtoms(); track trackById($index, atom)) {
+                  <li>
+                    <a
+                      class="result-card result-card--atom glass-panel"
+                      [routerLink]="['/a/atoms', atom.id, 'play']"
+                      [attr.aria-label]="'Open atom: ' + atom.title"
+                      [attr.data-testid]="'atom-card-' + atom.id">
+                      <header class="result-card__header">
+                        <span class="result-card__kind-badge result-card__kind-badge--atom">
+                          <i class="fa-solid fa-atom" aria-hidden="true"></i>
+                          Atom
+                        </span>
+                        <span class="result-card__difficulty" [attr.aria-label]="'Difficulty: ' + difficultyLabel(atom.difficulty)">
+                          <i class="fa-solid fa-signal" aria-hidden="true"></i>
+                          {{ difficultyLabel(atom.difficulty) }}
+                        </span>
+                      </header>
+                      <h3 class="result-card__title" [innerHTML]="atom.title"></h3>
+                      @if (atom.content_excerpt) {
+                        <p class="result-card__excerpt" [innerHTML]="atom.content_excerpt"></p>
+                      }
+                      @if (atom.labels && atom.labels.length > 0) {
+                        <ul class="result-card__tags" aria-label="Tags">
+                          @for (label of atom.labels.slice(0, 4); track label) {
+                            <li class="result-card__tag">{{ label }}</li>
+                          }
+                        </ul>
+                      }
+                      <footer class="result-card__footer">
+                        <span class="result-card__type-pill">{{ atom.atom_type.replace('_', ' ') }}</span>
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      </footer>
+                    </a>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+
+          <!-- Course results -->
+          @if (visibleCourses().length > 0) {
+            <section
+              class="results-group"
+              aria-labelledby="results-courses-heading">
+              @if (activeTab() === 'all') {
+                <h2 id="results-courses-heading" class="results-group__heading">
+                  <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                  Courses
+                </h2>
+              }
+              <ul class="result-grid" role="list" aria-label="Course results">
+                @for (course of visibleCourses(); track trackById($index, course)) {
+                  <li>
+                    <a
+                      class="result-card result-card--course glass-panel"
+                      [routerLink]="['/a/courses', course.id]"
+                      [attr.aria-label]="'View course: ' + course.title"
+                      [attr.data-testid]="'course-card-' + course.id">
+                      <header class="result-card__header">
+                        <span class="result-card__kind-badge result-card__kind-badge--course">
+                          <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                          Course
+                        </span>
+                        <span class="result-card__price">
+                          {{ formatPrice(course.price_sgd_cents, course.is_free) }}
+                        </span>
+                      </header>
+                      <h3 class="result-card__title">{{ course.title }}</h3>
+                      @if (course.instructor_name) {
+                        <p class="result-card__sub">by {{ course.instructor_name }}</p>
+                      }
+                      <div class="result-card__meta">
+                        <span>
+                          <i class="fa-solid fa-users" aria-hidden="true"></i>
+                          {{ course.enrolled_count }} enrolled
+                        </span>
+                      </div>
+                      @if (course.tags.length > 0) {
+                        <ul class="result-card__tags" aria-label="Tags">
+                          @for (tag of course.tags.slice(0, 3); track tag) {
+                            <li class="result-card__tag">{{ tag }}</li>
+                          }
+                        </ul>
+                      }
+                      <footer class="result-card__footer">
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      </footer>
+                    </a>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+
+          <!-- Collection results -->
+          @if (visibleCollections().length > 0) {
+            <section
+              class="results-group"
+              aria-labelledby="results-collections-heading">
+              @if (activeTab() === 'all') {
+                <h2 id="results-collections-heading" class="results-group__heading">
+                  <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                  Collections
+                </h2>
+              }
+              <ul class="result-grid" role="list" aria-label="Collection results">
+                @for (col of visibleCollections(); track trackById($index, col)) {
+                  <li>
+                    <a
+                      class="result-card result-card--collection glass-panel"
+                      [routerLink]="['/a/study/collections', col.id]"
+                      [attr.aria-label]="'View collection: ' + col.title"
+                      [attr.data-testid]="'collection-card-' + col.id">
+                      <header class="result-card__header">
+                        <span class="result-card__kind-badge result-card__kind-badge--collection">
+                          <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                          Collection
+                        </span>
+                      </header>
+                      <h3 class="result-card__title">{{ col.title }}</h3>
+                      @if (col.owner_display_name) {
+                        <p class="result-card__sub">by {{ col.owner_display_name }}</p>
+                      }
+                      <div class="result-card__meta">
+                        <span>
+                          <i class="fa-solid fa-atom" aria-hidden="true"></i>
+                          {{ col.atom_count }} atoms
+                        </span>
+                      </div>
+                      <footer class="result-card__footer">
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      </footer>
+                    </a>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+
+        </div>
+      }
+    }
+  </main>
+</section>

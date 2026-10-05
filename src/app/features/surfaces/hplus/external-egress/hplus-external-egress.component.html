@@ -1,0 +1,153 @@
+<section class="hplus-egress">
+  <header class="hplus-egress__head">
+    <h1 class="hplus-egress__title">
+      {{ 'hplus.externalEgress.title' | translate }}
+    </h1>
+    <p class="hplus-egress__lede">
+      {{ 'hplus.externalEgress.lede' | translate }}
+    </p>
+  </header>
+
+  @switch (loadState().status) {
+    @case ('loading') {
+      <p class="hplus-egress__status" role="status" aria-live="polite">
+        {{ 'hplus.externalEgress.loading' | translate }}
+      </p>
+    }
+
+    @case ('error') {
+      <!-- Loud. A failed READ is never rendered as "off" — that would be
+           indistinguishable from a real policy denial, and the admin could
+           conclude the tenant is safely disabled when it may not be. -->
+      @if (loadErrorKey(); as key) {
+        <div
+          class="hplus-egress__alert"
+          role="alert"
+          data-testid="hplus-egress-load-error"
+        >
+          <p>{{ key | translate }}</p>
+          <button type="button" class="btn btn-secondary" (click)="load()">
+            {{ 'hplus.externalEgress.retry' | translate }}
+          </button>
+        </div>
+      }
+    }
+
+    @case ('success') {
+      <form
+        class="hplus-egress__form glass-panel"
+        (submit)="$event.preventDefault(); save()"
+      >
+        @if (!optedIn()) {
+          <!-- Never opted in: no policy row exists at all. Rendered DIFFERENTLY
+               from an explicit "off" so the default-deny posture stays visible
+               instead of being silently collapsed into it. -->
+          <p
+            class="hplus-egress__default-note"
+            role="status"
+            data-testid="hplus-egress-never-opted-in"
+          >
+            {{ 'hplus.externalEgress.neverOptedIn' | translate }}
+          </p>
+        }
+
+        <fieldset class="hplus-egress__field">
+          <legend class="hplus-egress__legend">
+            {{ 'hplus.externalEgress.toggleLabel' | translate }}
+          </legend>
+          <label class="hplus-egress__toggle">
+            <input
+              type="checkbox"
+              [checked]="enabledDraft()"
+              (change)="onToggle($any($event.target).checked)"
+              data-testid="hplus-egress-toggle"
+            />
+            <span>{{ 'hplus.externalEgress.toggleHelp' | translate }}</span>
+          </label>
+        </fieldset>
+
+        <fieldset class="hplus-egress__field">
+          <legend class="hplus-egress__legend">
+            {{ 'hplus.externalEgress.ceilingLabel' | translate }}
+          </legend>
+          <input
+            type="number"
+            min="0"
+            [max]="maxCeiling()"
+            step="1"
+            [value]="ceilingDraft()"
+            (input)="onCeilingInput($any($event.target).value)"
+            data-testid="hplus-egress-ceiling"
+            [attr.aria-invalid]="!ceilingValid()"
+          />
+          <p class="hplus-egress__hint">
+            {{ 'hplus.externalEgress.ceilingHelp' | translate }} (0–{{ maxCeiling() }})
+          </p>
+          @if (!ceilingValid()) {
+            <p
+              class="hplus-egress__inline-error"
+              role="alert"
+              data-testid="hplus-egress-ceiling-invalid"
+            >
+              {{ 'hplus.externalEgress.error.validation' | translate }}
+            </p>
+          }
+        </fieldset>
+
+        <footer class="hplus-egress__footer">
+          @if (policy(); as p) {
+            @if (p.updated_at) {
+              <p class="hplus-egress__audit" data-testid="hplus-egress-audit">
+                {{ 'hplus.externalEgress.lastChanged' | translate }}:
+                {{ p.updated_at }}
+              </p>
+            }
+          }
+          <div class="hplus-egress__actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="!isDirty() || saving()"
+              (click)="cancel()"
+              data-testid="hplus-egress-cancel"
+            >
+              {{ 'hplus.externalEgress.cancel' | translate }}
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!canSave()"
+              data-testid="hplus-egress-save"
+            >
+              @if (saving()) {
+                {{ 'hplus.externalEgress.saving' | translate }}
+              } @else {
+                {{ 'hplus.externalEgress.save' | translate }}
+              }
+            </button>
+          </div>
+        </footer>
+
+        @if (justSaved()) {
+          <p
+            class="hplus-egress__saved"
+            role="status"
+            data-testid="hplus-egress-saved"
+          >
+            {{ 'hplus.externalEgress.saved' | translate }}
+          </p>
+        }
+        <!-- Loud. A failed WRITE must never show a false success. -->
+        @if (saveErrorKey(); as key) {
+          <p
+            class="hplus-egress__inline-error"
+            role="alert"
+            data-testid="hplus-egress-save-error"
+          >
+            {{ key | translate }}
+          </p>
+        }
+      </form>
+    }
+  }
+</section>

@@ -1,0 +1,522 @@
+<section
+  class="assessment-builder"
+  role="main"
+  [attr.aria-label]="pageTitle() | translate"
+  data-testid="assessment-builder">
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="assessment-builder__loading" data-testid="assessment-loading" aria-live="polite">
+      <div class="assessment-builder__skeleton assessment-builder__skeleton--header"></div>
+      <div class="assessment-builder__skeleton assessment-builder__skeleton--body"></div>
+    </div>
+  }
+
+  @if (!loading()) {
+    <!-- Page Header -->
+    <header class="assessment-builder__header">
+      <h1 class="assessment-builder__title" data-testid="assessment-title">
+        {{ pageTitle() | translate }}
+      </h1>
+    </header>
+
+    <!-- Session Form -->
+    <form [formGroup]="sessionForm" class="assessment-builder__session-form" data-testid="session-form">
+      <div class="assessment-builder__field">
+        <label for="session-title" class="assessment-builder__label">
+          {{ 'admin.assessments.builder.session_title' | translate }}
+        </label>
+        <input
+          id="session-title"
+          type="text"
+          formControlName="title"
+          class="assessment-builder__input"
+          data-testid="session-title-input" />
+      </div>
+
+      <div class="assessment-builder__field">
+        <label for="session-description" class="assessment-builder__label">
+          {{ 'admin.assessments.builder.description' | translate }}
+        </label>
+        <textarea
+          id="session-description"
+          formControlName="description"
+          class="assessment-builder__textarea"
+          data-testid="session-description"
+          rows="2"></textarea>
+      </div>
+
+      <div class="assessment-builder__field-row">
+        <div class="assessment-builder__field">
+          <label for="session-type" class="assessment-builder__label">
+            {{ 'admin.assessments.builder.session_type' | translate }}
+          </label>
+          <select
+            id="session-type"
+            formControlName="session_type"
+            class="assessment-builder__select"
+            data-testid="session-type-select">
+            @for (type of allSessionTypes; track type) {
+              <option [value]="type">{{ sessionTypeLabels[type] | translate }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="assessment-builder__field">
+          <label for="structure-mode" class="assessment-builder__label">
+            {{ 'admin.assessments.builder.structure_mode' | translate }}
+          </label>
+          <select
+            id="structure-mode"
+            formControlName="structure_mode"
+            class="assessment-builder__select"
+            data-testid="structure-mode-select">
+            @for (mode of allStructureModes; track mode) {
+              <option [value]="mode">{{ structureModeLabels[mode] | translate }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="assessment-builder__field">
+          <label for="time-limit" class="assessment-builder__label">
+            {{ 'admin.assessments.builder.time_limit' | translate }}
+          </label>
+          <input
+            id="time-limit"
+            type="number"
+            formControlName="time_limit_minutes"
+            class="assessment-builder__input assessment-builder__input--narrow"
+            data-testid="time-limit-input"
+            min="1"
+            [placeholder]="'admin.assessments.builder.unlimited' | translate" />
+        </div>
+      </div>
+    </form>
+
+    <!-- Total Points Summary -->
+    <div class="assessment-builder__points-summary" data-testid="total-points">
+      <span class="assessment-builder__points-label">
+        {{ 'admin.assessments.builder.total_points' | translate }}
+      </span>
+      <span class="assessment-builder__points-value">{{ totalPoints() }}</span>
+    </div>
+
+    <!-- Papers (for papers_only and papers_and_sections) -->
+    @if (structureMode() === 'papers_only' || structureMode() === 'papers_and_sections') {
+      <section class="assessment-builder__papers" data-testid="papers-section">
+        <div class="assessment-builder__section-header">
+          <h2 class="assessment-builder__section-title">
+            {{ 'admin.assessments.builder.papers' | translate }}
+          </h2>
+          <button
+            type="button"
+            class="assessment-builder__btn-secondary"
+            (click)="addPaper()"
+            data-testid="add-paper">
+            {{ 'admin.assessments.builder.add_paper' | translate }}
+          </button>
+        </div>
+
+        @for (paper of papers(); track paper.id) {
+          <div class="assessment-builder__paper" [attr.data-testid]="'paper-' + paper.id">
+            <div
+              class="assessment-builder__accordion-header"
+              role="button"
+              tabindex="0"
+              (click)="togglePaperExpand(paper.id)"
+              (keydown.enter)="togglePaperExpand(paper.id)"
+              (keydown.space)="togglePaperExpand(paper.id); $event.preventDefault()">
+              <button
+                type="button"
+                class="assessment-builder__accordion-toggle"
+                [attr.aria-expanded]="paper.expanded"
+                [attr.data-testid]="'toggle-paper-' + paper.id">
+                <span
+                  class="assessment-builder__accordion-icon"
+                  [class.assessment-builder__accordion-icon--expanded]="paper.expanded">
+                  &#9654;
+                </span>
+              </button>
+              <span class="assessment-builder__paper-title">{{ paper.title }}</span>
+              <span class="assessment-builder__paper-points">{{ paperPoints(paper) }} pts</span>
+              <button
+                type="button"
+                class="assessment-builder__btn-icon assessment-builder__btn-icon--danger"
+                (click)="removePaper(paper.id); $event.stopPropagation()"
+                [attr.aria-label]="'admin.assessments.builder.remove_paper' | translate"
+                [attr.data-testid]="'remove-paper-' + paper.id">
+                &times;
+              </button>
+            </div>
+
+            @if (paper.expanded) {
+              <div class="assessment-builder__accordion-body">
+                <div class="assessment-builder__field-row">
+                  <div class="assessment-builder__field">
+                    <label [for]="'paper-title-' + paper.id" class="assessment-builder__label">
+                      {{ 'admin.assessments.builder.paper_title' | translate }}
+                    </label>
+                    <input
+                      [id]="'paper-title-' + paper.id"
+                      type="text"
+                      class="assessment-builder__input"
+                      [value]="paper.title"
+                      (input)="updatePaperTitle(paper.id, $any($event.target).value)"
+                      [attr.data-testid]="'paper-title-input-' + paper.id" />
+                  </div>
+                  <div class="assessment-builder__field">
+                    <label [for]="'paper-time-' + paper.id" class="assessment-builder__label">
+                      {{ 'admin.assessments.builder.paper_time_limit' | translate }}
+                    </label>
+                    <input
+                      [id]="'paper-time-' + paper.id"
+                      type="number"
+                      class="assessment-builder__input assessment-builder__input--narrow"
+                      [value]="getPaperTimeLimitMinutes(paper)"
+                      (input)="updatePaperTimeLimit(paper.id, +$any($event.target).value || null)"
+                      [attr.data-testid]="'paper-time-input-' + paper.id"
+                      min="1" />
+                  </div>
+                </div>
+
+                <!-- Sections within paper -->
+                @if (structureMode() === 'papers_and_sections') {
+                  <div class="assessment-builder__nested-sections">
+                    <button
+                      type="button"
+                      class="assessment-builder__btn-secondary"
+                      (click)="addSection(paper.id)"
+                      [attr.data-testid]="'add-section-to-' + paper.id">
+                      {{ 'admin.assessments.builder.add_section' | translate }}
+                    </button>
+
+                    @for (section of paper.sections; track section.id) {
+                      <ng-template
+                        [ngTemplateOutlet]="sectionTemplate"
+                        [ngTemplateOutletContext]="{ $implicit: section, paperId: paper.id }">
+                      </ng-template>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <!-- Standalone Sections (for sections_only and flat) -->
+    @if (structureMode() === 'sections_only' || structureMode() === 'flat') {
+      <section class="assessment-builder__sections" data-testid="sections-panel">
+        <div class="assessment-builder__section-header">
+          <h2 class="assessment-builder__section-title">
+            {{ 'admin.assessments.builder.sections' | translate }}
+          </h2>
+          <button
+            type="button"
+            class="assessment-builder__btn-secondary"
+            (click)="addSection()"
+            data-testid="add-section">
+            {{ 'admin.assessments.builder.add_section' | translate }}
+          </button>
+        </div>
+
+        @for (section of sections(); track section.id) {
+          <ng-template
+            [ngTemplateOutlet]="sectionTemplate"
+            [ngTemplateOutletContext]="{ $implicit: section, paperId: undefined }">
+          </ng-template>
+        }
+      </section>
+    }
+
+    <!-- Atom Picker Modal -->
+    @if (atomPickerVisible()) {
+      <div class="assessment-builder__atom-picker-overlay" data-testid="atom-picker-overlay">
+        <div class="assessment-builder__atom-picker" role="dialog" aria-label="Select atoms">
+          <div class="assessment-builder__picker-header">
+            <h3 class="assessment-builder__picker-title">
+              {{ 'admin.assessments.builder.select_atoms' | translate }}
+            </h3>
+            <button
+              type="button"
+              class="assessment-builder__btn-icon"
+              (click)="closeAtomPicker()"
+              data-testid="close-atom-picker"
+              aria-label="Close">
+              &times;
+            </button>
+          </div>
+
+          @if (atomPickerLoading()) {
+            <div class="assessment-builder__picker-loading" aria-live="polite">
+              {{ 'admin.assessments.builder.loading_atoms' | translate }}
+            </div>
+          }
+
+          <ul class="assessment-builder__atom-catalog">
+            @for (atom of atomPickerAtoms(); track atom.id) {
+              <li class="assessment-builder__catalog-item">
+                <button
+                  type="button"
+                  class="assessment-builder__catalog-btn"
+                  (click)="selectAtom(atom)"
+                  [attr.data-testid]="'select-atom-' + atom.id">
+                  <span class="assessment-builder__catalog-icon material-icons" aria-hidden="true">
+                    {{ getAtomTypeIcon(atom.atom_type) }}
+                  </span>
+                  <span class="assessment-builder__catalog-title">
+                    {{ atom.latest_revision?.content?.['stem'] || atom.latest_revision?.content?.['front'] || 'Untitled' }}
+                  </span>
+                  <span class="assessment-builder__catalog-type">{{ atom.atom_type }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+
+    <!-- Preview -->
+    @if (previewVisible()) {
+      <section class="assessment-builder__preview" data-testid="assessment-preview" aria-label="Assessment preview">
+        <h2 class="assessment-builder__section-title">
+          {{ 'admin.assessments.builder.preview' | translate }}
+        </h2>
+        <div class="assessment-builder__preview-tree">
+          <p><strong>{{ sessionForm.get('title')?.value || 'Untitled' }}</strong></p>
+          <p>{{ 'admin.assessments.builder.total_points' | translate }}: {{ totalPoints() }}</p>
+          @for (paper of papers(); track paper.id) {
+            <div class="assessment-builder__preview-paper">
+              &#8627; {{ paper.title }} ({{ paperPoints(paper) }} pts)
+              @for (section of paper.sections; track section.id) {
+                <div class="assessment-builder__preview-section">
+                  &emsp;&#8627; {{ section.title }} ({{ sectionPoints(section) }} pts, {{ section.atoms.length }} atoms)
+                  <ng-container
+                    [ngTemplateOutlet]="previewAtoms"
+                    [ngTemplateOutletContext]="{ $implicit: section }"
+                  ></ng-container>
+                </div>
+              }
+            </div>
+          }
+          @for (section of sections(); track section.id) {
+            <div class="assessment-builder__preview-section">
+              &#8627; {{ section.title }} ({{ sectionPoints(section) }} pts, {{ section.atoms.length }} atoms)
+              <ng-container
+                [ngTemplateOutlet]="previewAtoms"
+                [ngTemplateOutletContext]="{ $implicit: section }"
+              ></ng-container>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- CHO-1638 — per-atom illustrations in the preview (author surface:
+         both question + model-answer illustrations are in scope). -->
+    <ng-template #previewAtoms let-section>
+      @for (atom of section.atoms; track atom.atom_id) {
+        @if (questionImageFor(atom.atom_id) || answerImageFor(atom.atom_id)) {
+          <div
+            class="assessment-builder__preview-atom"
+            [attr.data-testid]="'assessment-preview-atom-' + atom.atom_id"
+          >
+            <span class="assessment-builder__preview-atom-title">{{ atom.atom_title }}</span>
+            @if (questionImageFor(atom.atom_id); as questionImageUrl) {
+              <figure
+                class="assessment-builder__preview-image"
+                [attr.data-testid]="'assessment-preview-question-image-' + atom.atom_id"
+              >
+                <figcaption class="assessment-builder__preview-image-label">
+                  {{ 'admin.assessments.builder.question_illustration' | translate }}
+                </figcaption>
+                <img [src]="questionImageUrl" alt="Generated question illustration" />
+              </figure>
+            }
+            @if (answerImageFor(atom.atom_id); as answerImageUrl) {
+              <figure
+                class="assessment-builder__preview-image"
+                [attr.data-testid]="'assessment-preview-answer-image-' + atom.atom_id"
+              >
+                <figcaption class="assessment-builder__preview-image-label">
+                  {{ 'admin.assessments.builder.model_answer_illustration' | translate }}
+                </figcaption>
+                <img [src]="answerImageUrl" alt="Generated model-answer illustration" />
+              </figure>
+            }
+          </div>
+        }
+      }
+    </ng-template>
+
+    <!-- Action Buttons -->
+    <footer class="assessment-builder__actions" data-testid="assessment-actions">
+      <button
+        type="button"
+        class="assessment-builder__btn-secondary"
+        (click)="togglePreview()"
+        data-testid="toggle-preview"
+        [attr.aria-expanded]="previewVisible()">
+        {{ (previewVisible() ? 'admin.assessments.builder.hide_preview' : 'admin.assessments.builder.show_preview') | translate }}
+      </button>
+      <button
+        type="button"
+        class="assessment-builder__btn-secondary"
+        (click)="cancel()"
+        data-testid="btn-cancel"
+        [disabled]="saving()">
+        {{ 'admin.assessments.builder.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="assessment-builder__btn-primary"
+        (click)="saveDraft()"
+        data-testid="btn-save-draft"
+        [disabled]="saving()">
+        @if (saving()) {
+          {{ 'admin.assessments.builder.saving' | translate }}
+        } @else {
+          {{ 'admin.assessments.builder.save_draft' | translate }}
+        }
+      </button>
+      <button
+        type="button"
+        class="assessment-builder__btn-primary assessment-builder__btn-primary--publish"
+        (click)="saveAndPublish()"
+        data-testid="btn-publish"
+        [disabled]="saving()">
+        {{ 'admin.assessments.builder.publish' | translate }}
+      </button>
+    </footer>
+  }
+</section>
+
+<!-- Section Template (reused for standalone and in-paper sections) -->
+<ng-template #sectionTemplate let-section let-paperId="paperId">
+  <div class="assessment-builder__section" [attr.data-testid]="'section-' + section.id">
+    <div
+      class="assessment-builder__accordion-header"
+      role="button"
+      tabindex="0"
+      (click)="toggleSectionExpand(section.id, paperId)"
+      (keydown.enter)="toggleSectionExpand(section.id, paperId)"
+      (keydown.space)="toggleSectionExpand(section.id, paperId); $event.preventDefault()">
+      <button
+        type="button"
+        class="assessment-builder__accordion-toggle"
+        [attr.aria-expanded]="section.expanded"
+        [attr.data-testid]="'toggle-section-' + section.id">
+        <span
+          class="assessment-builder__accordion-icon"
+          [class.assessment-builder__accordion-icon--expanded]="section.expanded">
+          &#9654;
+        </span>
+      </button>
+      <span class="assessment-builder__section-name">{{ section.title }}</span>
+      <span class="assessment-builder__section-points">{{ sectionPoints(section) }} pts</span>
+      <span class="assessment-builder__section-atom-count">{{ section.atoms.length }} atoms</span>
+      <button
+        type="button"
+        class="assessment-builder__btn-icon assessment-builder__btn-icon--danger"
+        (click)="removeSection(section.id, paperId); $event.stopPropagation()"
+        [attr.aria-label]="'admin.assessments.builder.remove_section' | translate"
+        [attr.data-testid]="'remove-section-' + section.id">
+        &times;
+      </button>
+    </div>
+
+    @if (section.expanded) {
+      <div class="assessment-builder__accordion-body">
+        <div class="assessment-builder__field-row">
+          <div class="assessment-builder__field">
+            <label [for]="'section-title-' + section.id" class="assessment-builder__label">
+              {{ 'admin.assessments.builder.section_title' | translate }}
+            </label>
+            <input
+              [id]="'section-title-' + section.id"
+              type="text"
+              class="assessment-builder__input"
+              [value]="section.title"
+              (input)="updateSectionTitle(section.id, $any($event.target).value, paperId)"
+              [attr.data-testid]="'section-title-input-' + section.id" />
+          </div>
+          <div class="assessment-builder__field">
+            <label [for]="'section-grading-' + section.id" class="assessment-builder__label">
+              {{ 'admin.assessments.builder.grading_mode' | translate }}
+            </label>
+            <select
+              [id]="'section-grading-' + section.id"
+              class="assessment-builder__select"
+              [value]="section.grading_mode"
+              (change)="updateSectionGradingMode(section.id, $any($event.target).value, paperId)"
+              [attr.data-testid]="'section-grading-' + section.id">
+              @for (gm of allGradingModes; track gm) {
+                <option [value]="gm" [selected]="gm === section.grading_mode">
+                  {{ gradingModeLabels[gm] | translate }}
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Atoms in section -->
+        <div class="assessment-builder__atom-list">
+          @for (atom of section.atoms; track atom.atom_id) {
+            <div class="assessment-builder__atom-row" [attr.data-testid]="'atom-' + atom.atom_id">
+              <span class="assessment-builder__atom-icon material-icons" aria-hidden="true">
+                {{ getAtomTypeIcon(atom.atom_type) }}
+              </span>
+              <span class="assessment-builder__atom-title">{{ atom.atom_title }}</span>
+
+              <!-- Revision Selector -->
+              @if (atom.available_revisions.length > 0) {
+                <select
+                  class="assessment-builder__select assessment-builder__select--compact"
+                  [value]="atom.revision_id"
+                  (change)="updateAtomRevision(section.id, atom.atom_id, $any($event.target).value, paperId)"
+                  [attr.data-testid]="'revision-select-' + atom.atom_id"
+                  [attr.aria-label]="'admin.assessments.builder.pin_revision' | translate">
+                  @for (rev of atom.available_revisions; track rev.id) {
+                    <option [value]="rev.id" [selected]="rev.id === atom.revision_id">
+                      Rev {{ rev.revision_number }}
+                    </option>
+                  }
+                </select>
+              }
+
+              <!-- Points -->
+              <input
+                type="number"
+                class="assessment-builder__input assessment-builder__input--points"
+                [value]="atom.points"
+                (input)="updateAtomPoints(section.id, atom.atom_id, +$any($event.target).value, paperId)"
+                [attr.data-testid]="'atom-points-' + atom.atom_id"
+                [attr.aria-label]="'admin.assessments.builder.atom_points' | translate"
+                min="0"
+                step="1" />
+              <span class="assessment-builder__points-unit">pts</span>
+
+              <button
+                type="button"
+                class="assessment-builder__btn-icon assessment-builder__btn-icon--danger"
+                (click)="removeAtomFromSection(section.id, atom.atom_id, paperId)"
+                [attr.aria-label]="'admin.assessments.builder.remove_atom' | translate"
+                [attr.data-testid]="'remove-atom-' + atom.atom_id">
+                &times;
+              </button>
+            </div>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="assessment-builder__btn-secondary"
+          (click)="openAtomPicker({ type: 'section', sectionId: section.id })"
+          [attr.data-testid]="'add-atom-to-' + section.id">
+          {{ 'admin.assessments.builder.add_atom' | translate }}
+        </button>
+      </div>
+    }
+  </div>
+</ng-template>

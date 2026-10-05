@@ -1,0 +1,526 @@
+// A+ Me-Assessment-Result — Phase X.3.3 (result polling + render)
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.me-result {
+  padding: 2rem clamp(1rem, 3vw, 2rem);
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.me-result__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.me-result__title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.me-result__loading,
+.me-result__error {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.me-result__error {
+  border-left: 4px solid var(--danger, #dc2626);
+}
+
+.me-result__pending {
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+
+  i {
+    font-size: 48px;
+    color: var(--primary);
+    opacity: 0.7;
+  }
+
+  p { margin: 0; max-width: 480px; }
+}
+
+.me-result__pending-title { margin: 0; font-size: 20px; font-weight: 700; }
+.me-result__pending-note { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+.me-result__released {
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.me-result__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.me-result__passed-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &[data-passed='true'] {
+    background: rgba(15, 118, 110, 0.12);
+    color: var(--success, #0f766e);
+  }
+  &[data-passed='false'] {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--danger, #dc2626);
+  }
+}
+
+.me-result__score {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+
+  strong {
+    color: var(--primary);
+    font-size: 48px;
+  }
+}
+
+.me-result__score-sep {
+  color: var(--text-muted);
+  font-weight: 400;
+  margin: 0 0.4rem;
+}
+
+.me-result__score-suffix {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: 0.5rem;
+}
+
+.me-result__threshold {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+
+  code {
+    font-family: 'Courier New', monospace;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    color: var(--text-main);
+  }
+}
+
+.me-result__instructor-comment {
+  margin: 0.5rem 0 0;
+  padding: 0.85rem 1rem;
+  font-size: 13px;
+  font-style: italic;
+  background: rgba(25, 118, 210, 0.06);
+  border-left: 3px solid var(--primary);
+  border-radius: 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+
+  i { color: var(--primary); margin-top: 0.15rem; }
+}
+
+.me-result__rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.me-result__row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.me-result__row-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.me-result__row-type {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-muted);
+}
+
+.me-result__row-points {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.me-result__row-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+
+  &[data-correct='true'] {
+    background: rgba(15, 118, 110, 0.12);
+    color: var(--success, #0f766e);
+  }
+  &[data-correct='false'] {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger, #dc2626);
+  }
+}
+
+.me-result__oe-pending {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--warning, #f59e0b);
+  font-family: 'Courier New', monospace;
+}
+
+.me-result__row-stem {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.5;
+  margin: 0.5rem 0 0;
+  letter-spacing: -0.005em;
+}
+
+.me-result__row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.me-result__row-answer {
+  font-size: 14px;
+  padding: 0.75rem 1rem;
+  background: rgba(25, 118, 210, 0.04);
+  border-radius: 8px;
+  border-left: 3px solid rgba(25, 118, 210, 0.4);
+
+  strong { color: var(--primary); font-weight: 700; }
+  em { color: var(--text-muted); font-style: italic; }
+
+  // Tint the "Your answer" summary by MCQ correctness so the verdict reads at
+  // a glance, in step with the per-option reveal badges below it.
+  &[data-correct='true'] {
+    background: rgba(15, 118, 110, 0.06);
+    border-left-color: var(--success, #0f766e);
+
+    strong { color: var(--success, #0f766e); }
+  }
+
+  &[data-correct='false'] {
+    background: rgba(239, 68, 68, 0.05);
+    border-left-color: var(--danger, #ef4444);
+
+    strong { color: var(--danger, #ef4444); }
+  }
+}
+
+.me-result__row-answer-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+.me-result__options {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+// W8 image-gen (CHO-1638): the question + model-answer illustrations on the
+// result reveal now render via the shared `<chora-question-image>`
+// (width-primary, aspect-aware, click-to-zoom, own centred caption) — the old
+// `max-height: 22rem` cap that crushed portrait diagrams is gone.
+chora-question-image {
+  display: block;
+  margin: 0.6rem 0 0;
+}
+
+// Model-answer block — a divider + a reference line that points the reader to
+// the illustration, so the model-answer image reads as part of the answer.
+.me-result__model-answer {
+  margin-top: 0.6rem;
+}
+
+.me-result__divider {
+  border: 0;
+  border-top: 1px solid var(--glass-border);
+  margin: 0.85rem 0 0.6rem;
+}
+
+.me-result__model-answer-ref {
+  margin: 0 0 0.2rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #6b7280;
+
+  i {
+    margin-right: 0.35rem;
+    opacity: 0.8;
+  }
+}
+
+.me-result__oe-feedback {
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0.85rem;
+  background: rgba(25, 118, 210, 0.06);
+  border-left: 3px solid var(--primary);
+  border-radius: 4px;
+  font-size: 12px;
+  display: flex;
+  gap: 0.5rem;
+
+  i { color: var(--primary); margin-top: 0.15rem; }
+}
+
+// ── ADR-172 OE post-grade reveal ─────────────────────────────────────
+
+// AI/Human provenance badge — shared between per-question + overall comment.
+.me-result__provenance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+
+  &[data-provenance='AI'] {
+    background: rgba(25, 118, 210, 0.12);
+    color: var(--secondary, #c2410c);
+  }
+  &[data-provenance='HUMAN'] {
+    background: rgba(25, 118, 210, 0.12);
+    color: var(--primary, #1976d2);
+  }
+}
+
+// Subtle "flagged for review" note.
+.me-result__oe-flagged {
+  margin: 0.5rem 0 0;
+  padding: 0.45rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning, #f59e0b);
+
+  i { font-size: 11px; }
+}
+
+// Per-question grader comment block.
+.me-result__oe-comment {
+  margin: 0.6rem 0 0;
+  padding: 0.75rem 0.9rem;
+  background: rgba(25, 118, 210, 0.06);
+  border-left: 3px solid var(--primary);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.me-result__oe-comment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.me-result__oe-comment-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+
+  i { color: var(--primary); }
+}
+
+.me-result__oe-comment-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-main);
+}
+
+// Per-criterion scores.
+.me-result__oe-criteria {
+  margin: 0.6rem 0 0;
+}
+
+.me-result__oe-criteria-label {
+  margin: 0 0 0.45rem;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.me-result__oe-criteria-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.me-result__oe-criterion {
+  padding: 0.6rem 0.8rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.me-result__oe-criterion-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.me-result__oe-criterion-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.me-result__oe-criterion-score {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.me-result__oe-criterion-feedback {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+// Whole-assessment overall comment block.
+.me-result__overall-comment {
+  padding: 1.1rem 1.25rem;
+  background: rgba(25, 118, 210, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.me-result__overall-comment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.me-result__overall-comment-label {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+
+  i { color: var(--primary); }
+}
+
+.me-result__overall-comment-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+
+.me-result__footer {
+  display: flex;
+  justify-content: flex-start;
+}

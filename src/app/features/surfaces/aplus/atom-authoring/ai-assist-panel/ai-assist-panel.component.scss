@@ -1,0 +1,145 @@
+:host {
+  display: block;
+}
+
+/* stub — the inline single-mode ai-draft panel is superseded by the top-level
+   AI Assist crew modal (the inline path 422s pre-save). Gray it out + make it
+   non-interactive while keeping it visible for continuity. */
+.ai-assist-panel--stub {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(0.6);
+}
+
+.ai-assist-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--chora-radius-md, 12px);
+  backdrop-filter: blur(8px);
+
+  &__toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: inherit;
+
+    .fa-sparkles {
+      color: var(--chora-color-accent, #9a3412);
+      margin-right: var(--chora-space-xs, 4px);
+    }
+
+    .fa-chevron-down,
+    .fa-chevron-up {
+      margin-left: auto;
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-accent, #9a3412);
+      outline-offset: 2px;
+    }
+  }
+
+  &__body {
+    padding: var(--chora-space-md, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+
+    &--inline {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--chora-space-sm, 8px);
+    }
+  }
+
+  &__label {
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+
+  &__prompt,
+  &__difficulty {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--chora-radius-sm, 8px);
+    color: inherit;
+    padding: var(--chora-space-sm, 8px);
+    font-family: inherit;
+    font-size: 0.95rem;
+  }
+
+  &__prompt {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  &__difficulty {
+    width: auto;
+    min-width: 80px;
+  }
+
+  &__cost-hint {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  &__status,
+  &__error {
+    font-size: 0.9rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__status {
+    color: var(--chora-color-info, #60a5fa);
+  }
+
+  &__error {
+    color: var(--chora-color-danger, #f87171);
+  }
+
+  &__cta {
+    background: linear-gradient(
+      135deg,
+      var(--chora-color-accent, #9a3412),
+      var(--chora-color-primary, #818cf8)
+    );
+    color: white;
+    border: 0;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-sm, 8px);
+    cursor: pointer;
+    font-weight: 600;
+    align-self: flex-start;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+  }
+}

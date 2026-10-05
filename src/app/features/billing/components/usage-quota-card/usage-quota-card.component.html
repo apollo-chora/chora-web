@@ -1,0 +1,39 @@
+<div
+  class="usage-quota-card"
+  [attr.data-testid]="'usage-quota-card-' + resourceType()"
+  role="region"
+  [attr.aria-label]="resourceType()">
+
+  <h3 class="usage-quota-card__title">{{ resourceType() }}</h3>
+
+  <p class="usage-quota-card__usage" data-testid="usage-text">
+    {{ formatUsage() }}
+  </p>
+
+  <div class="usage-quota-card__track" role="progressbar"
+    [attr.aria-valuenow]="percentUsed()"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    [attr.aria-label]="'billing.usage_progress' | translate">
+    <div
+      class="usage-quota-card__fill"
+      [class.usage-quota-card__fill--normal]="!isWarning() && !isCritical()"
+      [class.usage-quota-card__fill--warning]="isWarning()"
+      [class.usage-quota-card__fill--critical]="isCritical()"
+      [style.width.%]="progressWidth()">
+    </div>
+  </div>
+
+  <p class="usage-quota-card__percent" data-testid="percent-text">
+    {{ percentUsed() }}%
+  </p>
+
+  @if (isOverage()) {
+    <p class="usage-quota-card__overage-alert"
+       data-testid="overage-alert"
+       role="alert"
+       aria-live="assertive">
+      {{ 'billing.usage_overage_alert' | translate }}
+    </p>
+  }
+</div>

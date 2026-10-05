@@ -1,0 +1,189 @@
+:host {
+  display: block;
+}
+
+.weakness-drill-launcher {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--chora-space-xl);
+
+  // ---------------------------------------------------------------------------
+  // Loading & Error
+  // ---------------------------------------------------------------------------
+
+  &__loading,
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-2xl);
+    color: var(--chora-color-text-secondary);
+  }
+
+  &__error {
+    color: var(--chora-color-error);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    margin-bottom: var(--chora-space-xl);
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 16px;
+    color: var(--chora-color-text-secondary);
+    margin-top: var(--chora-space-xs);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Summary stats
+  // ---------------------------------------------------------------------------
+
+  &__summary {
+    display: flex;
+    gap: var(--chora-space-lg);
+    margin-bottom: var(--chora-space-xl);
+    padding: var(--chora-space-lg);
+    background: var(--chora-color-surface-1, #f8f9fa);
+    border-radius: var(--chora-radius-md);
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+  }
+
+  &__stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--chora-color-text-secondary);
+  }
+
+  &__stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--chora-color-text-primary);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Retention classes
+  // ---------------------------------------------------------------------------
+
+  &__retention--critical {
+    color: var(--chora-color-error, #dc3545) !important;
+  }
+
+  &__retention--low {
+    color: var(--chora-color-warning, #e67700) !important;
+  }
+
+  &__retention--moderate {
+    color: var(--chora-color-text-primary);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Atom list
+  // ---------------------------------------------------------------------------
+
+  &__section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+    margin-bottom: var(--chora-space-md);
+  }
+
+  &__atom-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--chora-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+  }
+
+  &__atom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    background: var(--chora-color-surface-0, #fff);
+    border: 1px solid var(--chora-color-surface-1, #e9ecef);
+    border-radius: var(--chora-radius-sm);
+  }
+
+  &__atom-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__atom-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__atom-type {
+    font-size: 12px;
+    color: var(--chora-color-text-secondary);
+    text-transform: capitalize;
+  }
+
+  &__atom-retention {
+    font-size: 16px;
+    font-weight: 700;
+    min-width: 48px;
+    text-align: end;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Launch action
+  // ---------------------------------------------------------------------------
+
+  &__action {
+    text-align: center;
+  }
+
+  &__launch-btn {
+    padding: var(--chora-space-md) var(--chora-space-2xl);
+    background: var(--chora-color-primary);
+    color: var(--chora-color-on-primary);
+    border: none;
+    border-radius: var(--chora-radius-md);
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__launch-error {
+    margin-top: var(--chora-space-sm);
+    font-size: 14px;
+    color: var(--chora-color-error);
+  }
+}

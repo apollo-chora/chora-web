@@ -1,0 +1,277 @@
+/* Continue-learning wrapper (SP2.6) — ROW-BY-ROW, the `courses` dashboard
+   group. glass-panel supplies the card surface; this owns the heading, the
+   stacked rows, and the See-more / pager affordances. The generic collection
+   pattern: 3 latest collapsed → See more → 10/page with a ‹ Page x of N › pager. */
+:host {
+  display: block;
+}
+
+.continue-learning {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md, 16px);
+  padding: var(--chora-space-md, 16px) var(--chora-space-lg, 24px);
+}
+
+.continue-learning__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main, #1f2430);
+
+  i {
+    color: var(--primary, #1976d2);
+    font-size: 1rem;
+  }
+}
+
+/* ── The stacked rows ─────────────────────────────────────────────────── */
+.continue-learning__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm, 8px);
+}
+
+.continue-learning__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm, 8px);
+  padding: var(--chora-space-md, 16px);
+  border-radius: var(--panel-radius, 16px);
+  background: color-mix(in srgb, var(--surface-0, #ffffff) 60%, transparent);
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.06));
+  // Progressive-reveal easing on row hover (Dale's FE design language).
+  transition: transform 220ms
+      var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)),
+    box-shadow 220ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)),
+    border-color 220ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--primary, #1976d2) 30%, transparent);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.continue-learning__row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.continue-learning__row-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.continue-learning__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--button-radius, 999px);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--primary, #1976d2);
+  background: color-mix(in srgb, var(--primary, #1976d2) 12%, transparent);
+}
+
+.continue-learning__retention-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.continue-learning__row-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main, #1f2430);
+}
+
+.continue-learning__row-instructor {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted, #6b7280);
+
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+/* ── Progress + mini stats ────────────────────────────────────────────── */
+.continue-learning__row-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.continue-learning__progress-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+}
+
+.continue-learning__stats {
+  display: flex;
+  gap: var(--chora-space-lg, 24px);
+  flex-wrap: wrap;
+}
+
+.continue-learning__stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.82rem;
+}
+
+.continue-learning__stat-label {
+  color: var(--text-muted, #6b7280);
+}
+
+.continue-learning__stat-value {
+  font-weight: 700;
+  color: var(--text-main, #1f2430);
+}
+
+.continue-learning__row-action {
+  display: flex;
+}
+
+/* ── See more / See less + pager ──────────────────────────────────────── */
+.continue-learning__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-md, 16px);
+  flex-wrap: wrap;
+}
+
+.continue-learning__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--button-radius, 999px);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--primary, #1976d2);
+  background: color-mix(in srgb, var(--primary, #1976d2) 10%, transparent);
+  cursor: pointer;
+  transition: background 200ms
+    var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--primary, #1976d2) 20%, transparent);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+.continue-learning__pager {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-sm, 8px);
+}
+
+.continue-learning__pager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.1));
+  border-radius: 50%;
+  background: var(--surface-0, #ffffff);
+  color: var(--text-main, #1f2430);
+  cursor: pointer;
+  transition: background 180ms
+      var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)),
+    border-color 180ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    border-color: var(--primary, #1976d2);
+    color: var(--primary, #1976d2);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.continue-learning__pager-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  min-width: 6.5em;
+  text-align: center;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────── */
+.continue-learning__empty {
+  margin: 0;
+  padding: var(--chora-space-lg, 24px) 0;
+  text-align: center;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.95rem;
+}
+
+/* Tablet-first: on wide desktop lay each row out horizontally (identity |
+   progress | action) instead of the stacked tablet default. */
+@media (min-width: 1280px) {
+  .continue-learning__row {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--chora-space-lg, 24px);
+  }
+  .continue-learning__row-main {
+    flex: 1 1 34%;
+    min-width: 0;
+  }
+  .continue-learning__row-progress {
+    flex: 1 1 44%;
+    min-width: 0;
+  }
+  .continue-learning__row-action {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+  }
+}
+
+/* Respect reduced-motion — no lift/tween. */
+@media (prefers-reduced-motion: reduce) {
+  .continue-learning__row,
+  .continue-learning__toggle,
+  .continue-learning__pager-btn {
+    transition: none;
+  }
+  .continue-learning__row:hover {
+    transform: none;
+  }
+}

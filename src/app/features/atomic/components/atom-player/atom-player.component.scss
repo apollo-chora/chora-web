@@ -1,0 +1,121 @@
+:host { display: block; height: 100%; }
+
+.atom-player {
+  display: flex; flex-direction: column; height: 100%;
+  background: var(--chora-color-surface-0); max-width: 800px; margin: 0 auto; padding: var(--chora-space-lg);
+
+  &__loading, &__error {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 1; gap: var(--chora-space-md); color: var(--chora-color-text-secondary);
+  }
+
+  &__spinner {
+    width: 32px; height: 32px; border: 3px solid var(--chora-color-surface-2);
+    border-top-color: var(--chora-color-primary); border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+
+  &__header {
+    display: flex; align-items: center; gap: var(--chora-space-sm);
+    padding-bottom: var(--chora-space-md); border-bottom: 1px solid var(--chora-color-border);
+  }
+
+  &__close-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border: none; background: none;
+    font-size: 20px; cursor: pointer; color: var(--chora-color-text-secondary); border-radius: var(--chora-radius-sm);
+    &:hover { background: var(--chora-color-surface-2); }
+    &:focus-visible { outline: 2px solid var(--chora-color-primary); }
+  }
+
+  &__type-badge {
+    font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--chora-color-primary);
+    padding: 2px 8px; border-radius: var(--chora-radius-full); background: rgba(25, 118, 210, 0.08);
+  }
+
+  &__difficulty { display: flex; gap: 2px; margin-inline-start: auto; }
+  &__star--filled { color: var(--chora-color-reward); }
+  &__quality {
+    display: flex; align-items: center; gap: var(--chora-space-md); flex-wrap: wrap;
+    padding: var(--chora-space-sm) 0; border-bottom: 1px solid var(--chora-color-border);
+  }
+
+  &__content { flex: 1; display: flex; flex-direction: column; padding: var(--chora-space-lg) 0; overflow-y: auto; }
+  &__hints { display: flex; flex-direction: column; gap: var(--chora-space-sm); padding: var(--chora-space-sm) 0; }
+
+  &__hint-text {
+    font-size: 14px; color: var(--chora-color-curiosity);
+    padding: var(--chora-space-sm) var(--chora-space-md); background: rgba(124, 77, 255, 0.06);
+    border-radius: var(--chora-radius-md); border-left: 3px solid var(--chora-color-curiosity);
+  }
+
+  &__hint-label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; opacity: 0.7; margin-bottom: 2px; }
+
+  &__validation-error {
+    padding: var(--chora-space-sm) var(--chora-space-md); background: rgba(211, 47, 47, 0.06);
+    border-left: 3px solid var(--chora-color-danger); border-radius: var(--chora-radius-md); color: var(--chora-color-danger);
+    p { margin: 0 0 var(--chora-space-xs); font-size: 14px; }
+  }
+
+  &__validation-error-detail { font-size: 13px; opacity: 0.8; }
+  &__controls { display: flex; justify-content: center; padding-top: var(--chora-space-md); border-top: 1px solid var(--chora-color-border); }
+
+  &__submit-spinner {
+    display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite;
+    vertical-align: middle; margin-inline-end: var(--chora-space-xs);
+  }
+
+  &__shortcuts {
+    display: flex; justify-content: center; gap: var(--chora-space-md);
+    padding-top: var(--chora-space-sm); font-size: 11px; color: var(--chora-color-text-disabled);
+    kbd { padding: 1px 4px; border: 1px solid var(--chora-color-border); border-radius: 3px; font-size: 10px; }
+  }
+
+  &__btn {
+    padding: var(--chora-space-sm) var(--chora-space-xl); border-radius: var(--chora-radius-md);
+    font-size: 14px; font-weight: 500; cursor: pointer; border: none;
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:focus-visible { outline: 2px solid var(--chora-color-primary); outline-offset: 2px; }
+    &--primary { background: var(--chora-color-primary); color: #fff; }
+    &--secondary { background: var(--chora-color-surface-2); color: var(--chora-color-text-primary); }
+    &--hint {
+      background: transparent; border: 1px solid var(--chora-color-curiosity); color: var(--chora-color-curiosity);
+      padding: var(--chora-space-xs) var(--chora-space-md); font-size: 13px; align-self: flex-start;
+    }
+  }
+
+  &__feedback {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 1; gap: var(--chora-space-md); text-align: center; padding: var(--chora-space-xl);
+    &--correct { color: var(--chora-color-success); }
+    &--incorrect { color: var(--chora-color-danger); }
+  }
+
+  &__feedback-icon { font-size: 48px; }
+  &__feedback-label { font-size: 22px; font-weight: 700; }
+
+  &__feedback-rule {
+    font-size: 12px; font-weight: 600; text-transform: uppercase; padding: 2px 10px;
+    border-radius: var(--chora-radius-full); background: var(--chora-color-surface-2); color: var(--chora-color-text-secondary);
+  }
+
+  &__feedback-explanation { font-size: 15px; color: var(--chora-color-text-primary); max-width: 500px; line-height: 1.6; margin: 0; }
+  &__feedback-confidence { font-size: 13px; color: var(--chora-color-text-secondary); padding: 2px 8px; border-radius: var(--chora-radius-full); background: var(--chora-color-surface-2); }
+
+  &__feedback-expected {
+    display: flex; flex-direction: column; gap: var(--chora-space-xs);
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    background: var(--chora-color-surface-1); border-radius: var(--chora-radius-md); max-width: 500px; width: 100%;
+  }
+
+  &__feedback-expected-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--chora-color-text-secondary); }
+
+  &__feedback-expected-value {
+    font-size: 14px; color: var(--chora-color-text-primary); background: var(--chora-color-surface-2);
+    padding: var(--chora-space-xs) var(--chora-space-sm); border-radius: var(--chora-radius-sm); word-break: break-word;
+  }
+
+  &__feedback-actions { display: flex; gap: var(--chora-space-sm); padding-top: var(--chora-space-md); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

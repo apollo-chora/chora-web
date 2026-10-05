@@ -1,0 +1,37 @@
+<div
+  class="yields-strip"
+  [attr.aria-label]="'aplus.shell.yields.aria' | translate"
+  role="group"
+  data-testid="yields-strip">
+  <span class="yields-strip__pill" data-testid="yields-streak">
+    <i class="yields-strip__icon fa-solid fa-fire" aria-hidden="true"></i>
+    <span class="yields-strip__label">{{ 'aplus.shell.yields.streak' | translate }}</span>
+    @switch (streakState()) {
+      @case ('ready') {
+        <span class="yields-strip__value" data-testid="yields-streak-value">{{ streakDays() }}</span>
+      }
+      @case ('loading') {
+        <span class="yields-strip__muted" data-testid="yields-streak-loading">{{ 'aplus.shell.yields.loading' | translate }}</span>
+      }
+      @default {
+        <span class="yields-strip__muted" data-testid="yields-streak-unread">{{ 'aplus.shell.yields.unread' | translate }}</span>
+      }
+    }
+  </span>
+
+  <span class="yields-strip__pill" data-testid="yields-mana">
+    <i class="yields-strip__icon fa-solid fa-droplet" aria-hidden="true"></i>
+    <span class="yields-strip__label">{{ 'aplus.shell.yields.mana' | translate }}</span>
+    @switch (manaState()) {
+      @case ('ready') {
+        <span class="yields-strip__value" data-testid="yields-mana-value">{{ manaUnits() }}</span>
+      }
+      @case ('loading') {
+        <span class="yields-strip__muted" data-testid="yields-mana-loading">{{ 'aplus.shell.yields.loading' | translate }}</span>
+      }
+      @default {
+        <span class="yields-strip__muted" data-testid="yields-mana-unread">{{ 'aplus.shell.yields.unread' | translate }}</span>
+      }
+    }
+  </span>
+</div>

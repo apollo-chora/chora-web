@@ -1,0 +1,46 @@
+<section
+  class="aplus-checkout-result surface-aplus"
+  aria-labelledby="aplus-checkout-result-heading"
+  data-testid="aplus-checkout-result">
+  @if (outcome() === 'success') {
+    <div
+      class="checkout-result checkout-result--success glass-panel"
+      data-testid="aplus-checkout-result-success">
+      <i class="checkout-result__icon fa-solid fa-egg" aria-hidden="true"></i>
+      <h1 id="aplus-checkout-result-heading" class="checkout-result__title">
+        {{ 'aplus.familiar_checkout.success_title' | translate }}
+      </h1>
+      <p class="checkout-result__sub">
+        {{ 'aplus.familiar_checkout.success_sub' | translate }}
+      </p>
+      <a
+        routerLink="/a/companion"
+        class="btn btn-primary checkout-result__cta"
+        data-testid="aplus-checkout-success-cta">
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        {{ 'aplus.familiar_checkout.success_cta' | translate }}
+      </a>
+    </div>
+  } @else {
+    <div
+      class="checkout-result checkout-result--cancel glass-panel"
+      data-testid="aplus-checkout-result-cancel">
+      <i
+        class="checkout-result__icon fa-solid fa-rotate-left"
+        aria-hidden="true"></i>
+      <h1 id="aplus-checkout-result-heading" class="checkout-result__title">
+        {{ 'aplus.familiar_checkout.cancel_title' | translate }}
+      </h1>
+      <p class="checkout-result__sub">
+        {{ 'aplus.familiar_checkout.cancel_sub' | translate }}
+      </p>
+      <a
+        routerLink="/a/companion/marketplace"
+        class="btn btn-secondary checkout-result__cta"
+        data-testid="aplus-checkout-cancel-cta">
+        <i class="fa-solid fa-shop" aria-hidden="true"></i>
+        {{ 'aplus.familiar_checkout.cancel_cta' | translate }}
+      </a>
+    </div>
+  }
+</section>

@@ -1,0 +1,355 @@
+<section
+  class="surface-rplus classroom"
+  data-testid="rplus-classroom">
+  @if (error(); as err) {
+    <div
+      class="classroom__error glass-panel"
+      role="alert"
+      data-testid="classroom-error">
+      <i
+        class="fa-solid fa-triangle-exclamation"
+        aria-hidden="true"></i>
+      <div class="classroom__error-body">
+        <p class="classroom__error-title">
+          {{ 'rplus.classroom.error_title' | translate }}
+        </p>
+        <p
+          class="classroom__error-detail"
+          data-testid="classroom-error-status">
+          {{ 'rplus.classroom.error_status' | translate }}
+          <strong>{{ err.status }}</strong>
+        </p>
+      </div>
+    </div>
+  } @else if (!sessionId()) {
+    <div
+      class="classroom__empty glass-panel"
+      data-testid="classroom-no-session">
+      <i class="fa-solid fa-broadcast-tower" aria-hidden="true"></i>
+      <h1 class="classroom__empty-title">
+        {{ 'rplus.classroom.empty_title' | translate }}
+      </h1>
+      <p class="classroom__empty-body">
+        {{ 'rplus.classroom.empty_body' | translate }}
+      </p>
+    </div>
+  } @else if (snapshot(); as s) {
+    <header class="classroom__header glass-panel">
+      <div class="classroom__cohort-row">
+        <span
+          class="badge classroom__state-badge"
+          [class.classroom__state-badge--armed]="s.state === 'ARMED'"
+          [class.classroom__state-badge--live]="s.state === 'LIVE'"
+          [class.classroom__state-badge--closed]="s.state === 'CLOSED'"
+          [attr.data-testid]="'classroom-state-' + s.state"
+          [attr.aria-label]="
+            'rplus.classroom.state_aria.' + s.state | translate
+          ">
+          @if (s.state === 'LIVE') {
+            <i class="fa-solid fa-circle-dot" aria-hidden="true"></i>
+          } @else if (s.state === 'ARMED') {
+            <i class="fa-solid fa-clock" aria-hidden="true"></i>
+          } @else {
+            <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+          }
+          {{ 'rplus.classroom.state.' + s.state | translate }}
+        </span>
+        <h1
+          class="classroom__title"
+          data-testid="classroom-title">
+          {{ 'rplus.classroom.title' | translate }}
+        </h1>
+      </div>
+      <div class="classroom__stat-row">
+        <span
+          class="classroom__stat"
+          data-testid="classroom-joined-learners">
+          <i class="fa-solid fa-users" aria-hidden="true"></i>
+          <strong>{{ s.joinedLearners }}</strong>
+          {{ 'rplus.classroom.joined' | translate }}
+        </span>
+        <span
+          class="classroom__stat"
+          data-testid="classroom-session-id">
+          <i class="fa-solid fa-fingerprint" aria-hidden="true"></i>
+          <span class="classroom__session-id">{{ s.id }}</span>
+        </span>
+      </div>
+      @if (s.state !== 'CLOSED') {
+        <div class="classroom__controls" data-testid="classroom-controls">
+          @if (s.state === 'ARMED') {
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-testid="classroom-start"
+              [disabled]="acting()"
+              (click)="start()">
+              <i class="fa-solid fa-play" aria-hidden="true"></i>
+              {{ 'rplus.classroom.start' | translate }}
+            </button>
+          } @else if (s.state === 'LIVE') {
+            @for (q of questions(); track q.questionId; let i = $index) {
+              <button
+                type="button"
+                class="btn"
+                [class.btn-primary]="q.questionId === s.currentQuestionId"
+                [attr.data-testid]="'classroom-advance-' + i"
+                [disabled]="acting()"
+                (click)="advanceTo(q.questionId)">
+                <i class="fa-solid fa-forward" aria-hidden="true"></i>
+                {{ 'rplus.classroom.present' | translate }} {{ i + 1 }}
+              </button>
+            }
+            <button
+              type="button"
+              class="btn classroom__end"
+              data-testid="classroom-end"
+              [disabled]="acting()"
+              (click)="endSession()">
+              <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+              {{ 'rplus.classroom.end' | translate }}
+            </button>
+          }
+        </div>
+      }
+    </header>
+
+    @if (s.state === 'ARMED' && joinCode()) {
+      <section
+        class="classroom__lobby glass-panel"
+        data-testid="classroom-lobby"
+        aria-label="Lobby: join code, QR and roster">
+        <p class="classroom__lobby-label">
+          {{ 'rplus.classroom.join_at' | translate }}
+          <code>/play</code>
+        </p>
+        <p class="classroom__join-code" data-testid="classroom-join-code">
+          {{ joinCode() }}
+        </p>
+        @if (qr(); as q) {
+          <figure
+            class="classroom__qr"
+            data-testid="classroom-qr"
+            aria-label="QR code for the learner play URL">
+            <svg
+              [attr.viewBox]="'0 0 ' + q.size + ' ' + q.size"
+              role="img"
+              focusable="false">
+              <path [attr.d]="q.path" fill="currentColor" />
+            </svg>
+          </figure>
+        }
+        <a
+          class="classroom__play-link"
+          data-testid="classroom-play-link"
+          [href]="playHref()"
+          target="_blank"
+          rel="noopener">
+          <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+          {{ 'rplus.classroom.open_play_view' | translate }}
+        </a>
+        <ul
+          class="classroom__roster"
+          data-testid="classroom-roster"
+          aria-live="polite">
+          @for (p of roster(); track p.nickname) {
+            <li class="classroom__roster-nick">{{ p.nickname }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    <div class="classroom__main">
+      <article class="classroom__quiz glass-panel">
+        <header class="classroom__quiz-head">
+          @if (s.currentQuestionId) {
+            <p
+              class="classroom__question-id"
+              data-testid="classroom-question-id"
+              aria-live="polite">
+              <i class="fa-solid fa-list-ol" aria-hidden="true"></i>
+              {{ 'rplus.classroom.current_question' | translate }}
+              <code>{{ s.currentQuestionId }}</code>
+            </p>
+          } @else {
+            <p
+              class="classroom__waiting"
+              data-testid="classroom-waiting"
+              aria-live="polite">
+              <i
+                class="fa-solid fa-hourglass-half"
+                aria-hidden="true"></i>
+              {{ 'rplus.classroom.waiting' | translate }}
+            </p>
+          }
+          @if (s.state === 'LIVE' && countdownSecs() !== null) {
+            <p
+              class="classroom__countdown"
+              data-testid="classroom-countdown"
+              role="timer"
+              aria-live="off">
+              <i class="fa-solid fa-stopwatch" aria-hidden="true"></i>
+              {{ countdownSecs() }}s
+            </p>
+          }
+          @if (s.state === 'LIVE' && openQuestion()) {
+            <p class="classroom__answered" data-testid="classroom-answered">
+              <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+              {{ answeredCount() }} / {{ participantCount() }}
+              {{ 'rplus.classroom.answered' | translate }}
+            </p>
+          }
+        </header>
+
+        @if (interimBoard().length > 0) {
+          <ol
+            class="classroom__scoreboard"
+            data-testid="classroom-scoreboard"
+            aria-label="Interim scoreboard">
+            @for (row of interimBoard(); track row.nickname) {
+              <li
+                class="classroom__rank-row"
+                [attr.data-testid]="'classroom-rank-' + row.rank">
+                <span class="classroom__rank-pos">#{{ row.rank }}</span>
+                <span class="classroom__rank-nick">{{ row.nickname }}</span>
+                <span class="classroom__rank-score">&middot; {{ row.score }}</span>
+              </li>
+            }
+          </ol>
+        }
+        @if (podium().length > 0) {
+          <ol
+            class="classroom__podium"
+            data-testid="classroom-podium"
+            aria-label="Final podium">
+            @for (row of podium(); track row.nickname) {
+              <li
+                class="classroom__podium-step"
+                [attr.data-testid]="'classroom-podium-' + row.rank">
+                <span class="classroom__rank-pos">#{{ row.rank }}</span>
+                <span class="classroom__rank-nick">{{ row.nickname }}</span>
+                <span class="classroom__rank-score">&middot; {{ row.score }}</span>
+              </li>
+            }
+          </ol>
+        }
+
+        @if (responseRows().length) {
+          <ol
+            class="classroom__options"
+            data-testid="classroom-response-bars">
+            @for (row of responseRows(); track row.marker) {
+              <li
+                class="classroom__option"
+                [attr.data-testid]="
+                  'classroom-bar-' + row.marker
+                ">
+                <div class="classroom__option-head">
+                  <span
+                    class="classroom__option-key surface-accent-text">
+                    {{ row.marker }}
+                  </span>
+                  <span class="classroom__option-text"
+                    >{{ 'rplus.classroom.choice' | translate }}
+                    {{ row.marker }}</span
+                  >
+                  <span
+                    class="classroom__option-pct"
+                    [attr.data-testid]="
+                      'classroom-pct-' + row.marker
+                    ">
+                    {{ row.percent }}%
+                  </span>
+                </div>
+                <div
+                  class="classroom__option-bar"
+                  role="progressbar"
+                  [attr.aria-valuenow]="row.percent"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-label]="
+                    'rplus.classroom.bar_aria' | translate
+                  ">
+                  <span
+                    class="classroom__option-fill surface-accent-bg"
+                    [style.width.%]="row.percent"></span>
+                </div>
+                <p
+                  class="classroom__option-count"
+                  [attr.data-testid]="
+                    'classroom-count-' + row.marker
+                  ">
+                  <strong>{{ row.count }}</strong>
+                  {{ 'rplus.classroom.responses' | translate }}
+                </p>
+              </li>
+            }
+          </ol>
+        } @else {
+          <p
+            class="classroom__no-responses"
+            data-testid="classroom-no-responses"
+            aria-live="polite">
+            <i class="fa-solid fa-inbox" aria-hidden="true"></i>
+            {{ 'rplus.classroom.no_responses' | translate }}
+          </p>
+        }
+      </article>
+
+      <aside
+        class="classroom__pulse glass-panel"
+        data-testid="classroom-pulse">
+        <h2 class="classroom__pulse-title">
+          <i
+            class="fa-solid fa-heart-pulse surface-accent-text"
+            aria-hidden="true"></i>
+          {{ 'rplus.classroom.pulse_title' | translate }}
+        </h2>
+        <dl class="classroom__pulse-stats">
+          <div
+            class="classroom__pulse-stat"
+            data-testid="classroom-pulse-joined">
+            <dt>
+              <span
+                class="classroom__pulse-dot classroom__pulse-dot--live"
+                aria-hidden="true"></span>
+              {{ 'rplus.classroom.pulse_joined' | translate }}
+            </dt>
+            <dd>{{ s.joinedLearners }}</dd>
+          </div>
+          <div
+            class="classroom__pulse-stat"
+            data-testid="classroom-pulse-state">
+            <dt>
+              <span
+                class="classroom__pulse-dot"
+                [class.classroom__pulse-dot--live]="s.state === 'LIVE'"
+                [class.classroom__pulse-dot--off]="s.state !== 'LIVE'"
+                aria-hidden="true"></span>
+              {{ 'rplus.classroom.pulse_state' | translate }}
+            </dt>
+            <dd>{{ 'rplus.classroom.state.' + s.state | translate }}</dd>
+          </div>
+        </dl>
+        <p
+          class="classroom__pulse-note"
+          data-testid="classroom-polling-note">
+          @if (polling()) {
+            <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+            {{ 'rplus.classroom.pulse_polling' | translate }}
+          } @else {
+            <i class="fa-solid fa-stop" aria-hidden="true"></i>
+            {{ 'rplus.classroom.pulse_stopped' | translate }}
+          }
+        </p>
+      </aside>
+    </div>
+  } @else {
+    <p
+      class="classroom__loading"
+      data-testid="classroom-loading"
+      aria-live="polite">
+      {{ 'rplus.classroom.loading' | translate }}
+    </p>
+  }
+</section>

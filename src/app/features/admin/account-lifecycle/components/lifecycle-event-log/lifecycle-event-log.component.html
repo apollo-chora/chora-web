@@ -1,0 +1,129 @@
+<section
+  class="lifecycle-event-log"
+  role="main"
+  [attr.aria-label]="'admin.account_lifecycle.event_log_title' | translate"
+  data-testid="lifecycle-event-log">
+
+  <!-- Header -->
+  <header class="lifecycle-event-log__header">
+    <div class="lifecycle-event-log__header-nav">
+      <a
+        routerLink="../"
+        class="lifecycle-event-log__back-link"
+        data-testid="btn-back"
+        [attr.aria-label]="'admin.account_lifecycle.back_to_accounts' | translate">
+        &larr; {{ 'admin.account_lifecycle.back_to_accounts' | translate }}
+      </a>
+      <h1 class="lifecycle-event-log__title" data-testid="event-log-title">
+        {{ 'admin.account_lifecycle.event_log_title' | translate }}
+      </h1>
+      <p class="lifecycle-event-log__subtitle">
+        GCID: {{ gcid() }}
+      </p>
+    </div>
+    <button
+      type="button"
+      class="lifecycle-event-log__btn lifecycle-event-log__btn--primary"
+      (click)="loadEvents()"
+      data-testid="btn-refresh-events"
+      [attr.aria-label]="'admin.account_lifecycle.refresh' | translate">
+      {{ 'admin.account_lifecycle.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="lifecycle-event-log__loading" data-testid="events-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="lifecycle-event-log__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="lifecycle-event-log__empty" data-testid="events-empty" role="status">
+      <p class="lifecycle-event-log__empty-text">
+        {{ 'admin.account_lifecycle.no_events' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Event Timeline -->
+  @if (!loading() && !isEmpty()) {
+    <div class="lifecycle-event-log__timeline" data-testid="event-timeline" role="list">
+      @for (event of events(); track event.id) {
+        <div
+          class="lifecycle-event-log__entry"
+          role="listitem"
+          [attr.data-testid]="'event-' + event.id">
+
+          <div class="lifecycle-event-log__dot"></div>
+
+          <div class="lifecycle-event-log__content">
+            <!-- Event Header -->
+            <div class="lifecycle-event-log__entry-header">
+              <span
+                class="lifecycle-event-log__event-badge"
+                [class]="eventTypeClass(event.eventType)">
+                {{ getEventLabel(event.eventType) | translate }}
+              </span>
+              <time
+                class="lifecycle-event-log__timestamp"
+                [attr.datetime]="event.createdAt">
+                {{ formatDateTime(event.createdAt) }}
+              </time>
+            </div>
+
+            <!-- Actor -->
+            <div class="lifecycle-event-log__actor-row">
+              <span
+                class="lifecycle-event-log__actor"
+                [class]="actorTypeClass(event.actorType)">
+                {{ event.actor }}
+              </span>
+              <span class="lifecycle-event-log__actor-type">
+                ({{ event.actorType }})
+              </span>
+            </div>
+
+            <!-- Reason -->
+            @if (event.reason) {
+              <p class="lifecycle-event-log__reason" data-testid="event-reason">
+                {{ event.reason }}
+              </p>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <nav
+        class="lifecycle-event-log__pagination"
+        data-testid="pagination"
+        [attr.aria-label]="'admin.account_lifecycle.pagination' | translate">
+        <button
+          type="button"
+          class="lifecycle-event-log__btn"
+          [disabled]="currentPage() <= 1"
+          (click)="goToPage(currentPage() - 1)"
+          data-testid="btn-prev-page">
+          {{ 'admin.account_lifecycle.prev_page' | translate }}
+        </button>
+        <span class="lifecycle-event-log__page-info">
+          {{ currentPage() }} / {{ totalPages() }}
+        </span>
+        <button
+          type="button"
+          class="lifecycle-event-log__btn"
+          [disabled]="currentPage() >= totalPages()"
+          (click)="goToPage(currentPage() + 1)"
+          data-testid="btn-next-page">
+          {{ 'admin.account_lifecycle.next_page' | translate }}
+        </button>
+      </nav>
+    }
+  }
+</section>

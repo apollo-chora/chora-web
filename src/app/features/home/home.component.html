@@ -1,0 +1,131 @@
+<section
+  class="chora-home"
+  aria-labelledby="home-heading"
+  data-testid="home">
+  <header class="chora-home__header glass-panel">
+    <div class="chora-home__title-row">
+      <h1 id="home-heading" class="chora-home__title">
+        {{ 'home.heading' | translate }}
+      </h1>
+      <button
+        type="button"
+        class="chora-home__edit-toggle"
+        (click)="editMode() ? exitEditMode() : enterEditMode()"
+        [attr.aria-pressed]="editMode()"
+        data-testid="home-edit-toggle">
+        <i
+          class="fa-solid"
+          [class.fa-check]="editMode()"
+          [class.fa-pen-to-square]="!editMode()"
+          aria-hidden="true"></i>
+        {{ (editMode() ? 'home.done' : 'home.customise') | translate }}
+      </button>
+    </div>
+    <p class="chora-home__subtitle">{{ 'home.subtitle' | translate }}</p>
+    @if (syncDegraded()) {
+      <p
+        class="chora-home__sync-degraded"
+        role="status"
+        aria-live="polite"
+        data-testid="home-sync-degraded">
+        <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+        {{ 'home.sync_degraded' | translate }}
+      </p>
+    }
+  </header>
+
+  <chora-home-quests />
+
+  <h2 class="chora-home__pins-heading">{{ 'home.quests.pins_heading' | translate }}</h2>
+
+  @if (isEmpty()) {
+    <div class="glass-panel chora-home__empty" data-testid="home-empty">
+      <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+      <p class="chora-home__empty-text">{{ 'home.empty' | translate }}</p>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="enterEditMode()"
+        data-testid="home-empty-add">
+        {{ 'home.empty_cta' | translate }}
+      </button>
+    </div>
+  } @else {
+    <div
+      class="chora-home__grid"
+      cdkDropList
+      cdkDropListOrientation="mixed"
+      (cdkDropListDropped)="onDrop($event)"
+      [class.is-editing]="editMode()"
+      [attr.aria-label]="'home.pins_aria' | translate"
+      data-testid="home-grid">
+      @for (pin of pinnedDefs(); track pin.id) {
+        <div
+          class="chora-home__pin surface-{{ pin.owningSurface }}"
+          cdkDrag
+          [cdkDragStartDelay]="editMode() ? 0 : longPressDelay"
+          [class.is-editing]="editMode()"
+          [attr.data-pin-id]="pin.id"
+          data-testid="home-pin-card">
+          @if (editMode()) {
+            <button
+              type="button"
+              class="chora-home__pin-grip"
+              cdkDragHandle
+              [attr.aria-label]="'home.reorder_aria' | translate"
+              data-testid="home-pin-grip">
+              <i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>
+            </button>
+            <button
+              type="button"
+              class="chora-home__pin-remove"
+              (click)="removePin(pin.id)"
+              [attr.aria-label]="'home.remove_aria' | translate"
+              data-testid="home-pin-remove">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          }
+          <a class="chora-home__pin-link" [routerLink]="pin.route">
+            <span class="chora-home__pin-ic">
+              <i class="fa-solid fa-{{ pin.icon }}" aria-hidden="true"></i>
+            </span>
+            <span class="chora-home__pin-label">{{ pin.labelKey | translate }}</span>
+          </a>
+        </div>
+      }
+    </div>
+  }
+
+  @if (editMode()) {
+    <section
+      class="glass-panel chora-home__palette"
+      [attr.aria-label]="'home.palette_aria' | translate"
+      data-testid="home-palette">
+      <h2 class="chora-home__palette-heading">
+        {{ 'home.palette_heading' | translate }}
+      </h2>
+      @if (addablePins().length === 0) {
+        <p class="chora-home__palette-empty">
+          {{ 'home.palette_empty' | translate }}
+        </p>
+      } @else {
+        <div class="chora-home__palette-grid">
+          @for (pin of addablePins(); track pin.id) {
+            <button
+              type="button"
+              class="chora-home__add surface-{{ pin.owningSurface }}"
+              (click)="addPin(pin.id)"
+              [attr.data-pin-id]="pin.id"
+              data-testid="home-add-pin">
+              <span class="chora-home__pin-ic">
+                <i class="fa-solid fa-{{ pin.icon }}" aria-hidden="true"></i>
+              </span>
+              <span class="chora-home__pin-label">{{ pin.labelKey | translate }}</span>
+              <i class="fa-solid fa-plus chora-home__add-plus" aria-hidden="true"></i>
+            </button>
+          }
+        </div>
+      }
+    </section>
+  }
+</section>

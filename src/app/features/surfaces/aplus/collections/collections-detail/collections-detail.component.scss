@@ -1,0 +1,535 @@
+/**
+ * CollectionsDetailComponent styles — A+ personal collection detail view.
+ * Tablet-first (≥768px primary, ≥1280px desktop enhanced).
+ * Glassmorphism design system — glass-panel containers, A+ accent tokens.
+ * BEM: .collections-detail__*
+ */
+
+:host {
+  display: block;
+}
+
+.collections-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+
+  // ── Loading / error shared ────────────────────────────────────────────────
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3rem 1.5rem;
+    font-size: 1rem;
+    color: var(--text-muted);
+  }
+
+  &__error,
+  &__contract-gap,
+  &__not-found {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-left: 4px solid var(--danger);
+
+    i {
+      color: var(--danger);
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    p {
+      margin: 0.25rem 0;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    strong {
+      color: var(--text-main);
+    }
+
+    code {
+      background: rgba(0, 0, 0, 0.06);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+  }
+
+  &__error-message {
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-main);
+  }
+
+  // ── Header ────────────────────────────────────────────────────────────────
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  &__header-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  &__back-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    color: var(--primary);
+    background: rgba(25, 118, 210, 0.08);
+    text-decoration: none;
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(25, 118, 210, 0.16);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__meta {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    word-break: break-word;
+  }
+
+  &__badges {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__visibility-badge,
+  &__atom-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(25, 118, 210, 0.1);
+    border: 1px solid rgba(25, 118, 210, 0.2);
+    color: var(--primary);
+  }
+
+  &__atom-count {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+  }
+
+  &__description {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  // ── Atom list ────────────────────────────────────────────────────────────
+  &__empty-atoms {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 3rem 2rem;
+    text-align: center;
+
+    i {
+      font-size: 2rem;
+      color: var(--primary);
+      opacity: 0.5;
+    }
+
+    p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+    }
+  }
+
+  &__atoms {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__atom-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.875rem 1.25rem;
+  }
+
+  &__atom-position {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(25, 118, 210, 0.1);
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  &__atom-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__atom-id {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
+
+    i {
+      color: var(--primary);
+    }
+  }
+
+  &__atom-added {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  &__remove-btn {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--danger);
+      outline-offset: 2px;
+    }
+  }
+
+  &__atom-op-error {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-left: 3px solid var(--danger);
+
+    i { color: var(--danger); }
+    p { margin: 0; font-size: 0.875rem; color: var(--text-muted); }
+  }
+
+  // ── Delete dialog ────────────────────────────────────────────────────────
+  &__dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  &__dialog-panel {
+    width: min(480px, calc(100vw - 2rem));
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__dialog-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  &__dialog-body {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  &__dialog-error {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--danger);
+  }
+
+  &__dialog-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  &__dialog-body--muted {
+    font-size: 0.875rem;
+    opacity: 0.85;
+  }
+
+  // ── Convert to study list — result panel (WS-4 · ADR-233 D11) ────────────
+  //
+  // Partial success reads as success (emerald), with the named exclusions
+  // carried as a calm amber sub-section — informative, not alarming. The atoms
+  // were not lost; they simply stayed behind, and the copy says so.
+  &__convert-result {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-left: 3px solid var(--success);
+  }
+
+  &__convert-result-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  &__convert-icon {
+    color: var(--success);
+    font-size: 1.25rem;
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+  }
+
+  &__convert-result-copy {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__convert-headline {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  &__convert-sub {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  &__convert-dismiss {
+    color: var(--text-muted);
+    font-size: 1rem;
+    flex-shrink: 0;
+    cursor: pointer;
+
+    &:hover { color: var(--text-main); }
+  }
+
+  // Named exclusions — the D11 obligation made visible.
+  &__convert-excluded {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.22);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__convert-excluded-title {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  &__convert-excluded-intro,
+  &__convert-excluded-footnote {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  &__convert-excluded-footnote {
+    font-size: 0.8125rem;
+    opacity: 0.9;
+  }
+
+  &__convert-excluded-list {
+    list-style: none;
+    margin: 0.25rem 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__convert-excluded-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.625rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
+
+    i {
+      color: var(--warning);
+      font-size: 0.8125rem;
+      flex-shrink: 0;
+    }
+  }
+
+  &__convert-excluded-atom code {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  &__convert-excluded-reason {
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  &__convert-open {
+    align-self: flex-start;
+  }
+
+  &__convert-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-left: 3px solid var(--danger);
+
+    i { color: var(--danger); flex-shrink: 0; margin-top: 0.125rem; }
+
+    p { margin: 0 0 0.75rem; font-size: 0.9375rem; color: var(--text-main); line-height: 1.6; }
+  }
+
+  // Desktop enhancement (≥1280px): the exclusion rows get room to breathe on
+  // one line each. Tablet (≥768px) keeps the same stack — no mobile arm.
+  @media (min-width: 1280px) {
+    &__convert-excluded-row {
+      align-items: center;
+      gap: 0.75rem;
+    }
+  }
+
+  // ── prefers-reduced-motion ───────────────────────────────────────────────
+  @media (prefers-reduced-motion: reduce) {
+    &__back-link,
+    &__remove-btn,
+    &__convert-dismiss {
+      transition: none;
+    }
+  }
+}
+
+// ── Shared button styles (A+ accent) ────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: var(--button-radius, 8px);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.btn-primary {
+    background: var(--primary);
+    color: #ffffff;
+    &:hover:not(:disabled) { opacity: 0.9; }
+  }
+
+  &.btn-secondary {
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--primary);
+    border: 1px solid rgba(25, 118, 210, 0.3);
+    &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.9); }
+  }
+
+  &.btn-danger {
+    background: var(--danger);
+    color: #ffffff;
+    &:hover:not(:disabled) { opacity: 0.9; }
+  }
+
+  &.btn-icon-only {
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+}

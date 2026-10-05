@@ -1,0 +1,263 @@
+<section
+  class="path-builder"
+  role="main"
+  [attr.aria-label]="pageTitle() | translate"
+  data-testid="path-builder">
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="path-builder__loading" data-testid="path-loading" aria-live="polite">
+      <div class="path-builder__skeleton path-builder__skeleton--header"></div>
+      <div class="path-builder__skeleton path-builder__skeleton--body"></div>
+    </div>
+  }
+
+  @if (!loading()) {
+    <!-- Page Header -->
+    <header class="path-builder__header">
+      <h1 class="path-builder__title" data-testid="path-title">
+        {{ pageTitle() | translate }}
+      </h1>
+    </header>
+
+    <!-- Metadata Form -->
+    <form [formGroup]="metaForm" class="path-builder__meta-form" data-testid="path-meta-form">
+      <div class="path-builder__field">
+        <label for="path-title" class="path-builder__label">
+          {{ 'admin.paths.builder.path_title' | translate }}
+        </label>
+        <input
+          id="path-title"
+          type="text"
+          formControlName="title"
+          class="path-builder__input"
+          data-testid="path-title-input" />
+      </div>
+
+      <div class="path-builder__field">
+        <label for="path-description" class="path-builder__label">
+          {{ 'admin.paths.builder.description' | translate }}
+        </label>
+        <textarea
+          id="path-description"
+          formControlName="description"
+          class="path-builder__textarea"
+          data-testid="path-description"
+          rows="3"></textarea>
+      </div>
+
+      <div class="path-builder__field-row">
+        <div class="path-builder__field">
+          <label for="path-duration" class="path-builder__label">
+            {{ 'admin.paths.builder.estimated_duration' | translate }}
+          </label>
+          <input
+            id="path-duration"
+            type="number"
+            formControlName="estimated_duration_minutes"
+            class="path-builder__input path-builder__input--narrow"
+            data-testid="path-duration-input"
+            min="1"
+            [placeholder]="'admin.paths.builder.minutes' | translate" />
+        </div>
+
+        <div class="path-builder__field">
+          <label for="enrollment-type" class="path-builder__label">
+            {{ 'admin.paths.builder.enrollment_type' | translate }}
+          </label>
+          <select
+            id="enrollment-type"
+            formControlName="enrollment_type"
+            class="path-builder__select"
+            data-testid="enrollment-type-select">
+            @for (type of allEnrollmentTypes; track type) {
+              <option [value]="type">{{ enrollmentTypeLabels[type] | translate }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </form>
+
+    <!-- Step List -->
+    <section class="path-builder__steps-section" data-testid="steps-section">
+      <div class="path-builder__steps-header">
+        <h2 class="path-builder__section-title">
+          {{ 'admin.paths.builder.steps' | translate }}
+          <span class="path-builder__step-count">({{ stepCount() }})</span>
+        </h2>
+        <button
+          type="button"
+          class="path-builder__btn-primary"
+          (click)="openAtomPicker()"
+          data-testid="add-step">
+          {{ 'admin.paths.builder.add_atom' | translate }}
+        </button>
+      </div>
+
+      <!-- Empty State -->
+      @if (steps().length === 0) {
+        <div class="path-builder__steps-empty" data-testid="steps-empty" aria-live="polite">
+          <p>{{ 'admin.paths.builder.no_steps' | translate }}</p>
+          <button
+            type="button"
+            class="path-builder__btn-secondary"
+            (click)="openAtomPicker()"
+            data-testid="add-first-step">
+            {{ 'admin.paths.builder.add_first_atom' | translate }}
+          </button>
+        </div>
+      }
+
+      <!-- Visual Path Timeline -->
+      <div class="path-builder__timeline">
+        @for (step of steps(); track step.id; let i = $index; let last = $last) {
+          <div
+            class="path-builder__step"
+            [class]="getDropClass(i)"
+            [attr.data-testid]="'step-' + i"
+            draggable="true"
+            (dragstart)="onStepDragStart($event, i)"
+            (dragover)="onStepDragOver($event, i)"
+            (dragleave)="onStepDragLeave()"
+            (drop)="onStepDrop($event, i)"
+            (dragend)="onStepDragEnd()">
+
+            <!-- Step Number -->
+            <div class="path-builder__step-number" aria-hidden="true">
+              {{ step.step_order }}
+            </div>
+
+            <!-- Connector Line -->
+            @if (!last) {
+              <div class="path-builder__connector">
+                @if (step.requires_previous) {
+                  <span class="path-builder__connector-lock" aria-label="Locked">&#128274;</span>
+                }
+              </div>
+            }
+
+            <!-- Step Card -->
+            <div class="path-builder__step-card">
+              <div class="path-builder__step-info">
+                <span class="path-builder__step-icon material-icons" aria-hidden="true">
+                  {{ getAtomTypeIcon(step.atom_type) }}
+                </span>
+                <div class="path-builder__step-details">
+                  <span class="path-builder__step-title" [attr.data-testid]="'step-title-' + i">
+                    {{ step.atom_title }}
+                  </span>
+                  <span class="path-builder__step-type">{{ step.atom_type }}</span>
+                </div>
+              </div>
+
+              <div class="path-builder__step-actions">
+                <!-- Prerequisite Toggle -->
+                @if (i > 0) {
+                  <label class="path-builder__prerequisite-toggle">
+                    <input
+                      type="checkbox"
+                      [checked]="step.requires_previous"
+                      (change)="togglePrerequisite(i)"
+                      [attr.data-testid]="'prerequisite-' + i" />
+                    <span class="path-builder__prerequisite-label">
+                      {{ 'admin.paths.builder.requires_previous' | translate }}
+                    </span>
+                  </label>
+                }
+
+                <!-- Remove -->
+                <button
+                  type="button"
+                  class="path-builder__btn-icon path-builder__btn-icon--danger"
+                  (click)="removeStep(i)"
+                  [attr.aria-label]="'admin.paths.builder.remove_step' | translate"
+                  [attr.data-testid]="'remove-step-' + i">
+                  &times;
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Atom Picker Modal -->
+    @if (atomPickerVisible()) {
+      <div class="path-builder__atom-picker-overlay" data-testid="atom-picker-overlay">
+        <div class="path-builder__atom-picker" role="dialog" aria-label="Select atom">
+          <div class="path-builder__picker-header">
+            <h3 class="path-builder__picker-title">
+              {{ 'admin.paths.builder.select_atom' | translate }}
+            </h3>
+            <button
+              type="button"
+              class="path-builder__btn-icon"
+              (click)="closeAtomPicker()"
+              data-testid="close-atom-picker"
+              aria-label="Close">
+              &times;
+            </button>
+          </div>
+
+          @if (atomPickerLoading()) {
+            <div class="path-builder__picker-loading" aria-live="polite">
+              {{ 'admin.paths.builder.loading_atoms' | translate }}
+            </div>
+          }
+
+          <ul class="path-builder__atom-catalog">
+            @for (atom of atomPickerAtoms(); track atom.id) {
+              <li class="path-builder__catalog-item">
+                <button
+                  type="button"
+                  class="path-builder__catalog-btn"
+                  (click)="addAtom(atom)"
+                  [attr.data-testid]="'select-atom-' + atom.id">
+                  <span class="path-builder__catalog-icon material-icons" aria-hidden="true">
+                    {{ getAtomTypeIcon(atom.atom_type) }}
+                  </span>
+                  <span class="path-builder__catalog-title">
+                    {{ atom.latest_revision?.content?.['stem'] || atom.latest_revision?.content?.['front'] || 'Untitled' }}
+                  </span>
+                  <span class="path-builder__catalog-type">{{ atom.atom_type }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+
+    <!-- Action Buttons -->
+    <footer class="path-builder__actions" data-testid="path-actions">
+      <button
+        type="button"
+        class="path-builder__btn-secondary"
+        (click)="cancel()"
+        data-testid="btn-cancel"
+        [disabled]="saving()">
+        {{ 'admin.paths.builder.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="path-builder__btn-primary"
+        (click)="saveDraft()"
+        data-testid="btn-save-draft"
+        [disabled]="saving()">
+        @if (saving()) {
+          {{ 'admin.paths.builder.saving' | translate }}
+        } @else {
+          {{ 'admin.paths.builder.save_draft' | translate }}
+        }
+      </button>
+      <button
+        type="button"
+        class="path-builder__btn-primary path-builder__btn-primary--publish"
+        (click)="saveAndPublish()"
+        data-testid="btn-publish"
+        [disabled]="saving()">
+        {{ 'admin.paths.builder.publish' | translate }}
+      </button>
+    </footer>
+  }
+</section>

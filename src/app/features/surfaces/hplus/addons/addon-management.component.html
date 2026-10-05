@@ -1,0 +1,260 @@
+<section class="surface-hplus addons" data-testid="hplus-addons">
+  <main class="addons__main">
+    <nav
+      class="addons__breadcrumb"
+      [attr.aria-label]="'hplus.addons.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.addons.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="addons__crumb-active">
+        {{ 'hplus.addons.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    <header class="addons__hero">
+      <div class="addons__title-row">
+        <h1 class="addons__title">{{ 'hplus.addons.title' | translate }}</h1>
+        <button
+          type="button"
+          class="btn btn-secondary addons__refresh"
+          data-testid="addons-refresh"
+          (click)="reload()"
+          [disabled]="loading()">
+          <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+          {{ 'hplus.addons.refresh' | translate }}
+        </button>
+      </div>
+      <p class="addons__subtitle">
+        {{ 'hplus.addons.subtitle' | translate }}
+      </p>
+    </header>
+
+    <div
+      class="addons__filters"
+      role="tablist"
+      [attr.aria-label]="'hplus.addons.statusFilterLabel' | translate"
+      data-testid="addons-filters">
+      <button
+        type="button"
+        class="addons__chip"
+        role="tab"
+        [class.addons__chip--active]="isFilterActive('all')"
+        [attr.aria-selected]="isFilterActive('all')"
+        [attr.data-testid]="'addons-filter-all'"
+        (click)="setStatusFilter('all')">
+        {{ 'hplus.addons.filter.all' | translate }}
+      </button>
+      <button
+        type="button"
+        class="addons__chip"
+        role="tab"
+        [class.addons__chip--active]="isFilterActive('active')"
+        [attr.aria-selected]="isFilterActive('active')"
+        [attr.data-testid]="'addons-filter-active'"
+        (click)="setStatusFilter('active')">
+        {{ 'hplus.addons.filter.active' | translate }}
+      </button>
+      <button
+        type="button"
+        class="addons__chip"
+        role="tab"
+        [class.addons__chip--active]="isFilterActive('pending')"
+        [attr.aria-selected]="isFilterActive('pending')"
+        [attr.data-testid]="'addons-filter-pending'"
+        (click)="setStatusFilter('pending')">
+        {{ 'hplus.addons.filter.pending' | translate }}
+      </button>
+      <button
+        type="button"
+        class="addons__chip"
+        role="tab"
+        [class.addons__chip--active]="isFilterActive('suspended')"
+        [attr.aria-selected]="isFilterActive('suspended')"
+        [attr.data-testid]="'addons-filter-suspended'"
+        (click)="setStatusFilter('suspended')">
+        {{ 'hplus.addons.filter.suspended' | translate }}
+      </button>
+      <label class="addons__search">
+        <span class="sr-only">{{ 'hplus.addons.searchLabel' | translate }}</span>
+        <input
+          type="search"
+          name="addonsSearch"
+          data-testid="addons-search"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          [attr.placeholder]="'hplus.addons.searchPlaceholder' | translate" />
+      </label>
+    </div>
+
+    @if (loading()) {
+      <p
+        class="addons__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="addons-loading">
+        {{ 'hplus.addons.loading' | translate }}
+      </p>
+    }
+
+    @if (loadError(); as msg) {
+      <p
+        class="addons__load-error"
+        role="alert"
+        data-testid="addons-load-error">
+        {{ msg | translate }}
+      </p>
+    }
+
+    @if (isEmpty() && !loadError()) {
+      <div class="addons__empty" data-testid="addons-empty">
+        <p class="addons__empty-title">
+          {{
+            hasAnyRows()
+              ? ('hplus.addons.emptyFiltered' | translate)
+              : ('hplus.addons.emptyZero' | translate)
+          }}
+        </p>
+        @if (!hasAnyRows()) {
+          <p class="addons__empty-cta">
+            {{ 'hplus.addons.emptyMarketplaceHint' | translate }}
+          </p>
+        }
+      </div>
+    }
+
+    <ul
+      class="addons__grid"
+      data-testid="addons-grid"
+      role="list">
+      @for (tile of tiles(); track trackByPlanId($index, tile)) {
+        <li
+          class="glass-panel addons__tile"
+          [attr.data-testid]="'addon-tile-' + tile.addonPlanId"
+          [attr.data-status]="tile.status">
+          <header class="addons__tile-head">
+            <div>
+              <h2 class="addons__tile-name">{{ tile.displayName }}</h2>
+              <p class="addons__tile-code">{{ tile.addonCode }}</p>
+            </div>
+            <span
+              [class]="statusBadgeClass(tile.status)"
+              [attr.data-testid]="'addon-tile-status-' + tile.addonPlanId">
+              {{ statusLabelKey(tile.status) | translate }}
+            </span>
+          </header>
+
+          <dl class="addons__tile-meta">
+            <div>
+              <dt>{{ 'hplus.addons.tier' | translate }}</dt>
+              <dd>
+                {{ tile.tier }}
+                @if (tile.scheduledTier && tile.scheduledEffectiveAt) {
+                  <span
+                    class="addons__scheduled-badge"
+                    [attr.data-testid]="'addon-tile-scheduled-' + tile.addonPlanId">
+                    {{ tile.scheduledTier }} starting {{ formatScheduledDate(tile.scheduledEffectiveAt) }}
+                  </span>
+                }
+                @if (tile.deactivationEffectiveAt) {
+                  <span
+                    class="addons__deactivating-badge"
+                    [attr.data-testid]="'addon-tile-deactivating-' + tile.addonPlanId">
+                    {{ 'hplus.addons.scheduled.deactivating' | translate }}
+                    {{ formatScheduledDate(tile.deactivationEffectiveAt) }}
+                  </span>
+                  <button
+                    type="button"
+                    class="addons__deactivating-undo"
+                    [attr.data-testid]="'addon-tile-cancel-deactivation-' + tile.addonPlanId"
+                    [disabled]="isCancelInFlight(tile)"
+                    (click)="onCancelDeactivation(tile)">
+                    {{ 'hplus.addons.scheduled.deactivatingUndo' | translate }}
+                  </button>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'hplus.addons.seats' | translate }}</dt>
+              <dd>{{ tile.seatsUsed }}</dd>
+            </div>
+            @if (tile.billingCycleEnd) {
+              <div>
+                <dt>{{ 'hplus.addons.billingCycleEnd' | translate }}</dt>
+                <dd
+                  [attr.data-testid]="'addon-tile-billing-cycle-end-' + tile.addonPlanId">
+                  {{ formatScheduledDate(tile.billingCycleEnd) }}
+                </dd>
+              </div>
+            }
+            @if (tile.lastUsageRollupAt) {
+              <div>
+                <dt>{{ 'hplus.addons.lastUsageRollup' | translate }}</dt>
+                <dd>{{ tile.lastUsageRollupAt }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (tile.system) {
+            <p
+              class="addons__system-badge"
+              [attr.data-testid]="'addon-tile-system-' + tile.addonPlanId">
+              <i class="fa-solid fa-shield" aria-hidden="true"></i>
+              {{ 'hplus.addons.systemBadge' | translate }}
+            </p>
+          }
+          @if (tile.complianceLocked) {
+            <p
+              class="addons__compliance-lock"
+              [attr.data-testid]="'addon-tile-compliance-' + tile.addonPlanId">
+              <i class="fa-solid fa-lock" aria-hidden="true"></i>
+              {{ 'hplus.addons.complianceLocked' | translate }}
+            </p>
+          }
+
+          <footer class="addons__tile-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [attr.data-testid]="'addon-tile-usage-' + tile.addonPlanId"
+              (click)="onUsage(tile)">
+              {{ 'hplus.addons.action.usage' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [attr.data-testid]="'addon-tile-tier-' + tile.addonPlanId"
+              (click)="onChangeTier(tile)">
+              {{ 'hplus.addons.action.changeTier' | translate }}
+            </button>
+            @if (!tile.system) {
+              <button
+                type="button"
+                class="btn btn-secondary"
+                [attr.data-testid]="'addon-tile-deactivate-' + tile.addonPlanId"
+                [disabled]="tile.complianceLocked"
+                (click)="onDeactivate(tile)">
+                {{ 'hplus.addons.action.deactivate' | translate }}
+              </button>
+            }
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [attr.data-testid]="'addon-tile-marketplace-' + tile.addonPlanId"
+              (click)="onMarketplace(tile)">
+              {{ 'hplus.addons.action.marketplace' | translate }}
+            </button>
+          </footer>
+        </li>
+      }
+    </ul>
+  </main>
+
+  @if (deactivateTarget(); as tile) {
+    <chora-hplus-addon-deactivate-modal
+      [addonPlanId]="tile.addonPlanId"
+      [displayName]="tile.displayName"
+      [addonCode]="tile.addonCode"
+      [billingCycleEnd]="tile.billingCycleEnd"
+      (deactivated)="onDeactivated($event)"
+      (dismissed)="onDeactivateDismissed()" />
+  }
+</section>

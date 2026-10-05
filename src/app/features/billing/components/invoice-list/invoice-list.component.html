@@ -1,0 +1,120 @@
+<section
+  class="invoice-list"
+  role="main"
+  [attr.aria-label]="'billing.invoices_title' | translate"
+  data-testid="invoice-list">
+
+  <!-- Page Header -->
+  <header class="invoice-list__header">
+    <h1 class="invoice-list__title" data-testid="invoices-title">
+      {{ 'billing.invoices_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="invoice-list__filters" data-testid="invoice-filters" role="search">
+    <div class="invoice-list__filter-group">
+      <label for="invoice-status-filter" class="invoice-list__filter-label">
+        {{ 'billing.status' | translate }}
+      </label>
+      <select
+        id="invoice-status-filter"
+        class="invoice-list__select"
+        data-testid="invoice-status-filter"
+        (change)="onStatusFilter($any($event.target).value)">
+        <option value="">{{ 'billing.all_statuses' | translate }}</option>
+        @for (st of allStatuses; track st) {
+          <option [value]="st">{{ statusLabels[st] | translate }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (invoiceState().status === 'loading') {
+    <div class="invoice-list__loading" data-testid="invoices-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="invoice-list__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (invoiceState().status === 'error') {
+    <div class="invoice-list__error" data-testid="invoices-error" role="alert">
+      <p class="invoice-list__error-text">
+        {{ 'billing.invoices_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="invoice-list__empty" data-testid="invoices-empty" role="status">
+      <p class="invoice-list__empty-text">
+        {{ 'billing.no_invoices' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Invoice Table -->
+  @if (invoiceState().status === 'success' && !isEmpty()) {
+    <div class="invoice-list__table-wrapper" data-testid="invoice-table-wrapper">
+      <table class="invoice-list__table" role="table" aria-label="Invoices">
+        <thead>
+          <tr role="row">
+            <th class="invoice-list__th" role="columnheader" scope="col">
+              {{ 'billing.invoice_number' | translate }}
+            </th>
+            <th class="invoice-list__th" role="columnheader" scope="col">
+              {{ 'billing.period' | translate }}
+            </th>
+            <th class="invoice-list__th" role="columnheader" scope="col">
+              {{ 'billing.amount' | translate }}
+            </th>
+            <th class="invoice-list__th" role="columnheader" scope="col">
+              {{ 'billing.status' | translate }}
+            </th>
+            <th class="invoice-list__th" role="columnheader" scope="col">
+              {{ 'billing.actions' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invoice of filteredInvoices(); track invoice.id) {
+            <tr class="invoice-list__row" role="row" [attr.data-testid]="'invoice-' + invoice.id">
+              <td class="invoice-list__cell invoice-list__cell--number" role="cell">
+                {{ invoice.invoice_number }}
+              </td>
+              <td class="invoice-list__cell" role="cell">
+                {{ formatDate(invoice.period_start) }} &ndash; {{ formatDate(invoice.period_end) }}
+              </td>
+              <td class="invoice-list__cell" role="cell">
+                {{ formatPrice(invoice.amount_cents, invoice.currency) }}
+              </td>
+              <td class="invoice-list__cell" role="cell">
+                <span
+                  class="invoice-list__status"
+                  [class]="statusClass(invoice.status)"
+                  [attr.data-testid]="'invoice-status-' + invoice.id">
+                  {{ statusLabels[invoice.status] | translate }}
+                </span>
+              </td>
+              <td class="invoice-list__cell" role="cell">
+                <button
+                  type="button"
+                  class="invoice-list__btn invoice-list__btn--pdf"
+                  [disabled]="!hasPdf(invoice)"
+                  [attr.data-testid]="'btn-pdf-' + invoice.id"
+                  [attr.aria-label]="'billing.download_pdf' | translate"
+                  (click)="downloadPdf(invoice)">
+                  {{ 'billing.download_pdf' | translate }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

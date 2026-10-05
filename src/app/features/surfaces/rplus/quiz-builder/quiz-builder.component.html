@@ -1,0 +1,545 @@
+<section
+  class="surface-rplus quiz-builder"
+  data-testid="rplus-quiz-builder">
+  <header class="quiz-builder__header glass-panel">
+    <div class="quiz-builder__breadcrumb">
+      <span>{{ 'rplus.quizBuilder.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.quizBuilder.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+
+    <form
+      class="quiz-builder__meta"
+      [formGroup]="metaForm"
+      data-testid="quiz-builder-meta-form">
+      <label class="quiz-builder__meta-field">
+        <span class="quiz-builder__meta-label">
+          {{ 'rplus.quizBuilder.title_label' | translate }}
+        </span>
+        <input
+          type="text"
+          formControlName="title"
+          class="quiz-builder__meta-input"
+          data-testid="quiz-builder-title-input"
+          [attr.aria-invalid]="
+            metaForm.controls['title'].touched &&
+            metaForm.controls['title'].invalid
+              ? 'true'
+              : null
+          "
+          [attr.placeholder]="
+            'rplus.quizBuilder.title_placeholder' | translate
+          " />
+      </label>
+      <label class="quiz-builder__meta-field">
+        <span class="quiz-builder__meta-label">
+          {{ 'rplus.quizBuilder.course_label' | translate }}
+        </span>
+        <input
+          type="text"
+          formControlName="courseId"
+          class="quiz-builder__meta-input"
+          data-testid="quiz-builder-course-input"
+          [attr.placeholder]="
+            'rplus.quizBuilder.course_placeholder' | translate
+          " />
+      </label>
+
+      <label class="quiz-builder__meta-field">
+        <span class="quiz-builder__meta-label">
+          <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+          {{ 'rplus.quizBuilder.time_limit_label' | translate }}
+        </span>
+        <input
+          type="number"
+          class="quiz-builder__meta-input"
+          data-testid="quiz-builder-time-limit-input"
+          [value]="quizTimeLimitSeconds()"
+          [disabled]="isPublished()"
+          [min]="0"
+          [max]="maxQuizLimit"
+          step="5"
+          [attr.placeholder]="
+            'rplus.quizBuilder.time_limit_placeholder' | translate
+          "
+          [attr.aria-describedby]="'quiz-builder-time-limit-hint'"
+          (input)="setQuizTimeLimit(numberFromEvent($event))" />
+        <span
+          id="quiz-builder-time-limit-hint"
+          class="quiz-builder__meta-hint">
+          {{ 'rplus.quizBuilder.time_limit_hint' | translate }}
+        </span>
+      </label>
+
+      <label class="quiz-builder__meta-field">
+        <span class="quiz-builder__meta-label">
+          <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+          {{ 'rplus.quizBuilder.explainer_mode_label' | translate }}
+        </span>
+        <select
+          class="quiz-builder__meta-input"
+          data-testid="quiz-builder-explainer-mode"
+          [value]="explainerMode()"
+          [disabled]="isPublished()"
+          (change)="setExplainerMode(stringFromEvent($event))">
+          @for (mode of explainerModes; track mode) {
+            <option [value]="mode" [selected]="mode === explainerMode()">
+              {{ 'rplus.quizBuilder.explainerMode.' + mode | translate }}
+            </option>
+          }
+        </select>
+      </label>
+    </form>
+
+    <div class="quiz-builder__title-row">
+      <div class="quiz-builder__title-wrap">
+        <span
+          class="badge surface-accent-bg quiz-builder__state-pill"
+          data-testid="quiz-builder-state">
+          {{ state() }}
+        </span>
+        <h1 class="quiz-builder__title" data-testid="quiz-builder-title">
+          {{ draft().title || ('rplus.quizBuilder.untitled' | translate) }}
+        </h1>
+      </div>
+      <div class="quiz-builder__cta-row">
+        <span
+          class="quiz-builder__valid-pill"
+          [class.quiz-builder__valid-pill--ok]="isValid()"
+          [class.quiz-builder__valid-pill--err]="!isValid()"
+          data-testid="quiz-builder-valid"
+          aria-live="polite">
+          @if (isValid()) {
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'rplus.quizBuilder.valid' | translate }}
+          } @else {
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            {{ 'rplus.quizBuilder.invalid' | translate }}
+          }
+        </span>
+        <button
+          type="button"
+          class="btn quiz-builder__save"
+          data-testid="quiz-builder-save"
+          [disabled]="saving() || isPublished()"
+          (click)="saveDraft()"
+          [attr.aria-label]="'rplus.quizBuilder.save_aria' | translate">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+          {{ 'rplus.quizBuilder.save' | translate }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary quiz-builder__publish"
+          data-testid="quiz-builder-publish"
+          [disabled]="!isValid() || saving() || isPublished() || hasUnsavedId()"
+          (click)="publish()"
+          [attr.aria-label]="'rplus.quizBuilder.publish_aria' | translate">
+          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+          {{ 'rplus.quizBuilder.publish' | translate }}
+        </button>
+        @if (isPublished()) {
+          <button
+            type="button"
+            class="btn btn-primary quiz-builder__launch"
+            data-testid="quiz-builder-launch"
+            [disabled]="launching()"
+            (click)="launchSession()"
+            [attr.aria-label]="'rplus.quizBuilder.launch_aria' | translate">
+            <i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i>
+            {{ 'rplus.quizBuilder.launch' | translate }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <p
+        class="quiz-builder__alert quiz-builder__alert--err"
+        role="alert"
+        data-testid="quiz-builder-error">
+        {{ errorMessage() | translate }}
+      </p>
+    }
+    @if (statusMessage()) {
+      <p
+        class="quiz-builder__alert quiz-builder__alert--ok"
+        role="status"
+        aria-live="polite"
+        data-testid="quiz-builder-status">
+        {{ statusMessage() | translate }}
+      </p>
+    }
+
+    <dl class="quiz-builder__kpis">
+      <div class="quiz-builder__kpi">
+        <dt>{{ 'rplus.quizBuilder.kpi.items' | translate }}</dt>
+        <dd data-testid="quiz-builder-items-count">{{ items().length }}</dd>
+      </div>
+      <div class="quiz-builder__kpi">
+        <dt>{{ 'rplus.quizBuilder.kpi.score' | translate }}</dt>
+        <dd data-testid="quiz-builder-total-score">{{ totalScore() }}</dd>
+      </div>
+      <div class="quiz-builder__kpi">
+        <dt>{{ 'rplus.quizBuilder.kpi.duration' | translate }}</dt>
+        <dd data-testid="quiz-builder-total-seconds">
+          {{ totalSeconds() }}s
+        </dd>
+      </div>
+    </dl>
+  </header>
+
+  <div class="quiz-builder__main">
+    <ol
+      class="quiz-builder__items glass-panel"
+      [attr.aria-label]="'rplus.quizBuilder.items_aria' | translate"
+      data-testid="quiz-builder-items">
+      @for (it of items(); track it.questionId; let i = $index) {
+        <li
+          class="quiz-builder__item"
+          [class.quiz-builder__item--active]="i === selectedIndex()"
+          [class.quiz-builder__item--invalid]="errorsFor(it).length > 0"
+          [attr.data-testid]="'quiz-builder-item-' + it.questionId">
+          <header class="quiz-builder__item-head">
+            <button
+              type="button"
+              class="quiz-builder__select"
+              [attr.data-testid]="'quiz-builder-select-' + it.questionId"
+              [attr.aria-current]="i === selectedIndex() ? 'true' : null"
+              (click)="selectItem(i)">
+              <span class="quiz-builder__item-num">Q{{ i + 1 }}</span>
+            </button>
+            <label
+              class="quiz-builder__prompt-label"
+              [attr.for]="'prompt-' + it.questionId">
+              {{ 'rplus.quizBuilder.prompt_label' | translate }}
+            </label>
+            <input
+              class="quiz-builder__prompt-input"
+              type="text"
+              [id]="'prompt-' + it.questionId"
+              [attr.data-testid]="'quiz-builder-prompt-' + it.questionId"
+              [value]="it.prompt"
+              [disabled]="isPublished()"
+              [attr.aria-invalid]="errorsFor(it).length > 0 ? 'true' : null"
+              (input)="setPrompt(it.questionId, stringFromEvent($event))" />
+            @if (it.atomId) {
+              <span
+                class="badge quiz-builder__atom-badge"
+                [attr.data-testid]="'quiz-builder-atom-badge-' + it.questionId"
+                [attr.title]="it.atomId">
+                <i class="fa-solid fa-atom" aria-hidden="true"></i>
+                {{ 'rplus.quizBuilder.from_atom' | translate }}
+              </span>
+            }
+            <button
+              type="button"
+              class="quiz-builder__remove"
+              [attr.data-testid]="'quiz-builder-remove-' + it.questionId"
+              [disabled]="isPublished()"
+              [attr.aria-label]="
+                ('rplus.quizBuilder.remove_aria' | translate) +
+                ' Q' + (i + 1)
+              "
+              (click)="removeQuestion(it.questionId)">
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+            </button>
+          </header>
+
+          <ul
+            class="quiz-builder__options"
+            role="radiogroup"
+            [attr.aria-label]="
+              'rplus.quizBuilder.options_aria' | translate
+            ">
+            @for (opt of it.options; track opt.key) {
+              <li class="quiz-builder__option">
+                <input
+                  type="radio"
+                  class="quiz-builder__correct-toggle"
+                  [name]="'correct-' + it.questionId"
+                  [id]="'correct-' + it.questionId + '-' + opt.key"
+                  [checked]="it.correctKey === opt.key"
+                  [disabled]="isPublished()"
+                  [attr.data-testid]="
+                    'quiz-builder-correct-' + it.questionId + '-' + opt.key
+                  "
+                  [attr.aria-label]="
+                    ('rplus.quizBuilder.correct_aria' | translate) +
+                    ' ' + opt.key
+                  "
+                  (change)="setCorrect(it.questionId, opt.key)" />
+                <label
+                  class="quiz-builder__option-key"
+                  [attr.for]="'correct-' + it.questionId + '-' + opt.key">
+                  {{ opt.key }}
+                </label>
+                <label
+                  class="quiz-builder__option-input-label sr-only"
+                  [attr.for]="'opt-text-' + it.questionId + '-' + opt.key">
+                  {{ 'rplus.quizBuilder.option_text_label' | translate }}
+                  {{ opt.key }}
+                </label>
+                <input
+                  type="text"
+                  class="quiz-builder__option-text"
+                  [id]="'opt-text-' + it.questionId + '-' + opt.key"
+                  [attr.data-testid]="
+                    'quiz-builder-option-' + it.questionId + '-' + opt.key
+                  "
+                  [value]="opt.text"
+                  [disabled]="isPublished()"
+                  [attr.placeholder]="
+                    'rplus.quizBuilder.option_placeholder' | translate
+                  "
+                  (input)="
+                    setOptionText(
+                      it.questionId,
+                      opt.key,
+                      stringFromEvent($event)
+                    )
+                  " />
+                <label
+                  class="quiz-builder__option-explainer-label sr-only"
+                  [attr.for]="
+                    'opt-explainer-' + it.questionId + '-' + opt.key
+                  ">
+                  {{ 'rplus.quizBuilder.option_explainer_label' | translate }}
+                  {{ opt.key }}
+                </label>
+                <input
+                  type="text"
+                  class="quiz-builder__option-explainer"
+                  [id]="'opt-explainer-' + it.questionId + '-' + opt.key"
+                  [attr.data-testid]="
+                    'quiz-builder-explainer-' + it.questionId + '-' + opt.key
+                  "
+                  [value]="opt.explainer"
+                  [disabled]="isPublished()"
+                  [attr.placeholder]="
+                    'rplus.quizBuilder.option_explainer_placeholder'
+                      | translate
+                  "
+                  (input)="
+                    setOptionExplainer(
+                      it.questionId,
+                      opt.key,
+                      stringFromEvent($event)
+                    )
+                  " />
+              </li>
+            }
+          </ul>
+
+          <div class="quiz-builder__controls">
+            <div class="quiz-builder__field">
+              <label [attr.for]="'timer-' + it.questionId">
+                <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                {{ 'rplus.quizBuilder.timer_label' | translate }}
+              </label>
+              <input
+                type="number"
+                [id]="'timer-' + it.questionId"
+                class="quiz-builder__num"
+                [attr.data-testid]="'quiz-builder-timer-' + it.questionId"
+                [value]="it.timerSeconds"
+                [disabled]="isPublished()"
+                [min]="minTimer"
+                [max]="maxTimer"
+                step="5"
+                (input)="setTimerSoft(it.questionId, numberFromEvent($event))"
+                (change)="setTimer(it.questionId, numberFromEvent($event))" />
+              <span class="quiz-builder__unit">s</span>
+            </div>
+            <div class="quiz-builder__field">
+              <label [attr.for]="'score-' + it.questionId">
+                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                {{ 'rplus.quizBuilder.score_label' | translate }}
+              </label>
+              <input
+                type="number"
+                [id]="'score-' + it.questionId"
+                class="quiz-builder__num"
+                [attr.data-testid]="'quiz-builder-score-' + it.questionId"
+                [value]="it.scorePoints"
+                [disabled]="isPublished()"
+                [min]="minScore"
+                [max]="maxScore"
+                step="1"
+                (input)="setScoreSoft(it.questionId, numberFromEvent($event))"
+                (change)="setScore(it.questionId, numberFromEvent($event))" />
+              <span class="quiz-builder__unit">pts</span>
+            </div>
+            <div class="quiz-builder__field quiz-builder__field--double">
+              <label [attr.for]="'double-' + it.questionId">
+                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                {{ 'rplus.quizBuilder.double_points_label' | translate }}
+              </label>
+              <input
+                type="checkbox"
+                [id]="'double-' + it.questionId"
+                [attr.data-testid]="'quiz-builder-double-' + i"
+                [checked]="it.doublePoints"
+                [disabled]="isPublished()"
+                (change)="setDoublePoints(it.questionId, $event)" />
+            </div>
+          </div>
+
+          @if (errorsFor(it).length > 0) {
+            <p
+              class="quiz-builder__errors"
+              role="alert"
+              aria-live="polite"
+              [attr.data-testid]="'quiz-builder-errors-' + it.questionId">
+              {{ errorsFor(it).join(' ') }}
+            </p>
+          }
+        </li>
+      } @empty {
+        <li class="quiz-builder__empty" data-testid="quiz-builder-empty">
+          <i class="fa-regular fa-clipboard" aria-hidden="true"></i>
+          <p>{{ 'rplus.quizBuilder.empty_message' | translate }}</p>
+        </li>
+      }
+
+      <li class="quiz-builder__add-row">
+        <button
+          type="button"
+          class="btn quiz-builder__add"
+          data-testid="quiz-builder-add"
+          [disabled]="isPublished()"
+          (click)="addQuestion()"
+          [attr.aria-label]="'rplus.quizBuilder.add_aria' | translate">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{ 'rplus.quizBuilder.add' | translate }}
+        </button>
+        <button
+          type="button"
+          class="btn quiz-builder__add-atom"
+          data-testid="quiz-builder-add-from-atom"
+          [disabled]="isPublished()"
+          (click)="openAtomComposer()"
+          [attr.aria-label]="
+            'rplus.quizBuilder.add_from_atom_aria' | translate
+          ">
+          <i class="fa-solid fa-atom" aria-hidden="true"></i>
+          {{ 'rplus.quizBuilder.add_from_atom' | translate }}
+        </button>
+      </li>
+
+      @if (atomComposerOpen()) {
+        <li
+          class="quiz-builder__atom-composer glass-panel"
+          data-testid="quiz-builder-atom-composer">
+          <div class="quiz-builder__atom-composer-head">
+            <span class="quiz-builder__atom-label">
+              <i class="fa-solid fa-atom" aria-hidden="true"></i>
+              {{ 'rplus.quizBuilder.atom_picker_label' | translate }}
+            </span>
+            <button
+              type="button"
+              class="btn quiz-builder__atom-cancel"
+              data-testid="quiz-builder-atom-cancel"
+              (click)="cancelAtomComposer()">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              {{ 'rplus.quizBuilder.cancel' | translate }}
+            </button>
+          </div>
+          <!--
+            Reuses the A+ AtomQuestionPickerComponent
+            (chora-aplus-atom-question-picker): a standalone, BFF-only
+            question search against GET /api/atoms/questions/search. Its
+            per-row "+" quick-add emits `pickedQuestion`; the host snapshots
+            the chosen LearningAtom into a new MCQ item (atom_id provenance +
+            pre-filled prompt/options resolved via getAtomProjection).
+          -->
+          <chora-aplus-atom-question-picker
+            data-testid="quiz-builder-atom-picker"
+            (pickedQuestion)="onAtomPicked($event)" />
+          @if (atomComposing()) {
+            <p
+              class="quiz-builder__atom-note"
+              role="status"
+              aria-live="polite"
+              data-testid="quiz-builder-atom-composing">
+              <i class="fa-solid fa-spinner" aria-hidden="true"></i>
+              {{ 'rplus.quizBuilder.atom_composing' | translate }}
+            </p>
+          } @else {
+            <p class="quiz-builder__atom-note">
+              {{ 'rplus.quizBuilder.atom_picker_note' | translate }}
+            </p>
+          }
+        </li>
+      }
+    </ol>
+
+    <aside
+      class="quiz-builder__preview glass-panel"
+      aria-labelledby="quiz-builder-preview-heading"
+      data-testid="quiz-builder-preview">
+      <h2
+        id="quiz-builder-preview-heading"
+        class="quiz-builder__preview-title">
+        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+        {{ 'rplus.quizBuilder.preview_title' | translate }}
+      </h2>
+      @if (selectedItem(); as s) {
+        <article class="quiz-builder__preview-card">
+          <p
+            class="quiz-builder__preview-prompt"
+            data-testid="quiz-builder-preview-prompt">
+            {{ s.prompt || ('rplus.quizBuilder.preview_prompt_empty' | translate) }}
+          </p>
+          <ol class="quiz-builder__preview-options">
+            @for (opt of s.options; track opt.key) {
+              <li
+                class="quiz-builder__preview-option"
+                [class.quiz-builder__preview-option--correct]="
+                  opt.key === s.correctKey
+                "
+                [attr.data-testid]="
+                  'quiz-builder-preview-option-' + opt.key
+                ">
+                <span class="quiz-builder__preview-key">{{ opt.key }}</span>
+                <span class="quiz-builder__preview-text">
+                  {{ opt.text || ('rplus.quizBuilder.preview_option_empty' | translate) }}
+                </span>
+                @if (explainerMode() !== 'NEVER' && opt.explainer) {
+                  <span
+                    class="quiz-builder__preview-explainer"
+                    [attr.data-testid]="
+                      'quiz-builder-preview-explainer-' + opt.key
+                    ">
+                    <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+                    {{ opt.explainer }}
+                  </span>
+                }
+              </li>
+            }
+          </ol>
+          <footer class="quiz-builder__preview-meta">
+            <span data-testid="quiz-builder-preview-timer">
+              <i class="fa-solid fa-clock" aria-hidden="true"></i>
+              {{ s.timerSeconds }}s
+            </span>
+            <span data-testid="quiz-builder-preview-score">
+              <i class="fa-solid fa-star" aria-hidden="true"></i>
+              {{ s.scorePoints }} pts
+            </span>
+            <span data-testid="quiz-builder-preview-explainer-mode">
+              <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+              {{ 'rplus.quizBuilder.explainerMode.' + explainerMode()
+                | translate }}
+            </span>
+          </footer>
+        </article>
+      } @else {
+        <p class="quiz-builder__preview-empty">
+          {{ 'rplus.quizBuilder.preview_empty' | translate }}
+        </p>
+      }
+    </aside>
+  </div>
+</section>

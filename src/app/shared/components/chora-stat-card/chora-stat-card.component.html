@@ -1,0 +1,17 @@
+<div
+  class="chora-stat-card"
+  role="group"
+  [attr.data-accent]="accent()"
+  [attr.data-state]="state()"
+  [attr.aria-label]="ariaLabel()">
+  <span class="chora-stat-card__label" aria-hidden="true">{{ label() }}</span>
+  <span
+    class="chora-stat-card__value"
+    aria-hidden="true"
+    [attr.data-testid]="valueTestid()">
+    {{ displayValue() }}
+  </span>
+  @if (hint(); as h) {
+    <span class="chora-stat-card__hint" aria-hidden="true">{{ h }}</span>
+  }
+</div>

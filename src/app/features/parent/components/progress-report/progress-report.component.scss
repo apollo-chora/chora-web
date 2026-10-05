@@ -1,0 +1,198 @@
+:host {
+  display: block;
+}
+
+.progress-report {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Learner Info
+  // -------------------------------------------------------------------------
+
+  &__learner-info {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__learner-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__last-activity {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Stats Grid
+  // -------------------------------------------------------------------------
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--chora-space-md, 16px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--chora-space-md, 16px);
+    background: var(--chora-color-surface-1, #fafafa);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+  }
+
+  &__stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--chora-color-text, #111);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__stat-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--chora-color-text-muted, #666);
+    text-align: center;
+    margin-block-start: var(--chora-space-xs, 4px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Score Colors
+  // -------------------------------------------------------------------------
+
+  &__score {
+    &--high {
+      color: #16a34a;
+    }
+
+    &--medium {
+      color: #ca8a04;
+    }
+
+    &--low {
+      color: #dc2626;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Streak Progress Bar
+  // -------------------------------------------------------------------------
+
+  &__streak-section {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__streak-heading {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-sm, 8px);
+  }
+
+  &__streak-bar {
+    height: 12px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__streak-fill {
+    height: 100%;
+    background: var(--chora-color-primary, #2563eb);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+    min-width: 0;
+  }
+
+  &__streak-label {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // -------------------------------------------------------------------------
+  // Footer
+  // -------------------------------------------------------------------------
+
+  &__footer {
+    border-block-start: 1px solid var(--chora-color-border, #e5e5e5);
+    padding-block-start: var(--chora-space-md, 16px);
+  }
+
+  &__generated-at {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Loading / Empty / Error
+  // -------------------------------------------------------------------------
+
+  &__loading {
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__skeleton-row {
+    height: 16px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-sm, 4px);
+    margin-block-end: var(--chora-space-sm, 8px);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+  }
+
+  &__error-text {
+    font-size: 0.875rem;
+    color: #991b1b;
+    margin: 0;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Desktop enhancement — wider stats grid
+@media (min-width: 1280px) {
+  .progress-report {
+    &__stats {
+      grid-template-columns: repeat(4, 1fr);
+      max-width: 960px;
+    }
+
+    &__streak-section {
+      max-width: 480px;
+    }
+  }
+}

@@ -1,0 +1,74 @@
+<chora-cplus-page-header
+  [title]="'cplus.leaderboards.title' | translate"
+  [description]="'cplus.leaderboards.subtitle' | translate"
+  [breadcrumb]="breadcrumb"
+></chora-cplus-page-header>
+
+<div class="cplus-leaderboards__filters">
+  <div class="cplus-leaderboards__filter">
+    <span class="cplus-leaderboards__filter-label">{{ 'cplus.leaderboards.scope_label' | translate }}</span>
+    <chora-cplus-tabs [tabs]="scopeTabs" [activeId]="scope()" (activeChange)="onScopeChange($event)" />
+  </div>
+  <div class="cplus-leaderboards__filter">
+    <span class="cplus-leaderboards__filter-label">{{ 'cplus.leaderboards.metric_label' | translate }}</span>
+    <chora-cplus-tabs [tabs]="metricTabs" [activeId]="metric()" (activeChange)="onMetricChange($event)" />
+  </div>
+  <div class="cplus-leaderboards__filter">
+    <span class="cplus-leaderboards__filter-label">{{ 'cplus.leaderboards.period_label' | translate }}</span>
+    <chora-cplus-tabs [tabs]="periodTabs" [activeId]="period()" (activeChange)="onPeriodChange($event)" />
+  </div>
+</div>
+
+@if (state().status === 'loading') {
+  <p class="cplus-leaderboards__status" role="status">{{ 'cplus.leaderboards.loading' | translate }}</p>
+}
+
+@if (state().status === 'error') {
+  <p class="cplus-leaderboards__status cplus-leaderboards__status--error" role="alert">
+    {{ $any(state()).error.message | translate }}
+  </p>
+}
+
+@if (state().status === 'success') {
+  @if (entries().length === 0) {
+    <chora-cplus-empty-state [heading]="'cplus.leaderboards.empty' | translate" [icon]="'trophy'" />
+  } @else {
+    @if (podium().length > 0) {
+      <div class="cplus-leaderboards__podium" aria-label="{{ 'cplus.leaderboards.podium_label' | translate }}">
+        @for (entry of podium(); track entry.gcid; let i = $index) {
+          <chora-cplus-stat-card
+            [label]="podiumLabel(i)"
+            [value]="entry.score"
+            [accent]="podiumAccent(i)"
+            [hint]="displayName(entry)"
+          />
+        }
+      </div>
+    }
+    @if (rest().length > 0) {
+      <div class="cplus-leaderboards__rows" role="list" aria-label="{{ 'cplus.leaderboards.rows_label' | translate }}">
+        @for (entry of rest(); track entry.gcid) {
+          <chora-cplus-card elevation="flat" cardRole="listitem">
+            <div class="cplus-leaderboards-row" [class.cplus-leaderboards-row--me]="isMe(entry)">
+              <span class="cplus-leaderboards-row__rank">{{ 'cplus.leaderboards.rank_label' | translate }} {{ entry.rank }}</span>
+              <span class="cplus-leaderboards-row__name">
+                {{ displayName(entry) }}
+                @if (isMe(entry)) {
+                  <span class="cplus-leaderboards-row__you-badge">{{ 'cplus.leaderboards.you' | translate }}</span>
+                }
+              </span>
+              <span class="cplus-leaderboards-row__score">{{ entry.score }} {{ metricUnit() }}</span>
+            </div>
+          </chora-cplus-card>
+        }
+      </div>
+    }
+    @if (hasMore()) {
+      <div #sentinel class="cplus-leaderboards__sentinel" aria-hidden="true">
+        @if (loadingMore()) {
+          <span class="cplus-leaderboards__loading-more" role="status">{{ 'cplus.leaderboards.loading' | translate }}</span>
+        }
+      </div>
+    }
+  }
+}

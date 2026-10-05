@@ -1,0 +1,138 @@
+:host {
+  display: block;
+}
+
+.familiar-memory-panel {
+  padding: var(--chora-space-md, 16px);
+
+  // Header
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-block-end: var(--chora-space-md, 16px);
+  }
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__clear-btn {
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    background: #fecaca;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #fca5a5;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #991b1b;
+      outline-offset: 2px;
+    }
+  }
+
+  // States
+  &__loading,
+  &__error,
+  &__empty {
+    text-align: center;
+    padding: var(--chora-space-lg, 24px);
+  }
+
+  &__loading {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__error {
+    font-size: 0.875rem;
+    color: var(--chora-color-danger, #991b1b);
+  }
+
+  &__empty-text {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  // List
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__entry {
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+  }
+
+  &__entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  // Source badges
+  &__source {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    border-radius: 10px;
+    text-transform: uppercase;
+
+    &--conversation {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    &--learning_activity {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    &--assessment {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+  }
+
+  &__relevance {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__content {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    margin: 0 0 var(--chora-space-xs, 4px);
+    color: var(--chora-color-text, #333);
+  }
+
+  &__date {
+    font-size: 0.6875rem;
+    color: var(--chora-color-text-muted, #999);
+  }
+}
+
+@media (min-width: 1280px) {
+  .familiar-memory-panel {
+    max-width: 600px;
+  }
+}

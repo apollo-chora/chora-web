@@ -1,0 +1,192 @@
+<section
+  class="circuit-breaker-controls"
+  role="main"
+  [attr.aria-label]="'admin.investigation.circuit_breaker_title' | translate"
+  data-testid="circuit-breaker-controls">
+
+  <!-- Page Header -->
+  <header class="circuit-breaker-controls__header">
+    <div class="circuit-breaker-controls__header-nav">
+      <a
+        routerLink="../"
+        class="circuit-breaker-controls__back-link"
+        data-testid="btn-back"
+        [attr.aria-label]="'admin.investigation.back_to_workspace' | translate">
+        &larr; {{ 'admin.investigation.back_to_workspace' | translate }}
+      </a>
+      <h1 class="circuit-breaker-controls__title" data-testid="cb-title">
+        {{ 'admin.investigation.circuit_breaker_title' | translate }}
+      </h1>
+    </div>
+    <button
+      type="button"
+      class="circuit-breaker-controls__btn circuit-breaker-controls__btn--primary"
+      (click)="refresh()"
+      data-testid="btn-refresh"
+      [attr.aria-label]="'admin.investigation.refresh' | translate">
+      {{ 'admin.investigation.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Error (fail-loud — no fabricated fallback data) -->
+  @if (error()) {
+    <div class="circuit-breaker-controls__error" data-testid="cb-error" role="alert">
+      <p class="circuit-breaker-controls__error-text">
+        {{ error()! | translate }}
+      </p>
+      <button
+        type="button"
+        class="circuit-breaker-controls__btn circuit-breaker-controls__btn--primary"
+        (click)="refresh()"
+        data-testid="cb-error-retry"
+        [attr.aria-label]="'admin.investigation.refresh' | translate">
+        {{ 'admin.investigation.refresh' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Summary Cards -->
+  @if (!error()) {
+  <div class="circuit-breaker-controls__summary" data-testid="cb-summary" role="status">
+    <div class="circuit-breaker-controls__summary-card circuit-breaker-controls__summary-card--closed">
+      <span class="circuit-breaker-controls__summary-value">{{ closedCount() }}</span>
+      <span class="circuit-breaker-controls__summary-label">
+        {{ 'admin.investigation.cb_closed' | translate }}
+      </span>
+    </div>
+    <div class="circuit-breaker-controls__summary-card circuit-breaker-controls__summary-card--half-open">
+      <span class="circuit-breaker-controls__summary-value">{{ halfOpenCount() }}</span>
+      <span class="circuit-breaker-controls__summary-label">
+        {{ 'admin.investigation.cb_half_open' | translate }}
+      </span>
+    </div>
+    <div class="circuit-breaker-controls__summary-card circuit-breaker-controls__summary-card--open">
+      <span class="circuit-breaker-controls__summary-value">{{ openCount() }}</span>
+      <span class="circuit-breaker-controls__summary-label">
+        {{ 'admin.investigation.cb_open' | translate }}
+      </span>
+    </div>
+    <div class="circuit-breaker-controls__summary-card circuit-breaker-controls__summary-card--quarantined">
+      <span class="circuit-breaker-controls__summary-value">{{ quarantinedCount() }}</span>
+      <span class="circuit-breaker-controls__summary-label">
+        {{ 'admin.investigation.quarantined' | translate }}
+      </span>
+    </div>
+  </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="circuit-breaker-controls__loading" data-testid="cb-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="circuit-breaker-controls__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Agent List -->
+  @if (!loading() && !error()) {
+    <div class="circuit-breaker-controls__agent-list" data-testid="agent-list" role="list">
+      @for (agent of agents(); track agent.agent_id) {
+        <article
+          class="circuit-breaker-controls__agent-card"
+          [class.circuit-breaker-controls__agent-card--quarantined]="agent.is_quarantined"
+          role="listitem"
+          [attr.data-testid]="'agent-' + agent.agent_id">
+
+          <!-- Card Header -->
+          <div class="circuit-breaker-controls__agent-header">
+            <div class="circuit-breaker-controls__agent-info">
+              <h3 class="circuit-breaker-controls__agent-name">{{ agent.agent_name }}</h3>
+              <span class="circuit-breaker-controls__agent-service">{{ agent.service }}</span>
+            </div>
+            <div class="circuit-breaker-controls__badges">
+              <span
+                class="circuit-breaker-controls__state-badge"
+                [class]="stateClass(agent.state)"
+                [attr.aria-label]="stateLabels[agent.state] | translate">
+                {{ stateLabels[agent.state] | translate }}
+              </span>
+              @if (agent.is_quarantined) {
+                <span class="circuit-breaker-controls__quarantine-badge">
+                  {{ 'admin.investigation.quarantined' | translate }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Card Details -->
+          <div class="circuit-breaker-controls__agent-details">
+            <div class="circuit-breaker-controls__detail-item">
+              <span class="circuit-breaker-controls__detail-label">
+                {{ 'admin.investigation.failure_count' | translate }}
+              </span>
+              <span class="circuit-breaker-controls__detail-value">
+                {{ agent.failure_count }}
+              </span>
+            </div>
+            <div class="circuit-breaker-controls__detail-item">
+              <span class="circuit-breaker-controls__detail-label">
+                {{ 'admin.investigation.last_failure' | translate }}
+              </span>
+              <span class="circuit-breaker-controls__detail-value">
+                {{ formatTimestamp(agent.last_failure_at) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Canary Routing Slider -->
+          <div class="circuit-breaker-controls__canary-section">
+            <label
+              [for]="'canary-' + agent.agent_id"
+              class="circuit-breaker-controls__canary-label">
+              {{ 'admin.investigation.canary_traffic' | translate }}: {{ agent.canary_pct }}%
+            </label>
+            <div class="circuit-breaker-controls__canary-row">
+              <input
+                type="range"
+                [id]="'canary-' + agent.agent_id"
+                class="circuit-breaker-controls__canary-slider"
+                min="0"
+                max="100"
+                step="5"
+                [value]="agent.canary_pct"
+                [disabled]="agent.is_quarantined"
+                [attr.aria-label]="'admin.investigation.canary_traffic' | translate"
+                [attr.data-testid]="'canary-slider-' + agent.agent_id"
+                (input)="onCanaryChange(agent.agent_id, $event)" />
+              <button
+                type="button"
+                class="circuit-breaker-controls__btn circuit-breaker-controls__btn--small"
+                [disabled]="agent.is_quarantined || isActionInProgress(agent.agent_id)"
+                (click)="applyCanaryRouting(agent)"
+                [attr.data-testid]="'btn-apply-canary-' + agent.agent_id"
+                [attr.aria-label]="'admin.investigation.apply_routing' | translate">
+                {{ 'admin.investigation.apply' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="circuit-breaker-controls__agent-actions">
+            <button
+              type="button"
+              class="circuit-breaker-controls__btn"
+              [class.circuit-breaker-controls__btn--danger]="!agent.is_quarantined"
+              [class.circuit-breaker-controls__btn--success]="agent.is_quarantined"
+              [disabled]="isActionInProgress(agent.agent_id)"
+              (click)="toggleQuarantine(agent)"
+              [attr.data-testid]="'btn-quarantine-' + agent.agent_id"
+              [attr.aria-label]="(agent.is_quarantined ? 'admin.investigation.unquarantine' : 'admin.investigation.quarantine') | translate">
+              @if (agent.is_quarantined) {
+                {{ 'admin.investigation.unquarantine' | translate }}
+              } @else {
+                {{ 'admin.investigation.quarantine' | translate }}
+              }
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

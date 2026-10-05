@@ -1,0 +1,298 @@
+<section
+  class="merge-wizard"
+  role="main"
+  [attr.aria-label]="'identity.portability.merge_title' | translate"
+  data-testid="merge-wizard">
+
+  <!-- Header -->
+  <header class="merge-wizard__header">
+    <h1 class="merge-wizard__title" data-testid="merge-title">
+      {{ 'identity.portability.merge_title' | translate }}
+    </h1>
+    <p class="merge-wizard__subtitle">
+      {{ 'identity.portability.merge_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Step Indicator -->
+  <nav class="merge-wizard__steps" aria-label="Merge wizard steps" data-testid="step-indicator">
+    @for (label of stepLabels; track label; let i = $index) {
+      <div
+        class="merge-wizard__step"
+        [class.merge-wizard__step--active]="isStepActive(i + 1)"
+        [class.merge-wizard__step--completed]="isStepCompleted(i + 1)"
+        [attr.aria-current]="isStepActive(i + 1) ? 'step' : null">
+        <span class="merge-wizard__step-number">{{ i + 1 }}</span>
+        <span class="merge-wizard__step-label">{{ label | translate }}</span>
+      </div>
+    }
+  </nav>
+
+  <!-- Step Content -->
+  <div class="merge-wizard__content" aria-live="polite">
+    @switch (currentStep()) {
+      @case (1) {
+        <!-- Step 1: Identify Target GCID -->
+        <div class="merge-wizard__step-panel" data-testid="step-1">
+          <h2 class="merge-wizard__panel-title">
+            {{ 'identity.portability.merge_step1_title' | translate }}
+          </h2>
+          <p class="merge-wizard__panel-description">
+            {{ 'identity.portability.merge_step1_description' | translate }}
+          </p>
+
+          <div class="merge-wizard__form-group">
+            <label for="target-email" class="merge-wizard__label">
+              {{ 'identity.portability.merge_target_email' | translate }}
+            </label>
+            <input
+              id="target-email"
+              type="email"
+              class="merge-wizard__input"
+              data-testid="input-target-email"
+              [attr.aria-label]="'identity.portability.merge_target_email' | translate"
+              [ngModel]="targetEmail()"
+              (ngModelChange)="targetEmail.set($event)"
+              [attr.placeholder]="'identity.portability.merge_email_placeholder' | translate" />
+          </div>
+
+          <div class="merge-wizard__actions">
+            <button
+              type="button"
+              class="merge-wizard__btn merge-wizard__btn--primary"
+              data-testid="btn-step1-next"
+              [disabled]="!canProceedStep1()"
+              (click)="onInitiateMerge()"
+              [attr.aria-label]="'identity.portability.merge_next' | translate">
+              {{ 'identity.portability.merge_next' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+
+      @case (2) {
+        <!-- Step 2: Authenticate Other GCID -->
+        <div class="merge-wizard__step-panel" data-testid="step-2">
+          <h2 class="merge-wizard__panel-title">
+            {{ 'identity.portability.merge_step2_title' | translate }}
+          </h2>
+          <p class="merge-wizard__panel-description">
+            {{ 'identity.portability.merge_step2_description' | translate }}
+          </p>
+
+          @if (!authenticated()) {
+            <div class="merge-wizard__auth-section">
+              <p class="merge-wizard__auth-email" data-testid="auth-target-email">
+                {{ targetEmail() }}
+              </p>
+              <button
+                type="button"
+                class="merge-wizard__btn merge-wizard__btn--primary"
+                data-testid="btn-authenticate"
+                (click)="onAuthenticate()"
+                [attr.aria-label]="'identity.portability.merge_authenticate' | translate">
+                {{ 'identity.portability.merge_authenticate' | translate }}
+              </button>
+            </div>
+          }
+
+          @if (authenticated()) {
+            <div
+              class="merge-wizard__auth-confirmed"
+              role="status"
+              data-testid="auth-confirmed">
+              <span class="merge-wizard__auth-icon" aria-hidden="true">&#10003;</span>
+              <span>{{ 'identity.portability.merge_authenticated' | translate }}</span>
+            </div>
+
+            <div class="merge-wizard__actions">
+              <button
+                type="button"
+                class="merge-wizard__btn merge-wizard__btn--secondary"
+                data-testid="btn-step2-back"
+                (click)="goToStep(1)">
+                {{ 'identity.portability.merge_back' | translate }}
+              </button>
+              <button
+                type="button"
+                class="merge-wizard__btn merge-wizard__btn--primary"
+                data-testid="btn-step2-next"
+                (click)="goToStep(3)">
+                {{ 'identity.portability.merge_next' | translate }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      @case (3) {
+        <!-- Step 3: Preview Merge Impact -->
+        <div class="merge-wizard__step-panel" data-testid="step-3">
+          <h2 class="merge-wizard__panel-title">
+            {{ 'identity.portability.merge_step3_title' | translate }}
+          </h2>
+
+          @if (mergeState().status === 'loading') {
+            <div class="merge-wizard__loading" aria-live="polite" data-testid="preview-loading">
+              {{ 'identity.portability.merge_loading_preview' | translate }}
+            </div>
+          }
+
+          @if (mergePreview(); as preview) {
+            <div class="merge-wizard__preview" data-testid="merge-preview">
+              <h3 class="merge-wizard__preview-heading">
+                {{ 'identity.portability.merge_data_summary' | translate }}
+              </h3>
+
+              <div class="merge-wizard__preview-grid" role="list">
+                <div class="merge-wizard__preview-item" role="listitem">
+                  <span class="merge-wizard__preview-label">
+                    {{ 'identity.portability.merge_memberships' | translate }}
+                  </span>
+                  <span class="merge-wizard__preview-value" data-testid="preview-memberships">
+                    {{ preview.tenant_memberships }}
+                  </span>
+                </div>
+                <div class="merge-wizard__preview-item" role="listitem">
+                  <span class="merge-wizard__preview-label">
+                    {{ 'identity.portability.merge_assessments' | translate }}
+                  </span>
+                  <span class="merge-wizard__preview-value" data-testid="preview-assessments">
+                    {{ preview.assessment_results }}
+                  </span>
+                </div>
+                <div class="merge-wizard__preview-item" role="listitem">
+                  <span class="merge-wizard__preview-label">
+                    {{ 'identity.portability.merge_knowledge_nodes' | translate }}
+                  </span>
+                  <span class="merge-wizard__preview-value" data-testid="preview-knowledge">
+                    {{ preview.knowledge_graph_nodes }}
+                  </span>
+                </div>
+                <div class="merge-wizard__preview-item" role="listitem">
+                  <span class="merge-wizard__preview-label">
+                    {{ 'identity.portability.merge_familiar_obs' | translate }}
+                  </span>
+                  <span class="merge-wizard__preview-value" data-testid="preview-familiar">
+                    {{ preview.familiar_observations }}
+                  </span>
+                </div>
+                <div class="merge-wizard__preview-item" role="listitem">
+                  <span class="merge-wizard__preview-label">
+                    {{ 'identity.portability.merge_digital_skins' | translate }}
+                  </span>
+                  <span class="merge-wizard__preview-value" data-testid="preview-skins">
+                    {{ preview.digital_skins }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Conflicts -->
+              @if (hasConflicts()) {
+                <div class="merge-wizard__conflicts" data-testid="merge-conflicts">
+                  <h3 class="merge-wizard__preview-heading">
+                    {{ 'identity.portability.merge_conflicts' | translate }}
+                  </h3>
+                  <div role="list">
+                    @for (conflict of conflicts(); track $index) {
+                      <div class="merge-wizard__conflict-item" role="listitem">
+                        <span class="merge-wizard__conflict-type">
+                          {{ formatConflictType(conflict.type) | translate }}
+                        </span>
+                        <p class="merge-wizard__conflict-desc">{{ conflict.description }}</p>
+                        <span class="merge-wizard__conflict-resolution">
+                          {{ formatResolution(conflict.resolution) | translate }}
+                        </span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="merge-wizard__actions">
+              <button
+                type="button"
+                class="merge-wizard__btn merge-wizard__btn--secondary"
+                data-testid="btn-step3-back"
+                (click)="goToStep(2)">
+                {{ 'identity.portability.merge_back' | translate }}
+              </button>
+              <button
+                type="button"
+                class="merge-wizard__btn merge-wizard__btn--danger"
+                data-testid="btn-cancel-merge"
+                (click)="onCancelMerge()">
+                {{ 'identity.portability.merge_cancel' | translate }}
+              </button>
+              <button
+                type="button"
+                class="merge-wizard__btn merge-wizard__btn--primary"
+                data-testid="btn-step3-next"
+                (click)="onProceedToConfirm()">
+                {{ 'identity.portability.merge_proceed_confirm' | translate }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      @case (4) {
+        <!-- Step 4: Confirm Merge -->
+        <div class="merge-wizard__step-panel" data-testid="step-4">
+          <h2 class="merge-wizard__panel-title">
+            {{ 'identity.portability.merge_step4_title' | translate }}
+          </h2>
+          <p class="merge-wizard__panel-description merge-wizard__panel-description--warning">
+            {{ 'identity.portability.merge_step4_warning' | translate }}
+          </p>
+
+          <div class="merge-wizard__form-group">
+            <label for="confirmation-text" class="merge-wizard__label">
+              {{ 'identity.portability.merge_type_merge' | translate }}
+            </label>
+            <input
+              id="confirmation-text"
+              type="text"
+              class="merge-wizard__input"
+              data-testid="input-confirmation"
+              [attr.aria-label]="'identity.portability.merge_type_merge' | translate"
+              [ngModel]="confirmationText()"
+              (ngModelChange)="confirmationText.set($event)"
+              placeholder="MERGE" />
+          </div>
+
+          <div class="merge-wizard__actions">
+            <button
+              type="button"
+              class="merge-wizard__btn merge-wizard__btn--secondary"
+              data-testid="btn-step4-back"
+              (click)="goToStep(3)">
+              {{ 'identity.portability.merge_back' | translate }}
+            </button>
+            <button
+              type="button"
+              class="merge-wizard__btn merge-wizard__btn--danger"
+              data-testid="btn-confirm-merge"
+              [disabled]="!canSubmitMerge()"
+              (click)="onConfirmMerge()"
+              [attr.aria-label]="'identity.portability.merge_confirm_button' | translate">
+              @if (submitting()) {
+                {{ 'identity.portability.merge_submitting' | translate }}
+              } @else {
+                {{ 'identity.portability.merge_confirm_button' | translate }}
+              }
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Error State -->
+  @if (mergeState().status === 'error') {
+    <div class="merge-wizard__error" role="alert" aria-live="assertive" data-testid="merge-error">
+      <p>{{ 'identity.portability.merge_error' | translate }}</p>
+    </div>
+  }
+</section>

@@ -1,0 +1,114 @@
+:host {
+  display: inline-block;
+}
+
+.quality-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  flex-wrap: wrap;
+
+  &--compact {
+    gap: var(--chora-space-xs);
+    font-size: 11px;
+  }
+
+  // --- Difficulty ---
+  &__difficulty {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--chora-color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  &__dots {
+    display: flex;
+    gap: 3px;
+  }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--chora-color-surface-2);
+    transition: background var(--chora-transition-fast);
+
+    &--filled {
+      .quality-badge__difficulty--easy & {
+        background: #4caf50;
+      }
+
+      .quality-badge__difficulty--medium & {
+        background: #ff9800;
+      }
+
+      .quality-badge__difficulty--hard & {
+        background: #f44336;
+      }
+    }
+  }
+
+  // --- Quality score ---
+  &__quality {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__percent {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: var(--chora-radius-full);
+
+    .quality-badge__quality--high & {
+      color: #2e7d32;
+      background: rgba(76, 175, 80, 0.12);
+    }
+
+    .quality-badge__quality--medium & {
+      color: #e65100;
+      background: rgba(255, 152, 0, 0.12);
+    }
+
+    .quality-badge__quality--low & {
+      color: #c62828;
+      background: rgba(244, 67, 54, 0.12);
+    }
+  }
+
+  // --- Bloom's level tag ---
+  &__blooms {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: var(--chora-radius-full);
+    background: rgba(124, 77, 255, 0.1);
+    color: #7c4dff;
+    text-transform: capitalize;
+  }
+}
+
+.quality-badge--compact {
+  .quality-badge__dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .quality-badge__percent {
+    font-size: 10px;
+    padding: 0 4px;
+  }
+
+  .quality-badge__blooms {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+}

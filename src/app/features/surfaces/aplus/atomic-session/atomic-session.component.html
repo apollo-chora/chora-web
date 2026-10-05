@@ -1,0 +1,495 @@
+<section
+  class="aplus-atomic-session surface-aplus"
+  aria-labelledby="aplus-atomic-session-heading"
+  data-testid="aplus-atomic-session">
+  @switch (loadState().status) {
+    @case ('loading') {
+      <div
+        class="glass-panel atomic-session__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="atomic-session-loading">
+        {{ 'aplus.atomic_session.loading' | translate }}
+      </div>
+    }
+    @case ('error') {
+      <div
+        class="glass-panel atomic-session__error"
+        role="alert"
+        data-testid="atomic-session-load-error">
+        <p>{{ loadErrorKey() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-testid="atomic-session-retry"
+          (click)="retryLoad()">
+          {{ 'aplus.atomic_session.retry' | translate }}
+        </button>
+      </div>
+    }
+    @case ('success') {
+      @if (atom(); as a) {
+        <div class="atomic-session__layout">
+          <article class="atomic-session__main glass-panel">
+            <header class="atomic-session__header">
+              <span
+                class="topic-pill"
+                data-testid="atomic-session-type"
+                [attr.data-atom-type]="a.atom_type">
+                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                {{ a.atom_type }}
+              </span>
+              <h1
+                id="aplus-atomic-session-heading"
+                class="atomic-session__title"
+                data-testid="atomic-session-title">
+                {{ a.title }}
+              </h1>
+              <p class="atomic-session__meta">
+                <span class="atomic-session__atom-id">
+                  {{ 'aplus.atomic_session.atom_id' | translate }}:
+                  <code data-testid="atomic-session-atom-id">{{ a.atom_id }}</code>
+                </span>
+                <span
+                  class="atomic-session__difficulty"
+                  data-testid="atomic-session-difficulty"
+                  [attr.aria-label]="'aplus.atomic_session.difficulty' | translate">
+                  {{ difficultyLabel(a) }}
+                </span>
+                <span
+                  class="atomic-session__status"
+                  [attr.data-status]="a.status"
+                  data-testid="atomic-session-status">
+                  {{ a.status }}
+                </span>
+              </p>
+              @if (a.tags?.length) {
+                <ul
+                  class="atomic-session__tags"
+                  data-testid="atomic-session-tags"
+                  [attr.aria-label]="'aplus.atomic_session.tags' | translate">
+                  @for (tag of a.tags; track tag) {
+                    <li class="atomic-session__tag-chip">{{ tag }}</li>
+                  }
+                </ul>
+              }
+            </header>
+
+            @if (loadPartial(); as p) {
+              <p
+                class="atomic-session__partial-notice"
+                role="status"
+                aria-live="polite"
+                data-testid="atomic-session-partial-notice">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                {{ 'aplus.atomic_session.partial_notice' | translate }}
+                <code>{{ p }}</code>
+              </p>
+            }
+
+            <!--
+              Question rendering — routes on questionType() signal which
+              derives from question_payload (WS-0b A16) or falls back to
+              'reading-only' when no payload is present.
+            -->
+            @switch (questionType()) {
+              @case ('mcq') {
+                @let mcq = mcqOf(a.question_payload);
+                @if (mcq) {
+                  <section
+                    class="atomic-session__mcq-question glass-inner"
+                    aria-labelledby="mcq-question-heading"
+                    data-testid="atomic-session-mcq-question">
+                    @if (mcq.prompt) {
+                      <h2
+                        id="mcq-question-heading"
+                        class="atomic-session__question-prompt"
+                        data-testid="atomic-session-mcq-prompt">
+                        {{ mcq.prompt }}
+                      </h2>
+                    }
+
+                    <!-- CHO-1638 — QUESTION illustration only (learner-safe).
+                         The model-answer illustration is NEVER shown during a
+                         take; the BFF projection omits answer_image_url here. -->
+                    @if (mcq.image_url) {
+                      <chora-question-image
+                        class="atomic-session__question-image"
+                        [src]="mcq.image_url"
+                        alt="Question illustration"
+                        testIdPrefix="atomic-session-mcq-question-image" />
+                    }
+
+                    @if (mcq.timer_seconds) {
+                      <p
+                        class="atomic-session__mcq-timer"
+                        aria-live="polite"
+                        data-testid="atomic-session-mcq-timer">
+                        <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                        {{ mcq.timer_seconds }}
+                        {{ 'aplus.atomic_session.seconds' | translate }}
+                      </p>
+                    }
+
+                    <ol
+                      class="atomic-session__mcq-options"
+                      role="listbox"
+                      [attr.aria-label]="'aplus.atomic_session.mcq_options_label' | translate">
+                      @for (opt of mcq.options; track opt.option_id; let i = $index) {
+                          <li role="option" [attr.aria-selected]="selectedOptionId() === opt.option_id">
+                            <button
+                              type="button"
+                              class="atomic-session__mcq-opt-btn"
+                              [class.atomic-session__mcq-opt-btn--selected]="selectedOptionId() === opt.option_id"
+                              [attr.aria-label]="MCQ_MARKERS[i] + ': ' + (opt.label ?? opt.text ?? '')"
+                              [attr.aria-pressed]="selectedOptionId() === opt.option_id"
+                              [attr.data-selected]="selectedOptionId() === opt.option_id"
+                              [attr.data-testid]="'atomic-session-mcq-opt-' + i"
+                              (click)="selectOption(opt.option_id)"
+                              (keydown.enter)="selectOption(opt.option_id)"
+                              (keydown.space)="selectOption(opt.option_id)">
+                              <span
+                                class="atomic-session__mcq-opt-marker"
+                                data-testid="mcq-opt-marker"
+                                aria-hidden="true">
+                                {{ MCQ_MARKERS[i] }}
+                              </span>
+                              <span class="atomic-session__mcq-opt-text">
+                                {{ opt.label ?? opt.text }}
+                              </span>
+                              @if (mcq.correct_option_id === opt.option_id) {
+                                <span
+                                  class="atomic-session__mcq-correct-badge"
+                                  data-testid="mcq-correct-indicator"
+                                  aria-label="{{ 'aplus.atomic_session.mcq_correct_answer' | translate }}">
+                                  <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                </span>
+                              }
+                            </button>
+                          </li>
+                        }
+                      </ol>
+
+                    <p class="atomic-session__mcq-xp">
+                      <i class="fa-solid fa-star" aria-hidden="true"></i>
+                      +{{ mcq.xp_on_correct }}
+                      {{ 'aplus.atomic_session.xp_on_correct' | translate }}
+                    </p>
+                  </section>
+                }
+              }
+              @case ('oe') {
+                @let oe = oeOf(a.question_payload);
+                @if (oe) {
+                  <section
+                    class="atomic-session__oe-question glass-inner"
+                    aria-labelledby="oe-question-heading"
+                    data-testid="atomic-session-oe-question">
+                    @if (oe.prompt) {
+                      <h2
+                        id="oe-question-heading"
+                        class="atomic-session__question-prompt"
+                        data-testid="atomic-session-oe-prompt">
+                        {{ oe.prompt }}
+                      </h2>
+                    }
+
+                    <p class="atomic-session__oe-meta">
+                      <span data-testid="atomic-session-oe-max-score">
+                        {{ 'aplus.atomic_session.max_score' | translate }}:
+                        {{ oe.max_score }}
+                      </span>
+                      @if (oe.timer_seconds) {
+                        <span>
+                          <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                          {{ oe.timer_seconds }}
+                          {{ 'aplus.atomic_session.seconds' | translate }}
+                        </span>
+                      }
+                    </p>
+
+                    @let oeRubric = oeRubricOf(a.question_payload);
+                    @if (oeRubric?.criteria?.length) {
+                      <div
+                        class="atomic-session__oe-rubric"
+                        data-testid="atomic-session-oe-rubric"
+                        aria-labelledby="oe-rubric-heading">
+                        <h3 id="oe-rubric-heading" class="atomic-session__oe-rubric-heading">
+                          {{ 'aplus.atomic_session.rubric' | translate }}
+                        </h3>
+                        <ul class="atomic-session__oe-rubric-list">
+                          @for (c of oeRubric!.criteria; track c.criterion_id) {
+                            <li
+                              class="atomic-session__oe-rubric-criterion"
+                              [attr.data-testid]="'oe-rubric-criterion-' + c.criterion_id">
+                              <span class="atomic-session__oe-rubric-desc">{{ c.description }}</span>
+                              <span class="atomic-session__oe-rubric-weight">
+                                {{ c.weight_percent }}%
+                              </span>
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                    }
+
+                    <label
+                      class="atomic-session__oe-response-label"
+                      for="oe-response-textarea">
+                      {{ 'aplus.atomic_session.oe_response_label' | translate }}
+                    </label>
+                    <textarea
+                      id="oe-response-textarea"
+                      class="atomic-session__oe-textarea form-control"
+                      data-testid="atomic-session-oe-textarea"
+                      rows="8"
+                      [attr.aria-label]="'aplus.atomic_session.oe_response_label' | translate"
+                      [attr.aria-required]="true"
+                      [(ngModel)]="oeResponseValue"
+                      (input)="onOeInput($event)">
+                    </textarea>
+                  </section>
+                }
+              }
+              @default {
+                <!-- reading-only: body text present, no question_payload -->
+                @if (a.body) {
+                  <section
+                    class="atomic-session__reading"
+                    aria-labelledby="atomic-session-body-heading"
+                    data-testid="atomic-session-reading">
+                    <h2 id="atomic-session-body-heading" class="atomic-session__reading-heading">
+                      {{ 'aplus.atomic_session.reading_heading' | translate }}
+                    </h2>
+                    <p class="atomic-session__body" data-testid="atomic-session-body">
+                      {{ a.body }}
+                    </p>
+                  </section>
+                }
+              }
+            }
+
+            <!-- Session-start CTA + state — suppressed for reading-only atoms -->
+            @if (!isReadingOnly()) {
+            <section
+              class="atomic-session__session-panel"
+              aria-labelledby="atomic-session-session-heading"
+              data-testid="atomic-session-session-panel">
+              <h2
+                id="atomic-session-session-heading"
+                class="atomic-session__session-heading">
+                {{ 'aplus.atomic_session.session_heading' | translate }}
+              </h2>
+
+              @switch (startState().status) {
+                @case ('idle') {
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    (click)="startSession()"
+                    data-testid="atomic-session-start">
+                    <i class="fa-solid fa-play" aria-hidden="true"></i>
+                    {{ 'aplus.atomic_session.start_cta' | translate }}
+                  </button>
+                }
+                @case ('starting') {
+                  <p
+                    class="atomic-session__starting"
+                    role="status"
+                    aria-busy="true"
+                    data-testid="atomic-session-starting">
+                    {{ 'aplus.atomic_session.starting' | translate }}
+                  </p>
+                }
+                @case ('started') {
+                  @if (session(); as s) {
+                    <div
+                      class="atomic-session__session-meta"
+                      data-testid="atomic-session-session-meta"
+                      [attr.data-status]="s.status">
+                      <dl>
+                        <div>
+                          <dt>{{ 'aplus.atomic_session.session_id' | translate }}</dt>
+                          <dd><code data-testid="atomic-session-session-id">{{ s.session_id }}</code></dd>
+                        </div>
+                        <div>
+                          <dt>{{ 'aplus.atomic_session.session_status' | translate }}</dt>
+                          <dd>{{ s.status }}</dd>
+                        </div>
+                        <div>
+                          <dt>{{ 'aplus.atomic_session.started_at' | translate }}</dt>
+                          <dd>{{ s.started_at }}</dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    <!-- Submit CTA — Cloud-Armor edge-blocked, fails loud -->
+                    @switch (submitState().status) {
+                      @case ('idle') {
+                        <button
+                          type="button"
+                          class="btn btn-primary"
+                          (click)="submitAnswer()"
+                          data-testid="atomic-session-submit">
+                          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                          {{ 'aplus.atomic_session.submit_cta' | translate }}
+                        </button>
+                      }
+                      @case ('submitting') {
+                        <p
+                          class="atomic-session__submitting"
+                          role="status"
+                          aria-busy="true"
+                          data-testid="atomic-session-submitting">
+                          {{ 'aplus.atomic_session.submitting' | translate }}
+                        </p>
+                      }
+                      @case ('graded') {
+                        @if (isDuplicateGrade()) {
+                          <!-- CHO-2405: this reply is a REPLAY of an answer the
+                               server already recorded (the retry carried the same
+                               answer_id). Say so plainly rather than repeating the
+                               grade: the answer landed, and the retry did not count
+                               it twice. The campaign banner is out of this arm
+                               entirely, so ladder feedback cannot play again. -->
+                          <p
+                            class="atomic-session__graded"
+                            role="status"
+                            aria-live="polite"
+                            data-testid="atomic-session-graded-duplicate">
+                            {{ 'aplus.atomic_session.graded_duplicate' | translate }}
+                          </p>
+                        } @else {
+                          <p
+                            class="atomic-session__graded"
+                            role="status"
+                            aria-live="polite"
+                            data-testid="atomic-session-graded">
+                            {{ 'aplus.atomic_session.graded' | translate }}
+                          </p>
+                          <!-- CHO-2315: campaign ladder feedback when this dose
+                               answer folded into today's KG campaign hex, so the
+                               dose lane is no longer silent about pacing. -->
+                          @if (campaignBanner(); as banner) {
+                            <p
+                              class="atomic-session__campaign-banner"
+                              role="status"
+                              data-testid="atomic-session-campaign-banner">
+                              @switch (banner) {
+                                @case ('won') {
+                                  {{ 'aplus.knowledge.campaign_practice_won' | translate }}
+                                }
+                                @case ('cleared') {
+                                  {{
+                                    'aplus.knowledge.campaign_practice_cleared'
+                                      | translate: { label: campaignNextRungLabelKey() | translate }
+                                  }}
+                                }
+                                @case ('paced') {
+                                  {{ 'aplus.knowledge.campaign_practice_paced' | translate }}
+                                }
+                                @case ('counted') {
+                                  {{ 'aplus.knowledge.campaign_practice_counted' | translate }}
+                                }
+                              }
+                            </p>
+                          }
+                        }
+                      }
+                      @case ('error') {
+                        <div
+                          class="atomic-session__submit-error"
+                          role="alert"
+                          data-testid="atomic-session-submit-error">
+                          <p>{{ submitErrorKey() | translate }}</p>
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            (click)="submitAnswer()"
+                            data-testid="atomic-session-submit-retry">
+                            {{ 'aplus.atomic_session.retry' | translate }}
+                          </button>
+                        </div>
+                      }
+                    }
+                  }
+                }
+                @case ('error') {
+                  <div
+                    class="atomic-session__start-error"
+                    role="alert"
+                    data-testid="atomic-session-start-error">
+                    <p>{{ startErrorKey() | translate }}</p>
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      (click)="startSession()"
+                      data-testid="atomic-session-start-retry">
+                      {{ 'aplus.atomic_session.retry' | translate }}
+                    </button>
+                  </div>
+                }
+              }
+            </section>
+            } @else {
+              <section
+                class="atomic-session__no-question glass-inner"
+                role="status"
+                aria-live="polite"
+                data-testid="atomic-session-no-question-notice">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                {{ 'aplus.atomic_session.no_question_notice' | translate }}
+              </section>
+            }
+
+            <div class="atomic-session__footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="nextAtom()"
+                data-testid="atomic-session-next">
+                {{ 'aplus.atomic_session.next_atom' | translate }}
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </button>
+            </div>
+          </article>
+
+          @if (familiarPanel(); as f) {
+            <aside
+              class="atomic-session__rail glass-panel"
+              aria-labelledby="aplus-atomic-familiar-heading"
+              data-testid="atomic-session-familiar"
+              [attr.data-post-hatch]="f.isPostHatch">
+              <div class="atomic-session__familiar">
+                <div
+                  class="atomic-session__familiar-avatar surface-accent-bg"
+                  aria-hidden="true"
+                  [attr.data-species]="f.species || null">
+                  <span class="atomic-session__familiar-level">
+                    {{ f.avatarLevel }}
+                  </span>
+                </div>
+                <h2
+                  id="aplus-atomic-familiar-heading"
+                  class="atomic-session__familiar-name">
+                  {{ f.familiarName }}
+                </h2>
+                <p
+                  class="atomic-session__familiar-rank"
+                  data-testid="atomic-session-familiar-rank">
+                  {{ f.rankLabel }}
+                </p>
+                <a
+                  class="btn btn-secondary"
+                  routerLink="/a/companion"
+                  data-testid="atomic-session-familiar-link">
+                  <i class="fa-solid fa-paw" aria-hidden="true"></i>
+                  {{ 'aplus.atomic_session.familiar_open' | translate }}
+                </a>
+              </div>
+            </aside>
+          }
+        </div>
+      }
+    }
+  }
+</section>

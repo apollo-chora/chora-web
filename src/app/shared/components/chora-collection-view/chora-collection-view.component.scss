@@ -1,0 +1,402 @@
+// chora-collection-view — universal finder (table renderer, P0).
+//
+// Tablet-first: the base layer targets the tablet primary (>=768px) and shows
+// the essential columns folded with an expandable detail row; the >=1280px
+// layer is a pure ENHANCEMENT (facet rail beside results + the full column
+// set). No max-width / mobile breakpoints (chora-web tablet-first mandate).
+
+:host {
+  display: block;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cv {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+// ── Top bar: search + count ───────────────────────────────────────────────────
+.cv__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+  padding: var(--chora-space-md);
+}
+
+.cv__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 320px;
+}
+
+.cv__search-icon {
+  position: absolute;
+  inset-inline-start: var(--chora-space-md);
+  color: var(--chora-color-text-secondary);
+  pointer-events: none;
+}
+
+.cv__search-input {
+  width: 100%;
+  padding: var(--chora-space-sm) var(--chora-space-md);
+  padding-inline-start: calc(var(--chora-space-lg) + var(--chora-space-md));
+  font: inherit;
+  color: var(--chora-color-text-primary);
+  background: var(--chora-color-surface-0);
+  border: 1px solid var(--chora-color-border);
+  border-radius: var(--chora-radius-md);
+}
+
+.cv__search-input:focus-visible {
+  outline: 2px solid var(--chora-color-primary);
+  outline-offset: 2px;
+}
+
+.cv__count {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--chora-color-text-secondary);
+  white-space: nowrap;
+}
+
+// ── Body layout ───────────────────────────────────────────────────────────────
+.cv__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+.cv__main {
+  min-width: 0; // allow the table to shrink within the grid track
+}
+
+// ── Facet rail ────────────────────────────────────────────────────────────────
+.cv__facets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+  padding: var(--chora-space-md);
+}
+
+.cv__facet-title {
+  margin: 0 0 var(--chora-space-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--chora-color-text-secondary);
+}
+
+.cv__facet-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-xs);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.cv__facet-empty {
+  color: var(--chora-color-text-disabled);
+}
+
+.cv__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  padding: var(--chora-space-xs) var(--chora-space-sm);
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--chora-color-text-primary);
+  cursor: pointer;
+  background: var(--chora-color-surface-1);
+  border: 1px solid var(--chora-color-border);
+  border-radius: var(--chora-radius-full);
+  transition: background var(--chora-transition-fast), border-color var(--chora-transition-fast);
+}
+
+.cv__chip:hover {
+  border-color: var(--chora-color-primary);
+}
+
+.cv__chip:focus-visible {
+  outline: 2px solid var(--chora-color-primary);
+  outline-offset: 2px;
+}
+
+.cv__chip--active {
+  color: #fff;
+  background: var(--chora-color-primary);
+  border-color: var(--chora-color-primary);
+}
+
+.cv__chip-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+.cv__table-wrap {
+  padding: var(--chora-space-sm);
+  overflow: hidden;
+}
+
+.cv__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cv__th {
+  padding: var(--chora-space-sm) var(--chora-space-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--chora-color-text-secondary);
+  text-align: start;
+  border-bottom: 1px solid var(--chora-color-border);
+}
+
+.cv__th--end {
+  text-align: end;
+}
+
+.cv__sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  padding: 0;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+.cv__sort-btn:hover {
+  color: var(--chora-color-primary);
+}
+
+.cv__sort-btn:focus-visible {
+  outline: 2px solid var(--chora-color-primary);
+  outline-offset: 2px;
+}
+
+.cv__sort-icon {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.cv__cell {
+  padding: var(--chora-space-md);
+  font-size: 0.9375rem;
+  color: var(--chora-color-text-primary);
+  text-align: start;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--chora-color-border);
+}
+
+.cv__cell--end {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.cv__cell--primary {
+  font-weight: 600;
+}
+
+.cv__row-link {
+  color: var(--chora-color-primary-strong, var(--chora-color-primary));
+  text-decoration: none;
+}
+
+.cv__row-link:hover {
+  text-decoration: underline;
+}
+
+.cv__row-link:focus-visible {
+  outline: 2px solid var(--chora-color-primary);
+  outline-offset: 2px;
+}
+
+.cv__row-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-inline-start: var(--chora-space-xs);
+  color: var(--chora-color-text-secondary);
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--chora-color-border);
+  border-radius: var(--chora-radius-sm);
+}
+
+.cv__row-toggle:focus-visible {
+  outline: 2px solid var(--chora-color-primary);
+  outline-offset: 2px;
+}
+
+.cv__badge {
+  display: inline-block;
+  padding: 2px var(--chora-space-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--chora-color-text-secondary);
+  background: var(--chora-color-surface-1);
+  border: 1px solid var(--chora-color-border);
+  border-radius: var(--chora-radius-sm);
+}
+
+// ── Detail row (tablet only — secondary columns folded) ───────────────────────
+.cv__row-detail > td {
+  padding: var(--chora-space-sm) var(--chora-space-md) var(--chora-space-md);
+  background: var(--chora-color-surface-1);
+  border-bottom: 1px solid var(--chora-color-border);
+}
+
+.cv__detail-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--chora-space-sm) var(--chora-space-lg);
+  margin: 0;
+}
+
+.cv__detail-item dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--chora-color-text-secondary);
+}
+
+.cv__detail-item dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--chora-color-text-primary);
+}
+
+// Columns that collapse below the desktop breakpoint, plus the per-row toggle
+// + detail row that surface them. Hidden by default → revealed at >=1280px.
+.cv__col--secondary {
+  display: none;
+}
+
+// ── Load more ─────────────────────────────────────────────────────────────────
+.cv__more {
+  display: flex;
+  justify-content: center;
+  padding: var(--chora-space-md) 0 var(--chora-space-xs);
+}
+
+.cv__more-btn[disabled] {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+// ── States ────────────────────────────────────────────────────────────────────
+.cv__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+}
+
+.cv__skeleton-row {
+  height: 3rem;
+  background: linear-gradient(
+    90deg,
+    var(--chora-color-surface-1) 25%,
+    var(--chora-color-surface-2) 37%,
+    var(--chora-color-surface-1) 63%
+  );
+  background-size: 400% 100%;
+  border-radius: var(--chora-radius-md);
+  animation: cv-shimmer 1.4s ease infinite;
+}
+
+@keyframes cv-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.cv__error,
+.cv__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-2xl) var(--chora-space-lg);
+  text-align: center;
+}
+
+.cv__error-icon {
+  font-size: 1.5rem;
+  color: var(--chora-color-danger);
+}
+
+.cv__error-text {
+  margin: 0;
+  color: var(--chora-color-text-primary);
+}
+
+.cv__empty-icon {
+  font-size: 1.75rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.cv__empty-title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+// ── Desktop enhancement (>=1280px) ────────────────────────────────────────────
+@media (min-width: 1280px) {
+  .cv__body {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--chora-space-lg);
+  }
+
+  // Reveal the full column set inline; retire the tablet fold affordances.
+  .cv__col--secondary {
+    display: table-cell;
+  }
+
+  .cv__row-toggle,
+  .cv__row-detail {
+    display: none;
+  }
+}
+
+// ── Reduced motion ────────────────────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .cv__skeleton-row {
+    animation: none;
+  }
+
+  .fa-spin {
+    animation: none;
+  }
+}

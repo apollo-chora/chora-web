@@ -1,0 +1,119 @@
+<section class="compliance-dashboard" data-testid="compliance-dashboard">
+  @if (complianceState().status === 'loading') {
+    <div class="compliance-dashboard__loading" data-testid="compliance-loading" role="status">
+      <p>{{ 'training.compliance.loading' | translate }}</p>
+    </div>
+  } @else if (complianceState().status === 'error') {
+    <div class="compliance-dashboard__error" data-testid="compliance-error" role="alert">
+      <h2>{{ 'training.compliance.error-title' | translate }}</h2>
+      <p>{{ complianceError() }}</p>
+    </div>
+  } @else if (complianceData()) {
+    <!-- Header -->
+    <header class="compliance-dashboard__header" data-testid="compliance-header">
+      <h1 class="compliance-dashboard__title">{{ 'training.compliance.title' | translate }}</h1>
+    </header>
+
+    <!-- Summary stats -->
+    <div class="compliance-dashboard__summary" data-testid="compliance-summary">
+      <div class="compliance-dashboard__stat">
+        <span class="compliance-dashboard__stat-value" data-testid="overall-completion">
+          {{ overallCompletion() }}%
+        </span>
+        <span class="compliance-dashboard__stat-label">{{ 'training.compliance.overall' | translate }}</span>
+      </div>
+      <div class="compliance-dashboard__stat compliance-dashboard__stat--overdue">
+        <span class="compliance-dashboard__stat-value" data-testid="total-overdue">
+          {{ totalOverdue() }}
+        </span>
+        <span class="compliance-dashboard__stat-label">{{ 'training.compliance.overdue-learners' | translate }}</span>
+      </div>
+      <div class="compliance-dashboard__stat">
+        <span class="compliance-dashboard__stat-value" data-testid="next-deadline">
+          {{ formatDate(nextDeadline()) }}
+        </span>
+        <span class="compliance-dashboard__stat-label">{{ 'training.compliance.next-deadline' | translate }}</span>
+      </div>
+    </div>
+
+    <!-- Department rollup table -->
+    <div class="compliance-dashboard__table-wrapper" data-testid="compliance-table">
+      <table class="compliance-dashboard__table" role="table" aria-label="Department compliance">
+        <thead>
+          <tr>
+            <th scope="col" class="compliance-dashboard__th">{{ 'training.compliance.department' | translate }}</th>
+            <th scope="col" class="compliance-dashboard__th compliance-dashboard__th--center">{{ 'training.compliance.status' | translate }}</th>
+            <th scope="col" class="compliance-dashboard__th compliance-dashboard__th--right">{{ 'training.compliance.completion' | translate }}</th>
+            <th scope="col" class="compliance-dashboard__th compliance-dashboard__th--right">{{ 'training.compliance.overdue' | translate }}</th>
+            <th scope="col" class="compliance-dashboard__th">{{ 'training.compliance.deadline' | translate }}</th>
+            <th scope="col" class="compliance-dashboard__th compliance-dashboard__th--right">{{ 'training.compliance.days-left' | translate }}</th>
+            <th scope="col" class="compliance-dashboard__th compliance-dashboard__th--center">{{ 'training.compliance.action' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (dept of departments(); track dept.department_id) {
+            <tr class="compliance-dashboard__row" [attr.data-testid]="'dept-row-' + dept.department_id">
+              <td class="compliance-dashboard__td">
+                <span class="compliance-dashboard__dept-name">{{ dept.department_name }}</span>
+              </td>
+              <td class="compliance-dashboard__td compliance-dashboard__td--center">
+                <span
+                  class="compliance-dashboard__badge"
+                  [class]="statusBadgeClass(dept.status)"
+                  [attr.aria-label]="dept.status + ' status'">
+                  {{ dept.status }}
+                </span>
+              </td>
+              <td class="compliance-dashboard__td compliance-dashboard__td--right">
+                <div class="compliance-dashboard__progress">
+                  <div class="compliance-dashboard__progress-bar">
+                    <div
+                      class="compliance-dashboard__progress-fill"
+                      [class.compliance-dashboard__progress-fill--green]="dept.status === 'green'"
+                      [class.compliance-dashboard__progress-fill--amber]="dept.status === 'amber'"
+                      [class.compliance-dashboard__progress-fill--red]="dept.status === 'red'"
+                      [style.width.%]="dept.completion_pct">
+                    </div>
+                  </div>
+                  <span class="compliance-dashboard__progress-pct">{{ dept.completion_pct }}%</span>
+                </div>
+              </td>
+              <td class="compliance-dashboard__td compliance-dashboard__td--right">
+                @if (dept.overdue_learners > 0) {
+                  <span class="compliance-dashboard__overdue-count">{{ dept.overdue_learners }}</span>
+                } @else {
+                  <span class="compliance-dashboard__none">-</span>
+                }
+              </td>
+              <td class="compliance-dashboard__td">{{ formatDate(dept.deadline) }}</td>
+              <td class="compliance-dashboard__td compliance-dashboard__td--right">
+                <span
+                  class="compliance-dashboard__days"
+                  [class.compliance-dashboard__days--urgent]="dept.days_remaining <= 7">
+                  {{ dept.days_remaining }}
+                </span>
+              </td>
+              <td class="compliance-dashboard__td compliance-dashboard__td--center">
+                @if (dept.status === 'red' || dept.status === 'amber') {
+                  <button
+                    class="compliance-dashboard__remediate-btn"
+                    [disabled]="isRemediating(dept.department_id)"
+                    (click)="scheduleRemediation(dept)"
+                    type="button"
+                    [attr.data-testid]="'remediate-' + dept.department_id"
+                    [attr.aria-label]="'Schedule remediation for ' + dept.department_name">
+                    @if (isRemediating(dept.department_id)) {
+                      {{ 'training.compliance.scheduling' | translate }}
+                    } @else {
+                      {{ 'training.compliance.remediate' | translate }}
+                    }
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

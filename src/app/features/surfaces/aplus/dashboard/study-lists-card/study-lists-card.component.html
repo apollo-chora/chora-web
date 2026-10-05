@@ -1,0 +1,122 @@
+<section
+  class="study-card glass-panel"
+  aria-labelledby="study-card-heading"
+  data-testid="aplus-dashboard-study-card">
+
+  <header class="study-card__header">
+    <h2 id="study-card-heading" class="study-card__heading">
+      <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+      {{ 'aplus.dashboard.study_heading' | translate }}
+    </h2>
+    <a
+      routerLink="/a/study"
+      class="study-card__see-all"
+      data-testid="study-lists-card-see-all">
+      {{ 'aplus.dashboard.study_see_all' | translate }}
+      <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+    </a>
+  </header>
+
+  @switch (state().status) {
+
+    @case ('loading') {
+      <p
+        class="study-card__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="study-lists-card-loading">
+        <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        {{ 'aplus.study.loading' | translate }}
+      </p>
+    }
+
+    @case ('error') {
+      <!-- Fail loud. A failed fetch must never render as an empty inventory. -->
+      <div class="study-card__error" role="alert" data-testid="study-lists-card-error">
+        <p class="study-card__error-msg">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          {{ errorKey() | translate }}
+        </p>
+        <button
+          type="button"
+          class="btn btn-secondary study-card__retry"
+          (click)="retryLoad()"
+          data-testid="study-lists-card-retry">
+          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          {{ 'aplus.study.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    @case ('success') {
+      @if (isEmpty()) {
+        <div class="study-card__empty" data-testid="study-lists-card-empty">
+          <p class="study-card__empty-hint">
+            {{ 'aplus.dashboard.study_empty_hint' | translate }}
+          </p>
+          <a routerLink="/a/study/collections" class="btn btn-secondary">
+            {{ 'aplus.dashboard.study_empty_cta' | translate }}
+          </a>
+        </div>
+      } @else {
+        <ul class="study-card__list" data-testid="study-lists-card-list">
+          @for (path of rows(); track path.path_id) {
+            <li
+              class="study-card__row"
+              [attr.data-testid]="'study-lists-card-row-' + path.path_id">
+              <div class="study-card__row-main">
+                <p class="study-card__row-title">{{ path.title }}</p>
+                <!--
+                  🔴 ADR-233 D3: atom count is the ONLY count that means anything
+                  here. No progress, no cursor, no Completed badge — they are
+                  inert on a spaced path and would read as 0% forever.
+                -->
+                <p class="study-card__row-meta">
+                  <span class="study-card__atoms">
+                    <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+                    {{
+                      (path.total_atoms === 1
+                        ? 'aplus.study.card_atom_count_one'
+                        : 'aplus.study.card_atom_count_other'
+                      ) | translate: { count: path.total_atoms }
+                    }}
+                  </span>
+                  <span class="study-card__dose-hint">
+                    <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                    {{ 'aplus.study.card_dose_hint' | translate }}
+                  </span>
+                </p>
+              </div>
+              <div class="study-card__row-actions">
+                <a
+                  routerLink="/a/daily-dose"
+                  class="btn btn-primary study-card__row-cta"
+                  [attr.aria-label]="'aplus.study.card_dose_cta_aria' | translate: { title: path.title }">
+                  {{ 'aplus.study.card_dose_cta' | translate }}
+                </a>
+                @if (path.source_id) {
+                  <a
+                    [routerLink]="['/a/study/collections', path.source_id]"
+                    class="study-card__row-source"
+                    [attr.aria-label]="'aplus.study.card_source_cta_aria' | translate: { title: path.title }">
+                    {{ 'aplus.study.card_source_cta' | translate }}
+                  </a>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+
+        @if (moreCount() > 0) {
+          <a
+            routerLink="/a/study"
+            class="study-card__more"
+            data-testid="study-lists-card-more">
+            {{ 'aplus.dashboard.study_more' | translate: { count: moreCount() } }}
+          </a>
+        }
+      }
+    }
+  }
+
+</section>

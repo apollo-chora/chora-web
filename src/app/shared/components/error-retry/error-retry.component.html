@@ -1,0 +1,33 @@
+<div class="error-retry" role="alert" aria-live="polite">
+  <div class="error-retry__message">
+    <span class="error-retry__icon" aria-hidden="true">!</span>
+    <p class="error-retry__text">{{ messageKey() | translate }}</p>
+  </div>
+
+  @if (isRetryable()) {
+    <div class="error-retry__actions">
+      @if (countdownActive()) {
+        <p class="error-retry__countdown">
+          {{ 'errors.actions.retrying_in' | translate: { seconds: countdownSeconds() } }}
+        </p>
+      } @else {
+        <button
+          class="error-retry__button error-retry__button--retry"
+          type="button"
+          (click)="onRetry()"
+          [attr.aria-label]="'errors.actions.try_again' | translate">
+          {{ 'errors.actions.try_again' | translate }}
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="error-retry__actions">
+      <a
+        class="error-retry__button error-retry__button--support"
+        href="/support"
+        [attr.aria-label]="'errors.actions.contact_support' | translate">
+        {{ 'errors.actions.contact_support' | translate }}
+      </a>
+    </div>
+  }
+</div>

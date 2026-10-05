@@ -1,0 +1,286 @@
+<section class="cv" data-testid="collection-view">
+  <!-- Search + result count -->
+  <header class="cv__bar glass-panel">
+    <div class="cv__search">
+      <label class="cv__search-label sr-only" [for]="searchInputId">
+        {{ searchAriaKey() | translate }}
+      </label>
+      <i class="fa-solid fa-magnifying-glass cv__search-icon" aria-hidden="true"></i>
+      <input
+        #searchBox
+        type="search"
+        class="cv__search-input"
+        [id]="searchInputId"
+        [value]="store().query().q"
+        [attr.placeholder]="searchPlaceholderKey() | translate"
+        [attr.aria-label]="searchAriaKey() | translate"
+        (input)="onSearchInput(searchBox.value)"
+        data-testid="cv-search-input" />
+    </div>
+    <p class="cv__count" data-testid="cv-count" aria-live="polite">
+      ~{{ store().totalEstimate() | number }} {{ resultsLabelKey() | translate }}
+    </p>
+  </header>
+
+  <div class="cv__body">
+    <!-- Facet rail -->
+    @if (facetDefs().length > 0) {
+      <aside
+        class="cv__facets glass-panel"
+        data-testid="cv-facets"
+        [attr.aria-label]="facetsAriaKey() | translate">
+        @for (def of facetDefs(); track def.field) {
+          <section class="cv__facet">
+            <h3 class="cv__facet-title">{{ def.labelKey | translate }}</h3>
+            <ul class="cv__facet-list" role="list">
+              @for (val of facetValuesFor(def.field); track val.value) {
+                <li>
+                  <button
+                    type="button"
+                    class="cv__chip"
+                    [class.cv__chip--active]="isFilterActive(def.field, val.value)"
+                    [attr.aria-pressed]="isFilterActive(def.field, val.value)"
+                    [attr.data-testid]="'cv-chip-' + def.field + '-' + val.value"
+                    (click)="onToggleFilter(def.field, val.value)">
+                    <span class="cv__chip-label">{{ val.label | translate }}</span>
+                    <span class="cv__chip-count">{{ val.count | number }}</span>
+                  </button>
+                </li>
+              } @empty {
+                <li class="cv__facet-empty">-</li>
+              }
+            </ul>
+          </section>
+        }
+      </aside>
+    }
+
+    <main class="cv__main">
+      @switch (store().status()) {
+        @case ('loading') {
+          <div
+            class="cv__skeleton"
+            data-testid="cv-loading"
+            aria-busy="true"
+            aria-live="polite"
+            [attr.aria-label]="loadingAriaKey() | translate">
+            @for (i of skeletonRows; track i) {
+              <div class="cv__skeleton-row" aria-hidden="true"></div>
+            }
+          </div>
+        }
+        @case ('idle') {
+          <div
+            class="cv__skeleton"
+            data-testid="cv-loading"
+            aria-busy="true"
+            aria-hidden="true">
+            @for (i of skeletonRows; track i) {
+              <div class="cv__skeleton-row"></div>
+            }
+          </div>
+        }
+        @case ('error') {
+          <div class="cv__error" role="alert" data-testid="cv-error">
+            <i class="fa-solid fa-triangle-exclamation cv__error-icon" aria-hidden="true"></i>
+            <p class="cv__error-text">{{ loadErrorKey() | translate }}</p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="cv-retry"
+              (click)="store().reload()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ retryKey() | translate }}
+            </button>
+          </div>
+          <!-- Fail-loud but non-destructive: a failed reload/load-more keeps any
+               previously loaded rows visible beneath the banner. -->
+          @if (store().items().length > 0) {
+            <ng-container [ngTemplateOutlet]="resultsTable"></ng-container>
+          }
+        }
+        @default {
+          @if (store().items().length === 0) {
+            <div class="cv__empty" data-testid="cv-empty">
+              <i class="fa-solid fa-inbox cv__empty-icon" aria-hidden="true"></i>
+              <p class="cv__empty-title">{{ emptyTitleKey() | translate }}</p>
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="cv-clear-filters"
+                (click)="store().clearFilters()">
+                {{ clearFiltersKey() | translate }}
+              </button>
+            </div>
+          } @else {
+            <ng-container [ngTemplateOutlet]="resultsTable"></ng-container>
+          }
+        }
+      }
+    </main>
+  </div>
+</section>
+
+<!-- ── Results table renderer ──────────────────────────────────────────────── -->
+<ng-template #resultsTable>
+  <div class="cv__table-wrap glass-panel">
+    <table class="cv__table" [attr.aria-label]="tableAriaKey() | translate" data-testid="cv-table">
+      <thead>
+        <tr>
+          @if (primaryColumn(); as primary) {
+            <th
+              scope="col"
+              class="cv__th cv__th--primary"
+              [attr.aria-sort]="ariaSortFor(primary)">
+              <ng-container
+                [ngTemplateOutlet]="headerCell"
+                [ngTemplateOutletContext]="{ col: primary }"></ng-container>
+            </th>
+          }
+          @for (col of restColumns(); track col.field) {
+            <th
+              scope="col"
+              class="cv__th"
+              [class.cv__col--secondary]="isSecondary(col)"
+              [class.cv__th--end]="col.align === 'end'"
+              [attr.aria-sort]="ariaSortFor(col)">
+              <ng-container
+                [ngTemplateOutlet]="headerCell"
+                [ngTemplateOutletContext]="{ col }"></ng-container>
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody data-testid="cv-tbody">
+        @for (row of store().items(); track identityOf(row)) {
+          <tr [attr.data-testid]="'cv-row-' + identityOf(row)">
+            @if (primaryColumn(); as primary) {
+              <th scope="row" class="cv__cell cv__cell--primary">
+                @if (rowLinkFor(row); as link) {
+                  <a
+                    class="cv__row-link"
+                    [routerLink]="link"
+                    [attr.data-testid]="'cv-row-link-' + identityOf(row)">
+                    <ng-container
+                      [ngTemplateOutlet]="bodyCell"
+                      [ngTemplateOutletContext]="{ col: primary, row }"></ng-container>
+                  </a>
+                } @else {
+                  <ng-container
+                    [ngTemplateOutlet]="bodyCell"
+                    [ngTemplateOutletContext]="{ col: primary, row }"></ng-container>
+                }
+                @if (secondaryColumns().length > 0) {
+                  <button
+                    type="button"
+                    class="cv__row-toggle"
+                    [attr.aria-expanded]="isExpanded(row)"
+                    [attr.aria-label]="rowDetailsKey() | translate"
+                    [attr.data-testid]="'cv-row-toggle-' + identityOf(row)"
+                    (click)="toggleExpanded(row)">
+                    <i
+                      class="fa-solid"
+                      [class.fa-chevron-down]="!isExpanded(row)"
+                      [class.fa-chevron-up]="isExpanded(row)"
+                      aria-hidden="true"></i>
+                  </button>
+                }
+              </th>
+            }
+            @for (col of restColumns(); track col.field) {
+              <td
+                class="cv__cell"
+                [class.cv__col--secondary]="isSecondary(col)"
+                [class.cv__cell--end]="col.align === 'end'">
+                <ng-container
+                  [ngTemplateOutlet]="bodyCell"
+                  [ngTemplateOutletContext]="{ col, row }"></ng-container>
+              </td>
+            }
+          </tr>
+          @if (isExpanded(row) && secondaryColumns().length > 0) {
+            <tr
+              class="cv__row-detail"
+              [attr.data-testid]="'cv-row-detail-' + identityOf(row)">
+              <td [attr.colspan]="columns().length">
+                <dl class="cv__detail-list">
+                  @for (col of secondaryColumns(); track col.field) {
+                    <div class="cv__detail-item">
+                      <dt>{{ col.labelKey | translate }}</dt>
+                      <dd>
+                        <ng-container
+                          [ngTemplateOutlet]="bodyCell"
+                          [ngTemplateOutletContext]="{ col, row }"></ng-container>
+                      </dd>
+                    </div>
+                  }
+                </dl>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    @if (store().hasMore()) {
+      <div class="cv__more">
+        <button
+          type="button"
+          class="btn btn-ghost cv__more-btn"
+          data-testid="cv-load-more"
+          [disabled]="store().status() === 'loadingMore'"
+          (click)="store().loadMore()">
+          @if (store().status() === 'loadingMore') {
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            {{ loadingMoreKey() | translate }}
+          } @else {
+            {{ loadMoreKey() | translate }}
+          }
+        </button>
+      </div>
+    }
+  </div>
+</ng-template>
+
+<!-- Header cell: sortable button or plain label. -->
+<ng-template #headerCell let-col="col">
+  @if (col.sortable) {
+    <button
+      type="button"
+      class="cv__sort-btn"
+      [attr.data-testid]="'cv-sort-' + col.field"
+      (click)="onSort(col)">
+      <span>{{ col.labelKey | translate }}</span>
+      <i
+        class="fa-solid cv__sort-icon"
+        [class.fa-sort]="ariaSortFor(col) === 'none'"
+        [class.fa-sort-up]="ariaSortFor(col) === 'ascending'"
+        [class.fa-sort-down]="ariaSortFor(col) === 'descending'"
+        aria-hidden="true"></i>
+    </button>
+  } @else {
+    <span>{{ col.labelKey | translate }}</span>
+  }
+</ng-template>
+
+<!-- Body cell: rendered by cell kind. `badge` values are i18n keys. -->
+<ng-template #bodyCell let-col="col" let-row="row">
+  @switch (col.cell) {
+    @case ('badge') {
+      <span class="cv__badge" [attr.data-badge-field]="col.field">
+        {{ badgeKey(col, row) | translate }}
+      </span>
+    }
+    @case ('date') {
+      <time [attr.datetime]="dateAttr(col, row)">
+        {{ rawValue(col, row) | date: 'mediumDate' }}
+      </time>
+    }
+    @case ('number') {
+      <span>{{ rawValue(col, row) | number }}</span>
+    }
+    @default {
+      <span>{{ rawValue(col, row) }}</span>
+    }
+  }
+</ng-template>

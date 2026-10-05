@@ -1,0 +1,332 @@
+// =====================================================================
+// H+ Add-On Management — CHO-1698 dashboard styling.
+//
+// Rewritten in CHO-1743 to match the current grid+chip+tile HTML
+// structure. Prior SCSS targeted the obsolete single-row layout +
+// in-page confirm modal that were both replaced when the dashboard
+// rewired to the real BFF (CHO-1698 PR 2) and the deactivate flow
+// moved into the standalone `addon-deactivate-modal` component
+// (CHO-1731). The result was an effectively-unstyled page.
+//
+// Tablet-first per chora-web/CLAUDE.md §11 — no mobile breakpoints.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.addons {
+  display: block;
+  padding: 1.5rem;
+  min-height: 100%;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1280px;
+    margin-inline: auto;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  &__crumb-active {
+    color: var(--primary);
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Hero (title row + subtitle)
+  // ──────────────────────────────────────────────────────────────────
+
+  &__hero {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  &__refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: var(--text-muted);
+    max-width: 70ch;
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Filter chip row + search
+  // ──────────────────────────────────────────────────────────────────
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__chip {
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid rgb(255 255 255 / 14%);
+    background: rgb(255 255 255 / 4%);
+    color: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: rgb(255 255 255 / 8%);
+      border-color: rgb(255 255 255 / 22%);
+    }
+
+    &--active {
+      background: var(--primary, #5b8def);
+      border-color: var(--primary, #5b8def);
+      color: #fff;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary, #5b8def);
+      outline-offset: 2px;
+    }
+  }
+
+  &__search {
+    margin-inline-start: auto;
+    display: inline-flex;
+    align-items: center;
+
+    input {
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgb(255 255 255 / 14%);
+      background: rgb(255 255 255 / 4%);
+      color: inherit;
+      font-size: 0.875rem;
+      min-width: 220px;
+
+      &:focus {
+        outline: 2px solid var(--primary, #5b8def);
+        outline-offset: 1px;
+        border-color: transparent;
+      }
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Banners (loading / error / empty)
+  // ──────────────────────────────────────────────────────────────────
+
+  &__loading,
+  &__load-error,
+  &__empty {
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    background: rgb(255 255 255 / 4%);
+    margin: 0;
+  }
+
+  &__load-error {
+    background: rgb(176 0 32 / 12%);
+    color: var(--chora-color-danger, #b00020);
+  }
+
+  &__empty {
+    text-align: center;
+  }
+
+  &__empty-title {
+    margin: 0 0 0.4rem;
+    font-weight: 600;
+  }
+
+  &__empty-cta {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Tile grid
+  // ──────────────────────────────────────────────────────────────────
+
+  &__grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 1440px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1.1rem 1.25rem;
+    // `.glass-panel` already provides background + border-radius +
+    // backdrop blur in the shared design tokens; this rule only adds
+    // tile-specific layout.
+  }
+
+  &__tile-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__tile-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  &__tile-code {
+    margin: 0.15rem 0 0;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  &__tile-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.5rem 1rem;
+    margin: 0;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    dt {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 0.9rem;
+    }
+  }
+
+  // CHO-1772 — pending end-of-cycle tier change pill next to the
+  // current tier. Subtle teal accent matching the H+ surface.
+  &__scheduled-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    border-radius: 999px;
+    background: rgb(91 141 239 / 18%);
+    color: var(--primary, #5b8def);
+    white-space: nowrap;
+  }
+
+  // CHO-1782 — destructive counterpart of the scheduled-tier badge.
+  // Amber accent reads as "going away" without screaming red.
+  &__deactivating-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    border-radius: 999px;
+    background: rgb(217 119 6 / 18%);
+    color: var(--warning, #d97706);
+    white-space: nowrap;
+  }
+
+  // CHO-1785 — undo affordance next to the deactivating pill. Plain
+  // link-style button so it doesn't compete with the pill itself for
+  // visual weight; matches focus-ring requirements from chora-web/CLAUDE.md §10.
+  &__deactivating-undo {
+    margin-left: 0.4rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    font-size: 0.7rem;
+    color: var(--primary, #5b8def);
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: progress;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary, #5b8def);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+  }
+
+  &__compliance-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.4rem;
+    background: rgb(176 0 32 / 12%);
+    color: var(--chora-color-danger, #b00020);
+    font-size: 0.8125rem;
+    margin: 0;
+    width: fit-content;
+  }
+
+  &__tile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    border-top: 1px solid rgb(255 255 255 / 8%);
+    padding-top: 0.85rem;
+
+    .btn {
+      font-size: 0.8125rem;
+      padding: 0.4rem 0.75rem;
+    }
+  }
+}

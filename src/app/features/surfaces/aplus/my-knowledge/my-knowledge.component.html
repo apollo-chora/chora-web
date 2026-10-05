@@ -1,0 +1,269 @@
+<main class="mk" aria-labelledby="mk-heading" data-testid="aplus-my-knowledge">
+  <header class="mk__header">
+    <div class="mk__lead">
+      <h1 id="mk-heading" class="mk__title">
+        <i class="fa-solid fa-compass" aria-hidden="true"></i>
+        {{ 'aplus.knowledge.title' | translate }}
+      </h1>
+      <p class="mk__intro">{{ 'aplus.knowledge.intro' | translate }}</p>
+    </div>
+    <button
+      type="button"
+      class="btn-primary mk__new"
+      (click)="openForm()"
+      data-testid="mk-new-map">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      {{ 'aplus.knowledge.new_map' | translate }}
+    </button>
+  </header>
+
+  <!-- Persistent resume-review banner (CHO-2337): re-offers a Growth-Edge
+       diagnosis parked at the HITL review the learner closed the drawer on.
+       Self-healed against GET /uploads/{id}; never shown for a resolved one. -->
+  @if (pendingReviewId(); as reviewId) {
+    <section
+      class="glass-panel mk__pending"
+      role="status"
+      aria-labelledby="mk-pending-title"
+      data-testid="pending-review-banner">
+      <div class="mk__pending-lead">
+        <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+        <div>
+          <h2 id="mk-pending-title" class="mk__pending-title">
+            {{ 'aplus.knowledge.pending_review_title' | translate }}
+          </h2>
+          <p class="mk__pending-body">
+            {{ 'aplus.knowledge.pending_review_body' | translate }}
+          </p>
+        </div>
+      </div>
+      <a
+        class="btn-primary mk__pending-resume"
+        [routerLink]="['/a/growth-edges/review', reviewId]"
+        data-testid="pending-review-resume">
+        {{ 'aplus.knowledge.pending_review_resume' | translate }}
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </a>
+    </section>
+  }
+
+  <!-- Inline "＋ New map" form (a single required name → 2-step create). -->
+  @if (formOpen()) {
+    <section
+      class="glass-panel mk__form"
+      aria-labelledby="mk-form-label"
+      data-testid="mk-new-map-form">
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <label id="mk-form-label" class="mk__form-label" for="mk-map-name">
+          {{ 'aplus.knowledge.new_map_name_label' | translate }}
+        </label>
+        <div class="mk__form-row">
+          <input
+            id="mk-map-name"
+            class="mk__form-input"
+            type="text"
+            formControlName="name"
+            [attr.maxlength]="maxNameLength"
+            [attr.placeholder]="
+              'aplus.knowledge.new_map_name_placeholder' | translate
+            "
+            data-testid="mk-new-map-name" />
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="form.invalid || creating()"
+            data-testid="mk-new-map-submit">
+            {{ 'aplus.knowledge.create' | translate }}
+          </button>
+          <button
+            type="button"
+            class="btn-ghost"
+            (click)="cancelForm()"
+            data-testid="mk-new-map-cancel">
+            {{ 'aplus.knowledge.cancel' | translate }}
+          </button>
+        </div>
+        @if (createError(); as err) {
+          <p class="mk__form-error" role="alert" data-testid="mk-new-map-error">
+            {{ err | translate }}
+          </p>
+        }
+      </form>
+    </section>
+  }
+
+  <!-- Load state machine: loading / error(retry) / empty / success grid. -->
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="mk__loading" role="status" data-testid="mk-loading">
+        {{ 'aplus.knowledge.loading' | translate }}
+      </p>
+    }
+    @case ('error') {
+      <section
+        class="glass-panel mk__error"
+        role="alert"
+        data-testid="mk-error">
+        <p class="mk__error-text">{{ 'aplus.knowledge.error' | translate }}</p>
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="retry()"
+          data-testid="mk-retry">
+          {{ 'aplus.knowledge.retry' | translate }}
+        </button>
+      </section>
+    }
+    @case ('success') {
+      @if (maps().length === 0) {
+        <section class="glass-panel mk__empty" data-testid="mk-empty">
+          <h2 class="mk__empty-title">
+            {{ 'aplus.knowledge.empty_title' | translate }}
+          </h2>
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="openForm()"
+            data-testid="mk-empty-cta">
+            {{ 'aplus.knowledge.empty_cta' | translate }}
+          </button>
+        </section>
+      } @else {
+        <section
+          class="mk__grid"
+          [attr.aria-label]="'aplus.knowledge.title' | translate"
+          data-testid="mk-grid">
+          @for (map of maps(); track map.goalId) {
+            <article
+              class="glass-panel mk-card"
+              [attr.data-testid]="'mk-card-' + map.goalId">
+              <!-- Remove this whole map (learner-owned soft-delete). Top-right;
+                   opens a confirm MODAL (ConfirmDialogService) — not window.confirm. -->
+              <button
+                type="button"
+                class="mk-card__remove"
+                [disabled]="deletingId() === map.goalId"
+                (click)="promptDeleteMap(map.goalId)"
+                [attr.data-testid]="'mk-delete-' + map.goalId"
+                [attr.aria-label]="'aplus.knowledge.map_delete' | translate"
+                [attr.title]="'aplus.knowledge.map_delete' | translate">
+                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+              </button>
+              <h2 class="mk-card__title">
+                @if (cardTitle(map); as t) {
+                  {{ t }}
+                } @else {
+                  {{ 'aplus.knowledge.untitled_map' | translate }}
+                }
+              </h2>
+              @if (map.title && map.northStarNote) {
+                <p class="mk-card__subtitle">{{ map.northStarNote }}</p>
+              }
+
+              <p class="mk-card__concepts">
+                <span class="mk-card__count">{{ map.conceptCount }}</span>
+                {{ 'aplus.knowledge.concepts_count' | translate }}
+              </p>
+
+              <p class="mk-card__terrain">
+                @if (map.shakyCount > 0) {
+                  <span class="mk-card__band" data-terrain="shaky">
+                    <span aria-hidden="true">🔴</span>
+                    {{ map.shakyCount }}
+                    {{ 'aplus.knowledge.shaky_count' | translate }}
+                  </span>
+                } @else {
+                  <span class="mk-card__band" data-terrain="solid">
+                    <span aria-hidden="true">🟢</span>
+                    {{ 'aplus.knowledge.solid' | translate }}
+                  </span>
+                }
+                @if (map.masteredCount > 0) {
+                  <span class="mk-card__band" data-terrain="mastered">
+                    <span aria-hidden="true">✓</span>
+                    {{ map.masteredCount }}
+                    {{ 'aplus.knowledge.mastered_count' | translate }}
+                  </span>
+                }
+              </p>
+
+              <!-- Cooling and the stationed Companion (C4 slice 4), both served
+                   since c4c5d8820 and dropped by the FE model until now.
+                   The cooling chip is gated on `coolingPartial`: when the
+                   cooling read did not happen every count is 0, and rendering
+                   either a count or a "nothing cooling" from that would state a
+                   fact built from a read that never ran. Silence is the honest
+                   third state. -->
+              @if (!coolingPartial() && (map.coolingCount ?? 0) > 0) {
+                <p class="mk-card__cooling" [attr.data-testid]="'mk-cooling-' + map.goalId">
+                  <span aria-hidden="true">🔵</span>
+                  {{ map.coolingCount }}
+                  {{ 'aplus.knowledge.cooling_count' | translate }}
+                  @if (map.coolingHexLabel) {
+                    <span class="mk-card__cooling-hex">{{ map.coolingHexLabel }}</span>
+                  }
+                </p>
+              }
+              @if (map.attachedCompanionName) {
+                <p class="mk-card__companion" [attr.data-testid]="'mk-companion-' + map.goalId">
+                  <i class="fa-solid fa-shield-cat" aria-hidden="true"></i>
+                  {{ 'aplus.knowledge.companion_stationed' | translate }}
+                  <span class="mk-card__companion-name">{{ map.attachedCompanionName }}</span>
+                </p>
+              }
+
+              <a
+                class="mk-card__continue"
+                [routerLink]="['/a/knowledge', map.goalId]"
+                [attr.data-testid]="'mk-continue-' + map.goalId">
+                {{ 'aplus.knowledge.continue' | translate }}
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </a>
+            </article>
+          }
+        </section>
+      }
+    }
+  }
+
+  @if (legacyClusters().length > 0) {
+    <section class="mk__legacy" data-testid="mk-legacy">
+      <h2 class="mk__legacy-title">
+        {{ 'aplus.knowledge.legacy_title' | translate }}
+      </h2>
+      <p class="mk__legacy-intro">
+        {{ 'aplus.knowledge.legacy_intro' | translate }}
+      </p>
+      @if (convertError(); as err) {
+        <p class="mk__form-error" role="alert" data-testid="mk-convert-error">
+          {{ err | translate }}
+        </p>
+      }
+      <div class="mk__grid" data-testid="mk-legacy-grid">
+        @for (c of legacyClusters(); track c.clusterId) {
+          <article
+            class="glass-panel mk-card mk-card--legacy"
+            [attr.data-testid]="'mk-legacy-card-' + c.clusterId">
+            <h3 class="mk-card__title">{{ c.seedTopic }}</h3>
+            <p class="mk-card__subtitle">
+              {{ 'aplus.knowledge.legacy_badge' | translate }}
+            </p>
+            <button
+              type="button"
+              class="mk-card__continue"
+              [disabled]="converting() !== null"
+              (click)="convert(c.clusterId)"
+              [attr.data-testid]="'mk-convert-' + c.clusterId">
+              @if (converting() === c.clusterId) {
+                {{ 'aplus.knowledge.converting' | translate }}
+              } @else {
+                {{ 'aplus.knowledge.convert_cta' | translate }}
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              }
+            </button>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</main>

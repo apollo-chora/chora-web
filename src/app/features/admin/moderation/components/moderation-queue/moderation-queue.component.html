@@ -1,0 +1,326 @@
+<section
+  class="moderation-queue"
+  role="main"
+  [attr.aria-label]="'admin.moderation.title' | translate"
+  data-testid="moderation-queue">
+
+  <!-- Page Header -->
+  <header class="moderation-queue__header">
+    <div class="moderation-queue__header-top">
+      <h1 class="moderation-queue__title" data-testid="moderation-title">
+        {{ 'admin.moderation.title' | translate }}
+      </h1>
+      <button
+        type="button"
+        class="moderation-queue__btn moderation-queue__btn--primary"
+        (click)="loadItems()"
+        data-testid="btn-refresh"
+        [attr.aria-label]="'admin.moderation.refresh' | translate">
+        {{ 'admin.moderation.refresh' | translate }}
+      </button>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="moderation-queue__stats" data-testid="moderation-stats" role="status">
+      <div class="moderation-queue__stat">
+        <span class="moderation-queue__stat-value" data-testid="stat-total">{{ totalCount() }}</span>
+        <span class="moderation-queue__stat-label">{{ 'admin.moderation.total_flagged' | translate }}</span>
+      </div>
+      <div class="moderation-queue__stat">
+        <span class="moderation-queue__stat-value moderation-queue__stat-value--pending" data-testid="stat-pending">
+          {{ pendingCount() }}
+        </span>
+        <span class="moderation-queue__stat-label">{{ 'admin.moderation.pending' | translate }}</span>
+      </div>
+      <div class="moderation-queue__stat">
+        <span class="moderation-queue__stat-value moderation-queue__stat-value--reviewing" data-testid="stat-reviewing">
+          {{ reviewingCount() }}
+        </span>
+        <span class="moderation-queue__stat-label">{{ 'admin.moderation.reviewing' | translate }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="moderation-queue__filters" data-testid="moderation-filters" role="search">
+    <div class="moderation-queue__filter-group">
+      <label for="status-filter" class="moderation-queue__filter-label">
+        {{ 'admin.moderation.filter_status' | translate }}
+      </label>
+      <select
+        id="status-filter"
+        class="moderation-queue__select"
+        data-testid="status-filter"
+        (change)="onStatusFilter($any($event.target).value)">
+        <option value="">{{ 'admin.moderation.all_statuses' | translate }}</option>
+        @for (status of allStatuses; track status) {
+          <option [value]="status">{{ statusLabels[status] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="moderation-queue__filter-group">
+      <label for="type-filter" class="moderation-queue__filter-label">
+        {{ 'admin.moderation.filter_type' | translate }}
+      </label>
+      <select
+        id="type-filter"
+        class="moderation-queue__select"
+        data-testid="type-filter"
+        (change)="onContentTypeFilter($any($event.target).value)">
+        <option value="">{{ 'admin.moderation.all_types' | translate }}</option>
+        @for (ct of allContentTypes; track ct) {
+          <option [value]="ct">{{ contentTypeLabels[ct] | translate }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="moderation-queue__loading" data-testid="moderation-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="moderation-queue__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="moderation-queue__empty" data-testid="moderation-empty" role="status">
+      <p class="moderation-queue__empty-text">
+        {{ 'admin.moderation.no_flagged_content' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Content Layout: List + Detail -->
+  @if (!loading() && !isEmpty()) {
+    <div class="moderation-queue__layout">
+
+      <!-- Flagged Items List -->
+      <div class="moderation-queue__list" data-testid="flagged-list" role="list">
+        @for (item of items(); track item.id) {
+          <div
+            class="moderation-queue__card"
+            role="listitem"
+            [class.moderation-queue__card--selected]="isSelected(item.id)"
+            [attr.data-testid]="'flagged-' + item.id"
+            [attr.aria-expanded]="isSelected(item.id)"
+            (click)="selectItem(item.id)"
+            (keyup.enter)="selectItem(item.id)"
+            tabindex="0">
+
+            <!-- Card Header: Status badge + Content type -->
+            <div class="moderation-queue__card-header">
+              <span
+                class="moderation-queue__badge"
+                [class]="statusBadgeClass(item.status)"
+                data-testid="status-badge">
+                {{ statusLabels[item.status] | translate }}
+              </span>
+              <span class="moderation-queue__content-type">
+                {{ contentTypeLabels[item.content_type] | translate }}
+              </span>
+            </div>
+
+            <!-- Card Title -->
+            <h3 class="moderation-queue__card-title">{{ item.content_title }}</h3>
+
+            <!-- Excerpt -->
+            <p class="moderation-queue__card-excerpt">{{ item.content_excerpt }}</p>
+
+            <!-- Flag Info -->
+            <div class="moderation-queue__card-flag">
+              <span class="moderation-queue__flag-label">
+                {{ 'admin.moderation.flagged_by' | translate }}:
+              </span>
+              <span class="moderation-queue__flag-user">{{ item.flagged_by_display_name }}</span>
+              <span class="moderation-queue__flag-date">{{ formatDateTime(item.created_at) }}</span>
+            </div>
+
+            <!-- Reason -->
+            <div class="moderation-queue__card-reason">
+              <span class="moderation-queue__reason-label">
+                {{ 'admin.moderation.flag_reason' | translate }}:
+              </span>
+              {{ item.flag_reason }}
+            </div>
+
+            <!-- Assigned Moderator -->
+            @if (item.assigned_moderator_name) {
+              <div class="moderation-queue__card-assignee">
+                <span class="moderation-queue__assignee-label">
+                  {{ 'admin.moderation.assigned_to' | translate }}:
+                </span>
+                {{ item.assigned_moderator_name }}
+              </div>
+            }
+
+            <!-- Card Actions -->
+            <div
+              class="moderation-queue__card-actions"
+              role="presentation"
+              (click)="$event.stopPropagation()"
+              (keydown)="$event.stopPropagation()">
+              @if (canAssign(item)) {
+                <button
+                  type="button"
+                  class="moderation-queue__btn moderation-queue__btn--small moderation-queue__btn--primary"
+                  [attr.data-testid]="'btn-assign-' + item.id"
+                  (click)="assignToSelf(item)">
+                  {{ 'admin.moderation.assign_to_me' | translate }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Detail Panel -->
+      @if (selectedItem(); as selected) {
+        <aside
+          class="moderation-queue__detail"
+          data-testid="moderation-detail"
+          [attr.aria-label]="'admin.moderation.detail_panel' | translate">
+
+          <h2 class="moderation-queue__detail-title">{{ selected.content_title }}</h2>
+
+          <!-- Content Info -->
+          <div class="moderation-queue__detail-section">
+            <h3 class="moderation-queue__detail-heading">
+              {{ 'admin.moderation.content_info' | translate }}
+            </h3>
+            <dl class="moderation-queue__detail-list">
+              <div class="moderation-queue__detail-row">
+                <dt>{{ 'admin.moderation.content_id' | translate }}</dt>
+                <dd data-testid="detail-content-id">{{ selected.content_id }}</dd>
+              </div>
+              <div class="moderation-queue__detail-row">
+                <dt>{{ 'admin.moderation.content_type' | translate }}</dt>
+                <dd>{{ contentTypeLabels[selected.content_type] | translate }}</dd>
+              </div>
+              <div class="moderation-queue__detail-row">
+                <dt>{{ 'admin.moderation.status' | translate }}</dt>
+                <dd>
+                  <span
+                    class="moderation-queue__badge"
+                    [class]="statusBadgeClass(selected.status)">
+                    {{ statusLabels[selected.status] | translate }}
+                  </span>
+                </dd>
+              </div>
+              <div class="moderation-queue__detail-row">
+                <dt>{{ 'admin.moderation.flagged_at' | translate }}</dt>
+                <dd>{{ formatDateTime(selected.created_at) }}</dd>
+              </div>
+              @if (selected.resolved_at) {
+                <div class="moderation-queue__detail-row">
+                  <dt>{{ 'admin.moderation.resolved_at' | translate }}</dt>
+                  <dd>{{ formatDateTime(selected.resolved_at) }}</dd>
+                </div>
+              }
+            </dl>
+          </div>
+
+          <!-- Flag Details -->
+          <div class="moderation-queue__detail-section">
+            <h3 class="moderation-queue__detail-heading">
+              {{ 'admin.moderation.flag_details' | translate }}
+            </h3>
+            <div class="moderation-queue__detail-flag-info">
+              <p>
+                <strong>{{ 'admin.moderation.flagged_by' | translate }}:</strong>
+                {{ selected.flagged_by_display_name }}
+              </p>
+              <p>
+                <strong>{{ 'admin.moderation.flag_reason' | translate }}:</strong>
+                {{ selected.flag_reason }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Content Excerpt -->
+          <div class="moderation-queue__detail-section">
+            <h3 class="moderation-queue__detail-heading">
+              {{ 'admin.moderation.content_excerpt' | translate }}
+            </h3>
+            <blockquote class="moderation-queue__detail-excerpt" data-testid="detail-excerpt">
+              {{ selected.content_excerpt }}
+            </blockquote>
+          </div>
+
+          <!-- Action Button -->
+          @if (canTakeAction(selected) && !actionDialogOpen()) {
+            <div class="moderation-queue__detail-actions">
+              <button
+                type="button"
+                class="moderation-queue__btn moderation-queue__btn--primary"
+                (click)="openActionDialog()"
+                data-testid="btn-take-action">
+                {{ 'admin.moderation.take_action' | translate }}
+              </button>
+            </div>
+          }
+
+          <!-- Action Dialog (inline) -->
+          @if (actionDialogOpen() && selectedItem()) {
+            <div class="moderation-queue__action-dialog-wrapper" data-testid="action-dialog-wrapper">
+              <chora-moderation-action-dialog
+                [item]="selectedItem()!"
+                [submitting]="actionSubmitting()"
+                (submitAction)="onActionSubmit($event)"
+                (cancelled)="closeActionDialog()" />
+            </div>
+          }
+
+          <!-- Audit Trail -->
+          <div class="moderation-queue__detail-section">
+            <h3 class="moderation-queue__detail-heading">
+              {{ 'admin.moderation.audit_trail' | translate }}
+            </h3>
+
+            @if (auditLoading()) {
+              <div class="moderation-queue__audit-loading" aria-live="polite">
+                {{ 'admin.moderation.loading_audit' | translate }}
+              </div>
+            }
+
+            @if (!auditLoading() && auditTrail().length === 0) {
+              <p class="moderation-queue__empty-text">
+                {{ 'admin.moderation.no_audit_entries' | translate }}
+              </p>
+            }
+
+            @if (!auditLoading() && auditTrail().length > 0) {
+              <div class="moderation-queue__audit-list" data-testid="audit-list" role="list">
+                @for (entry of auditTrail(); track entry.id) {
+                  <div
+                    class="moderation-queue__audit-entry"
+                    role="listitem"
+                    [attr.data-testid]="'audit-' + entry.id">
+                    <div class="moderation-queue__audit-header">
+                      <span class="moderation-queue__audit-action">{{ entry.action }}</span>
+                      <span class="moderation-queue__audit-date">{{ formatDate(entry.created_at) }}</span>
+                    </div>
+                    <div class="moderation-queue__audit-moderator">
+                      {{ entry.moderator_name }}
+                    </div>
+                    <div class="moderation-queue__audit-reason">
+                      {{ entry.reason }}
+                    </div>
+                    @if (entry.notes) {
+                      <div class="moderation-queue__audit-notes">
+                        {{ entry.notes }}
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </aside>
+      }
+    </div>
+  }
+</section>

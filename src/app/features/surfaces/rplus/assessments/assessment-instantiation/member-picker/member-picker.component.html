@@ -1,0 +1,82 @@
+<div data-testid="member-picker" class="member-picker">
+  <label
+    for="member-picker-input"
+    class="member-picker__label">
+    {{ 'rplus.member_picker.search_label' | translate }}
+  </label>
+
+  <input
+    #inputEl
+    id="member-picker-input"
+    data-testid="member-picker-input"
+    class="member-picker__input"
+    type="text"
+    autocomplete="off"
+    [attr.placeholder]="'rplus.member_picker.search_placeholder' | translate"
+    [value]="query()"
+    (input)="onQueryInput(($any($event.target)).value)" />
+
+  @if (chips().length > 0) {
+    <ul
+      data-testid="member-picker-chips"
+      class="member-picker__chips"
+      aria-label="Selected learners">
+      @for (chip of chips(); track chip.gcid) {
+        <li
+          data-testid="member-picker-chip"
+          [attr.data-gcid]="chip.gcid"
+          class="member-picker__chip">
+          <span class="member-picker__chip-label">{{ formatRow(chip) }}</span>
+          <button
+            type="button"
+            data-testid="member-picker-chip-remove"
+            class="member-picker__chip-remove"
+            [attr.aria-label]="'rplus.member_picker.remove_chip' | translate"
+            (click)="removeChip(chip.gcid)">
+            ×
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (isLoading()) {
+    <div
+      data-testid="member-picker-loading"
+      class="member-picker__loading"
+      aria-busy="true">
+      {{ 'rplus.member_picker.searching' | translate }}
+    </div>
+  } @else if (isError()) {
+    <div
+      data-testid="member-picker-error"
+      class="member-picker__error"
+      role="alert">
+      {{ errorKey() | translate }}
+    </div>
+  } @else if (isSuccessEmpty()) {
+    <div
+      data-testid="member-picker-empty"
+      class="member-picker__empty">
+      {{ 'rplus.member_picker.empty' | translate }}
+    </div>
+  } @else if (results().length > 0) {
+    <ul
+      data-testid="member-picker-results"
+      class="member-picker__results"
+      role="listbox">
+      @for (member of results(); track member.gcid) {
+        <li class="member-picker__result-row">
+          <button
+            type="button"
+            data-testid="member-picker-result"
+            [attr.data-gcid]="member.gcid"
+            class="member-picker__result"
+            (click)="selectMember(member)">
+            {{ formatRow(member) }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -1,0 +1,182 @@
+<div class="oe-fields">
+  <label class="oe-fields__field">
+    <span class="oe-fields__label">Question stem</span>
+    <textarea
+      class="oe-fields__textarea"
+      data-testid="oe-fields-prompt"
+      [value]="prompt()"
+      [disabled]="readonly()"
+      rows="3"
+      (input)="onPromptInput($any($event.target).value)"></textarea>
+  </label>
+
+  @if (imageUrl(); as url) {
+    <chora-question-image
+      [src]="url"
+      alt="Generated question illustration"
+      testIdPrefix="oe-fields-image" />
+  }
+
+  <!--
+    W8: `image_url` (above) is the QUESTION/stem image. The MODEL-ANSWER
+    image (`answer_image_url`, the 2nd slot) renders below, AFTER the
+    model-answer textarea — see `&__answer-image` block. Dormant unless the
+    author opted in (`image_for_answer`) AND the BE returned one.
+  -->
+  <label class="oe-fields__field">
+    <span class="oe-fields__label">Model answer</span>
+    <textarea
+      class="oe-fields__textarea oe-fields__textarea--tall"
+      data-testid="oe-fields-model-answer"
+      [value]="modelAnswer()"
+      [disabled]="readonly()"
+      rows="6"
+      (input)="onModelAnswerInput($any($event.target).value)"></textarea>
+    <!--
+      AI "generate model answer" button RE-ENABLED 2026-06-28 (CHO-1658). Repointed
+      off the dead us-central1 Agent Engine onto the live GKE qgen crew
+      (intent=model_answer_fill; producer fetches the existing question + publishes
+      ai_assist.started.v2 with existing_question_json). Mana refunds on crew failure
+      (no charge-then-fail). Reachable once the question is saved (existingQuestionId
+      non-null) — the hint guides the author to save first.
+    -->
+    <button
+      type="button"
+      class="oe-fields__model-answer-ai"
+      data-testid="oe-fields-model-answer-ai"
+      [disabled]="!canRequestModelAnswer()"
+      (click)="requestModelAnswer()">
+      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+      {{ modelAnswerCtaKey() | translate }}
+    </button>
+    @if (existingQuestionId() === null) {
+      <span
+        class="oe-fields__model-answer-hint"
+        data-testid="oe-fields-model-answer-hint">
+        {{ 'aplus.atom_authoring.ai_assist.model_answer_hint' | translate }}
+      </span>
+    }
+  </label>
+
+  <!--
+    Generated MODEL-ANSWER image (W8 AUTHOR-OPT-IN, 2nd slot) — renders
+    immediately after the model-answer textarea. Display-only, dormant until
+    `answer_image_url` is present on the candidate.
+  -->
+  @if (answerImageUrl(); as answerUrl) {
+    <chora-question-image
+      [src]="answerUrl"
+      alt="Generated model-answer illustration"
+      testIdPrefix="oe-fields-answer-image" />
+  }
+
+  <div class="oe-fields__row">
+    <label class="oe-fields__field oe-fields__field--inline">
+      <span class="oe-fields__label">Min response chars</span>
+      <input
+        type="number"
+        class="oe-fields__number"
+        data-testid="oe-fields-min-chars"
+        [value]="minResponseChars() ?? ''"
+        [disabled]="readonly()"
+        min="0"
+        (input)="onMinCharsInput($any($event.target).value)" />
+    </label>
+
+    <label class="oe-fields__field oe-fields__field--inline">
+      <span class="oe-fields__label">Max response chars</span>
+      <input
+        type="number"
+        class="oe-fields__number"
+        data-testid="oe-fields-max-chars"
+        [value]="maxResponseChars() ?? ''"
+        [disabled]="readonly()"
+        min="0"
+        (input)="onMaxCharsInput($any($event.target).value)" />
+    </label>
+
+    <label class="oe-fields__field oe-fields__field--inline">
+      <span class="oe-fields__label">Grader tier</span>
+      <select
+        class="oe-fields__select"
+        data-testid="oe-fields-grader-tier"
+        [value]="graderTier() ?? ''"
+        [disabled]="readonly()"
+        (change)="onGraderTierChange($any($event.target).value)">
+        <option value="">(default)</option>
+        <option value="T1">T1 (fast / cheap)</option>
+        <option value="T2">T2 (deeper / costlier)</option>
+      </select>
+    </label>
+  </div>
+
+  <fieldset class="oe-fields__rubric" [disabled]="readonly()">
+    <legend class="oe-fields__legend">Rubric criteria (optional)</legend>
+    @for (criterion of rubricCriteria(); track criterion.criterion_id; let i = $index) {
+      <div
+        class="oe-fields__rubric-row"
+        [attr.data-testid]="'oe-fields-rubric-row-' + i">
+        <input
+          type="text"
+          class="oe-fields__rubric-label"
+          [attr.data-testid]="'oe-fields-rubric-label-' + i"
+          [value]="criterion.title"
+          [disabled]="readonly()"
+          placeholder="Criterion label"
+          (input)="onCriterionLabelInput(i, $any($event.target).value)" />
+        <input
+          type="number"
+          class="oe-fields__rubric-weight"
+          [attr.data-testid]="'oe-fields-rubric-weight-' + i"
+          [value]="criterion.weight"
+          [disabled]="readonly()"
+          step="0.01"
+          min="0"
+          max="1"
+          (input)="onCriterionWeightInput(i, $any($event.target).value)" />
+        <input
+          type="text"
+          class="oe-fields__rubric-description"
+          [attr.data-testid]="'oe-fields-rubric-description-' + i"
+          [value]="criterion.description ?? ''"
+          [disabled]="readonly()"
+          placeholder="Description (optional)"
+          (input)="onCriterionDescriptionInput(i, $any($event.target).value)" />
+        <button
+          type="button"
+          class="oe-fields__remove-btn"
+          [attr.data-testid]="'oe-fields-remove-criterion-' + i"
+          [disabled]="readonly()"
+          (click)="removeCriterion(i)">
+          Remove
+        </button>
+      </div>
+    }
+
+    @if (rubricCriteria().length > 0 && !rubricWeightsValid()) {
+      <p
+        class="oe-fields__rubric-weight-error"
+        role="alert"
+        data-testid="oe-fields-rubric-weight-error">
+        Rubric criterion weights must add up to 100% (currently {{ rubricWeightPercent() }}%).
+      </p>
+      <button
+        type="button"
+        class="oe-fields__normalize-btn"
+        data-testid="oe-fields-normalize-weights"
+        [disabled]="readonly() || rubricWeightSum() === 0"
+        (click)="normalizeRubricWeights()">
+        Normalize to 100%
+      </button>
+    }
+
+    <button
+      type="button"
+      class="oe-fields__add-btn"
+      data-testid="oe-fields-add-criterion"
+      [disabled]="readonly()"
+      (click)="addCriterion()">
+      Add criterion
+    </button>
+  </fieldset>
+</div>

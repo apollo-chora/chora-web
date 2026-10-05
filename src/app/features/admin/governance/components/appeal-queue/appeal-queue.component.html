@@ -1,0 +1,143 @@
+<section
+  class="appeal-queue"
+  role="main"
+  [attr.aria-label]="'admin.governance.appeals_title' | translate"
+  data-testid="appeal-queue">
+
+  <!-- Page Header -->
+  <header class="appeal-queue__header">
+    <div class="appeal-queue__header-nav">
+      <h1 class="appeal-queue__title" data-testid="appeals-title">
+        {{ 'admin.governance.appeals_title' | translate }}
+      </h1>
+    </div>
+    <button
+      type="button"
+      class="appeal-queue__btn appeal-queue__btn--primary"
+      (click)="loadAppeals()"
+      data-testid="btn-refresh-appeals"
+      [attr.aria-label]="'admin.governance.refresh' | translate">
+      {{ 'admin.governance.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="appeal-queue__filters" data-testid="appeal-filters" role="search">
+    <div class="appeal-queue__filter-group">
+      <label for="appeal-status-filter" class="appeal-queue__filter-label">
+        {{ 'admin.governance.status' | translate }}
+      </label>
+      <select
+        id="appeal-status-filter"
+        class="appeal-queue__select"
+        data-testid="appeal-status-filter"
+        (change)="onStatusFilter($any($event.target).value)">
+        <option value="">{{ 'admin.governance.all_statuses' | translate }}</option>
+        @for (st of allStatuses; track st) {
+          <option [value]="st">{{ appealStatusLabels[st] | translate }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="appeal-queue__loading" data-testid="appeals-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="appeal-queue__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="appeal-queue__empty" data-testid="appeals-empty" role="status">
+      <p class="appeal-queue__empty-text">
+        {{ 'admin.governance.no_appeals' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Appeals List -->
+  @if (!loading() && !isEmpty()) {
+    <div class="appeal-queue__layout">
+      <div class="appeal-queue__list" data-testid="appeal-list" role="list">
+        @for (appeal of filteredAppeals(); track appeal.id) {
+          <div
+            class="appeal-queue__card"
+            role="listitem"
+            [attr.data-testid]="'appeal-' + appeal.id">
+
+            <!-- Card Header -->
+            <div class="appeal-queue__card-header">
+              <span
+                class="appeal-queue__status"
+                [class]="statusClass(appeal.status)">
+                {{ appealStatusLabels[appeal.status] | translate }}
+              </span>
+            </div>
+
+            <!-- Card Body -->
+            <div class="appeal-queue__card-body">
+              <div class="appeal-queue__gcid">
+                <span class="appeal-queue__label">
+                  {{ 'admin.governance.appellant_gcid' | translate }}:
+                </span>
+                {{ appeal.appellant_gcid }}
+              </div>
+              <div class="appeal-queue__restriction-ref">
+                <span class="appeal-queue__label">
+                  {{ 'admin.governance.restriction_id' | translate }}:
+                </span>
+                {{ appeal.restriction_id }}
+              </div>
+              <p class="appeal-queue__reason">{{ appeal.reason }}</p>
+            </div>
+
+            <!-- Card Meta -->
+            <div class="appeal-queue__card-meta">
+              <span>{{ formatDateTime(appeal.submitted_at) }}</span>
+              @if (appeal.reviewer_gcid) {
+                <span class="appeal-queue__reviewer">
+                  {{ 'admin.governance.reviewer' | translate }}: {{ appeal.reviewer_gcid }}
+                </span>
+              }
+            </div>
+
+            <!-- Action Buttons -->
+            @if (canReview(appeal)) {
+              <div class="appeal-queue__actions">
+                <button
+                  type="button"
+                  class="appeal-queue__btn appeal-queue__btn--success"
+                  [attr.data-testid]="'btn-approve-' + appeal.id"
+                  [attr.aria-label]="'admin.governance.approve' | translate"
+                  (click)="approveAppeal(appeal)">
+                  {{ 'admin.governance.approve' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="appeal-queue__btn appeal-queue__btn--danger"
+                  [attr.data-testid]="'btn-deny-' + appeal.id"
+                  [attr.aria-label]="'admin.governance.deny' | translate"
+                  (click)="denyAppeal(appeal)">
+                  {{ 'admin.governance.deny' | translate }}
+                </button>
+              </div>
+            }
+
+            <!-- Reviewer Notes (if resolved) -->
+            @if (appeal.reviewer_notes) {
+              <div class="appeal-queue__notes">
+                <span class="appeal-queue__label">
+                  {{ 'admin.governance.reviewer_notes' | translate }}:
+                </span>
+                <p class="appeal-queue__notes-text">{{ appeal.reviewer_notes }}</p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>

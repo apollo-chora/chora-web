@@ -1,0 +1,252 @@
+<section
+  class="moderation-queue"
+  role="main"
+  [attr.aria-label]="'admin.moderation.queue_title' | translate"
+  data-testid="moderation-queue">
+
+  <!-- Page Header -->
+  <header class="moderation-queue__header">
+    <div class="moderation-queue__header-nav">
+      <h1 class="moderation-queue__title" data-testid="queue-title">
+        {{ 'admin.moderation.queue_title' | translate }}
+      </h1>
+      @if (totalCount() > 0) {
+        <span class="moderation-queue__count" data-testid="queue-count">
+          {{ totalCount() }} {{ 'admin.moderation.items_pending' | translate }}
+        </span>
+      }
+    </div>
+    <button
+      type="button"
+      class="moderation-queue__btn moderation-queue__btn--primary"
+      (click)="loadQueue()"
+      data-testid="btn-refresh-queue"
+      [attr.aria-label]="'admin.moderation.refresh' | translate">
+      {{ 'admin.moderation.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="moderation-queue__filters" data-testid="queue-filters" role="search">
+    <div class="moderation-queue__filter-group">
+      <label for="type-filter" class="moderation-queue__filter-label">
+        {{ 'admin.moderation.content_type' | translate }}
+      </label>
+      <select
+        id="type-filter"
+        class="moderation-queue__select"
+        data-testid="type-filter"
+        (change)="onTypeFilter($any($event.target).value)">
+        <option value="">{{ 'admin.moderation.all_types' | translate }}</option>
+        @for (type of allContentTypes; track type) {
+          <option [value]="type">{{ contentTypeLabels[type] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="moderation-queue__filter-group">
+      <label for="priority-filter" class="moderation-queue__filter-label">
+        {{ 'admin.moderation.priority' | translate }}
+      </label>
+      <select
+        id="priority-filter"
+        class="moderation-queue__select"
+        data-testid="priority-filter"
+        (change)="onPriorityFilter($any($event.target).value)">
+        <option value="">{{ 'admin.moderation.all_priorities' | translate }}</option>
+        @for (p of allPriorities; track p) {
+          <option [value]="p">{{ priorityLabels[p] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="moderation-queue__filter-group">
+      <label for="sort-order" class="moderation-queue__filter-label">
+        {{ 'admin.moderation.sort_by' | translate }}
+      </label>
+      <select
+        id="sort-order"
+        class="moderation-queue__select"
+        data-testid="sort-order"
+        (change)="onSortChange($any($event.target).value)">
+        @for (sort of allSortOptions; track sort) {
+          <option [value]="sort">{{ sortLabels[sort] | translate }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="moderation-queue__loading" data-testid="queue-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="moderation-queue__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="moderation-queue__empty" data-testid="queue-empty" role="status">
+      <p class="moderation-queue__empty-text">
+        {{ 'admin.moderation.no_flagged_content' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Queue Cards -->
+  @if (!loading() && !isEmpty()) {
+    <div class="moderation-queue__list" data-testid="queue-list" role="list">
+      @for (item of queueItems(); track item.id) {
+        <article
+          class="moderation-queue__card"
+          role="listitem"
+          [attr.data-testid]="'queue-item-' + item.id">
+
+          <!-- Card Header -->
+          <div class="moderation-queue__card-header">
+            <div class="moderation-queue__card-badges">
+              <span
+                class="moderation-queue__content-type"
+                [class]="contentTypeClass(item.content_type)">
+                {{ contentTypeLabels[item.content_type] | translate }}
+              </span>
+              <span
+                class="moderation-queue__flag-reason">
+                {{ flagReasonLabels[item.flag_reason] | translate }}
+              </span>
+            </div>
+            <span
+              class="moderation-queue__priority"
+              [class]="priorityClass(item.flag_count)"
+              [attr.data-testid]="'priority-' + item.id">
+              @if (getPriority(item.flag_count) === 'critical') {
+                {{ 'admin.moderation.priority_critical' | translate }}
+              } @else if (getPriority(item.flag_count) === 'high') {
+                {{ 'admin.moderation.priority_high' | translate }}
+              }
+            </span>
+          </div>
+
+          <!-- Card Body: Content Preview -->
+          <div class="moderation-queue__card-body">
+            @if (item.thumbnail_url) {
+              <div class="moderation-queue__thumbnail">
+                <img
+                  [src]="item.thumbnail_url"
+                  [alt]="item.title"
+                  class="moderation-queue__thumbnail-img"
+                  loading="lazy" />
+              </div>
+            }
+            <div class="moderation-queue__content-preview">
+              <h3 class="moderation-queue__content-title">{{ item.title }}</h3>
+              <p class="moderation-queue__content-excerpt">{{ item.excerpt }}</p>
+            </div>
+          </div>
+
+          <!-- Card Meta -->
+          <div class="moderation-queue__card-meta">
+            <div class="moderation-queue__reporter">
+              <span class="moderation-queue__label">
+                {{ 'admin.moderation.reported_by' | translate }}:
+              </span>
+              {{ item.reporter_name }}
+            </div>
+            <div class="moderation-queue__meta-details">
+              <span class="moderation-queue__reported-date">
+                {{ formatDateTime(item.reported_at) }}
+              </span>
+              <span class="moderation-queue__flag-count" [attr.data-testid]="'flag-count-' + item.id">
+                {{ item.flag_count }} {{ 'admin.moderation.flags' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Edit Notes (expandable) -->
+          @if (isEditNotesOpen(item.id)) {
+            <div
+              class="moderation-queue__edit-notes"
+              [attr.data-testid]="'edit-notes-' + item.id">
+              <label [for]="'edit-notes-input-' + item.id" class="moderation-queue__edit-notes-label">
+                {{ 'admin.moderation.edit_instructions' | translate }}
+              </label>
+              <textarea
+                [id]="'edit-notes-input-' + item.id"
+                class="moderation-queue__edit-notes-textarea"
+                rows="3"
+                [attr.placeholder]="'admin.moderation.edit_instructions_placeholder' | translate"
+                [value]="editNotesText()"
+                (input)="onEditNotesInput($any($event.target).value)"
+                [attr.data-testid]="'edit-notes-textarea-' + item.id"></textarea>
+              <div class="moderation-queue__edit-notes-actions">
+                <button
+                  type="button"
+                  class="moderation-queue__btn moderation-queue__btn--ghost"
+                  (click)="cancelEditNotes()"
+                  [attr.data-testid]="'btn-cancel-edit-' + item.id"
+                  [attr.aria-label]="'admin.moderation.cancel' | translate">
+                  {{ 'admin.moderation.cancel' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="moderation-queue__btn moderation-queue__btn--amber"
+                  [disabled]="isActionInProgress(item.id) || !editNotesText().trim()"
+                  (click)="submitEditRequest(item)"
+                  [attr.data-testid]="'btn-submit-edit-' + item.id"
+                  [attr.aria-label]="'admin.moderation.send_edit_request' | translate">
+                  {{ 'admin.moderation.send_edit_request' | translate }}
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Action Buttons -->
+          <div class="moderation-queue__actions">
+            <button
+              type="button"
+              class="moderation-queue__btn moderation-queue__btn--success"
+              [disabled]="isActionInProgress(item.id)"
+              (click)="approveItem(item)"
+              [attr.data-testid]="'btn-approve-' + item.id"
+              [attr.aria-label]="'admin.moderation.approve' | translate">
+              {{ 'admin.moderation.approve' | translate }}
+            </button>
+            <button
+              type="button"
+              class="moderation-queue__btn moderation-queue__btn--amber"
+              [disabled]="isActionInProgress(item.id)"
+              (click)="openEditNotes(item.id)"
+              [attr.data-testid]="'btn-request-edit-' + item.id"
+              [attr.aria-label]="'admin.moderation.request_edit' | translate">
+              {{ 'admin.moderation.request_edit' | translate }}
+            </button>
+            <button
+              type="button"
+              class="moderation-queue__btn moderation-queue__btn--danger"
+              [disabled]="isActionInProgress(item.id)"
+              (click)="removeItem(item)"
+              [attr.data-testid]="'btn-remove-' + item.id"
+              [attr.aria-label]="'admin.moderation.remove' | translate">
+              {{ 'admin.moderation.remove' | translate }}
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+
+    <!-- Load More -->
+    @if (hasMore()) {
+      <div class="moderation-queue__load-more">
+        <button
+          type="button"
+          class="moderation-queue__btn moderation-queue__btn--primary"
+          (click)="loadMore()"
+          data-testid="btn-load-more"
+          [attr.aria-label]="'admin.moderation.load_more' | translate">
+          {{ 'admin.moderation.load_more' | translate }}
+        </button>
+      </div>
+    }
+  }
+</section>

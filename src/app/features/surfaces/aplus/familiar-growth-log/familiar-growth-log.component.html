@@ -1,0 +1,92 @@
+<section
+  class="growth-log surface-aplus"
+  aria-labelledby="growth-log-heading"
+  data-testid="aplus-familiar-growth-log">
+  <header class="growth-log__header glass-panel">
+    <div>
+      <h1 id="growth-log-heading" class="growth-log__title">
+        <i class="fa-solid fa-scroll" aria-hidden="true"></i>
+        {{ 'aplus.familiar_growth_log.heading' | translate }}
+      </h1>
+      <p class="growth-log__sub">
+        {{ 'aplus.familiar_growth_log.sub' | translate }}
+      </p>
+    </div>
+    <a
+      [routerLink]="['/a/companion', familiarId()]"
+      class="growth-log__back"
+      data-testid="aplus-growth-log-back">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      {{ 'aplus.familiar.back_to_dashboard' | translate }}
+    </a>
+  </header>
+
+  @if (events().length > 0) {
+    <ol class="growth-log__timeline glass-panel" data-testid="aplus-growth-log-events">
+      @for (e of events(); track e.eventId) {
+        <li
+          class="growth-event"
+          [class.has-stage-up]="e.stageAfter > e.stageBefore"
+          [class.is-capped]="e.dailyCapHit"
+          [attr.data-testid]="'aplus-growth-event-' + e.eventId">
+          <div class="growth-event__dot" aria-hidden="true">
+            @if (e.stageAfter > e.stageBefore) {
+              <i class="fa-solid fa-arrow-up"></i>
+            } @else {
+              <i class="fa-solid fa-circle"></i>
+            }
+          </div>
+          <div class="growth-event__body">
+            <header class="growth-event__head">
+              <span class="growth-event__source">
+                {{ sourceLabel(e.source) | translate }}
+              </span>
+              <span class="growth-event__delta" [class.is-positive]="e.expDelta > 0">
+                +{{ e.expDelta }} EXP
+              </span>
+            </header>
+            <div class="growth-event__meta">
+              <time [attr.dateTime]="e.occurredAt">{{ e.occurredAt }}</time>
+              @if (e.stageAfter > e.stageBefore) {
+                <span class="growth-event__stage-pill">
+                  {{ 'aplus.familiar_growth_log.stage_up' | translate }}:
+                  {{ e.stageBefore }} → {{ e.stageAfter }}
+                </span>
+              }
+              @if (e.dailyCapHit) {
+                <span class="growth-event__capped-pill">
+                  <i class="fa-solid fa-hand" aria-hidden="true"></i>
+                  {{ 'aplus.familiar_growth_log.daily_cap_hit' | translate }}
+                </span>
+              }
+              <span class="growth-event__cumulative">
+                {{ 'aplus.familiar_growth_log.total' | translate }}:
+                <strong>{{ e.expCumulativeAfter }}</strong> EXP
+              </span>
+            </div>
+          </div>
+        </li>
+      }
+    </ol>
+
+    @if (hasNextPage()) {
+      <button
+        type="button"
+        class="growth-log__load-more"
+        [disabled]="loadingMore()"
+        (click)="loadMore()"
+        data-testid="aplus-growth-log-load-more">
+        @if (loadingMore()) {
+          <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+          {{ 'aplus.familiar_growth_log.loading_more' | translate }}
+        } @else {
+          {{ 'aplus.familiar_growth_log.load_more' | translate }}
+        }
+      </button>
+    }
+  } @else {
+    <p class="growth-log__empty" role="status">
+      {{ 'aplus.familiar_growth_log.empty' | translate }}
+    </p>
+  }
+</section>

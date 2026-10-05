@@ -1,0 +1,184 @@
+:host {
+  display: block;
+}
+
+.agent-monitor-dashboard {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-block-end: var(--chora-space-lg, 24px);
+    flex-wrap: wrap;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Buttons
+  // -------------------------------------------------------------------------
+
+  &__btn {
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    cursor: pointer;
+    font-size: 0.875rem;
+
+    &--primary {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Summary Cards
+  // -------------------------------------------------------------------------
+
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--chora-space-md, 16px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__summary-card {
+    padding: var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-md, 8px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    text-align: center;
+
+    &--total {
+      border-inline-start: 4px solid var(--chora-color-primary, #2563eb);
+    }
+
+    &--healthy {
+      border-inline-start: 4px solid #22c55e;
+    }
+
+    &--degraded {
+      border-inline-start: 4px solid #eab308;
+    }
+
+    &--down {
+      border-inline-start: 4px solid #ef4444;
+    }
+
+    &--tokens {
+      border-inline-start: 4px solid #8b5cf6;
+    }
+
+    &--errors {
+      border-inline-start: 4px solid #f97316;
+    }
+  }
+
+  &__summary-value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__summary-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--chora-color-text-muted, #666);
+    margin-block-start: var(--chora-space-xs, 4px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Agent Cards Grid
+  // -------------------------------------------------------------------------
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--chora-space-md, 16px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Loading
+  // -------------------------------------------------------------------------
+
+  &__loading {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__skeleton-card {
+    height: 180px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-md, 8px);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  // -------------------------------------------------------------------------
+  // Error / Empty
+  // -------------------------------------------------------------------------
+
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+
+    p {
+      margin: 0 0 var(--chora-space-md, 16px);
+      color: var(--chora-color-text-muted, #666);
+    }
+  }
+
+  &__empty {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+    margin: 0;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Desktop enhancement
+@media (min-width: 1280px) {
+  .agent-monitor-dashboard {
+    &__summary {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    &__grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    &__loading {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}

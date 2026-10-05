@@ -1,0 +1,116 @@
+<aside
+  class="search-filters"
+  role="complementary"
+  [attr.aria-label]="'search.filters_label' | translate"
+  data-testid="search-filters">
+
+  <!-- Filter Header -->
+  <div class="search-filters__header">
+    <h2 class="search-filters__title" data-testid="filters-title">
+      {{ 'search.filters_title' | translate }}
+    </h2>
+    @if (hasActiveFilters()) {
+      <button
+        type="button"
+        class="search-filters__clear-btn"
+        data-testid="btn-clear-filters"
+        [attr.aria-label]="'search.clear_all_filters' | translate"
+        (click)="clearAll()">
+        {{ 'search.clear_all' | translate }}
+        <span class="search-filters__badge" data-testid="active-filter-count">
+          {{ activeFilterCount() }}
+        </span>
+      </button>
+    }
+  </div>
+
+  <!-- Atom Type Facets -->
+  <fieldset class="search-filters__group" data-testid="filter-group-type">
+    <legend class="search-filters__group-title">
+      {{ 'search.filter_atom_type' | translate }}
+    </legend>
+    <div class="search-filters__options" role="group">
+      @for (type of allAtomTypes; track type) {
+        <label
+          class="search-filters__option"
+          [class.search-filters__option--active]="isTypeActive(type)"
+          data-testid="filter-option-type">
+          <input
+            type="checkbox"
+            class="search-filters__checkbox"
+            [checked]="isTypeActive(type)"
+            [attr.aria-label]="atomTypeLabels[type] | translate"
+            data-testid="checkbox-type"
+            (change)="toggleType(type)" />
+          <span class="search-filters__option-label">
+            {{ atomTypeLabels[type] | translate }}
+          </span>
+          @if (getTypeCount(type) > 0) {
+            <span class="search-filters__option-count" data-testid="type-count">
+              {{ getTypeCount(type) }}
+            </span>
+          }
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  <!-- Difficulty Facets -->
+  <fieldset class="search-filters__group" data-testid="filter-group-difficulty">
+    <legend class="search-filters__group-title">
+      {{ 'search.filter_difficulty' | translate }}
+    </legend>
+    <div class="search-filters__options" role="group">
+      @for (level of allDifficultyLevels; track level) {
+        <label
+          class="search-filters__option"
+          [class.search-filters__option--active]="isDifficultyActive(level)"
+          data-testid="filter-option-difficulty">
+          <input
+            type="checkbox"
+            class="search-filters__checkbox"
+            [checked]="isDifficultyActive(level)"
+            [attr.aria-label]="difficultyLabels[level] | translate"
+            data-testid="checkbox-difficulty"
+            (change)="toggleDifficulty(level)" />
+          <span class="search-filters__option-label">
+            {{ difficultyLabels[level] | translate }}
+          </span>
+          @if (getDifficultyCount(level) > 0) {
+            <span class="search-filters__option-count" data-testid="difficulty-count">
+              {{ getDifficultyCount(level) }}
+            </span>
+          }
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  <!-- Topic Filter (text input) -->
+  <fieldset class="search-filters__group" data-testid="filter-group-topic">
+    <legend class="search-filters__group-title">
+      {{ 'search.filter_topic' | translate }}
+    </legend>
+    <div class="search-filters__topic-input-wrapper">
+      <input
+        type="text"
+        class="search-filters__topic-input"
+        [value]="activeFilters().topic ?? ''"
+        [placeholder]="'search.topic_placeholder' | translate"
+        [attr.aria-label]="'search.filter_by_topic' | translate"
+        data-testid="input-topic-filter"
+        (keyup.enter)="setTopic($any($event.target).value || null)"
+        (blur)="setTopic($any($event.target).value || null)" />
+      @if (activeFilters().topic) {
+        <button
+          type="button"
+          class="search-filters__topic-clear"
+          data-testid="btn-clear-topic"
+          [attr.aria-label]="'search.clear_topic' | translate"
+          (click)="setTopic(null)">
+          &times;
+        </button>
+      }
+    </div>
+  </fieldset>
+</aside>

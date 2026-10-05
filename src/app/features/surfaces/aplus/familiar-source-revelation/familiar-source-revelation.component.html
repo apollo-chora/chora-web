@@ -1,0 +1,126 @@
+@if (state(); as s) {
+  <section
+    class="source-revelation surface-aplus"
+    [attr.data-breed]="s.species"
+    [attr.data-consumed]="windowConsumed() ? 'true' : null"
+    aria-labelledby="source-revelation-heading"
+    data-testid="aplus-familiar-source-revelation">
+    <div class="source-revelation__backdrop" aria-hidden="true"></div>
+    <div class="source-revelation__glow" aria-hidden="true"></div>
+
+    <div class="source-revelation__card glass-panel">
+      <header class="source-revelation__head">
+        <p class="source-revelation__eyebrow">
+          @if (!windowConsumed()) {
+            {{ 'aplus.familiar_source_revelation.eyebrow_active' | translate }}
+          } @else {
+            {{ 'aplus.familiar_source_revelation.eyebrow_consumed' | translate }}
+          }
+        </p>
+        <h1 id="source-revelation-heading" class="source-revelation__heading">
+          {{ 'aplus.familiar_source_revelation.heading' | translate }}
+        </h1>
+      </header>
+
+      <div class="source-revelation__art-row">
+        <!-- Current Stage 3 form -->
+        <div class="source-revelation__art-cell source-revelation__art-cell--current">
+          <chora-breed-art
+            [species]="s.species"
+            [stage]="3"
+            size="md"
+            mood="curious"
+            [altText]="currentStageLabel()" />
+          <span class="source-revelation__art-label">{{ currentStageLabel() }}</span>
+        </div>
+        <!-- Glimpse of the Stage 6 destined form -->
+        <div class="source-revelation__art-cell source-revelation__art-cell--vision">
+          <chora-breed-art
+            [species]="s.species"
+            [stage]="6"
+            [shiny]="s.shinyVariant"
+            size="lg"
+            mood="celebrating"
+            [altText]="maturedStageLabel() + ' (glimpsed destiny)'" />
+          <span class="source-revelation__art-label source-revelation__art-label--vision">
+            {{ maturedStageLabel() }}
+          </span>
+          <span class="source-revelation__vision-tag" aria-hidden="true">
+            <i class="fa-solid fa-eye"></i>
+            {{ 'aplus.familiar_source_revelation.glimpse_tag' | translate }}
+          </span>
+        </div>
+      </div>
+
+      <div class="source-revelation__narrative" data-testid="aplus-source-revelation-narrative">
+        @if (!windowConsumed()) {
+          <p>
+            {{ 'aplus.familiar_source_revelation.body_active_p1_prefix' | translate }}
+            <strong>{{ s.displayName }}</strong>
+            {{ 'aplus.familiar_source_revelation.body_active_p1_infix' | translate }}
+            <strong>{{ maturedStageLabel() }}</strong>,
+            {{ 'aplus.familiar_source_revelation.body_active_p1_suffix' | translate }}
+          </p>
+          <p>
+            {{ 'aplus.familiar_source_revelation.body_active_p2_prefix' | translate }}
+            <strong>{{ currentStageLabel() }}</strong>{{ 'aplus.familiar_source_revelation.body_active_p2_suffix' | translate }}
+          </p>
+          <p class="source-revelation__window">
+            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+            {{ 'aplus.familiar_source_revelation.body_active_p3_prefix' | translate }}
+            <strong>{{ s.displayName }}</strong>
+            {{ 'aplus.familiar_source_revelation.body_active_p3_suffix' | translate }}
+          </p>
+        } @else {
+          <p>
+            {{ 'aplus.familiar_source_revelation.body_consumed_prefix' | translate }}
+            <strong>{{ s.displayName }}</strong>
+            {{ 'aplus.familiar_source_revelation.body_consumed_suffix' | translate }}
+          </p>
+        }
+      </div>
+
+      @if (!windowConsumed() && windowExpiresAt()) {
+        <aside class="source-revelation__window-card" data-testid="aplus-source-revelation-window-card">
+          <div>
+            <p class="source-revelation__window-label">
+              {{ 'aplus.familiar_source_revelation.window_expires_at' | translate }}
+            </p>
+            <p class="source-revelation__window-value">
+              <time [attr.dateTime]="windowExpiresAt()">{{ windowExpiresAt() }}</time>
+            </p>
+          </div>
+          @if (previewLlmTier()) {
+            <div>
+              <p class="source-revelation__window-label">
+                {{ 'aplus.familiar_source_revelation.preview_tier' | translate }}
+              </p>
+              <p class="source-revelation__window-value">
+                <code>{{ previewLlmTier() }}</code>
+              </p>
+            </div>
+          }
+        </aside>
+      }
+
+      <footer class="source-revelation__footer">
+        <a
+          [routerLink]="['/a/companion', s.familiarId]"
+          class="source-revelation__cta"
+          data-testid="aplus-source-revelation-continue">
+          @if (!windowConsumed()) {
+            <i class="fa-solid fa-hand-sparkles" aria-hidden="true"></i>
+            {{ 'aplus.familiar_source_revelation.continue_active_cta' | translate }}
+          } @else {
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            {{ 'aplus.familiar_source_revelation.continue_consumed_cta' | translate }}
+          }
+        </a>
+      </footer>
+    </div>
+  </section>
+} @else {
+  <p class="source-revelation__loading" role="status" aria-live="polite">
+    Loading the revelation…
+  </p>
+}

@@ -1,0 +1,58 @@
+<form
+  class="kg-seed-form"
+  (submit)="$event.preventDefault(); startExploration()">
+  <label class="visually-hidden" for="kg-seed-input">
+    {{ 'aplus.dashboard.kg.seed_label' | translate }}
+  </label>
+  <input
+    id="kg-seed-input"
+    type="text"
+    class="kg-seed-form__input"
+    maxlength="128"
+    [placeholder]="'aplus.dashboard.kg.seed_placeholder' | translate"
+    [value]="seedTopic()"
+    (input)="onSeedInput($any($event.target).value)"
+    [attr.aria-describedby]="seedError() ? 'kg-seed-error' : null"
+    data-testid="kg-seed-input" />
+  <button
+    type="submit"
+    class="kg-seed-form__cta"
+    [disabled]="!canSeed()"
+    data-testid="kg-seed-cta">
+    @if (seeding()) {
+      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+      {{ 'aplus.dashboard.kg.seed_loading' | translate }}
+    } @else {
+      <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      {{ 'aplus.dashboard.kg.seed_cta' | translate }}
+    }
+  </button>
+</form>
+@if (seedError(); as err) {
+  <p
+    id="kg-seed-error"
+    class="kg-seed-form__error"
+    role="alert"
+    data-testid="kg-seed-error">
+    @switch (err.kind) {
+      @case ('cap_reached') {
+        {{ 'aplus.dashboard.kg.err_cap_reached' | translate }}
+      }
+      @case ('insufficient_mana') {
+        {{ 'aplus.dashboard.kg.err_insufficient_mana' | translate }}
+      }
+      @case ('invalid_seed') {
+        {{ 'aplus.dashboard.kg.err_invalid_seed' | translate }}
+      }
+      @case ('fog_insufficient_catalogue') {
+        {{ 'aplus.dashboard.kg.err_fog_insufficient_catalogue' | translate }}
+      }
+      @case ('service_unavailable') {
+        {{ 'aplus.dashboard.kg.err_unavailable' | translate }}
+      }
+      @default {
+        {{ 'aplus.dashboard.kg.err_unknown' | translate }}
+      }
+    }
+  </p>
+}

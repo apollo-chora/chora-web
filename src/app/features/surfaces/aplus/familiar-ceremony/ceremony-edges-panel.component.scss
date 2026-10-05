@@ -1,0 +1,521 @@
+// Ceremony learning-edges panel (CHO-2040 R8-3).
+// Design language (feedback_dale_ux_design_language): progressive staggered
+// reveal on the owner easing token, glassmorphism tokens, tablet-first
+// (≥768px primary — no mobile breakpoints). Intent tints mirror the CHO-2038
+// map-drawer chips (remediate = indigo, explore = teal) so the same edge
+// reads identically on the ceremony and on the map.
+
+$ceremony-ease: cubic-bezier(0.165, 0.84, 0.44, 1);
+
+:host {
+  display: block;
+}
+
+.ceremony-edges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  // Progressive reveal: the panel slides up into place after the attach.
+  animation: ceremony-reveal 0.28s $ceremony-ease both;
+}
+
+// Staggered content entrance — tier the header → narrative → body so the
+// eye follows the hierarchy (200/400ms delays, close in reverse implied by
+// the single-panel teardown).
+.ceremony-edges__header,
+.ceremony-edges__narrative,
+.ceremony-edges__live {
+  animation: ceremony-tier 0.32s $ceremony-ease both;
+}
+
+.ceremony-edges__narrative {
+  animation-delay: 0.08s;
+}
+
+.ceremony-edges__live {
+  animation-delay: 0.16s;
+}
+
+@keyframes ceremony-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes ceremony-tier {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.ceremony-edges__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ceremony-edges__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+
+  i {
+    color: var(--breed-accent, var(--accent, #9a3412));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--breed-accent, var(--accent, #9a3412));
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+}
+
+.ceremony-edges__narrative {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.ceremony-edges__live {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// ── Mana chip ────────────────────────────────────────────────────────────
+.ceremony-edges__mana-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(25, 118, 210, 0.12);
+  border: 1px solid rgba(25, 118, 210, 0.3);
+  color: var(--breed-accent, var(--accent, #9a3412));
+
+  &--free {
+    background: rgba(27, 135, 63, 0.12);
+    border-color: rgba(27, 135, 63, 0.3);
+    color: #1b873f;
+  }
+}
+
+// ── Skeleton ─────────────────────────────────────────────────────────────
+.ceremony-edges__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ceremony-edges__skeleton-line {
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(
+    90deg,
+    var(--glass-border, rgba(255, 255, 255, 0.25)) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    var(--glass-border, rgba(255, 255, 255, 0.25)) 75%
+  );
+  background-size: 200% 100%;
+  animation: ceremony-shimmer 1.2s ease-in-out infinite;
+
+  &--short {
+    width: 55%;
+  }
+}
+
+@keyframes ceremony-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+// ── Error / fallback / empty ─────────────────────────────────────────────
+.ceremony-edges__error {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(220, 70, 70, 0.1);
+  border: 1px solid rgba(220, 70, 70, 0.35);
+  font-size: 13px;
+
+  p {
+    margin: 0;
+    flex: 1;
+  }
+}
+
+.ceremony-edges__fallback {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(13, 148, 136, 0.1);
+  border: 1px solid rgba(13, 148, 136, 0.3);
+  font-size: 13px;
+
+  i {
+    color: #0f766e;
+    margin-top: 2px;
+  }
+}
+
+.ceremony-edges__fallback-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ceremony-edges__fallback-sub {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted);
+}
+
+.ceremony-edges__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px dashed var(--glass-border, rgba(255, 255, 255, 0.4));
+  font-size: 13px;
+
+  i {
+    font-size: 18px;
+    color: var(--text-muted);
+  }
+}
+
+.ceremony-edges__empty-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ceremony-edges__empty-sub {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+// ── Sections (accent-tinted groups) ──────────────────────────────────────
+.ceremony-edges__section {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.3));
+
+  // Candidates cascade in (tier-2 stagger under the section reveal).
+  .ceremony-edges__candidate {
+    animation: ceremony-tier 0.3s $ceremony-ease both;
+
+    @for $i from 1 through 12 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{0.04 * $i}s;
+      }
+    }
+  }
+
+  &--remediate {
+    background: rgba(25, 118, 210, 0.07);
+    border-color: rgba(21, 101, 192, 0.28);
+
+    .ceremony-edges__section-title i {
+      color: #1565c0;
+    }
+  }
+
+  &--explore {
+    background: rgba(13, 148, 136, 0.07);
+    border-color: rgba(13, 148, 136, 0.28);
+
+    .ceremony-edges__section-title i {
+      color: #0f766e;
+    }
+  }
+}
+
+.ceremony-edges__section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0 0.25rem;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ceremony-edges__section-sub {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-muted);
+}
+
+.ceremony-edges__list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+// ── Candidate rows ───────────────────────────────────────────────────────
+.ceremony-edges__candidate-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.18s $ceremony-ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:has(.ceremony-edges__tick:disabled) {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  &:has(.ceremony-edges__tick:checked) {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.ceremony-edges__tick {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  accent-color: var(--breed-accent, var(--accent, #9a3412));
+
+  &:focus-visible {
+    outline: 2px solid var(--breed-accent, var(--accent, #9a3412));
+    outline-offset: 2px;
+  }
+}
+
+.ceremony-edges__candidate-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.ceremony-edges__candidate-title {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ceremony-edges__candidate-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.ceremony-edges__source-badge {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.3));
+  color: var(--text-muted);
+
+  &[data-source='weakness'] {
+    background: rgba(25, 118, 210, 0.12);
+    border-color: rgba(21, 101, 192, 0.3);
+    color: #1565c0;
+  }
+
+  &[data-source='fog'] {
+    background: rgba(13, 148, 136, 0.12);
+    border-color: rgba(13, 148, 136, 0.3);
+    color: #0f766e;
+  }
+
+  &[data-source='comment'] {
+    background: rgba(217, 119, 6, 0.12);
+    border-color: rgba(217, 119, 6, 0.3);
+    color: #b45309;
+  }
+}
+
+.ceremony-edges__atoms-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.25));
+  color: var(--text-muted);
+}
+
+.ceremony-edges__rationale {
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+// ── Toolbar / actions ────────────────────────────────────────────────────
+.ceremony-edges__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ceremony-edges__count {
+  font-weight: 600;
+}
+
+.ceremony-edges__cap-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #b45309;
+}
+
+.ceremony-edges__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+// ── Success beat ─────────────────────────────────────────────────────────
+.ceremony-edges__success {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: rgba(27, 135, 63, 0.08);
+  border: 1px solid rgba(27, 135, 63, 0.3);
+  animation: ceremony-tier 0.32s $ceremony-ease both;
+}
+
+.ceremony-edges__success-glyph {
+  font-size: 20px;
+  color: #1b873f;
+  animation: ceremony-pop 0.45s $ceremony-ease both;
+}
+
+@keyframes ceremony-pop {
+  0% {
+    transform: scale3d(0.4, 0.4, 1);
+    opacity: 0;
+  }
+  70% {
+    transform: scale3d(1.15, 1.15, 1);
+  }
+  100% {
+    transform: scale3d(1, 1, 1);
+    opacity: 1;
+  }
+}
+
+.ceremony-edges__success-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ceremony-edges__success-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.ceremony-edges__memory-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ceremony-edges__memory-warn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(217, 119, 6, 0.1);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  font-size: 12.5px;
+
+  i {
+    color: #b45309;
+  }
+
+  p {
+    margin: 0;
+    flex: 1;
+    min-width: 12rem;
+  }
+}
+
+// Desktop enhancement: two-column candidate sections on wide screens.
+@media (min-width: 1280px) {
+  .ceremony-edges__list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ceremony-edges,
+  .ceremony-edges__header,
+  .ceremony-edges__narrative,
+  .ceremony-edges__live,
+  .ceremony-edges__section .ceremony-edges__candidate,
+  .ceremony-edges__success,
+  .ceremony-edges__success-glyph {
+    animation: none;
+  }
+
+  .ceremony-edges__skeleton-line {
+    animation: none;
+  }
+}

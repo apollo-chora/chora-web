@@ -1,0 +1,160 @@
+/**
+ * TranscriptCardComponent styles — the `transcript` dashboard wrapper.
+ *
+ * Row-by-row, mirroring StudyListsCard so the hub reads as one family.
+ * DEFINED --chora-color-* tokens ONLY (the legacy --text-muted #64748b fails
+ * WCAG AA at 4.36:1 on surface-2 — the canonical text-muted #616161 passes).
+ * Tablet-first: rows stay a single line at ≥768px; no below-tablet branches.
+ */
+:host {
+  display: block;
+}
+
+.transcript-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+}
+
+.transcript-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.transcript-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--chora-color-text-strong);
+
+  i {
+    color: var(--chora-color-primary-strong);
+  }
+}
+
+.transcript-card__see-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--chora-color-primary-strong);
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+.transcript-card__loading,
+.transcript-card__empty-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--chora-color-text-muted);
+}
+
+.transcript-card__error {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.transcript-card__error-msg {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--chora-color-danger);
+}
+
+.transcript-card__retry {
+  align-self: flex-start;
+}
+
+.transcript-card__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.transcript-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transcript-card__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--chora-color-border);
+  border-radius: 0.6rem;
+  background: var(--chora-color-surface-2);
+}
+
+.transcript-card__kind {
+  flex: 0 0 auto;
+  font-size: 1rem;
+  color: var(--chora-color-primary-strong);
+}
+
+.transcript-card__row-main {
+  min-width: 0;
+}
+
+.transcript-card__row-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--chora-color-text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transcript-card__row-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--chora-color-text-muted);
+}
+
+.transcript-card__score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--chora-color-text-strong);
+}
+
+.transcript-card__passed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--chora-color-success);
+  font-weight: 600;
+}
+
+.transcript-card__more {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--chora-color-primary-strong);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}

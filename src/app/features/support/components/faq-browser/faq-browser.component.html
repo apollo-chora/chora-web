@@ -1,0 +1,155 @@
+<section
+  class="faq-browser"
+  role="main"
+  [attr.aria-label]="'support.faq_title' | translate"
+  data-testid="faq-browser">
+
+  <!-- Page Header -->
+  <header class="faq-browser__header">
+    <h1 class="faq-browser__title" data-testid="faq-title">
+      {{ 'support.faq_title' | translate }}
+    </h1>
+    <p class="faq-browser__subtitle" data-testid="faq-subtitle">
+      {{ 'support.faq_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Search Bar -->
+  <div class="faq-browser__search" data-testid="faq-search">
+    <label class="faq-browser__search-label" for="faq-search-input">
+      {{ 'support.search_faq' | translate }}
+    </label>
+    <div class="faq-browser__search-row">
+      <input
+        id="faq-search-input"
+        type="search"
+        class="faq-browser__search-input"
+        data-testid="input-search"
+        [value]="searchQuery()"
+        (input)="updateSearch($any($event.target).value)"
+        (keydown.enter)="searchArticles()"
+        [attr.placeholder]="'support.search_placeholder' | translate" />
+      <button
+        type="button"
+        class="faq-browser__btn faq-browser__btn--primary"
+        data-testid="btn-search"
+        (click)="searchArticles()">
+        {{ 'support.search' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="faq-browser__content">
+    <!-- Category Sidebar -->
+    <aside class="faq-browser__sidebar" data-testid="faq-sidebar">
+      <h2 class="faq-browser__sidebar-title">
+        {{ 'support.categories' | translate }}
+      </h2>
+
+      @if (faqCategoryState().status === 'loading') {
+        <div class="faq-browser__sidebar-loading" aria-live="polite">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="faq-browser__skeleton-row"></div>
+          }
+        </div>
+      }
+
+      @if (faqCategoryState().status === 'success') {
+        <nav class="faq-browser__category-list" role="list" [attr.aria-label]="'support.category_list' | translate">
+          <button
+            type="button"
+            class="faq-browser__category-btn"
+            [class.faq-browser__category-btn--active]="selectedCategoryId() === null"
+            data-testid="btn-category-all"
+            (click)="selectCategory(null)">
+            {{ 'support.all_categories' | translate }}
+          </button>
+          @for (category of faqCategories(); track category.id) {
+            <button
+              type="button"
+              class="faq-browser__category-btn"
+              [class.faq-browser__category-btn--active]="selectedCategoryId() === category.id"
+              [attr.data-testid]="'btn-category-' + category.id"
+              (click)="selectCategory(category.id)">
+              {{ category.name }}
+              @if (category.description) {
+                <span class="faq-browser__category-desc">{{ category.description }}</span>
+              }
+            </button>
+          }
+        </nav>
+      }
+    </aside>
+
+    <!-- Article List -->
+    <div class="faq-browser__articles">
+      @if (faqListState().status === 'loading') {
+        <div class="faq-browser__loading" data-testid="faq-loading" aria-live="polite">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="faq-browser__skeleton-row"></div>
+          }
+        </div>
+      }
+
+      @if (faqListState().status === 'error') {
+        <div class="faq-browser__error" data-testid="faq-error" role="alert">
+          <p class="faq-browser__error-text">
+            {{ 'support.faq_load_error' | translate }}
+          </p>
+        </div>
+      }
+
+      @if (faqListState().status === 'success' && filteredArticles().length === 0) {
+        <div class="faq-browser__empty" data-testid="faq-empty" role="status">
+          <p class="faq-browser__empty-text">
+            {{ 'support.no_faq_articles' | translate }}
+          </p>
+        </div>
+      }
+
+      @if (faqListState().status === 'success' && filteredArticles().length > 0) {
+        <div class="faq-browser__article-count" data-testid="article-count" aria-live="polite">
+          {{ 'support.articles_found' | translate }}: {{ articleCount() }}
+        </div>
+
+        <ul class="faq-browser__article-list" role="list" data-testid="article-list">
+          @for (article of filteredArticles(); track article.id) {
+            <li class="faq-browser__article-item" data-testid="article-item">
+              <button
+                type="button"
+                class="faq-browser__article-question"
+                data-testid="article-question"
+                [attr.aria-expanded]="isExpanded(article.id)"
+                [attr.aria-controls]="'faq-answer-' + article.id"
+                (click)="toggleArticle(article.id)">
+                <span class="faq-browser__article-question-text">
+                  {{ article.question }}
+                </span>
+                <span class="faq-browser__article-toggle" aria-hidden="true">
+                  @if (isExpanded(article.id)) {
+                    &minus;
+                  } @else {
+                    &plus;
+                  }
+                </span>
+              </button>
+
+              @if (isExpanded(article.id)) {
+                <div
+                  class="faq-browser__article-answer"
+                  [id]="'faq-answer-' + article.id"
+                  data-testid="article-answer"
+                  role="region"
+                  [attr.aria-label]="article.question">
+                  <p class="faq-browser__article-answer-text">
+                    {{ article.answer }}
+                  </p>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+</section>

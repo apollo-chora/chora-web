@@ -1,0 +1,291 @@
+<section
+  class="migration-flow"
+  role="main"
+  [attr.aria-label]="'identity.portability.migration_title' | translate"
+  data-testid="migration-flow">
+
+  <!-- Header -->
+  <header class="migration-flow__header">
+    <h1 class="migration-flow__title" data-testid="migration-title">
+      {{ 'identity.portability.migration_title' | translate }}
+    </h1>
+    <p class="migration-flow__subtitle">
+      {{ 'identity.portability.migration_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="migration-flow__loading" aria-live="polite" data-testid="migration-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="migration-flow__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Active Migration Status -->
+  @if (hasMigration()) {
+    <div class="migration-flow__active" data-testid="active-migration">
+      <h2 class="migration-flow__section-title">
+        {{ 'identity.portability.active_migration' | translate }}
+      </h2>
+
+      @if (migrationData(); as migration) {
+        <div class="migration-flow__migration-card">
+          <div class="migration-flow__migration-meta">
+            <span class="migration-flow__migration-type"
+              [class.migration-flow__migration-type--departure]="migration.migration_type === 'departure'"
+              [class.migration-flow__migration-type--transfer]="migration.migration_type === 'transfer'">
+              {{ migration.migration_type }}
+            </span>
+            <span class="migration-flow__migration-date">
+              {{ formatDate(migration.initiated_at) }}
+            </span>
+          </div>
+
+          <!-- Status Timeline -->
+          <div class="migration-flow__timeline" role="list" data-testid="migration-timeline">
+            @for (status of statusOrder; track status) {
+              <div
+                class="migration-flow__timeline-step"
+                role="listitem"
+                [class.migration-flow__timeline-step--reached]="isStatusReached(status)"
+                [class.migration-flow__timeline-step--current]="isCurrentStatus(status)">
+                <div class="migration-flow__timeline-dot"></div>
+                <span class="migration-flow__timeline-label">
+                  {{ statusLabels[status] | translate }}
+                </span>
+              </div>
+            }
+          </div>
+
+          <!-- Consent Deadline -->
+          @if (migration.status === 'consent_pending' || migration.status === 'initiated') {
+            <div class="migration-flow__consent-info" data-testid="consent-info">
+              <p class="migration-flow__consent-deadline">
+                {{ 'identity.portability.consent_expires' | translate }}:
+                {{ formatDate(migration.consent_expires_at) }}
+              </p>
+              <button
+                type="button"
+                class="migration-flow__btn migration-flow__btn--primary"
+                data-testid="btn-confirm-consent"
+                [disabled]="submitting()"
+                (click)="onConfirmMigration()"
+                [attr.aria-label]="'identity.portability.grant_consent' | translate">
+                {{ 'identity.portability.grant_consent' | translate }}
+              </button>
+            </div>
+          }
+
+          <!-- Completed -->
+          @if (migration.status === 'completed' && migration.completed_at) {
+            <div class="migration-flow__completed" role="status" data-testid="migration-completed">
+              <p>{{ 'identity.portability.migration_completed_on' | translate }}:
+                {{ formatDate(migration.completed_at) }}</p>
+            </div>
+          }
+        </div>
+      }
+
+      <button
+        type="button"
+        class="migration-flow__btn migration-flow__btn--secondary"
+        data-testid="btn-back-to-select"
+        (click)="backToSelect()">
+        {{ 'identity.portability.back_to_tenants' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Tenant Selection / Action Mode -->
+  @if (!hasMigration() && !isLoading()) {
+    @switch (mode()) {
+      @case ('select') {
+        <!-- Tenant List -->
+        <div class="migration-flow__tenant-list" data-testid="tenant-list">
+          <h2 class="migration-flow__section-title">
+            {{ 'identity.portability.your_tenants' | translate }}
+          </h2>
+
+          @if (memberships().length === 0) {
+            <div class="migration-flow__empty" role="status" data-testid="no-memberships">
+              <p>{{ 'identity.portability.no_memberships' | translate }}</p>
+            </div>
+          }
+
+          @for (membership of memberships(); track membership.id) {
+            <div
+              class="migration-flow__tenant-card"
+              [attr.data-testid]="'tenant-' + membership.tenant_id">
+              <div class="migration-flow__tenant-info">
+                <span class="migration-flow__tenant-id">{{ membership.tenant_id }}</span>
+                <div class="migration-flow__tenant-roles">
+                  @for (role of membership.roles; track role) {
+                    <span class="migration-flow__role-chip">{{ role }}</span>
+                  }
+                </div>
+              </div>
+              <div class="migration-flow__tenant-actions">
+                <button
+                  type="button"
+                  class="migration-flow__btn migration-flow__btn--danger"
+                  [attr.data-testid]="'btn-depart-' + membership.tenant_id"
+                  (click)="selectDeparture(membership.tenant_id)"
+                  [attr.aria-label]="'identity.portability.leave_tenant' | translate">
+                  {{ 'identity.portability.leave_tenant' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="migration-flow__btn migration-flow__btn--primary"
+                  [attr.data-testid]="'btn-transfer-' + membership.tenant_id"
+                  (click)="selectTransfer(membership.tenant_id)"
+                  [attr.aria-label]="'identity.portability.transfer_data' | translate">
+                  {{ 'identity.portability.transfer_data' | translate }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @case ('departure') {
+        <!-- Departure Flow -->
+        <div class="migration-flow__departure" data-testid="departure-flow">
+          <h2 class="migration-flow__section-title">
+            {{ 'identity.portability.departure_title' | translate }}
+          </h2>
+          <p class="migration-flow__description">
+            {{ 'identity.portability.departure_description' | translate }}
+          </p>
+
+          @if (sourceTenant(); as source) {
+            <div class="migration-flow__source-card" data-testid="departure-source">
+              <span class="migration-flow__source-label">
+                {{ 'identity.portability.leaving' | translate }}:
+              </span>
+              <span class="migration-flow__source-id">{{ source.tenant_id }}</span>
+            </div>
+          }
+
+          <div class="migration-flow__actions">
+            <button
+              type="button"
+              class="migration-flow__btn migration-flow__btn--secondary"
+              data-testid="btn-departure-cancel"
+              (click)="backToSelect()">
+              {{ 'identity.portability.cancel' | translate }}
+            </button>
+            <button
+              type="button"
+              class="migration-flow__btn migration-flow__btn--danger"
+              data-testid="btn-departure-confirm"
+              [disabled]="!canInitiateDeparture()"
+              (click)="onInitiateDeparture()"
+              [attr.aria-label]="'identity.portability.confirm_departure' | translate">
+              @if (submitting()) {
+                {{ 'identity.portability.submitting' | translate }}
+              } @else {
+                {{ 'identity.portability.confirm_departure' | translate }}
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      @case ('transfer') {
+        <!-- Transfer Flow -->
+        <div class="migration-flow__transfer" data-testid="transfer-flow">
+          <h2 class="migration-flow__section-title">
+            {{ 'identity.portability.transfer_title' | translate }}
+          </h2>
+          <p class="migration-flow__description">
+            {{ 'identity.portability.transfer_description' | translate }}
+          </p>
+
+          <!-- Source Tenant -->
+          @if (sourceTenant(); as source) {
+            <div class="migration-flow__source-card" data-testid="transfer-source">
+              <span class="migration-flow__source-label">
+                {{ 'identity.portability.from_tenant' | translate }}:
+              </span>
+              <span class="migration-flow__source-id">{{ source.tenant_id }}</span>
+            </div>
+          }
+
+          <!-- Target Selection -->
+          <div class="migration-flow__form-group">
+            <label for="target-tenant" class="migration-flow__label">
+              {{ 'identity.portability.to_tenant' | translate }}
+            </label>
+            <select
+              id="target-tenant"
+              class="migration-flow__select"
+              data-testid="select-target-tenant"
+              [ngModel]="targetTenantId()"
+              (ngModelChange)="targetTenantId.set($event)">
+              <option [ngValue]="null">{{ 'identity.portability.select_tenant' | translate }}</option>
+              @for (target of availableTargets(); track target.id) {
+                <option [ngValue]="target.tenant_id">{{ target.tenant_id }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Data Selections -->
+          <div class="migration-flow__form-group">
+            <span class="migration-flow__label">
+              {{ 'identity.portability.select_data' | translate }}
+            </span>
+            <div class="migration-flow__data-selections" data-testid="data-selections">
+              @for (selection of allDataSelections; track selection) {
+                <label class="migration-flow__checkbox-label">
+                  <input
+                    type="checkbox"
+                    class="migration-flow__checkbox"
+                    [attr.data-testid]="'check-' + selection"
+                    [checked]="isDataSelected(selection)"
+                    (change)="toggleDataSelection(selection)" />
+                  {{ dataSelectionLabels[selection] | translate }}
+                </label>
+              }
+            </div>
+          </div>
+
+          <div class="migration-flow__actions">
+            <button
+              type="button"
+              class="migration-flow__btn migration-flow__btn--secondary"
+              data-testid="btn-transfer-cancel"
+              (click)="backToSelect()">
+              {{ 'identity.portability.cancel' | translate }}
+            </button>
+            <button
+              type="button"
+              class="migration-flow__btn migration-flow__btn--primary"
+              data-testid="btn-transfer-confirm"
+              [disabled]="!canInitiateTransfer()"
+              (click)="onInitiateTransfer()"
+              [attr.aria-label]="'identity.portability.confirm_transfer' | translate">
+              @if (submitting()) {
+                {{ 'identity.portability.submitting' | translate }}
+              } @else {
+                {{ 'identity.portability.confirm_transfer' | translate }}
+              }
+            </button>
+          </div>
+        </div>
+      }
+    }
+  }
+
+  <!-- Error State -->
+  @if (migrationState().status === 'error') {
+    <div
+      class="migration-flow__error"
+      role="alert"
+      aria-live="assertive"
+      data-testid="migration-error">
+      <p>{{ 'identity.portability.migration_error' | translate }}</p>
+    </div>
+  }
+</section>

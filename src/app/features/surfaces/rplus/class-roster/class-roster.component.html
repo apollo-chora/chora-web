@@ -1,0 +1,203 @@
+<section
+  class="surface-rplus class-roster"
+  data-testid="rplus-class-roster">
+  <a class="class-roster__skip-link" href="#roster-table">
+    {{ 'rplus.roster.skip_to_table' | translate }}
+  </a>
+
+  <!-- Cohort header — real course context off the wire (no fixture) -->
+  <header class="class-roster__header glass-panel" data-testid="cohort-header">
+    <div class="class-roster__breadcrumb">
+      <span>{{ 'rplus.nav.rostering' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text" data-testid="cohort-course-code">
+        {{ courseCode() }}
+      </span>
+    </div>
+    <h1 class="class-roster__title" data-testid="cohort-title">
+      {{ cohortName() }}
+    </h1>
+
+    <p
+      class="class-roster__instructor"
+      data-testid="cohort-instructor">
+      <i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i>
+      <span>{{ 'rplus.roster.instructor_label' | translate }}:</span>
+      <strong>{{ instructorName() }}</strong>
+    </p>
+
+    <p class="class-roster__roster-size" data-testid="roster-size-summary">
+      <i class="fa-solid fa-users" aria-hidden="true"></i>
+      <span>{{ 'rplus.roster.size_label' | translate }}:</span>
+      <strong>{{ rosterSize() }}</strong>
+      <span>{{ 'rplus.roster.learners' | translate }}</span>
+    </p>
+  </header>
+
+  @if (isLoading()) {
+    <p
+      class="class-roster__loading glass-panel"
+      data-testid="roster-loading"
+      role="status"
+      aria-live="polite">
+      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+      {{ 'rplus.rosterByCourse.loading' | translate }}
+    </p>
+  } @else if (hasError()) {
+    <p
+      class="class-roster__error glass-panel"
+      data-testid="roster-error"
+      role="alert"
+      aria-live="assertive">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      {{ errorTranslationKey()! | translate }}
+    </p>
+  } @else if (sortedLearners().length === 0) {
+    <p
+      class="class-roster__empty-state glass-panel"
+      data-testid="roster-empty-state">
+      {{ 'rplus.rosterByCourse.empty' | translate }}
+    </p>
+  } @else {
+    <!-- Roster table -->
+    <div class="class-roster__table-wrap glass-panel">
+      <table
+        class="data-table class-roster__table"
+        id="roster-table"
+        data-testid="roster-table"
+        [attr.aria-label]="'rplus.roster.table.aria_label' | translate">
+        <caption class="class-roster__caption">
+          {{ 'rplus.roster.table.caption' | translate }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" [attr.aria-sort]="ariaSort('name')">
+              <button
+                type="button"
+                class="class-roster__sort-button"
+                data-testid="sort-button-name"
+                (click)="toggleSort('name')"
+                [attr.aria-label]="'rplus.roster.sort.by_name' | translate">
+                {{ 'rplus.roster.col.learner' | translate }}
+                <i class="fa-solid fa-sort" aria-hidden="true"></i>
+              </button>
+            </th>
+            <th scope="col">{{ 'rplus.roster.col.gcid' | translate }}</th>
+            <th scope="col" [attr.aria-sort]="ariaSort('status')">
+              <button
+                type="button"
+                class="class-roster__sort-button"
+                data-testid="sort-button-status"
+                (click)="toggleSort('status')"
+                [attr.aria-label]="'rplus.roster.sort.by_status' | translate">
+                {{ 'rplus.roster.col.status' | translate }}
+                <i class="fa-solid fa-sort" aria-hidden="true"></i>
+              </button>
+            </th>
+            <th scope="col" [attr.aria-sort]="ariaSort('progress')">
+              <button
+                type="button"
+                class="class-roster__sort-button"
+                data-testid="sort-button-progress"
+                (click)="toggleSort('progress')"
+                [attr.aria-label]="'rplus.roster.sort.by_progress' | translate">
+                {{ 'rplus.roster.col.atomic_progress' | translate }}
+                <i class="fa-solid fa-sort" aria-hidden="true"></i>
+              </button>
+            </th>
+            <th scope="col" [attr.aria-sort]="ariaSort('enrolled-at')">
+              <button
+                type="button"
+                class="class-roster__sort-button"
+                data-testid="sort-button-enrolled"
+                (click)="toggleSort('enrolled-at')"
+                [attr.aria-label]="'rplus.roster.sort.by_activity' | translate">
+                {{ 'rplus.rosterByCourse.col.enrolled_at' | translate }}
+                <i class="fa-solid fa-sort" aria-hidden="true"></i>
+              </button>
+            </th>
+            <th scope="col">{{ 'rplus.roster.col.actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody data-testid="roster-tbody">
+          @for (learner of sortedLearners(); track learner.gcid) {
+            <tr [attr.data-testid]="'roster-row-' + learner.gcid">
+              <td>
+                <div class="class-roster__learner-cell">
+                  <span
+                    class="class-roster__avatar surface-accent-bg"
+                    aria-hidden="true">
+                    {{ initials(learner.displayName) }}
+                  </span>
+                  <span class="class-roster__learner-name">
+                    {{ learner.displayName }}
+                  </span>
+                </div>
+              </td>
+              <td>
+                <code class="class-roster__gcid">{{ learner.gcid }}</code>
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [class]="'badge ' + statusBadgeClass(learner.status)"
+                  [attr.data-testid]="'status-' + learner.gcid">
+                  {{ learner.status }}
+                </span>
+              </td>
+              <td>
+                <div class="class-roster__progress">
+                  <div
+                    class="class-roster__progress-bar"
+                    role="progressbar"
+                    [attr.aria-valuenow]="progressPercent(learner)"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    [attr.aria-label]="
+                      'rplus.roster.progress.aria_label' | translate
+                    ">
+                    <span
+                      class="class-roster__progress-fill surface-accent-bg"
+                      [style.width.%]="progressPercent(learner)"></span>
+                  </div>
+                  <span
+                    class="class-roster__progress-label"
+                    [attr.data-testid]="'progress-' + learner.gcid">
+                    {{ progressPercent(learner) }}%
+                  </span>
+                </div>
+              </td>
+              <td>
+                <time
+                  class="class-roster__activity"
+                  [attr.datetime]="enrolledAt(learner)">
+                  {{ enrolledAt(learner) }}
+                </time>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-primary class-roster__cert-cta"
+                  [attr.data-testid]="'cert-preview-cta-' + learner.gcid"
+                  [disabled]="!learner.certPreviewEnabled"
+                  (click)="openCertPreview(learner)">
+                  <i class="fa-solid fa-award" aria-hidden="true"></i>
+                  {{ 'rplus.roster.cert_preview_cta' | translate }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Cert preview modal -->
+  @if (certPreviewLearner(); as learner) {
+    <chora-rplus-cert-preview-modal
+      [learner]="learner"
+      [courseName]="cohortName()"
+      [instructorName]="instructorName()"
+      (closed)="closeCertPreview()" />
+  }
+</section>

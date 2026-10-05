@@ -1,0 +1,990 @@
+:host {
+  display: block;
+}
+
+.cplus-duels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-lg);
+}
+
+// ─── Lobby layout ───────────────────────────────────────────────────────
+
+.cplus-duels__lobby-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--cplus-space-lg);
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 320px;
+  }
+}
+
+// ─── Play panel (left column) ────────────────────────────────────────────
+
+.cplus-duels__play-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-md);
+  padding: var(--cplus-space-lg);
+  background: var(--cplus-surface);
+  border: 1px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-card);
+  box-shadow: var(--cplus-shadow-sm);
+}
+
+// ─── Hero art ────────────────────────────────────────────────────────────
+
+.cplus-duels__hero-art {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-md);
+  padding: var(--cplus-space-md);
+  background: var(--cplus-surface-muted);
+  border-radius: var(--cplus-radius-card);
+  border: 1px solid var(--cplus-border);
+
+  img {
+    width: 120px;
+    height: auto;
+    flex-shrink: 0;
+    animation: cplus-duels-float 3s ease-in-out infinite;
+  }
+}
+
+.cplus-duels__hero-art-tagline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cplus-duels__hero-art-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--cplus-text);
+}
+
+.cplus-duels__hero-art-sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--cplus-text-secondary);
+  line-height: 1.4;
+}
+
+// ─── Rating hero ─────────────────────────────────────────────────────────
+
+.cplus-duels__rating-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cplus-space-md);
+  padding: var(--cplus-space-md);
+  background: var(--cplus-surface-muted);
+  border-radius: var(--cplus-radius-card);
+  border: 1px solid var(--cplus-border);
+}
+
+.cplus-duels__rating-hero-main {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-md);
+}
+
+.cplus-duels__rating-icon-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--cplus-accent-tint);
+  color: var(--cplus-accent-strong);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.cplus-duels__rating-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cplus-duels__rating-hero-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--cplus-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cplus-duels__rating-hero-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cplus-text-secondary);
+}
+
+.cplus-duels__rating-hero-record {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cplus-duels__rating-hero-wl {
+  font-size: 0.8125rem;
+  color: var(--cplus-text-secondary);
+
+  strong {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    margin: 0 1px 0 4px;
+  }
+}
+
+.cplus-duels__rating-hero-w { color: var(--cplus-success); }
+.cplus-duels__rating-hero-l { color: var(--cplus-danger); }
+.cplus-duels__rating-hero-d { color: var(--cplus-text-secondary); }
+
+.cplus-duels__rating-hero-peak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  color: var(--cplus-text-secondary);
+}
+
+.cplus-duels__rating-skeleton {
+  height: 72px;
+  border-radius: var(--cplus-radius-card);
+  background: var(--cplus-surface-muted);
+}
+
+.cplus-duels__rating-error {
+  padding: var(--cplus-space-md);
+  color: var(--cplus-danger);
+  font-size: 0.875rem;
+}
+
+.cplus-duels__play-error {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-sm);
+  padding: var(--cplus-space-sm) var(--cplus-space-md);
+  border-radius: var(--cplus-radius-control);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--cplus-danger);
+  font-size: 0.875rem;
+}
+
+// ─── Mode cards ──────────────────────────────────────────────────────────
+
+.cplus-duels__mode-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cplus-space-sm);
+}
+
+.cplus-duels__mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--cplus-space-md) var(--cplus-space-sm);
+  border: 2px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-card);
+  background: var(--cplus-surface);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--cplus-transition-fast),
+              background-color var(--cplus-transition-fast),
+              box-shadow var(--cplus-transition-fast);
+
+  &:hover {
+    border-color: var(--cplus-border-strong);
+    box-shadow: var(--cplus-shadow-sm);
+  }
+
+  &--active {
+    border-color: var(--cplus-accent);
+    background: var(--cplus-accent-tint);
+    box-shadow: var(--cplus-shadow-sm);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--cplus-focus-ring);
+  }
+}
+
+.cplus-duels__mode-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--cplus-surface-muted);
+  color: var(--cplus-text-secondary);
+  font-size: 1.125rem;
+
+  .cplus-duels__mode-card--active & {
+    background: var(--cplus-surface);
+    color: var(--cplus-accent-strong);
+  }
+}
+
+.cplus-duels__mode-card-label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--cplus-text);
+}
+
+.cplus-duels__mode-card-desc {
+  font-size: 0.6875rem;
+  color: var(--cplus-text-secondary);
+  line-height: 1.3;
+}
+
+// ─── Segmented controls ──────────────────────────────────────────────────
+
+.cplus-duels__variant-row,
+.cplus-duels__config-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cplus-space-sm);
+}
+
+.cplus-duels__preset-group {
+  display: flex;
+  gap: var(--cplus-space-xs);
+  padding: var(--cplus-space-xs);
+  background: var(--cplus-surface-muted);
+  border-radius: var(--cplus-radius-control);
+
+  &--scroll {
+    flex: 1;
+    overflow-x: auto;
+  }
+}
+
+.cplus-duels__preset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cplus-space-xs);
+  padding: var(--cplus-space-sm) var(--cplus-space-md);
+  border: 1px solid transparent;
+  border-radius: var(--cplus-radius-control);
+  background: transparent;
+  color: var(--cplus-text-secondary);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--cplus-transition-fast),
+              color var(--cplus-transition-fast),
+              border-color var(--cplus-transition-fast);
+
+  &:hover:not(:disabled) {
+    color: var(--cplus-text);
+  }
+
+  &--selected {
+    background: var(--cplus-surface);
+    color: var(--cplus-accent-strong);
+    border-color: var(--cplus-accent);
+    box-shadow: var(--cplus-shadow-sm);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--cplus-focus-ring);
+  }
+}
+
+// ─── Find match button ───────────────────────────────────────────────────
+
+.cplus-duels__find-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cplus-space-sm);
+  padding: var(--cplus-space-md) var(--cplus-space-2xl);
+  border: none;
+  border-radius: var(--cplus-radius-control);
+  background: var(--cplus-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--cplus-transition-fast),
+              box-shadow var(--cplus-transition-fast),
+              transform var(--cplus-transition-fast);
+
+  &:hover:not(:disabled) {
+    background: var(--cplus-accent-strong);
+    box-shadow: var(--cplus-shadow-md);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--cplus-focus-ring), 0 0 0 4px var(--cplus-surface);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ─── Side panel (leaderboard) ─────────────────────────────────────────────
+
+.cplus-duels__side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-md);
+}
+
+.cplus-duels__leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-sm);
+  padding: var(--cplus-space-md);
+  background: var(--cplus-surface);
+  border: 1px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-card);
+  box-shadow: var(--cplus-shadow-sm);
+}
+
+.cplus-duels__leaderboard-title {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-sm);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--cplus-text);
+
+  i {
+    color: var(--cplus-accent);
+  }
+}
+
+.cplus-duels__leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cplus-duels__leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-sm);
+  padding: var(--cplus-space-sm);
+  border-radius: var(--cplus-radius-control);
+  transition: background-color var(--cplus-transition-fast);
+
+  &:hover {
+    background: var(--cplus-surface-muted);
+  }
+
+  &--me {
+    background: var(--cplus-accent-tint);
+  }
+}
+
+.cplus-duels__leaderboard-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cplus-text-secondary);
+  background: var(--cplus-surface-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+
+  &--top3 {
+    color: var(--cplus-accent-strong);
+    background: var(--cplus-accent-tint);
+  }
+}
+
+.cplus-duels__leaderboard-name {
+  flex: 1;
+  font-size: 0.8125rem;
+  color: var(--cplus-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cplus-duels__leaderboard-rating {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--cplus-accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Searching ───────────────────────────────────────────────────────────
+
+.cplus-duels__searching {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cplus-space-md);
+  padding: var(--cplus-space-xl) 0;
+}
+
+.cplus-duels__searching-art {
+  width: 160px;
+  height: auto;
+  animation: cplus-duels-float 3s ease-in-out infinite;
+}
+
+.cplus-duels__searching-spinner-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+}
+
+.cplus-duels__searching-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--cplus-border);
+  border-top-color: var(--cplus-accent);
+  border-radius: 50%;
+  animation: cplus-duels-spin 0.8s linear infinite;
+}
+
+.cplus-duels__searching-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--cplus-accent);
+  opacity: 0;
+  animation: cplus-duels-pulse-ring 1.5s ease-out infinite;
+}
+
+.cplus-duels__searching-text {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--cplus-text-secondary);
+}
+
+.cplus-duels__searching-countdown {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--cplus-accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.cplus-duels__searching-cancel-btn {
+  padding: var(--cplus-space-sm) var(--cplus-space-2xl);
+  border: 1px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-control);
+  background: var(--cplus-surface);
+  color: var(--cplus-text-secondary);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--cplus-transition-fast),
+              border-color var(--cplus-transition-fast),
+              color var(--cplus-transition-fast);
+
+  &:hover:not(:disabled) {
+    background: var(--cplus-surface-muted);
+    border-color: var(--cplus-danger);
+    color: var(--cplus-danger);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--cplus-focus-ring);
+  }
+}
+
+// ─── Arena ───────────────────────────────────────────────────────────────
+
+.cplus-duels-arena {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-md);
+}
+
+.cplus-duels-arena__statusbar {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-md);
+  flex-wrap: wrap;
+  padding: var(--cplus-space-sm) var(--cplus-space-md);
+  background: var(--cplus-surface-muted);
+  border-radius: var(--cplus-radius-control);
+}
+
+.cplus-duels-arena__round-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cplus-duels-arena__round-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cplus-text-secondary);
+}
+
+.cplus-duels-arena__round-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cplus-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cplus-duels-arena__timer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cplus-space-xs);
+  padding: var(--cplus-space-xs) var(--cplus-space-sm);
+  border-radius: var(--cplus-radius-pill);
+  background: var(--cplus-accent-tint);
+  color: var(--cplus-accent-strong);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+
+  &--blitz {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--cplus-warning);
+  }
+
+  &--urgent {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--cplus-danger);
+    animation: cplus-duels-timer-pulse 0.6s ease-in-out infinite alternate;
+  }
+}
+
+.cplus-duels-arena__scoreboard {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-sm);
+  margin-left: auto;
+}
+
+.cplus-duels-arena__score {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+
+  &--me { color: var(--cplus-accent-strong); }
+  &--opp { color: var(--cplus-text-secondary); }
+}
+
+.cplus-duels-arena__score-sep {
+  font-size: 0.75rem;
+  color: var(--cplus-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cplus-duels-arena__combo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cplus-space-xs);
+  padding: var(--cplus-space-xs) var(--cplus-space-sm);
+  border-radius: var(--cplus-radius-pill);
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--cplus-warning);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  animation: cplus-duels-score-pop var(--cplus-transition-normal);
+}
+
+.cplus-duels-arena__reconnecting {
+  color: var(--cplus-warning);
+  font-size: 0.8125rem;
+}
+
+// ─── Arena — classic mode ─────────────────────────────────────────────────
+
+.cplus-duels-arena__question {
+  padding: var(--cplus-space-md) var(--cplus-space-lg);
+  border-radius: var(--cplus-radius-card);
+  background: var(--cplus-surface-muted);
+  border: 1px solid var(--cplus-border);
+  color: var(--cplus-text);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  animation: cplus-duels-round-enter var(--cplus-transition-normal);
+
+  p { margin: 0; }
+}
+
+.cplus-duels-arena__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cplus-space-sm);
+  animation: cplus-duels-round-enter var(--cplus-transition-normal);
+}
+
+.cplus-duels-arena__option {
+  padding: var(--cplus-space-sm) var(--cplus-space-md);
+  border-radius: var(--cplus-radius-control);
+  border: 1px solid var(--cplus-border);
+  background: var(--cplus-surface);
+  color: var(--cplus-text);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-size: 0.9375rem;
+  transition: background-color var(--cplus-transition-fast),
+              border-color var(--cplus-transition-fast),
+              box-shadow var(--cplus-transition-fast);
+
+  &:hover:not(:disabled) {
+    border-color: var(--cplus-accent);
+    box-shadow: var(--cplus-shadow-sm);
+  }
+
+  &--selected {
+    border-color: var(--cplus-accent);
+    background: var(--cplus-accent-tint);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--cplus-focus-ring);
+  }
+
+  &--blitz {
+    padding: var(--cplus-space-sm) var(--cplus-space-md);
+    font-size: 0.8125rem;
+  }
+}
+
+.cplus-duels-arena__result {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cplus-space-sm);
+  font-weight: 600;
+  padding: var(--cplus-space-sm) var(--cplus-space-md);
+  border-radius: var(--cplus-radius-control);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--cplus-danger);
+  animation: cplus-duels-round-enter var(--cplus-transition-normal);
+
+  &--correct {
+    background: rgba(34, 197, 94, 0.08);
+    color: var(--cplus-success);
+  }
+}
+
+.cplus-duels-arena__result-points {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Arena — hype message ────────────────────────────────────────────────
+
+.cplus-duels-arena__hype {
+  text-align: center;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: var(--cplus-space-sm) var(--cplus-space-md);
+  border-radius: var(--cplus-radius-control);
+  background: var(--cplus-surface-muted);
+  color: var(--cplus-text-secondary);
+  animation: cplus-duels-round-enter var(--cplus-transition-normal);
+
+  &--positive {
+    background: var(--cplus-accent-tint);
+    color: var(--cplus-accent-strong);
+  }
+
+  &--blitz {
+    margin: 0 var(--cplus-space-sm);
+  }
+}
+
+.cplus-duels-arena__waiting {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-sm);
+  padding: var(--cplus-space-sm) var(--cplus-space-md);
+  border-radius: var(--cplus-radius-control);
+  background: var(--cplus-accent-tint);
+  color: var(--cplus-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.cplus-duels-arena__waiting-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: cplus-duels-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+// ─── Arena — blitz mode ──────────────────────────────────────────────────
+
+.cplus-duels-arena__blitz-questions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--cplus-space-sm);
+}
+
+.cplus-duels-arena__blitz-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-sm);
+  padding: var(--cplus-space-md);
+  border: 2px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-card);
+  background: var(--cplus-surface);
+  transition: border-color var(--cplus-transition-fast),
+              opacity var(--cplus-transition-fast),
+              box-shadow var(--cplus-transition-fast);
+  animation: cplus-duels-round-enter var(--cplus-transition-normal);
+
+  &:hover {
+    border-color: var(--cplus-border-strong);
+    box-shadow: var(--cplus-shadow-sm);
+  }
+
+  &--answered {
+    opacity: 0.55;
+    border-color: var(--cplus-border);
+  }
+
+  &--correct {
+    border-color: var(--cplus-success);
+  }
+}
+
+.cplus-duels-arena__blitz-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cplus-duels-arena__blitz-card-no {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--cplus-accent-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cplus-duels-arena__blitz-card-result {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--cplus-danger);
+
+  &--correct {
+    color: var(--cplus-success);
+  }
+}
+
+.cplus-duels-arena__blitz-card-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--cplus-text);
+}
+
+.cplus-duels-arena__blitz-card-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-xs);
+}
+
+// ─── Arena — outcome ─────────────────────────────────────────────────────
+
+.cplus-duels-arena__outcome-art {
+  display: flex;
+  justify-content: center;
+  padding: var(--cplus-space-md);
+
+  img {
+    width: 140px;
+    height: auto;
+    animation: cplus-duels-round-enter var(--cplus-transition-normal);
+  }
+}
+
+.cplus-duels-arena__outcome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cplus-space-sm);
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: var(--cplus-space-lg);
+  border-radius: var(--cplus-radius-card);
+  background: var(--cplus-surface-muted);
+  color: var(--cplus-text);
+  animation: cplus-duels-round-enter var(--cplus-transition-normal);
+
+  &--win {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--cplus-success);
+  }
+
+  &--loss {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--cplus-danger);
+  }
+
+  &--draw {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--cplus-warning);
+  }
+}
+
+.cplus-duels-arena__back-btn {
+  padding: var(--cplus-space-sm) var(--cplus-space-xl);
+  border: 1px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-control);
+  background: var(--cplus-surface);
+  color: var(--cplus-text-secondary);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: center;
+  transition: background-color var(--cplus-transition-fast),
+              border-color var(--cplus-transition-fast),
+              color var(--cplus-transition-fast);
+
+  &:hover {
+    background: var(--cplus-surface-muted);
+    border-color: var(--cplus-border-strong);
+    color: var(--cplus-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--cplus-focus-ring);
+  }
+}
+
+.cplus-duels-arena__connection-lost {
+  text-align: center;
+  padding: var(--cplus-space-lg);
+  color: var(--cplus-danger);
+}
+
+// ─── Animations ───────────────────────────────────────────────────────────
+
+@keyframes cplus-duels-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cplus-duels-round-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes cplus-duels-score-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cplus-duels-timer-pulse {
+  to { opacity: 0.6; }
+}
+
+@keyframes cplus-duels-pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes cplus-duels-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+// ─── Reduced motion ──────────────────────────────────────────────────────
+
+@media (prefers-reduced-motion: reduce) {
+  .cplus-duels__searching-spinner,
+  .cplus-duels__searching-pulse,
+  .cplus-duels__searching-art,
+  .cplus-duels__hero-art img,
+  .cplus-duels-arena__waiting-spinner {
+    animation: none;
+  }
+
+  .cplus-duels-arena__question,
+  .cplus-duels-arena__options,
+  .cplus-duels-arena__score,
+  .cplus-duels-arena__result,
+  .cplus-duels-arena__outcome,
+  .cplus-duels-arena__timer,
+  .cplus-duels-arena__combo,
+  .cplus-duels-arena__blitz-card {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────
+
+@media (min-width: 1280px) {
+  .cplus-duels__play-panel {
+    padding: var(--cplus-space-xl);
+  }
+
+  .cplus-duels__rating-hero-value {
+    font-size: 2.5rem;
+  }
+
+  .cplus-duels-arena__blitz-questions {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}

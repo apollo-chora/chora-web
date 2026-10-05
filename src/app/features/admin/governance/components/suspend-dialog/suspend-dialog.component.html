@@ -1,0 +1,212 @@
+@if (visible()) {
+  <div
+    class="suspend-dialog-backdrop"
+    data-testid="suspend-dialog-backdrop"
+    role="presentation"
+    tabindex="-1"
+    (click)="onBackdropClick()"
+    (keydown)="onKeydown($event)">
+    <div
+      #dialogPanel
+      class="suspend-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'suspend-dialog-title'"
+      [attr.aria-describedby]="'suspend-dialog-desc'"
+      tabindex="-1"
+      data-testid="suspend-dialog"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()">
+
+      <!-- Dialog Header -->
+      <header class="suspend-dialog__header">
+        <h2 id="suspend-dialog-title" class="suspend-dialog__title">
+          {{ 'admin.governance.suspend_user_title' | translate }}
+        </h2>
+        <button
+          type="button"
+          class="suspend-dialog__close"
+          [attr.aria-label]="'admin.governance.close_dialog' | translate"
+          [disabled]="submitting()"
+          data-testid="suspend-dialog-close"
+          (click)="closeDialog()">
+          &times;
+        </button>
+      </header>
+
+      <p id="suspend-dialog-desc" class="suspend-dialog__target">
+        {{ 'admin.governance.suspending_user' | translate }}:
+        <strong>{{ targetDisplayName() || targetGcid() }}</strong>
+      </p>
+
+      <!-- Step 1: Form -->
+      @if (step() === 'form') {
+        <div class="suspend-dialog__form" data-testid="suspend-dialog-form">
+
+          <!-- Reason -->
+          <div class="suspend-dialog__field">
+            <label for="suspend-reason" class="suspend-dialog__label">
+              {{ 'admin.governance.suspend_reason_label' | translate }}
+            </label>
+            <select
+              id="suspend-reason"
+              class="suspend-dialog__select"
+              data-testid="suspend-reason-select"
+              [ngModel]="selectedReason()"
+              (ngModelChange)="onReasonChange($event)">
+              <option value="">{{ 'admin.governance.suspend_select_reason' | translate }}</option>
+              @for (reason of allReasons; track reason) {
+                <option [value]="reason">{{ reasonLabels[reason] | translate }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Duration -->
+          <div class="suspend-dialog__field">
+            <label for="suspend-duration" class="suspend-dialog__label">
+              {{ 'admin.governance.suspend_duration_label' | translate }}
+            </label>
+            <select
+              id="suspend-duration"
+              class="suspend-dialog__select"
+              data-testid="suspend-duration-select"
+              [ngModel]="selectedDuration()"
+              (ngModelChange)="onDurationChange($event)">
+              <option value="">{{ 'admin.governance.suspend_select_duration' | translate }}</option>
+              @for (duration of allDurations; track duration) {
+                <option [value]="duration">{{ durationLabels[duration] | translate }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Notify Email -->
+          <div class="suspend-dialog__field suspend-dialog__field--checkbox">
+            <input
+              id="suspend-notify-email"
+              type="checkbox"
+              class="suspend-dialog__checkbox"
+              data-testid="suspend-notify-email"
+              [ngModel]="notifyEmail()"
+              (ngModelChange)="onNotifyEmailChange($event)" />
+            <label for="suspend-notify-email" class="suspend-dialog__checkbox-label">
+              {{ 'admin.governance.suspend_notify_email' | translate }}
+            </label>
+          </div>
+
+          <!-- Admin Notes -->
+          <div class="suspend-dialog__field">
+            <label for="suspend-notes" class="suspend-dialog__label">
+              {{ 'admin.governance.suspend_notes_label' | translate }}
+            </label>
+            <textarea
+              id="suspend-notes"
+              class="suspend-dialog__textarea"
+              data-testid="suspend-notes"
+              rows="3"
+              [attr.placeholder]="'admin.governance.suspend_notes_placeholder' | translate"
+              [ngModel]="adminNotes()"
+              (ngModelChange)="onAdminNotesChange($event)"></textarea>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="suspend-dialog__actions">
+            <button
+              type="button"
+              class="suspend-dialog__btn suspend-dialog__btn--cancel"
+              data-testid="suspend-cancel-btn"
+              (click)="closeDialog()">
+              {{ 'admin.governance.cancel' | translate }}
+            </button>
+            <button
+              type="button"
+              class="suspend-dialog__btn suspend-dialog__btn--next"
+              data-testid="suspend-next-btn"
+              [disabled]="!formValid()"
+              (click)="goToConfirm()">
+              {{ 'admin.governance.suspend_review' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Step 2: Confirmation -->
+      @if (step() === 'confirm') {
+        <div class="suspend-dialog__confirm" data-testid="suspend-dialog-confirm">
+          <div class="suspend-dialog__confirm-banner" role="alert">
+            {{ 'admin.governance.suspend_confirm_warning' | translate }}
+          </div>
+
+          <dl class="suspend-dialog__summary">
+            <div class="suspend-dialog__summary-row">
+              <dt class="suspend-dialog__summary-label">
+                {{ 'admin.governance.suspend_reason_label' | translate }}
+              </dt>
+              <dd class="suspend-dialog__summary-value" data-testid="confirm-reason">
+                @if (selectedReason()) {
+                  {{ reasonLabels[selectedReason()!] | translate }}
+                }
+              </dd>
+            </div>
+
+            <div class="suspend-dialog__summary-row">
+              <dt class="suspend-dialog__summary-label">
+                {{ 'admin.governance.suspend_duration_label' | translate }}
+              </dt>
+              <dd class="suspend-dialog__summary-value" data-testid="confirm-duration">
+                @if (selectedDuration()) {
+                  {{ durationLabels[selectedDuration()!] | translate }}
+                }
+              </dd>
+            </div>
+
+            <div class="suspend-dialog__summary-row">
+              <dt class="suspend-dialog__summary-label">
+                {{ 'admin.governance.suspend_notify_email' | translate }}
+              </dt>
+              <dd class="suspend-dialog__summary-value" data-testid="confirm-notify">
+                @if (notifyEmail()) {
+                  {{ 'admin.governance.yes' | translate }}
+                } @else {
+                  {{ 'admin.governance.no' | translate }}
+                }
+              </dd>
+            </div>
+
+            @if (adminNotes()) {
+              <div class="suspend-dialog__summary-row">
+                <dt class="suspend-dialog__summary-label">
+                  {{ 'admin.governance.suspend_notes_label' | translate }}
+                </dt>
+                <dd class="suspend-dialog__summary-value" data-testid="confirm-notes">
+                  {{ adminNotes() }}
+                </dd>
+              </div>
+            }
+          </dl>
+
+          <div class="suspend-dialog__actions">
+            <button
+              type="button"
+              class="suspend-dialog__btn suspend-dialog__btn--back"
+              data-testid="suspend-back-btn"
+              [disabled]="submitting()"
+              (click)="goBackToForm()">
+              {{ 'admin.governance.back' | translate }}
+            </button>
+            <button
+              type="button"
+              class="suspend-dialog__btn suspend-dialog__btn--danger"
+              data-testid="suspend-confirm-btn"
+              [disabled]="submitting()"
+              (click)="confirmSuspend()">
+              @if (submitting()) {
+                <span class="suspend-dialog__spinner" aria-hidden="true"></span>
+              }
+              {{ 'admin.governance.suspend_confirm' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

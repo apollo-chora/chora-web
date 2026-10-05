@@ -1,0 +1,1199 @@
+<section
+  class="aplus-atom-authoring surface-aplus"
+  aria-labelledby="aplus-atom-authoring-heading"
+  data-testid="aplus-atom-authoring">
+  <chora-studio-sub-nav />
+  @if (isLoading()) {
+    <p
+      class="atom-authoring__loading"
+      role="status"
+      aria-live="polite"
+      data-testid="aplus-atom-authoring-loading">
+      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+      {{ 'aplus.atom_authoring.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div
+      class="atom-authoring__error glass-panel"
+      role="alert"
+      aria-live="assertive"
+      data-testid="aplus-atom-authoring-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <h2 class="atom-authoring__error-title">
+        {{ 'aplus.atom_authoring.error_title' | translate }}
+      </h2>
+      <p
+        class="atom-authoring__error-message"
+        data-testid="aplus-atom-authoring-error-message">
+        {{ errorKey() | translate }}
+      </p>
+      <div class="atom-authoring__error-actions">
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="retry()"
+          data-testid="aplus-atom-authoring-retry">
+          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          {{ 'aplus.atom_authoring.retry' | translate }}
+        </button>
+        <a
+          class="btn btn-secondary"
+          routerLink="/a/dashboard"
+          data-testid="aplus-atom-authoring-back-to-dashboard">
+          {{ 'aplus.atom_authoring.back_to_dashboard' | translate }}
+        </a>
+      </div>
+    </div>
+  } @else if (draft(); as d) {
+    <header class="atom-authoring__topbar glass-panel">
+      <nav class="atom-authoring__crumbs" aria-label="Breadcrumb">
+        <a routerLink="/a/dashboard">{{ 'aplus.atom_authoring.crumb_projects' | translate }}</a>
+        @if (d.courseCode) {
+          <span aria-hidden="true">/</span>
+          <a routerLink="/a/catalog">{{ d.courseCode }}</a>
+        }
+        <span aria-hidden="true">/</span>
+        <span class="atom-authoring__crumb-current">
+          {{ mode === 'edit'
+              ? ('aplus.atom_authoring.crumb_edit' | translate)
+              : ('aplus.atom_authoring.crumb_new' | translate) }}
+        </span>
+      </nav>
+
+      <div class="atom-authoring__topbar-actions">
+        <span
+          class="atom-authoring__state-pill"
+          [attr.data-state]="state()"
+          data-testid="atom-authoring-state">
+          {{ stateKey() | translate }}
+        </span>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-testid="atom-authoring-preview">
+          <i class="fa-solid fa-eye" aria-hidden="true"></i>
+          {{ 'aplus.atom_authoring.preview' | translate }}
+        </button>
+        <!-- FE-BUG-PUBLISH-TOPRIGHT-DEAD — top-right Publish was gated on
+             state==='APPROVED' (6-agent workflow gate not engaged in
+             current Phase-K flow); appeared dead/greyed to users. Hidden
+             until the workflow gate is wired. The bottom "Publish to
+             library" CTA (in the editor canvas footer) is the canonical
+             direct-publish action. -->
+      </div>
+    </header>
+
+    <!--
+      Single-column atom-authoring layout (2026-05-17).
+      Replaces the legacy 3-column `.atom-authoring__layout` grid +
+      empty `.atom-authoring__canvas` toolbar shell. The actual question
+      authoring lives in the Phase H section below; this top stack carries
+      the page heading, the legacy AI Assist drawer trigger, the atom
+      metadata sidebar, and the IMDA D2 trace widget in source order.
+    -->
+    <h1 id="aplus-atom-authoring-heading" class="atom-authoring__heading">
+      {{ mode === 'edit'
+          ? ('aplus.atom_authoring.heading_edit' | translate)
+          : ('aplus.atom_authoring.heading_new' | translate) }}
+    </h1>
+
+    <button
+      #aiAssistTriggerBtn
+      type="button"
+      class="ai-assist-btn"
+      (click)="openAiAssist()"
+      [attr.aria-expanded]="aiAssistOpen()"
+      aria-controls="aplus-ai-assist-drawer"
+      data-testid="atom-authoring-ai-assist-open">
+      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+      {{ 'aplus.atom_authoring.ai_assist_open' | translate }}
+    </button>
+
+    <!--
+      A2 design refinement (CJ#1 smoke #4 — 2026-05-17), amended 2026-06-06:
+      COGNITIVE LEVEL moved INTO the AI Assist drawer (it's an AI-generation
+      input, alongside subject / prompt / difficulty — owner request). TAGS /
+      PREREQUISITES / LEARNING OBJECTIVES remain in this collapsed "Atom
+      metadata" disclosure. Per docs/m13/cj1-ui-design-refinement-plan-2026-05-17.md.
+    -->
+    <div class="atom-authoring__metadata glass-panel">
+      <button
+        type="button"
+        class="atom-authoring__metadata-toggle"
+        data-testid="atom-authoring-metadata-toggle"
+        [attr.aria-expanded]="metadataExpanded()"
+        [attr.aria-controls]="metadataPanelId"
+        (click)="toggleMetadata()">
+        <span class="atom-authoring__metadata-toggle-label">
+          {{ 'aplus.atom_authoring.metadata_disclosure' | translate }}
+        </span>
+        <span class="atom-authoring__metadata-toggle-summary">
+          {{ 'aplus.atom_authoring.metadata_summary' | translate }}
+        </span>
+        <i
+          class="fa-solid"
+          [class.fa-chevron-down]="!metadataExpanded()"
+          [class.fa-chevron-up]="metadataExpanded()"
+          aria-hidden="true"></i>
+      </button>
+
+      @if (metadataExpanded()) {
+        <div
+          class="atom-authoring__metadata-panel"
+          data-testid="atom-authoring-metadata-panel"
+          [id]="metadataPanelId">
+          <div class="metadata-section">
+            <h4>{{ 'aplus.atom_authoring.tags' | translate }}</h4>
+            <div class="atom-authoring__tags" data-testid="atom-authoring-tags">
+              @for (tag of d.tags; track tag.id) {
+                <span class="pill-tag">
+                  {{ tag.label }}
+                  <button
+                    type="button"
+                    class="pill-tag__remove"
+                    [attr.aria-label]="('aplus.atom_authoring.tag_remove' | translate) + ' ' + tag.label">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="metadata-section">
+            <h4>{{ 'aplus.atom_authoring.prerequisites' | translate }}</h4>
+            <ul class="atom-authoring__prereqs" data-testid="atom-authoring-prereqs">
+              @for (p of d.prerequisites; track p.id) {
+                <li class="prereq-tile">
+                  <i class="fa-solid fa-link" aria-hidden="true"></i>
+                  <span>{{ p.label }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div class="metadata-section">
+            <h4>{{ 'aplus.atom_authoring.objectives' | translate }}</h4>
+            <ul class="atom-authoring__objectives" data-testid="atom-authoring-objectives">
+              @for (o of d.objectives; track o.id) {
+                <li class="objective-tile">{{ o.text }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Agent-trace widget moved INTO the AI Assist drawer (owner request
+         2026-06-06); only rendered after an AI Assist run (see drawer body). -->
+
+
+    <!-- ──────────────────────────────────────────────────────────────
+         Phase H — Question Authoring CR wired surface (NEW). Mounts
+         below the legacy layout so existing tests stay green during
+         the additive transition. Phase H.2 sweep replaces the legacy
+         AI Assist drawer + Gatekeeper-refusal modal once the new flow
+         is browser-verified end-to-end.
+         ────────────────────────────────────────────────────────────── -->
+    <section
+      class="atom-authoring__phase-h glass-panel"
+      data-testid="atom-authoring-phase-h"
+      aria-labelledby="atom-authoring-phase-h-heading">
+      <header class="atom-authoring__phase-h-header">
+        <h2 id="atom-authoring-phase-h-heading">
+          <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+          {{ 'aplus.atom_authoring.phase_h.heading' | translate }}
+        </h2>
+        <!--
+          a11y: role="status" hosts the aria-label readout. axe-core's
+          aria-prohibited-attr rule (serious) rejects aria-label on a
+          generic <span> with no role; status is the WAI-ARIA-permitted
+          live-region role for a polite balance readout (matches the
+          load/save success bands above).
+        -->
+        <span
+          class="atom-authoring__mana-pill"
+          data-testid="atom-authoring-mana-pill"
+          role="status"
+          [attr.aria-label]="'core.mana.balance_aria' | translate">
+          <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+          {{ manaBalance() }} {{ 'core.mana.unit' | translate }}
+        </span>
+      </header>
+
+      @if (!existingQuestionId()) {
+        <!--
+          Phase D picker (server-driven 16-tile registry). Stays visible
+          until a question is persisted; toggling MCQ ↔ OE pre-save is
+          supported by `onQuestionTypeSelected()` (warn-confirm clears
+          any in-progress draft content). After save, the BE locks the
+          type per ADR-155 D5 so the picker disappears.
+        -->
+        @if (questionTypes().length > 0) {
+          <chora-question-type-picker
+            data-testid="atom-authoring-picker-mount"
+            [types]="questionTypes()"
+            [selectedType]="selectedQuestionType()"
+            [disabled]="false"
+            (typeSelected)="onQuestionTypeSelected($event)" />
+        } @else {
+          <p class="atom-authoring__phase-h-empty">
+            {{ 'aplus.atom_authoring.phase_h.picker_loading' | translate }}
+          </p>
+        }
+      }
+
+      @if (asMcqContent(editorSeed()); as mcq) {
+        <chora-ai-assist-panel
+          data-testid="atom-authoring-ai-panel-mcq"
+          [questionType]="'mcq'"
+          [stub]="true"
+          [jobState]="aiJobState()"
+          [manaBalance]="manaBalance()"
+          (generateRequested)="onAiAssistRequested($event)" />
+        <chora-mcq-fields
+          data-testid="atom-authoring-mcq-fields-mount"
+          [initialContent]="mcq"
+          [readonly]="false"
+          (contentChanged)="onMcqContentChanged($event)"
+          (validityChanged)="onContentValidityChanged($event)" />
+      }
+
+      @if (asOeContent(editorSeed()); as oe) {
+        <chora-ai-assist-panel
+          data-testid="atom-authoring-ai-panel-oe"
+          [questionType]="'oe'"
+          [stub]="true"
+          [jobState]="aiJobState()"
+          [manaBalance]="manaBalance()"
+          (generateRequested)="onAiAssistRequested($event)" />
+        <chora-oe-fields
+          data-testid="atom-authoring-oe-fields-mount"
+          [initialContent]="oe"
+          [readonly]="false"
+          [existingQuestionId]="existingQuestionId()"
+          [modelAnswerInFlight]="modelAnswerInFlight()"
+          (contentChanged)="onOeContentChanged($event)"
+          (validityChanged)="onContentValidityChanged($event)"
+          (modelAnswerRequested)="onModelAnswerRequested($event)" />
+      }
+
+      @if (selectedQuestionType()) {
+        <footer class="atom-authoring__phase-h-footer">
+          @if (
+            saveState().status === 'error' ||
+            saveState().status === 'success' ||
+            deleteState().status === 'error' ||
+            publishState().status === 'error'
+          ) {
+            <div class="atom-authoring__phase-h-status">
+              @if (saveState().status === 'error'; as _err) {
+                <p
+                  class="atom-authoring__phase-h-error"
+                  role="alert"
+                  data-testid="atom-authoring-phase-h-save-error">
+                  @if (saveState().status === 'error') {
+                    @if ($any(saveState()).raw) {
+                      {{ $any(saveState()).error }}
+                    } @else {
+                      {{ $any(saveState()).error | translate }}
+                    }
+                  }
+                </p>
+              }
+              @if (saveState().status === 'success') {
+                <p
+                  class="atom-authoring__phase-h-success"
+                  role="status"
+                  data-testid="atom-authoring-phase-h-save-success">
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  {{ 'aplus.atom_authoring.phase_h.save_success' | translate }}
+                  ({{ 'aplus.atom_authoring.phase_h.revision' | translate }} {{ $any(saveState()).revision }})
+                </p>
+              }
+              @if (deleteState().status === 'error') {
+                <p
+                  class="atom-authoring__phase-h-error"
+                  role="alert"
+                  data-testid="atom-authoring-phase-k-delete-error">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ 'aplus.atom_authoring.phase_k.error_delete' | translate }}
+                </p>
+              }
+              @if (publishState().status === 'error'; as _err) {
+                <p
+                  class="atom-authoring__phase-h-error"
+                  role="alert"
+                  data-testid="atom-authoring-phase-k-publish-error">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ $any(publishState()).error | translate }}
+                </p>
+              }
+            </div>
+          }
+
+          <div class="atom-authoring__phase-h-actions">
+            <div class="atom-authoring__phase-h-actions-primary">
+              <button
+                type="button"
+                class="btn btn-primary atom-authoring__phase-h-save"
+                data-testid="atom-authoring-phase-h-save"
+                [disabled]="!canSavePhaseH()"
+                (click)="saveQuestion()">
+                @if (saveState().status === 'submitting') {
+                  <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                  {{ 'aplus.atom_authoring.phase_h.saving' | translate }}
+                } @else {
+                  <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                  {{ 'aplus.atom_authoring.phase_h.save' | translate }}
+                }
+              </button>
+
+              <!-- Phase K — Preview + Publish CTAs (only after first save). -->
+              @if (hasPersistedQuestion() && draft()?.atomId; as currentAtomId) {
+                <a
+                  class="btn btn-secondary atom-authoring__phase-k-preview"
+                  data-testid="atom-authoring-phase-k-preview"
+                  [routerLink]="['/a/atoms', currentAtomId, 'play']">
+                  <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                  {{ 'aplus.atom_authoring.phase_k.preview' | translate }}
+                </a>
+
+                @if (publishState().status === 'success') {
+                  <!-- FE-BUG-PUBLISH-BOTTOM-NO-DISABLE — after publish 200, the
+                       button stayed clickable; users hammered it bumping
+                       revisions silently. Now a passive pill shows the
+                       success state with revision number + an "Author
+                       another" CTA replaces the active publish button. -->
+                  <span
+                    class="atom-authoring__phase-k-published-pill"
+                    data-testid="atom-authoring-phase-k-published">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    {{ 'aplus.atom_authoring.phase_k.published' | translate }}
+                    @if ($any(publishState()).revisionNumber; as rev) {
+                      , {{ 'aplus.atom_authoring.phase_k.revision_label' | translate }} {{ rev }}
+                    }
+                  </span>
+                  <button
+                    type="button"
+                    class="btn btn-secondary atom-authoring__phase-k-author-another"
+                    data-testid="atom-authoring-phase-k-author-another"
+                    (click)="authorAnother()">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    {{ 'aplus.atom_authoring.phase_k.author_another' | translate }}
+                  </button>
+                  @if (canShare()) {
+                    <button
+                      type="button"
+                      class="btn btn-secondary atom-authoring__phase-k-share"
+                      data-testid="atom-authoring-phase-k-share"
+                      [class.atom-authoring__phase-k-share--active]="sharePanelOpen()"
+                      (click)="toggleSharePanel()">
+                      <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                      {{ 'aplus.atom_authoring.share.cta' | translate }}
+                    </button>
+                  }
+                } @else {
+                  <button
+                    type="button"
+                    class="btn btn-publish atom-authoring__phase-k-publish"
+                    data-testid="atom-authoring-phase-k-publish"
+                    [disabled]="!canPublishPhaseK()"
+                    (click)="publishAtomDraft()">
+                    @if (publishState().status === 'submitting') {
+                      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                      {{ 'aplus.atom_authoring.phase_k.publishing' | translate }}
+                    } @else {
+                      <i class="fa-solid fa-rocket" aria-hidden="true"></i>
+                      {{ 'aplus.atom_authoring.phase_k.publish' | translate }}
+                    }
+                  </button>
+                }
+              }
+            </div>
+
+            @if (hasPersistedQuestion() && draft()?.atomId) {
+              <div class="atom-authoring__phase-h-actions-danger">
+                <!-- Delete CTA — atom CRUD (soft delete via deleteQuestion).
+                     Visible only when there's a persisted question to delete.
+                     Awaits BE atom-level DELETE per a508f184 BE specifics ask. -->
+                @if (canDelete()) {
+                  <button
+                    type="button"
+                    class="btn btn-danger atom-authoring__phase-k-delete"
+                    data-testid="atom-authoring-phase-k-delete"
+                    [disabled]="deleteState().status === 'submitting'"
+                    (click)="deleteCurrentAtom()">
+                    @if (deleteState().status === 'submitting') {
+                      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                      {{ 'aplus.atom_authoring.phase_k.deleting' | translate }}
+                    } @else {
+                      <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                      {{ 'aplus.atom_authoring.phase_k.delete' | translate }}
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          @if (sharePanelOpen()) {
+            <div class="atom-authoring__share-panel" data-testid="atom-authoring-share-panel">
+              @if (shareState().status === 'success') {
+                <div class="atom-authoring__share-success">
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  {{ 'aplus.atom_authoring.share.success' | translate }}
+                  <a routerLink="/c/feed" class="atom-authoring__share-view-link">
+                    {{ 'aplus.atom_authoring.share.view_in_feed' | translate }}
+                  </a>
+                </div>
+              } @else {
+                <div class="atom-authoring__share-field">
+                  <label for="share-caption" class="atom-authoring__share-label">
+                    {{ 'aplus.atom_authoring.share.caption_label' | translate }}
+                  </label>
+                  <textarea
+                    id="share-caption"
+                    class="atom-authoring__share-textarea"
+                    rows="2"
+                    maxlength="512"
+                    [value]="shareCaption()"
+                    (input)="shareCaption.set($any($event.target).value)"
+                    [placeholder]="'aplus.atom_authoring.share.caption_placeholder' | translate">
+                  </textarea>
+                </div>
+                <div class="atom-authoring__share-field">
+                  <label for="share-license" class="atom-authoring__share-label">
+                    {{ 'aplus.atom_authoring.share.license_label' | translate }}
+                  </label>
+                  <select
+                    id="share-license"
+                    class="atom-authoring__share-select"
+                    [value]="shareLicense()"
+                    (change)="shareLicense.set($any($event.target).value)">
+                    @for (opt of licenseOptions; track opt.value) {
+                      <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+                    }
+                  </select>
+                </div>
+                @if (isRoyaltyLicense()) {
+                  <div class="atom-authoring__share-field">
+                    <label for="share-royalty-rate" class="atom-authoring__share-label">
+                      {{ shareLicense() === 'royalty_pct'
+                        ? ('aplus.atom_authoring.share.royalty_pct_label' | translate)
+                        : ('aplus.atom_authoring.share.royalty_fixed_label' | translate) }}
+                    </label>
+                    <input
+                      type="number"
+                      id="share-royalty-rate"
+                      class="atom-authoring__share-input"
+                      [value]="shareRoyaltyRate()"
+                      [min]="0"
+                      [max]="shareLicense() === 'royalty_pct' ? 100 : undefined"
+                      (input)="shareRoyaltyRate.set(+$any($event.target).value)"
+                    />
+                    <span class="atom-authoring__share-hint">
+                      {{ shareLicense() === 'royalty_pct'
+                        ? ('aplus.atom_authoring.share.royalty_pct_hint' | translate)
+                        : ('aplus.atom_authoring.share.royalty_fixed_hint' | translate) }}
+                    </span>
+                  </div>
+                }
+                @if (shareState().status === 'error') {
+                  <p class="atom-authoring__share-error" role="alert">
+                    {{ $any(shareState()).error | translate }}
+                  </p>
+                }
+                <button
+                  type="button"
+                  class="btn btn-publish atom-authoring__share-submit"
+                  data-testid="atom-authoring-share-submit"
+                  [disabled]="shareState().status === 'submitting'"
+                  (click)="shareAtom()">
+                  @if (shareState().status === 'submitting') {
+                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                    {{ 'aplus.atom_authoring.share.submitting' | translate }}
+                  } @else {
+                    <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                    {{ 'aplus.atom_authoring.share.submit' | translate }}
+                  }
+                </button>
+              }
+            </div>
+          }
+        </footer>
+      }
+    </section>
+
+    <!-- "My authored questions" recent list — user-requested 2026-05-16.
+         Visible below the editor; refreshes on publish/delete success.
+         Open CTA per row navigates to /a/atoms/:atomId/edit. -->
+    <section
+      class="atom-authoring__my-atoms glass-panel"
+      data-testid="atom-authoring-my-atoms"
+      aria-labelledby="atom-authoring-my-atoms-heading"
+    >
+      <header class="atom-authoring__my-atoms-header">
+        <h2
+          id="atom-authoring-my-atoms-heading"
+          class="atom-authoring__my-atoms-title"
+        >
+          {{ 'aplus.atom_authoring.my_atoms.heading' | translate }}
+        </h2>
+        <button
+          type="button"
+          class="btn btn-secondary atom-authoring__my-atoms-refresh"
+          data-testid="atom-authoring-my-atoms-refresh"
+          (click)="loadMyAtoms()"
+          [disabled]="myAtomsLoading()"
+        >
+          <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+          {{ 'aplus.atom_authoring.my_atoms.refresh' | translate }}
+        </button>
+      </header>
+
+      @if (myAtomsLoading()) {
+        <p
+          class="atom-authoring__my-atoms-loading"
+          data-testid="atom-authoring-my-atoms-loading"
+          role="status"
+          aria-busy="true"
+        >
+          {{ 'aplus.atom_authoring.my_atoms.loading' | translate }}
+        </p>
+      } @else if (myAtomsError(); as errKey) {
+        <p
+          class="atom-authoring__my-atoms-error"
+          data-testid="atom-authoring-my-atoms-error"
+          role="alert"
+        >
+          {{ errKey | translate }}
+        </p>
+      } @else if (myAtomsList().length === 0) {
+        <p
+          class="atom-authoring__my-atoms-empty"
+          data-testid="atom-authoring-my-atoms-empty"
+        >
+          {{ 'aplus.atom_authoring.my_atoms.empty' | translate }}
+        </p>
+      } @else {
+        <ul
+          class="atom-authoring__my-atoms-list"
+          role="list"
+          data-testid="atom-authoring-my-atoms-list"
+        >
+          @for (atom of myAtomsList(); track atom.id) {
+            <li
+              class="atom-authoring__my-atoms-row"
+              role="listitem"
+            >
+              <span
+                class="atom-authoring__my-atoms-type"
+                [attr.data-question-type]="atom.question_type"
+              >
+                {{ atom.question_type }}
+              </span>
+              <span class="atom-authoring__my-atoms-title-cell">
+                {{ atom.title || atom.stem || atom.id.slice(0, 8) }}
+              </span>
+              <span class="atom-authoring__my-atoms-time">
+                {{ atom.created_at | timeAgo }}
+              </span>
+              <a
+                class="btn btn-secondary atom-authoring__my-atoms-open"
+                [routerLink]="['/a/atoms', atom.id, 'edit']"
+                [attr.data-testid]="'atom-authoring-my-atoms-open-' + atom.id"
+              >
+                {{ 'aplus.atom_authoring.my_atoms.open' | translate }}
+              </a>
+              <button
+                type="button"
+                class="btn btn-secondary atom-authoring__my-atoms-share"
+                [attr.data-testid]="'atom-authoring-my-atoms-share-' + atom.id"
+                [attr.aria-label]="'aplus.atom_authoring.share.cta' | translate"
+                [title]="'aplus.atom_authoring.share.cta' | translate"
+                (click)="shareFromList(atom.id, $event)"
+              >
+                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+              </button>
+            </li>
+          }
+        </ul>
+
+        @if (sharePanelOpen() && shareTargetAtomId()) {
+          <div class="atom-authoring__share-panel atom-authoring__share-panel--list" data-testid="atom-authoring-list-share-panel">
+            @if (shareState().status === 'success') {
+              <div class="atom-authoring__share-success">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'aplus.atom_authoring.share.success' | translate }}
+                <a routerLink="/c/feed" class="atom-authoring__share-view-link">
+                  {{ 'aplus.atom_authoring.share.view_in_feed' | translate }}
+                </a>
+              </div>
+            } @else {
+              <div class="atom-authoring__share-field">
+                <label for="list-share-caption" class="atom-authoring__share-label">
+                  {{ 'aplus.atom_authoring.share.caption_label' | translate }}
+                </label>
+                <textarea
+                  id="list-share-caption"
+                  class="atom-authoring__share-textarea"
+                  rows="2"
+                  maxlength="512"
+                  [value]="shareCaption()"
+                  (input)="shareCaption.set($any($event.target).value)"
+                  [placeholder]="'aplus.atom_authoring.share.caption_placeholder' | translate">
+                </textarea>
+              </div>
+              <div class="atom-authoring__share-field">
+                <label for="list-share-license" class="atom-authoring__share-label">
+                  {{ 'aplus.atom_authoring.share.license_label' | translate }}
+                </label>
+                <select
+                  id="list-share-license"
+                  class="atom-authoring__share-select"
+                  [value]="shareLicense()"
+                  (change)="shareLicense.set($any($event.target).value)">
+                  @for (opt of licenseOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+                  }
+                </select>
+              </div>
+              @if (isRoyaltyLicense()) {
+                <div class="atom-authoring__share-field">
+                  <label for="list-share-royalty-rate" class="atom-authoring__share-label">
+                    {{ shareLicense() === 'royalty_pct'
+                      ? ('aplus.atom_authoring.share.royalty_pct_label' | translate)
+                      : ('aplus.atom_authoring.share.royalty_fixed_label' | translate) }}
+                  </label>
+                  <input
+                    type="number"
+                    id="list-share-royalty-rate"
+                    class="atom-authoring__share-input"
+                    [value]="shareRoyaltyRate()"
+                    [min]="0"
+                    [max]="shareLicense() === 'royalty_pct' ? 100 : undefined"
+                    (input)="shareRoyaltyRate.set(+$any($event.target).value)"
+                  />
+                  <span class="atom-authoring__share-hint">
+                    {{ shareLicense() === 'royalty_pct'
+                      ? ('aplus.atom_authoring.share.royalty_pct_hint' | translate)
+                      : ('aplus.atom_authoring.share.royalty_fixed_hint' | translate) }}
+                  </span>
+                </div>
+              }
+              @if (shareState().status === 'error') {
+                <p class="atom-authoring__share-error" role="alert">
+                  {{ $any(shareState()).error | translate }}
+                </p>
+              }
+              <div class="atom-authoring__share-actions">
+                <button
+                  type="button"
+                  class="btn btn-publish"
+                  data-testid="atom-authoring-list-share-submit"
+                  [disabled]="shareState().status === 'submitting'"
+                  (click)="shareAtom()">
+                  @if (shareState().status === 'submitting') {
+                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                    {{ 'aplus.atom_authoring.share.submitting' | translate }}
+                  } @else {
+                    <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                    {{ 'aplus.atom_authoring.share.submit' | translate }}
+                  }
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="sharePanelOpen.set(false); shareTargetAtomId.set(null)">
+                  {{ 'aplus.atom_authoring.share.cancel' | translate }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+      }
+    </section>
+
+    <!-- Phase B ManaTopupModal — opens when a mana-spending call returns 402. -->
+    @if (topupUpsell(); as upsell) {
+      <chora-mana-topup-modal
+        data-testid="atom-authoring-topup-modal-mount"
+        [upsell]="upsell"
+        [actionCode]="currentActionCode()"
+        [submitting]="manaTopupState().status === 'submitting'"
+        [errorMessage]="manaTopupState().status === 'error' ? $any(manaTopupState()).error : null"
+        (topupRequested)="onTopupRequested()"
+        (dismissed)="onTopupDismissed()" />
+    }
+
+    <!-- AI Assist Drawer (slide-out, role=dialog) -->
+    @if (aiAssistOpen()) {
+      <!-- Click-catching backdrop: clicking outside the drawer closes it
+           (same as the × button), no autoscroll. -->
+      <div
+        class="atom-authoring__drawer-backdrop"
+        [class.atom-authoring__drawer-backdrop--closing]="drawerClosing()"
+        (click)="closeAiAssist()"
+        aria-hidden="true"
+        data-testid="atom-authoring-ai-assist-backdrop"></div>
+      <div
+        id="aplus-ai-assist-drawer"
+        class="atom-authoring__drawer glass-panel"
+        [class.atom-authoring__drawer--closing]="drawerClosing()"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="aplus-ai-assist-drawer-heading"
+        data-testid="atom-authoring-ai-assist-drawer">
+        <header class="drawer__header">
+          <h2 id="aplus-ai-assist-drawer-heading">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            {{ 'aplus.atom_authoring.ai_assist_heading' | translate }}
+          </h2>
+          <button
+            #drawerCloseBtn
+            type="button"
+            class="btn-icon"
+            (click)="closeAiAssist()"
+            [attr.aria-label]="'aplus.atom_authoring.ai_assist_close' | translate"
+            data-testid="atom-authoring-ai-assist-close">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="drawer__body">
+          <div
+            class="gate-banner"
+            role="status"
+            data-testid="atom-authoring-ai-assist-gate-banner">
+            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+            <p>{{ 'aplus.atom_authoring.gate_banner' | translate }}</p>
+          </div>
+
+          <!--
+            Question type tabset. MCQ + OE both selectable. OE unhidden
+            2026-06-03 (OE image track) now that OE author→grade→result is
+            proven e2e and the OE seed/preview paths below are wired. Tab
+            order keeps MCQ first per the 2026-05-17 direction.
+          -->
+          <div class="tabset" role="tablist"
+            [attr.aria-label]="'aplus.atom_authoring.content_type_aria' | translate">
+            <button
+              type="button"
+              role="tab"
+              [class.active]="isAiQuestionType('mcq')"
+              [attr.aria-selected]="isAiQuestionType('mcq')"
+              (click)="setAiQuestionType('mcq')"
+              data-testid="atom-authoring-ai-tab-mcq">
+              {{ 'aplus.atom_authoring.tab_mcq' | translate }}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              [class.active]="isAiQuestionType('oe')"
+              [attr.aria-selected]="isAiQuestionType('oe')"
+              (click)="setAiQuestionType('oe')"
+              data-testid="atom-authoring-ai-tab-oe">
+              {{ 'aplus.atom_authoring.tab_oe' | translate }}
+            </button>
+          </div>
+
+          <div class="form-block">
+            <label class="field-label" for="atom-authoring-ai-subject">
+              {{ 'aplus.atom_authoring.subject_label' | translate }}
+            </label>
+            <input
+              id="atom-authoring-ai-subject"
+              class="form-control"
+              type="text"
+              maxlength="64"
+              [value]="aiSubject()"
+              (input)="onAiSubjectInput(($any($event.target).value))"
+              [placeholder]="'aplus.atom_authoring.subject_placeholder' | translate"
+              [disabled]="isGenerating()"
+              data-testid="atom-authoring-ai-subject" />
+          </div>
+
+          <div class="form-block">
+            <label class="field-label" for="atom-authoring-ai-prompt">
+              {{ 'aplus.atom_authoring.prompt_label' | translate }}
+            </label>
+            <textarea
+              id="atom-authoring-ai-prompt"
+              class="prompt-textarea"
+              [value]="aiPrompt()"
+              (input)="onAiPromptInput(($any($event.target).value))"
+              [placeholder]="'aplus.atom_authoring.prompt_placeholder' | translate"
+              [attr.aria-describedby]="'atom-authoring-ai-prompt-help'"
+              [disabled]="isGenerating()"
+              data-testid="atom-authoring-ai-prompt"></textarea>
+            <p id="atom-authoring-ai-prompt-help" class="field-help">
+              {{ 'aplus.atom_authoring.prompt_help' | translate }}
+            </p>
+          </div>
+
+          <div class="param-grid">
+            <div class="param-block">
+              <label class="field-label" for="atom-authoring-cognitive-select">
+                {{ 'aplus.atom_authoring.cognitive_level' | translate }}
+              </label>
+              <select
+                id="atom-authoring-cognitive-select"
+                class="form-control"
+                [value]="cognitiveLevel()"
+                (change)="onCognitiveLevelChange(($any($event.target).value))"
+                [disabled]="isGenerating()"
+                data-testid="atom-authoring-cognitive">
+                @for (level of cognitiveLevels; track level) {
+                  <option [value]="level">{{ ('aplus.atom_authoring.cog_' + level) | translate }}</option>
+                }
+              </select>
+            </div>
+            <div class="param-block">
+              <label class="field-label" for="atom-authoring-ai-difficulty">
+                {{ 'aplus.atom_authoring.difficulty' | translate }}
+              </label>
+              <input
+                id="atom-authoring-ai-difficulty"
+                class="param-range"
+                type="range"
+                min="1" max="5"
+                [value]="aiDifficulty()"
+                (input)="onAiDifficultyInput(($any($event.target).value))"
+                [disabled]="isGenerating()"
+                data-testid="atom-authoring-ai-difficulty" />
+              <div class="param-bounds"><span>{{ 'aplus.atom_authoring.difficulty_easy' | translate }}</span><span>{{ 'aplus.atom_authoring.difficulty_expert' | translate }}</span></div>
+            </div>
+          </div>
+
+          <!--
+            W8 AUTHOR-OPT-IN image controls. The author chooses whether the
+            generator also produces an image for the QUESTION stem and/or the
+            MODEL ANSWER. Both default OFF; the flags ride on the generate
+            request (`image_for_stem` / `image_for_answer`). Accessible:
+            each <input type=checkbox> has an associated <label for>; the
+            fieldset/legend groups them for screen readers.
+          -->
+          <fieldset class="image-optins" data-testid="atom-authoring-ai-image-optins">
+            <legend class="field-label">
+              {{ 'aplus.atom_authoring.image_optins_legend' | translate }}
+            </legend>
+            <div class="image-optin">
+              <input
+                id="atom-authoring-ai-image-for-stem"
+                class="image-optin__checkbox"
+                type="checkbox"
+                [checked]="imageForStem()"
+                (change)="onImageForStemToggle($any($event.target).checked)"
+                [disabled]="isGenerating()"
+                data-testid="atom-authoring-ai-image-for-stem" />
+              <label class="image-optin__label" for="atom-authoring-ai-image-for-stem">
+                {{ 'aplus.atom_authoring.image_for_stem_label' | translate }}
+              </label>
+            </div>
+            <div class="image-optin">
+              <input
+                id="atom-authoring-ai-image-for-answer"
+                class="image-optin__checkbox"
+                type="checkbox"
+                [checked]="imageForAnswer()"
+                (change)="onImageForAnswerToggle($any($event.target).checked)"
+                [disabled]="isGenerating()"
+                data-testid="atom-authoring-ai-image-for-answer" />
+              <label class="image-optin__label" for="atom-authoring-ai-image-for-answer">
+                {{ 'aplus.atom_authoring.image_for_answer_label' | translate }}
+              </label>
+            </div>
+          </fieldset>
+
+          <button
+            type="button"
+            class="btn-generate"
+            [disabled]="isGenerating() || aiPrompt().trim().length === 0"
+            (click)="runGenerate()"
+            data-testid="atom-authoring-ai-generate">
+            @if (isGenerating()) {
+              <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+              {{ 'aplus.atom_authoring.generating' | translate }}
+            } @else {
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+              {{ 'aplus.atom_authoring.generate' | translate }}
+            }
+          </button>
+
+          <!-- Live status pill — surfaces QUEUED / IN_PROGRESS during poll. -->
+          @if (aiAssistJobState(); as job) {
+            @if (job.status === 'submitting' || job.status === 'polling') {
+              <p
+                class="drawer__status-pill"
+                role="status"
+                aria-live="polite"
+                data-testid="atom-authoring-ai-status-pill">
+                <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                @if (job.status === 'submitting') {
+                  {{ 'aplus.atom_authoring.ai_assist.status_submitting' | translate }}
+                } @else if (job.job.status === 'QUEUED') {
+                  {{ 'aplus.atom_authoring.ai_assist.status_queued' | translate }}
+                } @else {
+                  {{ 'aplus.atom_authoring.ai_assist.status_in_progress' | translate }}
+                }
+              </p>
+            }
+          }
+
+          <!--
+            Completed MCQ candidate preview — stem + 4 options with the
+            is_correct option marked green. Critic notes render as a
+            soft banner when `quality_warning: true`.
+          -->
+          @if (aiAssistMcqCandidate(); as mcq) {
+            <section
+              class="drawer__candidate"
+              data-testid="atom-authoring-ai-candidate"
+              aria-labelledby="atom-authoring-ai-candidate-heading">
+              <h3 id="atom-authoring-ai-candidate-heading">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'aplus.atom_authoring.ai_assist.candidate_heading' | translate }}
+              </h3>
+              <p
+                class="drawer__candidate-stem"
+                data-testid="atom-authoring-ai-candidate-stem">
+                {{ aiAssistCandidateStem() }}
+              </p>
+              <!--
+                Generated illustration (W8 image-gen) — display-only, dormant
+                until the BE populates `candidate.image_url`. Token-based
+                glassmorphism styling (matches mcq-fields `&__image` + the
+                drawer `--glass-border`); no hardcoded hex.
+              -->
+              @if (aiAssistCandidateImageUrl(); as url) {
+                <chora-question-image
+                  [src]="url"
+                  alt="Generated question illustration"
+                  testIdPrefix="atom-authoring-ai-candidate-image" />
+              }
+              <ol class="drawer__candidate-options">
+                @for (opt of mcq.options; track opt.option_id; let i = $index) {
+                  <li
+                    class="drawer__candidate-option"
+                    [class.correct]="opt.is_correct"
+                    [attr.data-testid]="'atom-authoring-ai-option-' + i">
+                    <span class="drawer__candidate-marker">
+                      @if (opt.is_correct) {
+                        <i
+                          class="fa-solid fa-check"
+                          aria-hidden="true"
+                          [attr.aria-label]="'aplus.atom_authoring.ai_assist.correct_option' | translate"></i>
+                      }
+                    </span>
+                    <span class="drawer__candidate-label">{{ opt.label }}</span>
+                  </li>
+                }
+              </ol>
+
+              <!--
+                Generated MODEL-ANSWER image (W8 AUTHOR-OPT-IN, 2nd slot) —
+                display-only, dormant until the BE populates
+                `candidate.answer_image_url` (only when the author opted in via
+                `image_for_answer`). Mirrors the question-image render above;
+                token-based glassmorphism styling (no hardcoded hex).
+              -->
+              @if (aiAssistCandidateAnswerImageUrl(); as answerUrl) {
+                <chora-question-image
+                  [src]="answerUrl"
+                  alt="Generated model-answer illustration"
+                  [caption]="'aplus.atom_authoring.ai_assist.answer_image_caption' | translate"
+                  testIdPrefix="atom-authoring-ai-candidate-answer-image" />
+              }
+
+              @if (aiAssistQualityWarning() !== null) {
+                <aside
+                  class="drawer__quality-warning"
+                  role="status"
+                  data-testid="atom-authoring-ai-quality-warning">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  <span>
+                    {{ 'aplus.atom_authoring.ai_assist.quality_warning_prefix' | translate }}
+                    @if (aiAssistQualityWarning(); as note) {
+                      : {{ note }}
+                    }
+                  </span>
+                </aside>
+              }
+            </section>
+          }
+
+          <!--
+            Completed OE candidate preview — stem + model answer + rubric
+            rows. Mirrors the MCQ preview above. The question/model-answer
+            illustrations reuse the type-agnostic `aiAssistCandidateImageUrl`
+            / `aiAssistCandidateAnswerImageUrl` computeds (shared with MCQ),
+            so no new image plumbing is needed. OE image track 2026-06-03.
+          -->
+          @if (aiAssistOeCandidate(); as oe) {
+            <section
+              class="drawer__candidate"
+              data-testid="atom-authoring-ai-candidate-oe"
+              aria-labelledby="atom-authoring-ai-candidate-oe-heading">
+              <h3 id="atom-authoring-ai-candidate-oe-heading">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'aplus.atom_authoring.ai_assist.candidate_heading_oe' | translate }}
+              </h3>
+              <p
+                class="drawer__candidate-stem"
+                data-testid="atom-authoring-ai-candidate-oe-stem">
+                {{ aiAssistCandidateStem() }}
+              </p>
+              <!-- Generated question illustration (type-agnostic computed). -->
+              @if (aiAssistCandidateImageUrl(); as url) {
+                <chora-question-image
+                  [src]="url"
+                  alt="Generated question illustration"
+                  testIdPrefix="atom-authoring-ai-candidate-oe-image" />
+              }
+              <div
+                class="drawer__candidate-model-answer"
+                data-testid="atom-authoring-ai-candidate-oe-model-answer">
+                <p class="field-label">
+                  {{ 'aplus.atom_authoring.ai_assist.model_answer_preview_label' | translate }}
+                </p>
+                <p class="drawer__candidate-stem">{{ oe.model_answer }}</p>
+              </div>
+              @if (oe.rubric && oe.rubric.length) {
+                <div
+                  class="drawer__candidate-rubric"
+                  data-testid="atom-authoring-ai-candidate-oe-rubric">
+                  <p class="field-label">
+                    {{ 'aplus.atom_authoring.ai_assist.rubric_preview_heading' | translate }}
+                  </p>
+                  <ul class="drawer__candidate-options">
+                    @for (crit of oe.rubric; track crit.criterion_id; let i = $index) {
+                      <li
+                        class="drawer__candidate-option"
+                        [attr.data-testid]="'atom-authoring-ai-oe-rubric-' + i">
+                        <span class="drawer__candidate-label">{{ crit.title }}</span>
+                        <span class="drawer__candidate-marker">{{ crit.weight }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+              <!-- Generated model-answer illustration (type-agnostic computed). -->
+              @if (aiAssistCandidateAnswerImageUrl(); as answerUrl) {
+                <chora-question-image
+                  [src]="answerUrl"
+                  alt="Generated model-answer illustration"
+                  [caption]="'aplus.atom_authoring.ai_assist.answer_image_caption' | translate"
+                  testIdPrefix="atom-authoring-ai-candidate-oe-answer-image" />
+              }
+              @if (aiAssistQualityWarning() !== null) {
+                <aside
+                  class="drawer__quality-warning"
+                  role="status"
+                  data-testid="atom-authoring-ai-quality-warning-oe">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  <span>
+                    {{ 'aplus.atom_authoring.ai_assist.quality_warning_prefix' | translate }}
+                    @if (aiAssistQualityWarning(); as note) {
+                      : {{ note }}
+                    }
+                  </span>
+                </aside>
+              }
+            </section>
+          }
+
+          <!--
+            Refusal banner — REFUSED terminal envelope. Renders the
+            BE-provided `user_facing_message` verbatim (non-leaky per
+            ai_assist.proto §251). Replaces the legacy gatekeeper
+            modal + FE-fabricated severity-chip/agent-card UX.
+          -->
+          @if (refusalOpen() && aiAssistRefusal(); as refusal) {
+            <section
+              class="drawer__refusal"
+              role="alert"
+              aria-labelledby="atom-authoring-ai-refusal-heading"
+              data-testid="atom-authoring-ai-refusal">
+              <header class="drawer__refusal-header">
+                <h3 id="atom-authoring-ai-refusal-heading">
+                  <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                  {{ 'aplus.atom_authoring.ai_assist.refused_heading' | translate }}
+                </h3>
+                <button
+                  #modalCloseBtn
+                  type="button"
+                  class="btn-icon"
+                  (click)="closeRefusalDialog()"
+                  [attr.aria-label]="'aplus.atom_authoring.ai_assist.refused_close' | translate"
+                  data-testid="atom-authoring-ai-refusal-close">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              </header>
+              <p
+                class="drawer__refusal-message"
+                data-testid="atom-authoring-ai-refusal-message">
+                {{ refusal.user_facing_message }}
+              </p>
+              <p
+                class="drawer__refusal-reason"
+                data-testid="atom-authoring-ai-refusal-reason">
+                <span class="reason-label">
+                  {{ 'aplus.atom_authoring.ai_assist.refused_reason_label' | translate }}:
+                </span>
+                <code>{{ refusal.reason }}</code>
+              </p>
+              <button
+                type="button"
+                class="btn btn-secondary drawer__refusal-retry"
+                (click)="refusalTryAgain()"
+                data-testid="atom-authoring-ai-refusal-retry">
+                <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                {{ 'aplus.atom_authoring.ai_assist.refused_retry' | translate }}
+              </button>
+            </section>
+          }
+
+          <!-- FAILED / timeout / transport-error banners. -->
+          @if (aiAssistJobState().status === 'failed') {
+            <p
+              class="drawer__error-banner"
+              role="alert"
+              data-testid="atom-authoring-ai-failed-banner">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'aplus.atom_authoring.ai_assist.error_failed' | translate }}
+            </p>
+          }
+          @if (aiAssistJobState().status === 'timeout') {
+            <p
+              class="drawer__error-banner"
+              role="alert"
+              data-testid="atom-authoring-ai-timeout-banner">
+              <i class="fa-solid fa-clock" aria-hidden="true"></i>
+              {{ 'aplus.atom_authoring.ai_assist.error_timeout' | translate }}
+            </p>
+          }
+          @if (aiAssistJobState().status === 'error') {
+            <p
+              class="drawer__error-banner"
+              role="alert"
+              data-testid="atom-authoring-ai-error-banner">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ $any(aiAssistJobState()).error | translate }}
+            </p>
+          }
+
+          <!-- IMDA D2 Transparency — the AI pipeline trace, moved into the
+               drawer (owner 2026-06-06). Only rendered once an AI Assist run
+               has started (status != idle); hidden on the resting editor. -->
+          @if (!traceIdle()) {
+            <chora-aplus-trace-widget
+              class="atom-authoring__trace atom-authoring__trace--in-drawer"
+              [pipelineTrace]="pipelineTrace()"
+              [refused]="traceRefused()"
+              [idle]="traceIdle()" />
+          }
+        </div>
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,165 @@
+:host {
+  display: block;
+}
+
+.assessment-authoring {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+  padding: var(--chora-space-lg);
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+  }
+
+  &__title {
+    margin: 0;
+  }
+
+  &__lede {
+    margin: 0;
+    opacity: 0.8;
+  }
+
+  // ── Compose form fields ─────────────────────────────────────────
+  &__fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+  }
+
+  &__field-label {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs);
+  }
+
+  &__field-hint {
+    margin: 0;
+    font-size: 0.875rem;
+    opacity: 0.7;
+  }
+
+  &__field-error {
+    margin: 0;
+    color: var(--chora-color-danger, #b3261e);
+    font-size: 0.875rem;
+  }
+
+  &__topic-input,
+  &__body-input,
+  &__select {
+    width: 100%;
+    padding: var(--chora-space-sm);
+    border-radius: var(--chora-radius-md, 0.5rem);
+    border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.16));
+    background: var(--chora-color-surface, #fff);
+    font: inherit;
+  }
+
+  &__body-input {
+    resize: vertical;
+  }
+
+  &__settings-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-md);
+  }
+
+  &__setting {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+    min-width: 12rem;
+    flex: 1 1 12rem;
+  }
+
+  &__difficulty-value {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+  }
+
+  &__difficulty-input {
+    width: 100%;
+  }
+
+  // ── AI / By-hand segmented control ──────────────────────────────
+  &__segmented {
+    display: inline-flex;
+    gap: var(--chora-space-2xs, 0.25rem);
+    padding: var(--chora-space-2xs, 0.25rem);
+    border-radius: var(--chora-radius-lg, 0.75rem);
+    background: var(--chora-color-surface-muted, rgba(0, 0, 0, 0.05));
+    width: fit-content;
+  }
+
+  &__segment {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs);
+    padding: var(--chora-space-xs) var(--chora-space-md);
+    border: 0;
+    border-radius: var(--chora-radius-md, 0.5rem);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+
+    &--active {
+      background: var(--chora-color-surface, #fff);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      font-weight: 600;
+    }
+  }
+
+  &__zone2 {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-md);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  // ── Review + working + done ─────────────────────────────────────
+  &__review {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-md);
+  }
+
+  &__reset {
+    align-self: flex-start;
+  }
+
+  &__working {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+    padding: var(--chora-space-lg);
+    justify-content: center;
+    opacity: 0.85;
+  }
+
+  &__done {
+    margin: 0;
+    padding: var(--chora-space-md);
+    font-weight: 600;
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs);
+    margin: 0;
+    color: var(--chora-color-danger, #b3261e);
+  }
+}

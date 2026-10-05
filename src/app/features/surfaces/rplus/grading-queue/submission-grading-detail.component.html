@@ -1,0 +1,332 @@
+<aside
+  data-testid="submission-grading-detail"
+  class="surface-rplus grading-detail"
+  aria-label="{{ 'rplus.grading_queue.detail_aria' | translate }}">
+
+  <header class="grading-detail__header">
+    <h2 class="grading-detail__title">
+      {{ 'rplus.grading_queue.detail_heading' | translate }}
+    </h2>
+    <button
+      type="button"
+      data-testid="grading-detail-close"
+      class="grading-detail__close"
+      (click)="close()">
+      {{ 'rplus.grading_queue.detail_close' | translate }}
+    </button>
+  </header>
+
+  @if (isLoading()) {
+    <div
+      data-testid="grading-detail-loading"
+      class="grading-detail__loading"
+      aria-busy="true">
+      <p>{{ 'rplus.grading_queue.detail_loading' | translate }}</p>
+    </div>
+  } @else if (isError()) {
+    <div
+      data-testid="grading-detail-error"
+      class="grading-detail__error"
+      role="alert">
+      <p>{{ errorKey() | translate }}</p>
+      <button
+        type="button"
+        data-testid="grading-detail-retry"
+        class="grading-detail__retry"
+        (click)="retry()">
+        {{ 'rplus.grading_queue.retry' | translate }}
+      </button>
+    </div>
+  } @else if (detail(); as d) {
+    <div class="grading-detail__body">
+
+      <!-- Summary strip -->
+      <section class="grading-detail__summary" aria-label="summary">
+        <span
+          data-testid="grading-detail-review-status"
+          class="grading-detail__review-status">
+          {{ reviewStatusKey() | translate }}
+        </span>
+        <span
+          data-testid="grading-detail-total"
+          class="grading-detail__total">
+          {{ 'rplus.grading_queue.total_points' | translate }}:
+          {{ d.total_points_earned }} / {{ d.total_points_possible }}
+        </span>
+      </section>
+
+      <!-- Per-question rows -->
+      <section
+        class="grading-detail__questions"
+        aria-label="{{ 'rplus.grading_queue.questions_aria' | translate }}">
+        @for (q of d.questions; track q.test_set_question_id) {
+          <article
+            [attr.data-testid]="'grading-detail-q-' + q.test_set_question_id"
+            class="grading-q"
+            [class.grading-q--flagged]="q.quality_flagged">
+
+            <header class="grading-q__header">
+              <span class="grading-q__type-pill">
+                {{ 'rplus.grading_queue.qtype_' + q.question_type | translate }}
+              </span>
+              @if (q.quality_flagged) {
+                <span
+                  [attr.data-testid]="'grading-detail-quality-flag-' + q.test_set_question_id"
+                  class="grading-q__flag">
+                  {{ 'rplus.grading_queue.quality_flagged' | translate }}
+                </span>
+              }
+            </header>
+
+            @if (q.prompt) {
+              <p class="grading-q__prompt">{{ q.prompt }}</p>
+            }
+
+            <!-- ── MCQ: read-only deterministic outcome ── -->
+            @if (q.question_type === 'mcq') {
+              <div class="grading-q__mcq">
+                <span
+                  [attr.data-testid]="'grading-detail-mcq-outcome-' + q.test_set_question_id"
+                  class="grading-q__mcq-outcome"
+                  [class.grading-q__mcq-outcome--correct]="q.correct === true"
+                  [class.grading-q__mcq-outcome--incorrect]="q.correct === false">
+                  @if (q.correct === true) {
+                    {{ 'rplus.grading_queue.mcq_correct' | translate }}
+                  } @else if (q.correct === false) {
+                    {{ 'rplus.grading_queue.mcq_incorrect' | translate }}
+                  } @else {
+                    {{ 'rplus.grading_queue.mcq_ungraded' | translate }}
+                  }
+                </span>
+                <span class="grading-q__mcq-score">
+                  {{ q.points_earned }} / {{ q.points_possible }}
+                </span>
+                @if (q.learner_answer?.mcq_choice_id; as choice) {
+                  <span class="grading-q__mcq-choice">
+                    {{ 'rplus.grading_queue.mcq_selected' | translate }}: {{ choice }}
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- ── OE: editable score / comment / model-answer ── -->
+            @if (q.question_type === 'oe') {
+              <div class="grading-q__oe">
+
+                <!-- Learner answer -->
+                <div class="grading-q__field">
+                  <span class="grading-q__label">
+                    {{ 'rplus.grading_queue.learner_answer' | translate }}
+                  </span>
+                  <p
+                    [attr.data-testid]="'grading-detail-learner-answer-' + q.test_set_question_id"
+                    class="grading-q__learner-answer">
+                    {{ q.learner_answer?.oe_response_text ?? ('rplus.grading_queue.no_answer' | translate) }}
+                  </p>
+                </div>
+
+                <!-- Score (editable) + provenance -->
+                <div class="grading-q__field grading-q__field--score">
+                  <label
+                    class="grading-q__label"
+                    [attr.for]="'score-' + q.test_set_question_id">
+                    {{ 'rplus.grading_queue.score' | translate }}
+                  </label>
+                  <div class="grading-q__score-row">
+                    <input
+                      [attr.data-testid]="'grading-detail-score-input-' + q.test_set_question_id"
+                      [id]="'score-' + q.test_set_question_id"
+                      class="grading-q__score-input"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      [max]="q.points_possible"
+                      [disabled]="editingLocked()"
+                      [value]="bufferFor(q.test_set_question_id).points_earned"
+                      (input)="onScoreInput(q.test_set_question_id, $any($event.target).value)" />
+                    <span class="grading-q__points-possible">
+                      / {{ q.points_possible }}
+                    </span>
+                    <span
+                      [attr.data-testid]="'grading-detail-provenance-' + q.test_set_question_id"
+                      class="grading-q__provenance"
+                      [class.grading-q__provenance--human]="isHuman(q.score_provenance)">
+                      {{ provenanceKey(q.score_provenance) | translate }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Per-criterion sub-scores -->
+                @if (q.criterion_scores && q.criterion_scores.length > 0) {
+                  <div class="grading-q__field">
+                    <span class="grading-q__label">
+                      {{ 'rplus.grading_queue.criteria' | translate }}
+                    </span>
+                    <ul class="grading-q__criteria">
+                      @for (c of q.criterion_scores; track trackByCriterion($index, c)) {
+                        <li class="grading-q__criterion">
+                          <span class="grading-q__criterion-title">
+                            {{ c.title ?? c.criterion_id }}
+                          </span>
+                          <span class="grading-q__criterion-score">
+                            {{ c.score ?? 0 }} / {{ c.max_score ?? 0 }}
+                          </span>
+                          @if (c.feedback) {
+                            <span class="grading-q__criterion-feedback">
+                              {{ c.feedback }}
+                            </span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+
+                <!-- Comment (editable) + provenance -->
+                <div class="grading-q__field">
+                  <label
+                    class="grading-q__label"
+                    [attr.for]="'comment-' + q.test_set_question_id">
+                    {{ 'rplus.grading_queue.comment' | translate }}
+                  </label>
+                  <textarea
+                    [attr.data-testid]="'grading-detail-comment-' + q.test_set_question_id"
+                    [id]="'comment-' + q.test_set_question_id"
+                    class="grading-q__textarea"
+                    rows="3"
+                    [disabled]="editingLocked()"
+                    [value]="bufferFor(q.test_set_question_id).comment"
+                    (input)="onCommentInput(q.test_set_question_id, $any($event.target).value)"></textarea>
+                  <span
+                    class="grading-q__provenance"
+                    [class.grading-q__provenance--human]="isHuman(q.comment_provenance)">
+                    {{ provenanceKey(q.comment_provenance) | translate }}
+                  </span>
+                </div>
+
+                <!-- Model answer (editable) + provenance -->
+                <div class="grading-q__field">
+                  <label
+                    class="grading-q__label"
+                    [attr.for]="'model-' + q.test_set_question_id">
+                    {{ 'rplus.grading_queue.model_answer' | translate }}
+                  </label>
+                  <textarea
+                    [attr.data-testid]="'grading-detail-model-answer-' + q.test_set_question_id"
+                    [id]="'model-' + q.test_set_question_id"
+                    class="grading-q__textarea"
+                    rows="3"
+                    [disabled]="editingLocked()"
+                    [value]="bufferFor(q.test_set_question_id).model_answer"
+                    (input)="onModelAnswerInput(q.test_set_question_id, $any($event.target).value)"></textarea>
+                  <span
+                    class="grading-q__provenance"
+                    [class.grading-q__provenance--human]="isHuman(q.model_answer_provenance)">
+                    {{ provenanceKey(q.model_answer_provenance) | translate }}
+                  </span>
+                </div>
+
+                <!-- Rubric (read-only reference) -->
+                @if (q.rubric && q.rubric.length > 0) {
+                  <details class="grading-q__rubric">
+                    <summary class="grading-q__rubric-summary">
+                      {{ 'rplus.grading_queue.rubric' | translate }}
+                    </summary>
+                    <ul class="grading-q__rubric-list">
+                      @for (r of q.rubric; track trackByCriterion($index, r)) {
+                        <li class="grading-q__rubric-item">
+                          <span class="grading-q__rubric-title">
+                            {{ r.title ?? r.criterion_id }}
+                          </span>
+                          @if (r.description) {
+                            <span class="grading-q__rubric-desc">
+                              {{ r.description }}
+                            </span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </details>
+                }
+              </div>
+            }
+          </article>
+        }
+      </section>
+
+      <!-- Overall comment (editable) + provenance -->
+      <section class="grading-detail__overall" aria-label="overall comment">
+        <label class="grading-q__label" for="overall-comment">
+          {{ 'rplus.grading_queue.overall_comment' | translate }}
+        </label>
+        <textarea
+          data-testid="grading-detail-overall-comment"
+          id="overall-comment"
+          class="grading-q__textarea"
+          rows="4"
+          [disabled]="editingLocked()"
+          [value]="overallCommentEdit()"
+          (input)="onOverallCommentInput($any($event.target).value)"></textarea>
+        <span
+          data-testid="grading-detail-overall-provenance"
+          class="grading-q__provenance"
+          [class.grading-q__provenance--human]="isHuman(d.overall_comment_provenance)">
+          {{ provenanceKey(d.overall_comment_provenance) | translate }}
+        </span>
+      </section>
+
+      <!-- Save / approve errors (fail loud) -->
+      @if (saveErrorKey()) {
+        <div
+          data-testid="grading-detail-save-error"
+          class="grading-detail__error"
+          role="alert">
+          <p>{{ saveErrorKey() | translate }}</p>
+        </div>
+      }
+      @if (approveErrorKey()) {
+        <div
+          data-testid="grading-detail-approve-error"
+          class="grading-detail__error"
+          role="alert">
+          <p>{{ approveErrorKey() | translate }}</p>
+        </div>
+      }
+
+      <!-- Action bar -->
+      <footer class="grading-detail__actions">
+        @if (editingLocked()) {
+          <span
+            data-testid="grading-detail-approved-badge"
+            class="grading-detail__approved-badge">
+            {{ 'rplus.grading_queue.already_approved' | translate }}
+          </span>
+        } @else if (approvalRequired()) {
+          <button
+            type="button"
+            data-testid="grading-detail-save"
+            class="cta cta--neutral"
+            [disabled]="saving()"
+            (click)="save()">
+            {{ 'rplus.grading_queue.save_edits' | translate }}
+          </button>
+          <button
+            type="button"
+            data-testid="grading-detail-approve"
+            class="cta cta--primary"
+            [disabled]="approving() || saving()"
+            (click)="approve()">
+            {{ 'rplus.grading_queue.approve' | translate }}
+          </button>
+        } @else {
+          <!-- MCQ-only NotRequired / already-released: no human gate, no CTA. -->
+          <span
+            data-testid="grading-detail-no-review-needed"
+            class="grading-detail__no-review-needed">
+            {{ 'rplus.grading_queue.no_review_needed' | translate }}
+          </span>
+        }
+      </footer>
+    </div>
+  }
+</aside>

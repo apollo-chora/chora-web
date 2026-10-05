@@ -1,0 +1,96 @@
+<section
+  class="contributor-profile"
+  role="main"
+  [attr.aria-label]="'community.contributor_profile_title' | translate"
+  data-testid="contributor-profile">
+
+  <!-- Loading -->
+  @if (profileState().status === 'loading') {
+    <div class="contributor-profile__loading" data-testid="profile-loading" aria-live="polite">
+      <div class="contributor-profile__skeleton-header"></div>
+      <div class="contributor-profile__skeleton-stats"></div>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (profileState().status === 'error') {
+    <div class="contributor-profile__error" data-testid="profile-error" role="alert">
+      <p class="contributor-profile__error-text">
+        {{ 'community.profile_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Profile Content -->
+  @if (profileState().status === 'success' && profile()) {
+    <!-- Profile Header -->
+    <header class="contributor-profile__header" data-testid="profile-header">
+      <div class="contributor-profile__avatar" data-testid="profile-avatar" aria-hidden="true">
+        {{ profile()!.display_name.charAt(0).toUpperCase() }}
+      </div>
+      <div class="contributor-profile__identity">
+        <h1 class="contributor-profile__name" data-testid="profile-name">
+          {{ profile()!.display_name }}
+        </h1>
+        <span
+          class="contributor-profile__level"
+          [class]="levelClass()"
+          data-testid="profile-level">
+          {{ levelLabels[profile()!.level] | translate }}
+        </span>
+        <span class="contributor-profile__member-since" data-testid="profile-member-since">
+          {{ 'community.member_since' | translate }}: {{ formatDate(profile()!.created_at) }}
+        </span>
+      </div>
+    </header>
+
+    <!-- Reputation Score -->
+    <div class="contributor-profile__reputation" data-testid="profile-reputation">
+      <span class="contributor-profile__reputation-value">
+        {{ profile()!.reputation_score }}
+      </span>
+      <span class="contributor-profile__reputation-label">
+        {{ 'community.reputation_score' | translate }}
+      </span>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="contributor-profile__stats" data-testid="profile-stats">
+      <div class="contributor-profile__stat-card" data-testid="stat-submitted">
+        <span class="contributor-profile__stat-value">
+          {{ profile()!.atoms_submitted }}
+        </span>
+        <span class="contributor-profile__stat-label">
+          {{ 'community.atoms_submitted' | translate }}
+        </span>
+      </div>
+
+      <div class="contributor-profile__stat-card" data-testid="stat-approved">
+        <span class="contributor-profile__stat-value">
+          {{ profile()!.atoms_approved }}
+        </span>
+        <span class="contributor-profile__stat-label">
+          {{ 'community.atoms_approved' | translate }}
+        </span>
+      </div>
+
+      <div class="contributor-profile__stat-card" data-testid="stat-approval-rate">
+        <span class="contributor-profile__stat-value">
+          {{ approvalRate() }}%
+        </span>
+        <span class="contributor-profile__stat-label">
+          {{ 'community.approval_rate' | translate }}
+        </span>
+      </div>
+
+      <div class="contributor-profile__stat-card" data-testid="stat-reviews">
+        <span class="contributor-profile__stat-value">
+          {{ profile()!.reviews_completed }}
+        </span>
+        <span class="contributor-profile__stat-label">
+          {{ 'community.reviews_completed' | translate }}
+        </span>
+      </div>
+    </div>
+  }
+</section>

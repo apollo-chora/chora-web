@@ -1,0 +1,138 @@
+<div
+  class="goal-picker-backdrop"
+  role="presentation"
+  tabindex="-1"
+  data-testid="goal-picker-backdrop"
+  (click)="onCancel()">
+  <!-- Keydown (Escape + focus trap) is bound on the PANEL, not the backdrop:
+       focus lives inside the panel, so a backdrop-level handler would never see
+       it (the panel would have to re-bubble, which click-stop prevents). -->
+  <div
+    #dialogPanel
+    class="goal-picker glass-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="goal-picker-title"
+    aria-describedby="goal-picker-subtitle"
+    tabindex="-1"
+    data-testid="goal-picker"
+    (click)="$event.stopPropagation()"
+    (keydown)="onKeydown($event)">
+    <h2 id="goal-picker-title" class="goal-picker__title">
+      {{ 'aplus.dashboard.goal.picker_title' | translate }}
+    </h2>
+    <p id="goal-picker-subtitle" class="goal-picker__subtitle">
+      {{ 'aplus.dashboard.goal.picker_subtitle' | translate }}
+    </p>
+
+    <form
+      class="goal-picker__form"
+      [formGroup]="form"
+      (submit)="$event.preventDefault(); onSubmit()">
+      <label class="goal-picker__field">
+        <span class="goal-picker__label">
+          {{ 'aplus.dashboard.goal.kind_label' | translate }}
+        </span>
+        <select
+          class="form-control"
+          formControlName="kind"
+          data-testid="goal-picker-kind">
+          @for (k of GOAL_KINDS; track k) {
+            <option [value]="k">
+              {{ 'aplus.dashboard.goal.kind_' + k | translate }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <label class="goal-picker__field">
+        <span class="goal-picker__label">
+          @if (requiresTarget) {
+            {{ 'aplus.dashboard.goal.target_label' | translate }}
+          } @else {
+            {{ 'aplus.dashboard.goal.topic_label' | translate }}
+          }
+        </span>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="target"
+          maxlength="160"
+          [placeholder]="
+            (requiresTarget
+              ? 'aplus.dashboard.goal.target_placeholder'
+              : 'aplus.dashboard.goal.topic_placeholder'
+            ) | translate
+          "
+          [attr.aria-describedby]="
+            submitError() ? 'goal-picker-error' : 'goal-picker-target-hint'
+          "
+          data-testid="goal-picker-target" />
+        <span
+          id="goal-picker-target-hint"
+          class="goal-picker__hint"
+          data-testid="goal-picker-target-hint">
+          @if (requiresTarget) {
+            {{ 'aplus.dashboard.goal.target_hint' | translate }}
+          } @else {
+            {{ 'aplus.dashboard.goal.topic_hint' | translate }}
+          }
+        </span>
+      </label>
+
+      <label class="goal-picker__field">
+        <span class="goal-picker__label">
+          {{ 'aplus.dashboard.goal.note_label' | translate }}
+        </span>
+        <textarea
+          class="form-control goal-picker__note"
+          formControlName="northStarNote"
+          rows="2"
+          maxlength="280"
+          [placeholder]="'aplus.dashboard.goal.note_placeholder' | translate"
+          data-testid="goal-picker-note"></textarea>
+      </label>
+
+      @if (submitError(); as err) {
+        <p
+          id="goal-picker-error"
+          class="goal-picker__error"
+          role="alert"
+          data-testid="goal-picker-error">
+          @switch (err.kind) {
+            @case ('invalid_goal') {
+              {{ 'aplus.dashboard.goal.err_invalid' | translate }}
+            }
+            @case ('service_unavailable') {
+              {{ 'aplus.dashboard.goal.err_unavailable' | translate }}
+            }
+            @default {
+              {{ 'aplus.dashboard.goal.err_unknown' | translate }}
+            }
+          }
+        </p>
+      }
+
+      <div class="goal-picker__actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="submitting()"
+          (click)="onCancel()"
+          data-testid="goal-picker-cancel">
+          {{ 'aplus.dashboard.goal.cancel' | translate }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="form.invalid || submitting()"
+          data-testid="goal-picker-submit">
+          @if (submitting()) {
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+          }
+          {{ 'aplus.dashboard.goal.submit' | translate }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

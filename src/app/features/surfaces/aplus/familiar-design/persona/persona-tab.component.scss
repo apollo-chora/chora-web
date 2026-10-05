@@ -1,0 +1,211 @@
+@use '../../../../../../styles/breed-accents';
+
+:host {
+  display: block;
+}
+
+.persona {
+  &__intro {
+    margin-bottom: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    margin: 0 0 var(--chora-space-xs, 4px);
+    font-size: 1.25rem;
+  }
+
+  &__lede {
+    margin: 0;
+    color: var(--text-muted, #6b7280);
+    font-size: 0.9rem;
+  }
+
+  &__status {
+    color: var(--text-muted, #6b7280);
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__error {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+    align-items: flex-start;
+    padding: var(--chora-space-md, 16px);
+    border: 1px solid var(--breed-accent-border, rgba(220, 38, 38, 0.3));
+    border-radius: var(--chora-radius-md, 12px);
+    background: var(--breed-accent-soft, rgba(220, 38, 38, 0.06));
+  }
+
+  // Typed-knob grid — 1 col (tablet) → 2 col (desktop enhance).
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--chora-space-md, 16px);
+    margin-bottom: var(--chora-space-lg, 24px);
+
+    @media (min-width: 1280px) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-strong, #374151);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  &__select,
+  &__input {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.15));
+    border-radius: var(--chora-radius-sm, 8px);
+    background: var(--surface-1, rgba(255, 255, 255, 0.7));
+    font-size: 0.95rem;
+    color: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--breed-accent, #1976d2);
+      outline-offset: 1px;
+    }
+
+    &--invalid {
+      border-color: var(--danger, #dc2626);
+    }
+  }
+
+  &__range {
+    width: 100%;
+    accent-color: var(--breed-accent, #1976d2);
+  }
+
+  &__hint {
+    font-size: 0.78rem;
+    color: var(--text-muted, #6b7280);
+
+    &--err {
+      color: var(--danger, #dc2626);
+    }
+  }
+
+  &__count {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted, #6b7280);
+
+    &--over {
+      color: var(--danger, #dc2626);
+      font-weight: 700;
+    }
+  }
+
+  // Interest chips
+  &__chips {
+    border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.12));
+    border-radius: var(--chora-radius-md, 12px);
+    padding: var(--chora-space-md, 16px);
+    margin: 0 0 var(--chora-space-lg, 24px);
+  }
+
+  &__chip-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-xs, 4px);
+    margin: 0 0 var(--chora-space-sm, 8px);
+    padding: 0;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: 2px var(--chora-space-sm, 8px);
+    border-radius: 999px;
+    background: var(--breed-accent-soft, rgba(25, 118, 210, 0.1));
+    color: var(--breed-accent-strong, #1565c0);
+    font-size: 0.85rem;
+  }
+
+  &__chip-x {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    color: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--breed-accent, #1976d2);
+    }
+  }
+
+  &__chip-add {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+
+    .persona__input {
+      flex: 1;
+    }
+  }
+
+  // Guidance note
+  &__note-field {
+    margin-bottom: var(--chora-space-lg, 24px);
+  }
+
+  &__note {
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.15));
+    border-radius: var(--chora-radius-sm, 8px);
+    background: var(--surface-1, rgba(255, 255, 255, 0.7));
+    font: inherit;
+    resize: vertical;
+
+    &:focus-visible {
+      outline: 2px solid var(--breed-accent, #1976d2);
+      outline-offset: 1px;
+    }
+
+    &--over {
+      border-color: var(--danger, #dc2626);
+    }
+  }
+
+  &__note-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--chora-space-xs, 4px);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__version {
+    color: var(--text-muted, #6b7280);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .persona__select,
+  .persona__input,
+  .persona__note {
+    transition: none;
+  }
+}

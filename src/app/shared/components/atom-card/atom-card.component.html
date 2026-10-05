@@ -1,0 +1,64 @@
+<article
+  class="atom-card"
+  [class.atom-card--compact]="compact()"
+  role="listitem"
+  tabindex="0"
+  [attr.aria-label]="title() + ', ' + typeLabel() + ', difficulty ' + atom().difficulty + ' of 5'"
+  [attr.data-testid]="'atom-card-' + atom().id"
+  (click)="onSelect()"
+  (keydown)="onKeydown($event)">
+
+  <div class="atom-card__header">
+    <span
+      class="atom-card__type-icon"
+      [attr.data-icon]="typeIcon()"
+      [attr.aria-label]="typeLabel()"
+      aria-hidden="true"></span>
+    <span class="atom-card__type-label">{{ typeLabel() }}</span>
+    @if (atom().status !== 'published') {
+      <span
+        class="atom-card__status-badge"
+        [class.atom-card__status-badge--draft]="atom().status === 'draft'"
+        [class.atom-card__status-badge--archived]="atom().status === 'archived'"
+        data-testid="atom-card-status">
+        {{ atom().status }}
+      </span>
+    }
+  </div>
+
+  <h3 class="atom-card__title" data-testid="atom-card-title">{{ title() }}</h3>
+
+  @if (!compact()) {
+    <div class="atom-card__meta">
+      <div
+        class="atom-card__difficulty"
+        role="img"
+        [attr.aria-label]="'Difficulty ' + atom().difficulty + ' of 5'">
+        @for (filled of difficultyStars(); track $index) {
+          <span
+            class="atom-card__star"
+            [class.atom-card__star--filled]="filled"
+            aria-hidden="true">★</span>
+        }
+      </div>
+
+      @if (atom().tags.length > 0) {
+        <div class="atom-card__tags" data-testid="atom-card-tags">
+          @for (tag of atom().tags; track tag) {
+            <span class="atom-card__tag">{{ tag }}</span>
+          }
+        </div>
+      }
+    </div>
+
+    @if (difficultyScore() !== null || qualityScore() !== null || bloomsLevel() !== null) {
+      <div class="atom-card__quality" data-testid="atom-card-quality">
+        <chora-quality-badge
+          [difficultyScore]="difficultyScore()"
+          [qualityScore]="qualityScore()"
+          [bloomsLevel]="bloomsLevel()"
+          [compact]="true" />
+      </div>
+    }
+  }
+</article>

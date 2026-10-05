@@ -1,0 +1,108 @@
+<section
+  class="me-transcript aplus-hub-page surface-aplus"
+  aria-labelledby="me-transcript-heading"
+  data-testid="me-transcript">
+  <chora-courses-sub-nav />
+  <header class="me-transcript__header">
+    <h1 id="me-transcript-heading" class="me-transcript__title">
+      {{ 'aplus.me_transcript.list.heading' | translate }}
+    </h1>
+    <p class="me-transcript__subtitle">
+      {{ 'aplus.me_transcript.list.subtitle' | translate }}
+    </p>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div
+        class="me-transcript__loading glass-panel"
+        role="status"
+        aria-busy="true"
+        data-testid="me-transcript-loading">
+        <p>{{ 'aplus.me_transcript.list.loading' | translate }}</p>
+        <div class="me-transcript__skeleton-rows" aria-hidden="true">
+          <div class="me-transcript__skeleton-row"></div>
+          <div class="me-transcript__skeleton-row"></div>
+          <div class="me-transcript__skeleton-row"></div>
+        </div>
+      </div>
+    }
+    @case ('error') {
+      <div
+        class="me-transcript__error glass-panel"
+        role="alert"
+        data-testid="me-transcript-error">
+        <p>{{ errorKey() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-testid="me-transcript-retry"
+          (click)="retry()">
+          {{ 'aplus.me_transcript.list.retry' | translate }}
+        </button>
+      </div>
+    }
+    @case ('success') {
+      @if (isEmpty()) {
+        <div
+          class="me-transcript__empty glass-panel"
+          role="status"
+          data-testid="me-transcript-empty">
+          <i class="fa-solid fa-scroll" aria-hidden="true"></i>
+          <p>{{ 'aplus.me_transcript.list.empty' | translate }}</p>
+        </div>
+      } @else {
+        <ul class="me-transcript__rows" data-testid="me-transcript-rows">
+          @for (row of rows(); track row.entryId) {
+            <li
+              class="me-transcript__row glass-panel"
+              [attr.data-testid]="'me-transcript-row-' + row.entryId">
+              <div class="me-transcript__row-main">
+                <div class="me-transcript__row-titles">
+                  <span
+                    class="me-transcript__chip me-transcript__chip--kind"
+                    data-testid="me-transcript-row-kind"
+                    [attr.data-kind]="row.kind">
+                    {{ ('aplus.me_transcript.list.kind_' + row.kind) | translate }}
+                  </span>
+                  <h2
+                    class="me-transcript__row-title"
+                    data-testid="me-transcript-row-title">
+                    {{ row.title }}
+                  </h2>
+                </div>
+                <dl class="me-transcript__meta">
+                  <div>
+                    <dt>{{ 'aplus.me_transcript.list.date' | translate }}</dt>
+                    <dd data-testid="me-transcript-row-date">
+                      {{ row.dateDisplay }}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+              <div class="me-transcript__row-outcome">
+                <span
+                  class="me-transcript__score"
+                  data-testid="me-transcript-row-score">
+                  {{ row.scoreDisplay }}
+                </span>
+                @if (row.passState) {
+                  <span
+                    class="me-transcript__chip me-transcript__chip--pass"
+                    data-testid="me-transcript-row-pass"
+                    [attr.data-pass]="row.passState">
+                    @if (row.passState === 'pass') {
+                      {{ 'aplus.me_transcript.list.pass_passed' | translate }}
+                    } @else {
+                      {{ 'aplus.me_transcript.list.pass_failed' | translate }}
+                    }
+                  </span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

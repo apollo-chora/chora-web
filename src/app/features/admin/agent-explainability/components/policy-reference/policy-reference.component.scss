@@ -1,0 +1,64 @@
+:host {
+  display: block;
+}
+
+.policy-reference {
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0 0 var(--chora-space-sm, 8px);
+  }
+
+  &__empty {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__item {
+    padding: var(--chora-space-sm, 8px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-sm, 4px);
+    border-inline-start: 3px solid var(--chora-color-primary, #2563eb);
+  }
+
+  &__item-header {
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__item-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  &__item-description {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    margin: 0 0 var(--chora-space-xs, 4px);
+    color: var(--chora-color-text, #333);
+  }
+
+  &__trigger {
+    display: flex;
+    gap: var(--chora-space-xs, 4px);
+    font-size: 0.75rem;
+  }
+
+  &__trigger-label {
+    font-weight: 600;
+    color: var(--chora-color-text-muted, #666);
+    flex-shrink: 0;
+  }
+
+  &__trigger-text {
+    color: var(--chora-color-text, #333);
+  }
+}

@@ -1,0 +1,30 @@
+<div
+  class="grew-celebration glass-panel"
+  role="status"
+  aria-live="polite"
+  data-testid="grew-celebration"
+>
+  <span class="grew-celebration__icon" aria-hidden="true">🌱</span>
+
+  <div class="grew-celebration__body">
+    <p class="grew-celebration__title">{{ 'aplus.growth_edges.grew_title' | translate }}</p>
+    <p class="grew-celebration__message">
+      <strong>{{ conceptLabel() }}</strong> {{ 'aplus.growth_edges.grew_body' | translate }}
+    </p>
+    @if (extraCount() > 0) {
+      <span class="grew-celebration__more" data-testid="grew-celebration-more">
+        +{{ extraCount() }} {{ 'aplus.growth_edges.grew_more' | translate }}
+      </span>
+    }
+  </div>
+
+  <button
+    type="button"
+    class="grew-celebration__dismiss"
+    data-testid="grew-celebration-dismiss"
+    [attr.aria-label]="'aplus.growth_edges.grew_dismiss' | translate"
+    (click)="dismiss()"
+  >
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>

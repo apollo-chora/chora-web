@@ -1,0 +1,154 @@
+<section
+  class="application-start"
+  role="main"
+  [attr.aria-label]="'admissions.application_title' | translate"
+  data-testid="application-start">
+
+  <!-- Header -->
+  <header class="application-start__header">
+    <h1 class="application-start__title" data-testid="application-title">
+      {{ 'admissions.application_title' | translate }}
+    </h1>
+    <p class="application-start__subtitle">
+      {{ 'admissions.application_subtitle' | translate }}
+    </p>
+  </header>
+
+  @if (loading()) {
+    <div class="application-start__loading" aria-live="polite" data-testid="application-loading">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="application-start__skeleton-step"></div>
+      }
+    </div>
+  }
+
+  @if (!loading()) {
+    <!-- Application Overview -->
+    @if (application(); as app) {
+      <div class="application-start__overview" data-testid="application-overview">
+        <h2 class="application-start__pipeline-name">{{ app.pipeline_name }}</h2>
+        @if (app.programme_name) {
+          <p class="application-start__programme">{{ app.programme_name }}</p>
+        }
+
+        <div class="application-start__meta">
+          <span class="application-start__meta-item">
+            {{ 'admissions.stages_total' | translate }}: {{ app.stages.length }}
+          </span>
+          <span class="application-start__meta-item">
+            {{ 'admissions.estimated_time' | translate }}: {{ estimatedMinutes() }}
+            {{ 'admissions.minutes' | translate }}
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- Vertical Stepper -->
+    <div
+      class="application-start__stepper"
+      role="list"
+      [attr.aria-label]="'admissions.stage_stepper' | translate"
+      data-testid="stage-stepper">
+      @for (stage of stages(); track trackByStageId($index, stage)) {
+        <div
+          class="application-start__step"
+          [class.application-start__step--active]="stage.status === 'active'"
+          [class.application-start__step--completed]="stage.status === 'completed'"
+          [class.application-start__step--pending]="stage.status === 'pending'"
+          [class.application-start__step--timed-out]="stage.status === 'timed_out'"
+          role="listitem"
+          [attr.aria-current]="stage.status === 'active' ? 'step' : null"
+          [attr.data-testid]="'step-' + $index">
+
+          <!-- Step Indicator -->
+          <div class="application-start__step-indicator">
+            <div class="application-start__step-icon">
+              @switch (stage.status) {
+                @case ('completed') {
+                  <span aria-hidden="true" class="application-start__icon application-start__icon--check">&#10003;</span>
+                }
+                @case ('active') {
+                  <span aria-hidden="true" class="application-start__icon application-start__icon--active">{{ $index + 1 }}</span>
+                }
+                @case ('timed_out') {
+                  <span aria-hidden="true" class="application-start__icon application-start__icon--timeout">&#9888;</span>
+                }
+                @default {
+                  <span aria-hidden="true" class="application-start__icon application-start__icon--lock">&#128274;</span>
+                }
+              }
+            </div>
+            @if ($index < stages().length - 1) {
+              <div class="application-start__step-connector"
+                   [class.application-start__step-connector--completed]="stage.status === 'completed'"></div>
+            }
+          </div>
+
+          <!-- Step Content -->
+          <div class="application-start__step-content">
+            <div class="application-start__step-header">
+              <h3 class="application-start__step-title">
+                {{ stage.name }}
+              </h3>
+              @if (!stage.required) {
+                <span class="application-start__optional-badge">
+                  {{ 'admissions.optional' | translate }}
+                </span>
+              }
+            </div>
+
+            <p class="application-start__step-status">
+              {{ stageStatusLabels[stage.status] | translate }}
+            </p>
+
+            @if (stage.status === 'active' && stage.timeout_deadline) {
+              <div class="application-start__countdown" data-testid="countdown"
+                   role="timer" [attr.aria-label]="'admissions.time_remaining' | translate">
+                <span class="application-start__countdown-label">
+                  {{ 'admissions.time_remaining' | translate }}:
+                </span>
+                <span class="application-start__countdown-value">
+                  {{ getTimeRemaining(stage) }}
+                </span>
+              </div>
+            }
+
+            @if (isStageAccessible(stage)) {
+              <button
+                type="button"
+                class="application-start__stage-btn"
+                (click)="navigateToStage(stage)"
+                [attr.data-testid]="'go-to-stage-' + $index"
+                [attr.aria-label]="stage.name + ' - ' + (stageStatusLabels[stage.status] | translate)">
+                @if (stage.status === 'completed') {
+                  {{ 'admissions.review' | translate }}
+                } @else {
+                  {{ 'admissions.continue' | translate }}
+                }
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Start Button (when no application yet) -->
+    @if (!hasStarted()) {
+      <div class="application-start__start-section" data-testid="start-section">
+        <button
+          type="button"
+          class="application-start__start-btn"
+          [disabled]="starting()"
+          (click)="startApplication()"
+          data-testid="start-btn"
+          [attr.aria-label]="'admissions.start_application' | translate">
+          @if (starting()) {
+            {{ 'admissions.starting' | translate }}
+          } @else {
+            {{ 'admissions.start_application' | translate }}
+          }
+        </button>
+      </div>
+    }
+  }
+</section>

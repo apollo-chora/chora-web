@@ -1,0 +1,139 @@
+<section
+  class="study-lists aplus-hub-page surface-aplus"
+  aria-labelledby="study-lists-heading"
+  data-testid="study-lists">
+  <chora-courses-sub-nav />
+
+  <header class="study-lists__header glass-panel">
+    <div class="study-lists__header-content">
+      <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+      <div>
+        <h1 id="study-lists-heading" class="study-lists__title">
+          {{ 'aplus.study.lists_title' | translate }}
+        </h1>
+        <p class="study-lists__subtitle">
+          {{ 'aplus.study.lists_subtitle' | translate }}
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <chora-study-sub-nav />
+
+  @switch (state().status) {
+
+    @case ('loading') {
+      <div
+        class="glass-panel study-lists__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="study-lists-loading">
+        <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        <span>{{ 'aplus.study.loading' | translate }}</span>
+      </div>
+    }
+
+    @case ('error') {
+      <div
+        class="glass-panel study-lists__error"
+        role="alert"
+        data-testid="study-lists-error">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <div>
+          <p class="study-lists__error-message" data-testid="study-lists-error-msg">
+            {{ errorKey() | translate }}
+          </p>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="retryLoad()"
+            data-testid="study-lists-retry">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            {{ 'aplus.study.retry' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    @case ('success') {
+      @if (isEmpty()) {
+        <div class="glass-panel study-lists__empty" data-testid="study-lists-empty">
+          <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+          <h2 class="study-lists__empty-heading">
+            {{ 'aplus.study.empty_heading' | translate }}
+          </h2>
+          <p class="study-lists__empty-hint">
+            {{ 'aplus.study.empty_hint' | translate }}
+          </p>
+        </div>
+      } @else {
+        <ul
+          class="study-lists__grid"
+          [attr.aria-label]="'aplus.study.lists_title' | translate"
+          data-testid="study-lists-grid">
+          @for (path of studyLists(); track path.path_id) {
+            <li
+              class="study-lists__card glass-panel"
+              [attr.data-testid]="'study-list-card-' + path.path_id">
+
+              <div class="study-lists__card-header">
+                <h2
+                  class="study-lists__card-title"
+                  [attr.data-testid]="'study-list-title-' + path.path_id">
+                  {{ path.title }}
+                </h2>
+                <span
+                  class="study-lists__atom-badge"
+                  [attr.data-testid]="'study-list-atoms-' + path.path_id">
+                  <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+                  <!-- The translate service does {{token}} substitution only —
+                       no ICU plurals — so the count selects the key. Without
+                       this a one-atom list reads "1 atoms". -->
+                  {{
+                    (path.total_atoms === 1
+                      ? 'aplus.study.card_atom_count_one'
+                      : 'aplus.study.card_atom_count_other'
+                    ) | translate: { count: path.total_atoms }
+                  }}
+                </span>
+              </div>
+
+              <!--
+                🔴 ADR-233 D3. No progress bar, no "n of m", no Continue: this
+                path is spaced, its cursor is inert and Advance() refuses on it.
+                The dose is the honoured action, so it is the CTA.
+              -->
+              <p
+                class="study-lists__dose-hint"
+                [attr.data-testid]="'study-list-dose-hint-' + path.path_id">
+                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                {{ 'aplus.study.card_dose_hint' | translate }}
+              </p>
+
+              <div class="study-lists__card-actions">
+                <a
+                  routerLink="/a/daily-dose"
+                  class="btn btn-primary"
+                  [attr.aria-label]="'aplus.study.card_dose_cta_aria' | translate: { title: path.title }"
+                  [attr.data-testid]="'study-list-dose-cta-' + path.path_id">
+                  {{ 'aplus.study.card_dose_cta' | translate }}
+                </a>
+                @if (path.source_id) {
+                  <a
+                    [routerLink]="['/a/study/collections', path.source_id]"
+                    class="btn btn-secondary"
+                    [attr.aria-label]="'aplus.study.card_source_cta_aria' | translate: { title: path.title }"
+                    [attr.data-testid]="'study-list-source-' + path.path_id">
+                    {{ 'aplus.study.card_source_cta' | translate }}
+                  </a>
+                }
+              </div>
+
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+
+</section>

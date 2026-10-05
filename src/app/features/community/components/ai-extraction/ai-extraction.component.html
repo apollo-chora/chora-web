@@ -1,0 +1,234 @@
+<section
+  class="ai-extraction"
+  [attr.aria-label]="'community.extraction.title' | translate"
+  data-testid="ai-extraction">
+
+  <header class="ai-extraction__header">
+    <h1 class="ai-extraction__title" data-testid="extraction-title">
+      {{ 'community.extraction.title' | translate }}
+    </h1>
+    <p class="ai-extraction__subtitle">
+      {{ 'community.extraction.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Upload zone (idle state) -->
+  @if (extractionState().status === 'idle') {
+    <div
+      class="ai-extraction__dropzone"
+      [class.ai-extraction__dropzone--active]="isDragOver()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+      data-testid="extraction-dropzone"
+      role="region"
+      [attr.aria-label]="'community.extraction.dropzone-label' | translate">
+      <p class="ai-extraction__dropzone-text">
+        {{ 'community.extraction.dropzone-text' | translate }}
+      </p>
+      <p class="ai-extraction__dropzone-hint">
+        {{ 'community.extraction.supported-formats' | translate }}
+      </p>
+      <label for="extraction-file-input" class="ai-extraction__browse-btn">
+        {{ 'community.extraction.browse' | translate }}
+      </label>
+      <input
+        id="extraction-file-input"
+        type="file"
+        class="ai-extraction__file-input"
+        accept=".pdf,.docx,.doc,.txt,.md"
+        (change)="onFileSelect($event)"
+        data-testid="extraction-file-input" />
+    </div>
+  }
+
+  <!-- Uploading / Processing -->
+  @if (extractionState().status === 'uploading' || extractionState().status === 'processing') {
+    <div class="ai-extraction__processing" data-testid="extraction-processing" role="status" aria-live="polite">
+      <div class="ai-extraction__spinner" aria-hidden="true"></div>
+      <p class="ai-extraction__processing-text">
+        @if (extractionState().status === 'uploading') {
+          {{ 'community.extraction.uploading' | translate }}
+        } @else {
+          {{ 'community.extraction.processing' | translate }}
+        }
+      </p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (extractionState().status === 'error') {
+    <div class="ai-extraction__error" data-testid="extraction-error" role="alert">
+      <p class="ai-extraction__error-text">
+        {{ 'community.extraction.error' | translate }}
+      </p>
+      <button
+        type="button"
+        class="ai-extraction__retry-btn"
+        (click)="onStartOver()"
+        data-testid="retry-btn">
+        {{ 'community.extraction.try-again' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Results: split-pane -->
+  @if (extractionState().status === 'success') {
+    <div class="ai-extraction__results-header">
+      <div class="ai-extraction__stats" role="status" aria-live="polite" data-testid="extraction-stats">
+        <span class="ai-extraction__stat">
+          {{ 'community.extraction.accepted' | translate }}: {{ acceptedCount() }}
+        </span>
+        <span class="ai-extraction__stat">
+          {{ 'community.extraction.rejected' | translate }}: {{ rejectedCount() }}
+        </span>
+        <span class="ai-extraction__stat">
+          {{ 'community.extraction.pending' | translate }}: {{ pendingCount() }}
+        </span>
+      </div>
+      <div class="ai-extraction__results-actions">
+        <button
+          type="button"
+          class="ai-extraction__submit-btn"
+          [disabled]="!canSubmitAccepted()"
+          (click)="onSubmitAccepted()"
+          data-testid="submit-accepted-btn">
+          {{ 'community.extraction.submit-accepted' | translate }}
+        </button>
+        <button
+          type="button"
+          class="ai-extraction__start-over-btn"
+          (click)="onStartOver()"
+          data-testid="start-over-btn">
+          {{ 'community.extraction.start-over' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div class="ai-extraction__split-pane">
+      <!-- Source document viewer -->
+      <aside class="ai-extraction__source-panel" data-testid="source-panel">
+        <h2 class="ai-extraction__panel-title">
+          {{ 'community.extraction.source-document' | translate }}
+        </h2>
+        <div class="ai-extraction__source-content">
+          <pre class="ai-extraction__source-text">{{ documentPreview() }}</pre>
+        </div>
+      </aside>
+
+      <!-- Extracted candidates -->
+      <main class="ai-extraction__candidates-panel" data-testid="candidates-panel">
+        <h2 class="ai-extraction__panel-title">
+          {{ 'community.extraction.candidates' | translate }}
+          ({{ candidates().length }})
+        </h2>
+
+        @if (candidates().length === 0) {
+          <div class="ai-extraction__no-candidates" role="status">
+            <p>{{ 'community.extraction.no-candidates' | translate }}</p>
+          </div>
+        } @else {
+          <div class="ai-extraction__candidate-list">
+            @for (candidate of candidates(); track candidate.id) {
+              <article
+                class="ai-extraction__candidate-card"
+                [class.ai-extraction__candidate-card--accepted]="candidate.status === 'accepted'"
+                [class.ai-extraction__candidate-card--rejected]="candidate.status === 'rejected'"
+                data-testid="candidate-card">
+
+                <!-- Candidate header -->
+                <div class="ai-extraction__candidate-header">
+                  <span class="ai-extraction__candidate-title">{{ candidate.title }}</span>
+                  <span class="ai-extraction__candidate-type">{{ candidate.atom_type }}</span>
+                  <span
+                    class="ai-extraction__confidence"
+                    [class]="getConfidenceClass(candidate.confidence)"
+                    data-testid="candidate-confidence">
+                    {{ candidate.confidence }}%
+                  </span>
+                </div>
+
+                <!-- Candidate content -->
+                @if (candidate.status !== 'editing') {
+                  <p class="ai-extraction__candidate-content">{{ candidate.content }}</p>
+                } @else {
+                  <div class="ai-extraction__edit-form">
+                    <label [attr.for]="'edit-' + candidate.id" class="ai-extraction__edit-label">
+                      {{ 'community.extraction.edit-content' | translate }}
+                    </label>
+                    <textarea
+                      [id]="'edit-' + candidate.id"
+                      class="ai-extraction__edit-textarea"
+                      [value]="candidate.edited_content ?? candidate.content"
+                      (input)="onEditContent(candidate.id, $event)"
+                      rows="4"
+                      data-testid="edit-textarea">
+                    </textarea>
+                  </div>
+                }
+
+                <!-- Tags -->
+                @if (candidate.tags.length > 0) {
+                  <div class="ai-extraction__candidate-tags">
+                    @for (tag of candidate.tags; track tag) {
+                      <span class="ai-extraction__candidate-tag">{{ tag }}</span>
+                    }
+                  </div>
+                }
+
+                <!-- Actions -->
+                <div class="ai-extraction__candidate-actions">
+                  @if (candidate.status === 'editing') {
+                    <button
+                      type="button"
+                      class="ai-extraction__action-btn ai-extraction__action-btn--save"
+                      (click)="saveEdit(candidate.id)"
+                      data-testid="save-edit-btn"
+                      [attr.aria-label]="'community.extraction.save-edit' | translate">
+                      {{ 'community.extraction.save' | translate }}
+                    </button>
+                    <button
+                      type="button"
+                      class="ai-extraction__action-btn ai-extraction__action-btn--cancel"
+                      (click)="cancelEdit(candidate.id)"
+                      data-testid="cancel-edit-btn"
+                      [attr.aria-label]="'community.extraction.cancel-edit' | translate">
+                      {{ 'community.extraction.cancel' | translate }}
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="ai-extraction__action-btn ai-extraction__action-btn--accept"
+                      [disabled]="candidate.status === 'accepted'"
+                      (click)="acceptCandidate(candidate.id)"
+                      data-testid="accept-btn"
+                      [attr.aria-label]="'community.extraction.accept' | translate">
+                      {{ 'community.extraction.accept' | translate }}
+                    </button>
+                    <button
+                      type="button"
+                      class="ai-extraction__action-btn ai-extraction__action-btn--reject"
+                      [disabled]="candidate.status === 'rejected'"
+                      (click)="rejectCandidate(candidate.id)"
+                      data-testid="reject-btn"
+                      [attr.aria-label]="'community.extraction.reject' | translate">
+                      {{ 'community.extraction.reject' | translate }}
+                    </button>
+                    <button
+                      type="button"
+                      class="ai-extraction__action-btn ai-extraction__action-btn--edit"
+                      (click)="startEditCandidate(candidate.id)"
+                      data-testid="edit-btn"
+                      [attr.aria-label]="'community.extraction.edit' | translate">
+                      {{ 'community.extraction.edit' | translate }}
+                    </button>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </main>
+    </div>
+  }
+</section>

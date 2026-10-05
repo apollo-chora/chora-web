@@ -1,0 +1,283 @@
+<section
+  class="topic-tree"
+  role="main"
+  [attr.aria-label]="'admin.topics.title' | translate"
+  data-testid="topic-tree">
+
+  <!-- Page Header -->
+  <header class="topic-tree__header">
+    <h1 class="topic-tree__title" data-testid="topic-tree-title">
+      {{ 'admin.topics.title' | translate }}
+    </h1>
+    <div class="topic-tree__actions">
+      <button
+        type="button"
+        class="topic-tree__btn-secondary"
+        (click)="toggleAtomPicker()"
+        data-testid="toggle-atom-picker"
+        [attr.aria-expanded]="atomPickerVisible()">
+        {{ 'admin.topics.atom_picker' | translate }}
+      </button>
+      <button
+        type="button"
+        class="topic-tree__btn-primary"
+        (click)="openCreateForm(null)"
+        data-testid="create-root-topic">
+        {{ 'admin.topics.create_topic' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="topic-tree__loading" data-testid="topic-tree-loading" aria-live="polite">
+      <div class="topic-tree__skeleton"></div>
+      <div class="topic-tree__skeleton"></div>
+      <div class="topic-tree__skeleton"></div>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="topic-tree__empty" data-testid="topic-tree-empty" aria-live="polite">
+      <p>{{ 'admin.topics.empty' | translate }}</p>
+      <button
+        type="button"
+        class="topic-tree__btn-primary"
+        (click)="openCreateForm(null)"
+        data-testid="create-first-topic">
+        {{ 'admin.topics.create_first' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Create Topic Form (inline) -->
+  @if (showCreateForm()) {
+    <div class="topic-tree__create-form" data-testid="create-topic-form">
+      <div class="topic-tree__create-fields">
+        <label for="new-topic-name" class="topic-tree__label">
+          {{ 'admin.topics.topic_name' | translate }}
+        </label>
+        <input
+          id="new-topic-name"
+          type="text"
+          class="topic-tree__input"
+          [ngModel]="newTopicName()"
+          (ngModelChange)="newTopicName.set($event)"
+          data-testid="new-topic-name"
+          [placeholder]="'admin.topics.name_placeholder' | translate"
+          (keydown.enter)="submitCreate()"
+          (keydown.escape)="cancelCreate()" />
+
+        <label for="new-topic-parent" class="topic-tree__label">
+          {{ 'admin.topics.parent' | translate }}
+        </label>
+        <select
+          id="new-topic-parent"
+          class="topic-tree__select"
+          [ngModel]="newTopicParentId()"
+          (ngModelChange)="newTopicParentId.set($event)"
+          data-testid="new-topic-parent">
+          <option [ngValue]="null">{{ 'admin.topics.root_level' | translate }}</option>
+          @for (topic of flatTopics(); track topic.id) {
+            <option [ngValue]="topic.id">
+              {{ '-'.repeat(topic.depth) }} {{ topic.name }}
+            </option>
+          }
+        </select>
+      </div>
+      <div class="topic-tree__create-actions">
+        <button
+          type="button"
+          class="topic-tree__btn-secondary"
+          (click)="cancelCreate()"
+          data-testid="cancel-create"
+          [disabled]="creating()">
+          {{ 'admin.topics.cancel' | translate }}
+        </button>
+        <button
+          type="button"
+          class="topic-tree__btn-primary"
+          (click)="submitCreate()"
+          data-testid="submit-create"
+          [disabled]="creating() || !newTopicName().trim()">
+          @if (creating()) {
+            {{ 'admin.topics.creating' | translate }}
+          } @else {
+            {{ 'admin.topics.create' | translate }}
+          }
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Main Content Area -->
+  <div class="topic-tree__content">
+    <!-- Tree Panel -->
+    <div class="topic-tree__tree-panel" data-testid="tree-panel">
+      @if (!loading() && topics().length > 0) {
+        <ul class="topic-tree__list" role="tree" aria-label="Topic tree">
+          @for (node of topics(); track node.id) {
+            <ng-template
+              [ngTemplateOutlet]="nodeTemplate"
+              [ngTemplateOutletContext]="{ $implicit: node, depth: 0 }">
+            </ng-template>
+          }
+        </ul>
+      }
+    </div>
+
+    <!-- Atom Picker Panel -->
+    @if (atomPickerVisible()) {
+      <aside
+        class="topic-tree__atom-picker"
+        data-testid="atom-picker-panel"
+        aria-label="Atom picker">
+        <h2 class="topic-tree__picker-title">
+          {{ 'admin.topics.available_atoms' | translate }}
+        </h2>
+        <input
+          type="search"
+          class="topic-tree__input"
+          [ngModel]="atomSearchTerm()"
+          (ngModelChange)="atomSearchTerm.set($event)"
+          (input)="onAtomSearchInput($event)"
+          data-testid="atom-search"
+          [placeholder]="'admin.topics.search_atoms' | translate" />
+
+        @if (atomPickerLoading()) {
+          <div class="topic-tree__picker-loading" aria-live="polite">
+            {{ 'admin.topics.loading_atoms' | translate }}
+          </div>
+        }
+
+        <ul class="topic-tree__atom-list">
+          @for (atom of atomPickerAtoms(); track atom.id) {
+            <li
+              class="topic-tree__atom-item"
+              draggable="true"
+              (dragstart)="onAtomDragStart($event, atom.id)"
+              [attr.data-testid]="'atom-picker-item-' + atom.id"
+              role="option"
+              aria-selected="false"
+              tabindex="0">
+              <span class="topic-tree__atom-icon material-icons" aria-hidden="true">
+                {{ getAtomTypeIcon(atom.atom_type) }}
+              </span>
+              <span class="topic-tree__atom-title">{{ getAtomTitle(atom) }}</span>
+            </li>
+          }
+        </ul>
+
+        @if (!atomPickerLoading() && atomPickerAtoms().length === 0) {
+          <p class="topic-tree__picker-empty">
+            {{ 'admin.topics.no_atoms' | translate }}
+          </p>
+        }
+      </aside>
+    }
+  </div>
+</section>
+
+<!-- Recursive Node Template -->
+<ng-template #nodeTemplate let-node let-depth="depth">
+  <li
+    class="topic-tree__node"
+    [class]="getDropClass(node.id)"
+    role="treeitem"
+    [attr.aria-expanded]="node.children?.length ? isExpanded(node.id) : null"
+    aria-selected="false"
+    [attr.data-testid]="'topic-node-' + node.id"
+    [style.padding-inline-start.px]="depth * 24"
+    draggable="true"
+    (dragstart)="onDragStart($event, node.id)"
+    (dragover)="onDragOver($event, node.id, 'inside')"
+    (dragleave)="onDragLeave()"
+    (drop)="onDrop($event, node.id)"
+    (dragend)="onDragEnd()">
+
+    <div class="topic-tree__node-content">
+      <!-- Expand/Collapse -->
+      @if (node.children?.length) {
+        <button
+          type="button"
+          class="topic-tree__toggle"
+          (click)="toggleExpand(node.id)"
+          [attr.aria-label]="(isExpanded(node.id) ? 'admin.topics.collapse' : 'admin.topics.expand') | translate"
+          [attr.data-testid]="'toggle-' + node.id">
+          <span class="topic-tree__toggle-icon" [class.topic-tree__toggle-icon--expanded]="isExpanded(node.id)">
+            &#9654;
+          </span>
+        </button>
+      } @else {
+        <span class="topic-tree__toggle-spacer"></span>
+      }
+
+      <!-- Node Name (editable) -->
+      @if (editingNodeId() === node.id) {
+        <input
+          type="text"
+          class="topic-tree__rename-input"
+          [ngModel]="editingName()"
+          (ngModelChange)="editingName.set($event)"
+          (keydown)="onRenameKeydown($event, node.id)"
+          (blur)="submitRename(node.id)"
+          [attr.data-testid]="'rename-input-' + node.id"
+          />
+      } @else {
+        <span
+          class="topic-tree__node-name"
+          (dblclick)="startRename(node)"
+          [attr.data-testid]="'node-name-' + node.id"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="startRename(node)"
+          [attr.aria-label]="node.name">
+          {{ node.name }}
+        </span>
+      }
+
+      <!-- Atom Count Badge -->
+      @if (node.atom_count !== null && node.atom_count > 0) {
+        <span
+          class="topic-tree__atom-badge"
+          [attr.data-testid]="'atom-count-' + node.id"
+          [attr.aria-label]="node.atom_count + ' atoms'">
+          {{ node.atom_count }}
+        </span>
+      }
+
+      <!-- Actions -->
+      <div class="topic-tree__node-actions">
+        <button
+          type="button"
+          class="topic-tree__btn-icon"
+          (click)="openCreateForm(node.id)"
+          [attr.aria-label]="'admin.topics.add_child' | translate"
+          [attr.data-testid]="'add-child-' + node.id">
+          +
+        </button>
+        <button
+          type="button"
+          class="topic-tree__btn-icon topic-tree__btn-icon--danger"
+          (click)="deleteTopic(node)"
+          [attr.aria-label]="'admin.topics.delete' | translate"
+          [attr.data-testid]="'delete-' + node.id">
+          &times;
+        </button>
+      </div>
+    </div>
+  </li>
+
+  <!-- Children (recursive) -->
+  @if (node.children?.length && isExpanded(node.id)) {
+    <ul class="topic-tree__children" role="group">
+      @for (child of node.children; track child.id) {
+        <ng-template
+          [ngTemplateOutlet]="nodeTemplate"
+          [ngTemplateOutletContext]="{ $implicit: child, depth: depth + 1 }">
+        </ng-template>
+      }
+    </ul>
+  }
+</ng-template>

@@ -1,0 +1,159 @@
+<section
+  data-testid="rplus-assessment-list"
+  class="surface-rplus assessment-list">
+  <header class="assessment-list__header">
+    <div class="assessment-list__header-text">
+      <h1 class="assessment-list__title">
+        {{ 'rplus.assessment_list.title' | translate }}
+      </h1>
+      <p class="assessment-list__subtitle">
+        {{ 'rplus.assessment_list.subtitle' | translate }}
+      </p>
+    </div>
+    <a
+      class="assessment-list__new-cta"
+      data-testid="assessment-list-new-cta"
+      routerLink="/r/assessments/new">
+      {{ 'rplus.assessment_list.new_cta' | translate }}
+    </a>
+  </header>
+
+  @if (isLoading()) {
+    <div
+      data-testid="assessment-list-loading"
+      class="assessment-list__loading"
+      aria-busy="true">
+      <p>{{ 'rplus.assessment_list.loading' | translate }}</p>
+    </div>
+  } @else if (isError()) {
+    <div
+      data-testid="assessment-list-error"
+      class="assessment-list__error"
+      role="alert">
+      <p>{{ errorKey() | translate }}</p>
+      <button
+        type="button"
+        data-testid="assessment-list-retry"
+        class="assessment-list__retry"
+        (click)="retry()">
+        {{ 'rplus.assessment_list.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    <!-- State filter: a set of toggle buttons, NOT a tablist. These chips
+         re-filter the list in place, own no tabpanel, and implement neither
+         roving tabindex nor arrow-key navigation, so tab semantics would be
+         a lie to a screen reader. `aria-pressed` carries the on/off state
+         (role=tab would demand aria-selected instead - carrying both is what
+         axe flagged as aria-allowed-attr, CRITICAL, live 2026-07-16). -->
+    <div
+      class="assessment-list__chips"
+      role="group"
+      aria-label="{{ 'rplus.assessment_list.filter_aria' | translate }}">
+      @for (chip of chips; track chip) {
+        <button
+          type="button"
+          data-testid="assessment-list-chip"
+          [attr.data-chip]="chip"
+          [attr.aria-pressed]="activeChip() === chip"
+          class="assessment-list__chip"
+          [class.assessment-list__chip--active]="activeChip() === chip"
+          (click)="selectChip(chip)">
+          {{ 'rplus.assessment_list.chip_' + chip | translate }}
+        </button>
+      }
+    </div>
+
+    <div class="assessment-list__search">
+      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+      <input
+        type="search"
+        class="assessment-list__search-input"
+        data-testid="assessment-list-search"
+        [value]="searchQuery()"
+        (input)="onSearchInput($any($event.target).value)"
+        [attr.placeholder]="'rplus.assessment_list.search_placeholder' | translate"
+        [attr.aria-label]="'rplus.assessment_list.search_label' | translate" />
+    </div>
+
+    @if (isEmpty()) {
+      <div
+        data-testid="assessment-list-empty"
+        class="assessment-list__empty">
+        <p>{{ 'rplus.assessment_list.empty' | translate }}</p>
+      </div>
+    } @else if (isFilterEmpty()) {
+      <div
+        data-testid="assessment-list-filter-empty"
+        class="assessment-list__filter-empty">
+        <p>{{ 'rplus.assessment_list.filter_empty' | translate }}</p>
+      </div>
+    } @else {
+      <div
+        data-testid="assessment-list-grid"
+        class="assessment-list__rows">
+        @for (a of visibleAssessments(); track a.assessment_id) {
+          <article
+            data-testid="assessment-list-card"
+            class="assessment-list__row">
+            <a
+              [routerLink]="['/r', 'assessments', a.assessment_id, 'monitor']"
+              class="assessment-list__row-link">
+              <div class="assessment-list__row-main">
+                <div class="assessment-list__row-titles">
+                  <h2
+                    data-testid="assessment-card-title"
+                    class="assessment-list__row-title">
+                    {{ a.title }}
+                  </h2>
+                  <span
+                    data-testid="assessment-card-state"
+                    [attr.data-state]="a.state"
+                    class="assessment-list__pill {{ badgeClass(a.state) }}">
+                    {{ 'rplus.assessment_state.' + a.state | translate }}
+                  </span>
+                </div>
+                <dl class="assessment-list__row-meta">
+                  <div class="assessment-list__row-meta-row">
+                    <dt>{{ 'rplus.assessment_list.cohort_size' | translate }}</dt>
+                    <dd data-testid="assessment-card-cohort-size">
+                      {{ a.invited_gcids?.length ?? 0 }}
+                    </dd>
+                  </div>
+                  <div class="assessment-list__row-meta-row">
+                    <dt>{{ 'rplus.assessment_list.questions' | translate }}</dt>
+                    <dd>{{ a.question_count }}</dd>
+                  </div>
+                  <div class="assessment-list__row-meta-row">
+                    <dt>{{ 'rplus.assessment_list.opens_at' | translate }}</dt>
+                    <dd data-testid="assessment-card-opens-at">
+                      {{ a.scheduled_open_at | date: 'medium' : 'UTC' }}
+                    </dd>
+                  </div>
+                  <div class="assessment-list__row-meta-row">
+                    <dt>{{ 'rplus.assessment_list.closes_at' | translate }}</dt>
+                    <dd data-testid="assessment-card-closes-at">
+                      {{ a.scheduled_close_at | date: 'medium' : 'UTC' }}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+              <i
+                class="fa-solid fa-chevron-right assessment-list__row-chevron"
+                aria-hidden="true"></i>
+            </a>
+          </article>
+        }
+      </div>
+      @if (hasMore()) {
+        <button
+          type="button"
+          class="assessment-list__load-more"
+          data-testid="assessment-list-load-more"
+          (click)="loadMore()">
+          {{ 'rplus.assessment_list.load_more' | translate }}
+        </button>
+      }
+    }
+  }
+</section>

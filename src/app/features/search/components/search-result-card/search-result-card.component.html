@@ -1,0 +1,57 @@
+<article
+  class="search-result-card"
+  [attr.aria-label]="hit().title"
+  data-testid="search-result-card">
+
+  <!-- Header: Title + Badges -->
+  <div class="search-result-card__header">
+    <h3 class="search-result-card__title" data-testid="result-title">
+      {{ hit().title }}
+    </h3>
+    <div class="search-result-card__badges">
+      <span
+        class="search-result-card__type-badge"
+        data-testid="result-type-badge">
+        {{ typeLabel() | translate }}
+      </span>
+      <span
+        class="search-result-card__difficulty"
+        [class]="difficultyClass()"
+        data-testid="result-difficulty-badge"
+        [attr.aria-label]="difficultyLabel() | translate">
+        {{ hit().difficulty }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Content Excerpt with Highlighting -->
+  @if (hasExcerpt()) {
+    <p
+      class="search-result-card__excerpt"
+      data-testid="result-excerpt"
+      [innerHTML]="hit().content_excerpt">
+    </p>
+  }
+
+  <!-- Topic Tags -->
+  @if (hasTopics()) {
+    <div class="search-result-card__topics" data-testid="result-topics">
+      @for (topic of hit().topic_names!; track topic) {
+        <span class="search-result-card__topic-tag" data-testid="result-topic-tag">
+          {{ topic }}
+        </span>
+      }
+    </div>
+  }
+
+  <!-- Labels -->
+  @if (hasLabels()) {
+    <div class="search-result-card__labels" data-testid="result-labels">
+      @for (label of hit().labels!; track label) {
+        <span class="search-result-card__label-tag" data-testid="result-label-tag">
+          #{{ label }}
+        </span>
+      }
+    </div>
+  }
+</article>

@@ -1,0 +1,233 @@
+<section class="session-creation" data-testid="session-creation">
+  <header class="session-creation__header">
+    <h1 class="session-creation__title">{{ 'training.session-creation.title' | translate }}</h1>
+  </header>
+
+  <!-- Session details form -->
+  <div class="session-creation__form" data-testid="session-form">
+    <div class="session-creation__field">
+      <label for="session-title" class="session-creation__label">
+        {{ 'training.session-creation.session-title' | translate }}
+      </label>
+      <input
+        id="session-title"
+        type="text"
+        class="session-creation__input"
+        [ngModel]="title()"
+        (ngModelChange)="title.set($event)"
+        data-testid="session-title-input"
+        required />
+    </div>
+
+    <div class="session-creation__field">
+      <label for="session-description" class="session-creation__label">
+        {{ 'training.session-creation.description' | translate }}
+      </label>
+      <textarea
+        id="session-description"
+        class="session-creation__textarea"
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        rows="3"
+        data-testid="session-description-input">
+      </textarea>
+    </div>
+
+    <div class="session-creation__row">
+      <div class="session-creation__field">
+        <label for="session-date" class="session-creation__label">
+          {{ 'training.session-creation.scheduled-at' | translate }}
+        </label>
+        <input
+          id="session-date"
+          type="datetime-local"
+          class="session-creation__input"
+          [ngModel]="scheduledAt()"
+          (ngModelChange)="scheduledAt.set($event)"
+          data-testid="session-date-input"
+          required />
+      </div>
+
+      <div class="session-creation__field">
+        <label for="session-duration" class="session-creation__label">
+          {{ 'training.session-creation.duration' | translate }}
+        </label>
+        <input
+          id="session-duration"
+          type="number"
+          class="session-creation__input session-creation__input--narrow"
+          [ngModel]="durationMinutes()"
+          (ngModelChange)="durationMinutes.set($event)"
+          min="15"
+          max="480"
+          data-testid="session-duration-input" />
+      </div>
+
+      <div class="session-creation__field">
+        <label for="session-participants" class="session-creation__label">
+          {{ 'training.session-creation.max-participants' | translate }}
+        </label>
+        <input
+          id="session-participants"
+          type="number"
+          class="session-creation__input session-creation__input--narrow"
+          [ngModel]="maxParticipants()"
+          (ngModelChange)="maxParticipants.set($event)"
+          min="1"
+          max="500"
+          data-testid="session-participants-input" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-panel layout: Atom browser + Agenda -->
+  <div class="session-creation__panels" data-testid="session-panels">
+    <!-- Atom browser panel -->
+    <div class="session-creation__browser" data-testid="atom-browser">
+      <h2 class="session-creation__panel-title">{{ 'training.session-creation.atom-browser' | translate }}</h2>
+      <div class="session-creation__search">
+        <label for="atom-search" class="session-creation__sr-only">{{ 'training.session-creation.search-atoms' | translate }}</label>
+        <input
+          id="atom-search"
+          type="search"
+          class="session-creation__search-input"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          (keyup.enter)="searchAtoms()"
+          [attr.placeholder]="'training.session-creation.search-placeholder' | translate"
+          data-testid="atom-search-input" />
+        <button
+          class="session-creation__search-btn"
+          (click)="searchAtoms()"
+          type="button"
+          data-testid="atom-search-btn"
+          [attr.aria-label]="'training.session-creation.search' | translate">
+          {{ 'training.session-creation.search' | translate }}
+        </button>
+      </div>
+
+      @if (atomSearchState().status === 'loading') {
+        <p class="session-creation__browser-status" role="status">{{ 'training.session-creation.searching' | translate }}</p>
+      }
+
+      <ul class="session-creation__atom-list" role="list" data-testid="atom-results">
+        @for (atom of atomResults(); track atom.id) {
+          <li class="session-creation__atom-item">
+            <div class="session-creation__atom-info">
+              <span class="session-creation__atom-name">{{ atom.title }}</span>
+              <span class="session-creation__atom-meta">{{ atom.type }} &middot; {{ atom.topic_name }}</span>
+            </div>
+            <button
+              class="session-creation__atom-add"
+              [disabled]="isAtomInAgenda(atom.id)"
+              (click)="addAtomToAgenda(atom)"
+              type="button"
+              [attr.data-testid]="'add-atom-' + atom.id"
+              [attr.aria-label]="'Add ' + atom.title + ' to agenda'">
+              @if (isAtomInAgenda(atom.id)) {
+                {{ 'training.session-creation.added' | translate }}
+              } @else {
+                {{ 'training.session-creation.add' | translate }}
+              }
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- Agenda panel (drag-drop) -->
+    <div class="session-creation__agenda" data-testid="session-agenda">
+      <h2 class="session-creation__panel-title">
+        {{ 'training.session-creation.agenda' | translate }}
+        <span class="session-creation__agenda-count">({{ agenda().length }})</span>
+      </h2>
+
+      @if (agenda().length === 0) {
+        <p class="session-creation__agenda-empty" data-testid="agenda-empty">
+          {{ 'training.session-creation.agenda-empty' | translate }}
+        </p>
+      } @else {
+        <div
+          cdkDropList
+          class="session-creation__agenda-list"
+          (cdkDropListDropped)="onAgendaDrop($event)"
+          data-testid="agenda-drop-list">
+          @for (item of agenda(); track item.atom_id) {
+            <div
+              cdkDrag
+              class="session-creation__agenda-item"
+              [attr.data-testid]="'agenda-item-' + item.atom_id">
+              <div class="session-creation__agenda-handle" cdkDragHandle aria-label="Drag to reorder">
+                <span class="session-creation__agenda-order">{{ item.order }}</span>
+              </div>
+              <div class="session-creation__agenda-content">
+                <div class="session-creation__agenda-header-row">
+                  <span class="session-creation__agenda-atom-title">{{ item.atom_title }}</span>
+                  <span class="session-creation__agenda-atom-type">{{ item.atom_type }}</span>
+                </div>
+                <div class="session-creation__agenda-controls">
+                  <label [for]="'duration-' + item.atom_id" class="session-creation__sr-only">Duration (minutes)</label>
+                  <input
+                    [id]="'duration-' + item.atom_id"
+                    type="number"
+                    class="session-creation__duration-input"
+                    [ngModel]="item.duration_minutes"
+                    (ngModelChange)="updateDuration(item.atom_id, $event)"
+                    min="5"
+                    max="120"
+                    [attr.data-testid]="'duration-' + item.atom_id"
+                    aria-label="Duration in minutes" />
+                  <span class="session-creation__duration-unit">{{ 'training.session-creation.min' | translate }}</span>
+                </div>
+                <label [for]="'notes-' + item.atom_id" class="session-creation__sr-only">Delivery notes</label>
+                <textarea
+                  [id]="'notes-' + item.atom_id"
+                  class="session-creation__notes-textarea"
+                  [ngModel]="item.delivery_notes"
+                  (ngModelChange)="updateDeliveryNotes(item.atom_id, $event)"
+                  rows="2"
+                  [attr.placeholder]="'training.session-creation.notes-placeholder' | translate"
+                  [attr.data-testid]="'notes-' + item.atom_id"
+                  aria-label="Delivery notes">
+                </textarea>
+              </div>
+              <button
+                class="session-creation__agenda-remove"
+                (click)="removeFromAgenda(item.atom_id)"
+                type="button"
+                [attr.data-testid]="'remove-' + item.atom_id"
+                [attr.aria-label]="'Remove ' + item.atom_title">
+                &times;
+              </button>
+            </div>
+          }
+        </div>
+
+        <p class="session-creation__total-duration" data-testid="total-duration">
+          {{ 'training.session-creation.total-duration' | translate }}: {{ totalDuration() }} {{ 'training.session-creation.minutes' | translate }}
+        </p>
+      }
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="session-creation__actions" data-testid="session-actions">
+    @if (submitError()) {
+      <p class="session-creation__submit-error" role="alert" data-testid="submit-error">
+        {{ submitError() }}
+      </p>
+    }
+    <button
+      class="session-creation__submit-btn"
+      [disabled]="!canSubmit()"
+      (click)="submitSession()"
+      type="button"
+      data-testid="session-submit-btn">
+      @if (isSubmitting()) {
+        {{ 'training.session-creation.creating' | translate }}
+      } @else {
+        {{ 'training.session-creation.create' | translate }}
+      }
+    </button>
+  </div>
+</section>

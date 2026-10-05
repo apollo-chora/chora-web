@@ -1,0 +1,671 @@
+// O+ Agents — Crews + Agents hierarchical accordion (Phase-D rewrite).
+// Tablet-first: ≥768px primary, ≥1280px desktop enhancement. No mobile breakpoints.
+
+:host {
+  display: block;
+}
+
+.oplus-agents {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--success, #10b981);
+    background: rgba(16, 185, 129, 0.1);
+
+    &[data-variant='stale'] {
+      color: #d97706;
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    &[data-variant='offline'] {
+      color: #dc2626;
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    &[data-variant='loading'] {
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  &__live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: oplusPulse 2s infinite;
+  }
+
+  &__gate,
+  &__error,
+  &__empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+
+    i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+  }
+
+  &__crew-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+.oplus-crew {
+  display: flex;
+  flex-direction: column;
+
+  &.is-empty {
+    opacity: 0.85;
+  }
+
+  &__header {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.25rem;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    background: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    text-align: start;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__chevron {
+    color: var(--primary);
+    width: 14px;
+    transition: transform 0.15s ease;
+  }
+
+  &__icon {
+    color: var(--primary);
+    font-size: 1.05rem;
+  }
+
+  &__title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  &__id {
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(123, 45, 142, 0.1);
+    color: var(--primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  &__quiet {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  &__panel {
+    padding: 0.75rem 0 0;
+  }
+
+  &__panel[hidden] {
+    display: none;
+  }
+
+  &__empty {
+    margin: 0 0 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    i {
+      color: var(--primary);
+    }
+  }
+}
+
+.oplus-agent-rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.oplus-agent-row {
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.55);
+
+  &__head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__icon {
+    color: var(--primary);
+    font-size: 1rem;
+  }
+
+  &__title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    color: var(--text-main);
+  }
+
+  &__role {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  &__links {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: flex-end;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  &__stat {
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+
+    dt {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      font-weight: 700;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+  }
+
+  &__mono {
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    font-size: 0.78rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// Selective deep-link button — used for "View in Cloud Trace ↗" and
+// "View in Agent Engine ↗" links across O+. Per anchor #2 of the plan,
+// O+ NEVER duplicates Cloud Trace internally — it links out.
+.oplus-deep-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(123, 45, 142, 0.1);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid rgba(123, 45, 142, 0.18);
+  white-space: nowrap;
+
+  i {
+    font-size: 0.7rem;
+  }
+
+  &__icon {
+    opacity: 0.65;
+    font-size: 0.6rem !important;
+  }
+
+  &:hover {
+    background: rgba(123, 45, 142, 0.18);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+// ADR-197 prompt-version evidence panel (CHO-2364). New declarations use the
+// canonical AA-safe tokens (--chora-color-text-muted / --chora-color-text-primary
+// / --chora-color-primary-strong); the legacy --text-muted family is frozen by
+// legacy-color-ban.spec.ts and may not grow.
+.oplus-prompts-panel {
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__subtitle {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__cards {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+// One card per evidence agent (payload order; runtime-role ids).
+.oplus-prompt-card {
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(123, 45, 142, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__icon {
+    color: var(--chora-color-primary-strong);
+    font-size: 0.85rem;
+  }
+
+  &__id {
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__crew {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.16rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(123, 45, 142, 0.1);
+    color: var(--chora-color-primary-strong);
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  &__total {
+    margin-inline-start: auto;
+    font-size: 0.74rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--chora-color-text-muted);
+    white-space: nowrap;
+  }
+}
+
+// Chip / matrix primitives shared by the cards.
+.oplus-prompt {
+  &__kind {
+    font-size: 0.72rem;
+    font-style: italic;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(123, 45, 142, 0.1);
+    border: 1px solid rgba(123, 45, 142, 0.18);
+    color: var(--chora-color-primary-strong);
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+
+    &--empty {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.08);
+      color: var(--chora-color-text-muted);
+      font-family: inherit;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    // CHO-2368 — chips are now the catalogue-modal openers.
+    &--button {
+      cursor: pointer;
+      font: inherit;
+      font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+
+      &:hover {
+        background: rgba(123, 45, 142, 0.18);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+
+      &.oplus-prompt__chip--empty {
+        font-family: inherit;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.08);
+        }
+      }
+    }
+  }
+
+  &__chip-view {
+    font-size: 0.62rem;
+    opacity: 0.75;
+  }
+
+  &__matrix-toggle {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 8px;
+    background: rgba(123, 45, 142, 0.08);
+    border: 1px solid rgba(123, 45, 142, 0.18);
+    color: var(--chora-color-primary-strong);
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(123, 45, 142, 0.16);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__matrix-chevron {
+    width: 12px;
+    font-size: 0.62rem;
+  }
+
+  &__matrix-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: rgba(123, 45, 142, 0.14);
+    font-size: 0.66rem;
+  }
+
+  &__matrix {
+    padding-top: 0.45rem;
+    overflow-x: auto;
+  }
+
+  &__matrix[hidden] {
+    display: none;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      text-align: start;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.75rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    thead th {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: var(--chora-color-text-muted);
+    }
+
+    tbody th {
+      font-weight: 600;
+      color: var(--chora-color-text-primary);
+    }
+
+    tbody td {
+      color: var(--chora-color-text-primary);
+    }
+
+    tbody tr[data-empty='true'] th,
+    tbody tr[data-empty='true'] td {
+      color: var(--chora-color-text-muted);
+    }
+  }
+
+  &__num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__no-evidence {
+    font-style: italic;
+    color: var(--chora-color-text-muted);
+  }
+}
+
+// Panel-internal prompts fetch state (loading / gate / error / empty).
+.oplus-prompts-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  color: var(--chora-color-text-muted);
+  font-size: 0.8rem;
+
+  p {
+    margin: 0;
+  }
+
+  i {
+    color: var(--chora-color-primary-strong);
+    font-size: 0.95rem;
+  }
+
+  &__skeleton {
+    display: inline-block;
+    width: 9rem;
+    max-width: 28%;
+    height: 0.9rem;
+    border-radius: 999px;
+    background: rgba(123, 45, 142, 0.12);
+    animation: oplusPulse 1.6s infinite;
+  }
+
+  &__retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-inline-start: auto;
+    padding: 0.32rem 0.75rem;
+    border-radius: 8px;
+    background: rgba(123, 45, 142, 0.1);
+    border: 1px solid rgba(123, 45, 142, 0.18);
+    color: var(--chora-color-primary-strong);
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+
+    i {
+      font-size: 0.7rem;
+    }
+
+    &:hover {
+      background: rgba(123, 45, 142, 0.18);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+@keyframes oplusPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oplus-agents__live-dot,
+  .oplus-prompts-state__skeleton {
+    animation: none;
+  }
+}

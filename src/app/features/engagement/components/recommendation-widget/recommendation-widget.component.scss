@@ -1,0 +1,190 @@
+:host {
+  display: block;
+}
+
+.recommendation-widget {
+  padding: var(--chora-space-md, 16px);
+  border-radius: var(--chora-radius-md, 8px);
+  background: var(--chora-color-surface-1, #ffffff);
+  border: 1px solid var(--chora-color-border, #e0e0e0);
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-bottom: var(--chora-space-md, 16px);
+
+    .material-icons-outlined {
+      font-size: 24px;
+      color: var(--chora-color-primary, #1976d2);
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Loading / error / empty
+  // ---------------------------------------------------------------------------
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    font-size: 14px;
+    color: var(--chora-color-text-secondary, #757575);
+  }
+
+  &__spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--chora-color-surface-2, #e0e0e0);
+    border-top-color: var(--chora-color-primary, #1976d2);
+    border-radius: 50%;
+    animation: rec-spin 0.8s linear infinite;
+  }
+
+  &__error {
+    font-size: 14px;
+    color: #f44336;
+    margin: 0;
+  }
+
+  &__empty {
+    font-size: 14px;
+    color: var(--chora-color-text-secondary, #757575);
+    margin: 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Horizontal scroll container
+  // ---------------------------------------------------------------------------
+
+  &__scroll {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+    overflow-x: auto;
+    padding-bottom: var(--chora-space-xs, 4px);
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--chora-color-surface-2, #e0e0e0);
+      border-radius: 2px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--chora-color-text-secondary, #757575);
+      border-radius: 2px;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Card
+  // ---------------------------------------------------------------------------
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+    min-width: 180px;
+    max-width: 200px;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #e0e0e0);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-0, #fafafa);
+    cursor: pointer;
+    text-align: start;
+    scroll-snap-align: start;
+    transition: border-color 0.15s ease;
+
+    &:hover {
+      border-color: var(--chora-color-primary, #1976d2);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #1976d2);
+      outline-offset: 2px;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Badge
+  // ---------------------------------------------------------------------------
+
+  &__badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    align-self: flex-start;
+
+    &--beginner {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    &--intermediate {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &--advanced {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    &--expert {
+      background: #fce4ec;
+      color: #c62828;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Card content
+  // ---------------------------------------------------------------------------
+
+  &__topic {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--chora-color-text-primary, #212121);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__score {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--chora-color-primary, #1976d2);
+  }
+
+  &__reason {
+    font-size: 12px;
+    color: var(--chora-color-text-secondary, #757575);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@keyframes rec-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

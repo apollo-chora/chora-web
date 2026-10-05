@@ -1,0 +1,51 @@
+:host {
+  display: block;
+}
+
+.cplus-breadcrumb {
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--cplus-space-xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+
+    // CSS-generated separator, aria-hidden from the a11y tree by virtue of
+    // being generated content on a list item (screen readers skip it). No
+    // literal ">" text node that would be announced.
+    &:not(:last-child)::after {
+      content: '/';
+      margin-inline-start: var(--cplus-space-xs);
+      color: var(--cplus-text-disabled);
+    }
+  }
+
+  &__link {
+    color: var(--cplus-text-secondary);
+    text-decoration: none;
+    transition: color var(--cplus-transition-fast);
+
+    &:hover {
+      color: var(--cplus-text);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--cplus-focus-ring);
+      outline-offset: var(--cplus-focus-ring-offset);
+      border-radius: var(--cplus-radius-control);
+    }
+  }
+
+  &__current {
+    color: var(--cplus-text);
+    font-weight: 600;
+  }
+}

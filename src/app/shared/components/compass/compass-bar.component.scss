@@ -1,0 +1,57 @@
+:host {
+  display: block;
+}
+
+// The A+ compass. Horizontal and tablet-first: it replaces a 280px column, so
+// it must not reintroduce one. Tokens are the sidebar's, deliberately, so the
+// two navigations paint the same and the contrast guard sees expressions it
+// already clears.
+.compass-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  padding: var(--chora-space-sm) var(--chora-space-md);
+  background: var(--chora-color-surface-1);
+  border-bottom: 1px solid var(--chora-color-border);
+  overflow-x: auto;
+
+  &__entry {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    border-radius: var(--chora-radius-md);
+    color: var(--chora-color-text-secondary);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color var(--chora-transition-fast),
+                color var(--chora-transition-fast);
+
+    &:hover {
+      background: var(--chora-color-surface-2);
+      color: var(--chora-color-text-primary);
+    }
+
+    // Same AA-safe pair the sidebar's active entry uses: the tinted ground
+    // with `--chora-color-primary-strong` (#0d47a1) scores about 7.35:1. The
+    // untinted primary (#1976d2) scores 4.14:1 on that same ground and is
+    // under the 4.5:1 normal-text floor, so it is not used here either.
+    &--active {
+      background: rgba(25, 118, 210, 0.08);
+      color: var(--chora-color-primary-strong, #0d47a1);
+      font-weight: 600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary-strong, #0d47a1);
+      outline-offset: 2px;
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+  }
+}

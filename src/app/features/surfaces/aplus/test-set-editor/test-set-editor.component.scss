@@ -1,0 +1,509 @@
+:host {
+  display: block;
+  padding: var(--chora-space-lg, 24px);
+}
+
+// ── Common ───────────────────────────────────────────────────────────────
+%panel {
+  background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+  border-radius: var(--chora-radius-md, 12px);
+  padding: var(--chora-space-md, 16px);
+}
+
+%section-title {
+  margin: 0 0 var(--chora-space-sm, 8px) 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--chora-color-text-strong, #0f172a);
+}
+
+%loading {
+  padding: var(--chora-space-md, 16px);
+  color: var(--chora-color-text-muted, #64748b);
+  text-align: center;
+}
+
+%error {
+  padding: var(--chora-space-md, 16px);
+  background: var(--chora-color-danger-surface, rgba(239, 68, 68, 0.08));
+  color: var(--chora-color-danger-strong, #b91c1c);
+  border-radius: var(--chora-radius-sm, 8px);
+  border: 1px solid var(--chora-color-danger-border, rgba(239, 68, 68, 0.35));
+}
+
+// ── List mode ────────────────────────────────────────────────────────────
+.test-set-list {
+  @extend %panel;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md, 16px);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  &__new-cta {
+    padding: 0.5rem 1rem;
+    background: var(--chora-color-accent-aplus, #3b82f6);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--chora-radius-sm, 8px);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+
+    &[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__loading { @extend %loading; }
+  &__error { @extend %error; }
+
+  &__empty {
+    padding: var(--chora-space-md, 16px);
+    text-align: center;
+    color: var(--chora-color-text-muted, #64748b);
+    border: 1px dashed var(--chora-color-border, rgba(15, 23, 42, 0.15));
+    border-radius: var(--chora-radius-sm, 8px);
+  }
+
+  &__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'title state'
+      'meta  meta';
+    gap: 0.25rem 0.5rem;
+    padding: var(--chora-space-md, 16px);
+    background: var(--chora-color-surface-0, #ffffff);
+    border: 1px solid var(--chora-color-border, rgba(15, 23, 42, 0.15));
+    border-radius: var(--chora-radius-sm, 8px);
+    color: var(--chora-color-text-strong, #0f172a);
+    text-decoration: none;
+
+    &:hover { border-color: var(--chora-color-accent-aplus, #3b82f6); }
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-accent-aplus, #3b82f6);
+      outline-offset: 2px;
+    }
+  }
+
+  &__card-title {
+    grid-area: title;
+    font-weight: 600;
+  }
+
+  &__state {
+    grid-area: state;
+    // Pin to the top of the grid cell + keep natural width/height so the pill
+    // does not stretch vertically when the title wraps to 2+ lines (the row
+    // grows but the badge must keep its shape). 2026-06-20 fix.
+    align-self: start;
+    justify-self: end;
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: var(--chora-color-accent-aplus-soft, rgba(59, 130, 246, 0.12));
+    color: var(--chora-color-accent-aplus, #3b82f6);
+  }
+
+  &__card-meta {
+    grid-area: meta;
+    color: var(--chora-color-text-muted, #64748b);
+    font-size: 0.85rem;
+  }
+
+  &__retry {
+    margin-top: var(--chora-space-xs, 4px);
+    padding: 0.4rem 1rem;
+    border: 1px solid currentColor;
+    border-radius: var(--chora-radius-sm, 8px);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+}
+
+// ── Editor mode ──────────────────────────────────────────────────────────
+.test-set-editor {
+  @extend %panel;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md, 16px);
+
+  &__loading { @extend %loading; }
+  &__error { @extend %error; }
+
+  &__retry {
+    margin-top: var(--chora-space-xs, 4px);
+    padding: 0.4rem 1rem;
+    border: 1px solid currentColor;
+    border-radius: var(--chora-radius-sm, 8px);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-bottom: var(--chora-space-sm, 8px);
+    border-bottom: 1px solid var(--chora-color-border, rgba(15, 23, 42, 0.15));
+  }
+
+  // The title row is a single flex line — heading (input or h1) on the left,
+  // state badge auto-margined to the right. Per CJ#1 P1 refinement plan
+  // (docs/m13/cj1-ui-design-refinement-plan-2026-05-17.md).
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    width: 100%;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--chora-color-text-strong, #0f172a);
+  }
+
+  &__title-label {
+    // Visually-hidden — the input itself IS the heading; the label exists
+    // for screen readers + form semantics only.
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  &__title-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--chora-radius-sm, 8px);
+    padding: 0.25rem 0.5rem;
+    margin: -0.25rem -0.5rem;
+    color: var(--chora-color-text-strong, #0f172a);
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+
+    &:hover {
+      border-color: var(--chora-color-border, rgba(15, 23, 42, 0.15));
+    }
+
+    &:focus {
+      outline: 2px solid var(--chora-color-accent-aplus, #3b82f6);
+      outline-offset: 0;
+      background: var(--chora-color-surface-0, #ffffff);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-accent-aplus, #3b82f6);
+      outline-offset: 0;
+      background: var(--chora-color-surface-0, #ffffff);
+    }
+  }
+
+  // Heading modifier — the title input doubles as the page h1. Large + bold
+  // by default; the focus ring (above) reveals it's editable on interaction.
+  // Per CJ#1 P1: input visually IS the heading, no separate h1 wrapper.
+  &__title-input--heading {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  &__title-saving {
+    align-self: center;
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #64748b);
+    font-style: italic;
+  }
+
+  &__state {
+    // `margin-inline-start: auto` pushes the badge to the right of the
+    // title row regardless of writing direction. Replaces the grid-area
+    // placement we used before.
+    margin-inline-start: auto;
+    flex: 0 0 auto;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: var(--chora-color-accent-aplus-soft, rgba(59, 130, 246, 0.12));
+    color: var(--chora-color-accent-aplus, #3b82f6);
+  }
+
+  &__points-summary {
+    color: var(--chora-color-text-muted, #64748b);
+    font-size: 0.9rem;
+  }
+
+  &__section-title {
+    @extend %section-title;
+  }
+
+  &__no-questions {
+    padding: var(--chora-space-md, 16px);
+    text-align: center;
+    color: var(--chora-color-text-muted, #64748b);
+    border: 1px dashed var(--chora-color-border, rgba(15, 23, 42, 0.15));
+    border-radius: var(--chora-radius-sm, 8px);
+  }
+
+  &__question-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__question-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto auto;
+    gap: var(--chora-space-sm, 8px);
+    align-items: center;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: var(--chora-color-surface-0, #ffffff);
+    border: 1px solid var(--chora-color-border, rgba(15, 23, 42, 0.15));
+    border-radius: var(--chora-radius-sm, 8px);
+  }
+
+  &__question-type {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: var(--chora-color-accent-aplus-soft, rgba(59, 130, 246, 0.12));
+    color: var(--chora-color-accent-aplus, #3b82f6);
+  }
+
+  &__question-stem {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.5;
+    // Full prompt — wrap instead of single-line ellipsis so the author can
+    // sight the whole question (FE fix 2026-06-20).
+    white-space: normal;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  // Full answer-key reveal beneath the row controls (correct answer +
+  // per-option grounding + OE model answer/rubric + illustrations).
+  &__question-review {
+    grid-column: 1 / -1;
+    margin-top: var(--chora-space-sm, 8px);
+    padding-top: var(--chora-space-sm, 8px);
+    border-top: 1px dashed var(--chora-color-border, rgba(15, 23, 42, 0.12));
+  }
+
+  &__points-label {
+    font-size: 0.8rem;
+    color: var(--chora-color-text-muted, #64748b);
+  }
+
+  &__points-input {
+    width: 4.5rem;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--chora-color-border, rgba(15, 23, 42, 0.15));
+    border-radius: var(--chora-radius-sm, 8px);
+    background: var(--chora-color-surface, rgba(255, 255, 255, 0.7));
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    text-align: right;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-accent-aplus, #3b82f6);
+      outline-offset: 1px;
+    }
+  }
+
+  &__remove {
+    appearance: none;
+    padding: 0.3rem 0.7rem;
+    background: transparent;
+    border: 1px solid var(--chora-color-danger-border, rgba(239, 68, 68, 0.35));
+    color: var(--chora-color-danger-strong, #b91c1c);
+    border-radius: var(--chora-radius-sm, 8px);
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+
+  &__picker {
+    margin-top: var(--chora-space-md, 16px);
+  }
+
+  &__footer {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: var(--chora-space-md, 16px);
+    border-top: 1px solid var(--chora-color-border, rgba(15, 23, 42, 0.15));
+  }
+
+  &__publish-cta {
+    padding: 0.5rem 1.25rem;
+    background: var(--chora-color-accent-aplus, #3b82f6);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--chora-radius-sm, 8px);
+    cursor: pointer;
+
+    &[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__archive-cta,
+  &__archive-and-new-cta {
+    padding: 0.5rem 1.25rem;
+    background: transparent;
+    color: var(--chora-color-text-strong, #0f172a);
+    border: 1px solid var(--chora-color-border, rgba(15, 23, 42, 0.15));
+    border-radius: var(--chora-radius-sm, 8px);
+    cursor: pointer;
+  }
+
+  &__published-notice,
+  &__archived-notice {
+    width: 100%;
+    margin: 0;
+    color: var(--chora-color-text-muted, #64748b);
+    font-size: 0.875rem;
+  }
+
+  &__published-explainer {
+    display: block;
+    margin: var(--chora-space-sm, 8px) 0 var(--chora-space-md, 16px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-accent-aplus-soft, rgba(59, 130, 246, 0.25));
+    border-left: 4px solid var(--chora-color-accent-aplus, #3b82f6);
+    border-radius: var(--chora-radius-sm, 8px);
+    background: var(--chora-color-accent-aplus-soft, rgba(59, 130, 246, 0.08));
+  }
+
+  &__published-explainer-title {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--chora-color-text-strong, #0f172a);
+  }
+
+  &__published-explainer-body {
+    margin: 0.35rem 0 0;
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #475569);
+  }
+
+  &__action-error {
+    width: 100%;
+    margin: 0;
+    color: var(--chora-color-danger-strong, #b91c1c);
+    font-size: 0.875rem;
+  }
+}
+
+// ── Inline question editing save row (#6, 2026-06-20) ───────────────
+.test-set-editor__question-save-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.test-set-editor__question-save {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--chora-color-accent-aplus, #3b82f6);
+  border-radius: 8px;
+  background: var(--chora-color-accent-aplus, #3b82f6);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.test-set-editor__question-saved {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #059669;
+}
+
+.test-set-editor__question-save-error {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+// ── Generated question / model-answer illustrations (CHO-1638) ──────
+// Both now render via the shared `<chora-question-image>` (width-primary,
+// aspect-aware, click-to-zoom) — the old `max-height: 320px` cap is gone. The
+// host keeps only layout (the answer image stays a full-width own row).
+.test-set-editor__question-image {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.test-set-editor__answer-image {
+  // Full-width own row (like __question-review / __question-save-row). Without
+  // this it auto-places into the badge's grid column, and its wide image
+  // inflates that `auto` track — ballooning the question-type badge and starving
+  // the stem (worst on OE rows whose answer illustration is widest).
+  display: block;
+  grid-column: 1 / -1;
+  margin: 0.5rem 0 0;
+}
+
+.test-set-editor__image-caption {
+  margin: 0 0 0.3rem;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}

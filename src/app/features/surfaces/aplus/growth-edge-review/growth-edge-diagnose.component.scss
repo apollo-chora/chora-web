@@ -1,0 +1,177 @@
+// A+ Growth-Edge structured-clue upload (ADR-205 WS-8). Tablet-first single
+// column; glassmorphism + A+ accent. Bounded pickers + one capped note.
+
+$accent: rgba(25, 118, 210, 1);
+$muted: var(--chora-color-text-muted, #5b6470);
+$border: var(--chora-glass-border, rgba(0, 0, 0, 0.12));
+
+.ge-diag {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.ge-diag-header {
+  h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+  .ge-diag-sub {
+    margin: 0.3rem 0 0;
+    color: $muted;
+  }
+}
+
+.ge-diag-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.ge-diag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.ge-diag-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border: 1px dashed rgba(25, 118, 210, 0.5);
+  border-radius: 12px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.4);
+  flex: 1 1 16rem;
+  input[type='file'] {
+    display: none;
+  }
+  span {
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.ge-diag-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: $muted;
+  flex: 1 1 12rem;
+}
+.ge-diag-select,
+.ge-diag-note {
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid $border;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  color: var(--chora-color-text, #1f2933);
+  width: 100%;
+}
+
+.ge-diag-clues {
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  legend {
+    padding: 0 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $muted;
+  }
+}
+
+.ge-diag-confidence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  .ge-diag-conf-label {
+    font-size: 0.85rem;
+    color: $muted;
+    margin-right: 0.3rem;
+  }
+}
+.ge-diag-conf-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ge-diag-note-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: $muted;
+}
+.ge-diag-note-hint {
+  color: $muted;
+  font-size: 0.78rem;
+}
+
+.ge-diag-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(25, 118, 210, 0.06);
+  border: 1px solid rgba(25, 118, 210, 0.2);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.ge-diag-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: $muted;
+  font-size: 0.9rem;
+}
+.ge-diag-error {
+  margin: 0;
+  color: #c62828;
+  font-size: 0.88rem;
+}
+.ge-diag-submit {
+  align-self: flex-start;
+}
+
+.ge-diag-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(25, 118, 210, 0.2);
+  border-top-color: $accent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: ge-diag-spin 0.8s linear infinite;
+}
+@keyframes ge-diag-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ge-diag-spinner {
+    animation: none;
+  }
+}

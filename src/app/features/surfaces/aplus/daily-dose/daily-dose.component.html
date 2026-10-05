@@ -1,0 +1,488 @@
+<!-- WS-C7 (CHO-2086): `?campaign_node=` mounts the hex-tap practice lane INSTEAD
+     of the dose. Absent → byte-identical dose behaviour (pinned by spec). -->
+@if (campaignNode(); as node) {
+  <chora-aplus-campaign-practice
+    [goalId]="campaignGoalId()"
+    [conceptId]="node"
+    [conceptLabel]="campaignConcept()" />
+} @else {
+<section
+  class="aplus-daily-dose surface-aplus"
+  aria-labelledby="aplus-daily-dose-heading"
+  data-testid="aplus-daily-dose">
+  <!-- Focused-practice header (Growth Edge deep-link, Phase 2B) — shown above
+       the dose in all states so the back affordance is always available. -->
+  @if (isFocused()) {
+    <nav
+      class="dose-focused-header glass-panel"
+      [attr.aria-label]="'aplus.daily_dose.focused_aria' | translate"
+      data-testid="daily-dose-focused-header">
+      <a
+        routerLink="/a/dashboard"
+        class="dose-focused-header__back"
+        data-testid="daily-dose-focused-back">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        {{ 'aplus.daily_dose.focused_back' | translate }}
+      </a>
+      <p class="dose-focused-header__concept" data-testid="daily-dose-focused-concept">
+        @if (focusedConcept(); as concept) {
+          <i class="fa-solid fa-bullseye" aria-hidden="true"></i>
+          {{ 'aplus.daily_dose.focused_practising' | translate }} {{ concept }}
+        } @else {
+          <i class="fa-solid fa-bullseye" aria-hidden="true"></i>
+          {{ 'aplus.daily_dose.focused_generic' | translate }}
+        }
+      </p>
+    </nav>
+  }
+
+  @if (isLoading()) {
+    <p
+      class="dose-loading"
+      role="status"
+      aria-live="polite"
+      data-testid="aplus-daily-dose-loading">
+      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+      {{ 'aplus.daily_dose.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div
+      class="dose-error glass-panel"
+      role="alert"
+      aria-live="assertive"
+      data-testid="aplus-daily-dose-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <h2 class="dose-error__title">
+        {{ 'aplus.daily_dose.error_title' | translate }}
+      </h2>
+      <p class="dose-error__message" data-testid="aplus-daily-dose-error-message">
+        {{ errorKey() | translate }}
+      </p>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="retry()"
+        data-testid="aplus-daily-dose-retry">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        {{ 'aplus.daily_dose.retry' | translate }}
+      </button>
+    </div>
+  } @else if (dose(); as d) {
+    <header class="dose-header glass-panel">
+      <div class="dose-header__title-block">
+        <h1 id="aplus-daily-dose-heading" class="dose-header__title">
+          {{ 'aplus.daily_dose.heading' | translate }}
+        </h1>
+        <!-- ADR-225: the dose is AI-composed (Ebbinghaus + recommender) — inline
+             AI-provenance disclosure chip, copy served by the BFF. -->
+        <chora-ai-label-chip variant="doseHeader" />
+        <p class="dose-header__date" data-testid="dose-served-on">
+          {{ d.servedOn }}
+        </p>
+        <a
+          routerLink="/a/daily-dose/preferences"
+          class="dose-header__prefs-link"
+          data-testid="dose-prefs-link">
+          {{ 'aplus.dosePrefs.manageLink' | translate }}
+        </a>
+      </div>
+
+      <!-- Composition chips: 40/30/30 Ebbinghaus composition.
+           Suppressed on an empty dose: percentages describing a composition of
+           zero atoms are a fabricated claim, not a decoration. -->
+      @if (!isEmpty() && composition(); as comp) {
+        <div
+          class="dose-composition"
+          role="group"
+          [attr.aria-label]="'aplus.daily_dose.composition_aria' | translate"
+          data-testid="dose-composition">
+          <span
+            class="composition-chip composition-chip--review"
+            data-testid="composition-review">
+            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+            {{ comp.reviewPercent }}% {{ 'aplus.daily_dose.composition_review' | translate }}
+          </span>
+          <span
+            class="composition-chip composition-chip--new"
+            data-testid="composition-new">
+            <i class="fa-solid fa-compass" aria-hidden="true"></i>
+            {{ comp.newPercent }}% {{ 'aplus.daily_dose.composition_new' | translate }}
+          </span>
+          <span
+            class="composition-chip composition-chip--stretch"
+            data-testid="composition-stretch">
+            <i class="fa-solid fa-mountain-sun" aria-hidden="true"></i>
+            {{ comp.stretchPercent }}% {{ 'aplus.daily_dose.composition_stretch' | translate }}
+          </span>
+        </div>
+      }
+
+      <!-- Goal-scope disclosure (ADR-242 D2): on a goal-scoped dose, state how
+           today's served cards split between this goal, its topics, and the
+           wider enrolment. Zero segments STAY ("0 from this goal" is the point).
+           Suppressed on an empty dose for the same reason as the chips above:
+           a split over zero cards would be a claim about nothing.
+           role="note" carries the aria-label: ARIA prohibits a name on a bare
+           paragraph, and the counts alone read as fragments without one. -->
+      @if (!isEmpty() && scope(); as s) {
+        <p
+          class="dose-scope"
+          role="note"
+          [attr.aria-label]="'aplus.daily_dose.scope_aria' | translate"
+          data-testid="dose-scope">
+          <i class="fa-solid fa-diagram-project" aria-hidden="true"></i>
+          {{
+            'aplus.daily_dose.scope_split'
+              | translate: { goal: s.from_goal, topics: s.on_topics, broader: s.broader }
+          }}
+        </p>
+      }
+
+      <div class="dose-header__stats">
+        <div class="dose-stat">
+          <span class="dose-stat__label">{{ 'aplus.daily_dose.total_xp' | translate }}</span>
+          <span class="dose-stat__value" data-testid="dose-total-xp">
+            +{{ totalXp() }} XP
+          </span>
+        </div>
+        <div class="dose-stat">
+          <span class="dose-stat__label">{{ 'aplus.daily_dose.tomorrow' | translate }}</span>
+          <span
+            class="dose-stat__value dose-stat__countdown"
+            role="timer"
+            aria-live="off"
+            data-testid="dose-countdown">
+            {{ countdownLabel() }}
+          </span>
+        </div>
+
+        <!-- Streak indicator (WS-12) -->
+        @if (streak(); as s) {
+          <div
+            class="dose-streak"
+            [class.dose-streak--at-risk]="streakAtRisk()"
+            [attr.aria-label]="(s.currentDays.toString()) + ' ' + ('aplus.daily_dose.streak_days' | translate)"
+            data-testid="dose-streak">
+            <i
+              class="fa-solid fa-fire dose-streak__icon"
+              [class.dose-streak__icon--pulse]="streakAtRisk()"
+              aria-hidden="true"></i>
+            <span class="dose-streak__count" data-testid="dose-streak-count">
+              {{ s.currentDays }}
+            </span>
+            <span class="dose-streak__label">
+              {{ 'aplus.daily_dose.streak_days' | translate }}
+            </span>
+            @if (streakAtRisk()) {
+              <span
+                class="dose-streak__warning"
+                role="alert"
+                data-testid="dose-streak-at-risk">
+                {{ 'aplus.daily_dose.streak_at_risk' | translate }}
+              </span>
+            }
+          </div>
+        }
+      </div>
+    </header>
+
+    <div class="dose-body">
+      <section
+        class="dose-stack"
+        aria-labelledby="dose-stack-heading"
+        data-testid="dose-card-stack">
+        <h2 id="dose-stack-heading" class="sr-only">
+          {{ 'aplus.daily_dose.stack_heading' | translate }}
+        </h2>
+
+        <!-- Per-Familiar nudge card (WS-12-NUDGE) -->
+        @if (familiarNudge(); as nudge) {
+          @if (nudgeRequiresUpgrade()) {
+            <!-- Mana gating: Basic tier upsell -->
+            <div
+              class="dose-nudge dose-nudge--upsell glass-panel"
+              role="complementary"
+              aria-labelledby="dose-nudge-upsell-heading"
+              data-testid="dose-nudge-upsell">
+              <i class="fa-solid fa-star dose-nudge__icon" aria-hidden="true"></i>
+              <div class="dose-nudge__body">
+                <h3 id="dose-nudge-upsell-heading" class="dose-nudge__title">
+                  {{ 'aplus.daily_dose.nudge_upsell_title' | translate }}
+                </h3>
+                <p class="dose-nudge__text">
+                  {{ 'aplus.daily_dose.nudge_upsell_body' | translate }}
+                </p>
+              </div>
+              <a
+                routerLink="/a/billing"
+                class="btn btn-primary dose-nudge__cta"
+                data-testid="dose-nudge-upgrade-cta">
+                {{ 'aplus.daily_dose.nudge_upgrade' | translate }}
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </a>
+            </div>
+          } @else {
+            <!-- Familiar nudge card -->
+            <div
+              class="dose-nudge dose-nudge--familiar glass-panel"
+              role="complementary"
+              aria-labelledby="dose-nudge-heading"
+              data-testid="dose-nudge-card">
+              <i class="fa-solid fa-paw dose-nudge__icon" aria-hidden="true"></i>
+              <div class="dose-nudge__body">
+                <h3 id="dose-nudge-heading" class="dose-nudge__title">
+                  {{ nudge.familiar_name }}
+                  {{ 'aplus.daily_dose.nudge_suggests' | translate }}
+                </h3>
+                <p class="dose-nudge__text" data-testid="dose-nudge-atom-title">
+                  {{ nudge.atom_title }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="btn btn-primary dose-nudge__cta"
+                (click)="playNudgeAtom()"
+                data-testid="dose-nudge-play">
+                {{ 'aplus.daily_dose.nudge_review' | translate }}
+                <i class="fa-solid fa-play" aria-hidden="true"></i>
+              </button>
+            </div>
+          }
+        }
+
+        <!-- Empty dose: the BFF composed ZERO atoms (not enrolled, nothing
+             projected yet). A legitimate 200, NOT an error, so no fail-loud
+             banner. The card stack, its navigation and the progress bar are
+             all replaced: framing an empty stack in working chrome reads as a
+             broken page. Copy is the server's own `message` when present.
+             Shape + testid convention mirror campaign-practice's `cp-empty`. -->
+        @if (isEmpty()) {
+        <div class="dose-empty glass-panel" data-testid="dose-empty">
+          <i class="fa-solid fa-seedling dose-empty__icon" aria-hidden="true"></i>
+          <h3 class="dose-empty__title">
+            {{ 'aplus.daily_dose.empty_title' | translate }}
+          </h3>
+          <p
+            class="dose-empty__body"
+            role="status"
+            aria-live="polite"
+            data-testid="dose-empty-message">
+            @if (emptyMessage(); as message) {
+              {{ message }}
+            } @else {
+              {{ 'aplus.daily_dose.empty_body' | translate }}
+            }
+          </p>
+          <a
+            routerLink="/a/catalog"
+            class="btn btn-primary dose-empty__cta"
+            data-testid="dose-empty-browse">
+            <i class="fa-solid fa-compass" aria-hidden="true"></i>
+            {{ 'aplus.daily_dose.empty_browse' | translate }}
+          </a>
+        </div>
+        } @else {
+        <!-- Stack visualisation: stacked cards ordered by retention urgency -->
+        <div class="dose-stack__cards">
+          @for (atom of atoms(); track atom.atomId; let i = $index) {
+            <article
+              class="dose-card glass-panel"
+              [class.is-active]="i === activeIndex()"
+              [class.is-behind]="i > activeIndex()"
+              [class.is-done]="i < activeIndex()"
+              [attr.aria-hidden]="i !== activeIndex()"
+              [attr.inert]="i === activeIndex() ? null : ''"
+              [attr.aria-label]="atom.title"
+              [attr.data-testid]="'dose-card-' + atom.atomId">
+              <header class="dose-card__head">
+                <span
+                  class="badge {{ categoryBadgeClass(atom) }} dose-card__category"
+                  [attr.data-testid]="'dose-card-category-' + atom.atomId">
+                  {{ categoryLabelKey(atom) | translate }}
+                </span>
+                <!-- Retention indicator (WS-12) -->
+                <span
+                  class="dose-card__retention"
+                  role="img"
+                  [style.color]="retentionColorVar(atom)"
+                  [attr.aria-label]="retentionLabel(atom) | translate"
+                  [attr.data-testid]="'dose-card-retention-' + atom.atomId">
+                  <i [class]="retentionIconClass(atom)" aria-hidden="true"></i>
+                </span>
+                <span class="dose-card__topic">{{ atom.topic }}</span>
+                <span class="dose-card__xp">+{{ atom.xpOnComplete }} XP</span>
+              </header>
+              <h3 class="dose-card__title">{{ atom.title }}</h3>
+              <p class="dose-card__atom-id">
+                {{ 'aplus.daily_dose.atom_id' | translate }}:
+                <code>{{ atom.atomId }}</code>
+              </p>
+              <p class="dose-card__summary">{{ atom.summary }}</p>
+              <footer class="dose-card__footer">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="playAtom(atom.atomId)"
+                  [attr.data-testid]="'dose-card-play-' + atom.atomId">
+                  {{ 'aplus.daily_dose.play' | translate }}
+                  <i class="fa-solid fa-play" aria-hidden="true"></i>
+                </button>
+              </footer>
+            </article>
+          }
+        </div>
+
+        <!-- Stack navigation -->
+        <nav
+          class="dose-stack__nav"
+          [attr.aria-label]="'aplus.daily_dose.nav_aria' | translate">
+          <button
+            type="button"
+            class="btn btn-secondary dose-stack__nav-btn"
+            [disabled]="!canGoPrev()"
+            (click)="goPrev()"
+            data-testid="dose-stack-prev">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            {{ 'aplus.daily_dose.prev' | translate }}
+          </button>
+
+          <ol
+            class="dose-stack__dots"
+            [attr.aria-label]="'aplus.daily_dose.dots_aria' | translate"
+            data-testid="dose-stack-dots">
+            @for (atom of atoms(); track atom.atomId; let i = $index) {
+              <li>
+                <button
+                  type="button"
+                  class="dose-stack__dot"
+                  [class.is-active]="i === activeIndex()"
+                  [attr.aria-current]="i === activeIndex() ? 'true' : null"
+                  [attr.aria-label]="(('aplus.daily_dose.go_to_card' | translate) + ' ' + (i + 1))"
+                  (click)="selectIndex(i)"
+                  [attr.data-testid]="'dose-stack-dot-' + i">
+                </button>
+              </li>
+            }
+          </ol>
+
+          <button
+            type="button"
+            class="btn btn-secondary dose-stack__nav-btn"
+            [disabled]="!canGoNext()"
+            (click)="goNext()"
+            data-testid="dose-stack-next">
+            {{ 'aplus.daily_dose.next' | translate }}
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </button>
+        </nav>
+
+        <div class="dose-progress" aria-hidden="true">
+          <div
+            class="dose-progress__fill surface-accent-bg"
+            [style.width.%]="progressPercent()"></div>
+        </div>
+        }
+      </section>
+
+      <aside
+        class="dose-rail glass-panel"
+        aria-labelledby="dose-familiar-heading"
+        data-testid="dose-familiar-panel">
+        <div class="dose-familiar">
+          <!-- Companion portrait (CHO-2403). The accent disc is only a
+               PLACEHOLDER frame: it fills when there is no art to show, and
+               steps aside once `companionArt()` proves the resolved companion
+               is the one this rail names. The level badge is decorative here
+               because the rank line below states the same number in text. -->
+          <div
+            class="dose-familiar__avatar"
+            [class.surface-accent-bg]="!companionArt()"
+            data-testid="dose-familiar-avatar">
+            @if (companionArt(); as art) {
+              <chora-breed-art
+                [species]="art.species"
+                [stage]="art.stage"
+                [shiny]="art.shiny"
+                [mood]="companionMood()"
+                [altText]="companionName()"
+                [bare]="true"
+                size="sm" />
+            }
+            <span class="dose-familiar__level" aria-hidden="true">
+              {{ companionStage() }}
+            </span>
+          </div>
+          <h2
+            id="dose-familiar-heading"
+            class="dose-familiar__name"
+            data-testid="dose-familiar-name">
+            {{ companionName() }}
+          </h2>
+          <p class="dose-familiar__rank" data-testid="dose-familiar-rank">
+            {{ 'aplus.daily_dose.familiar_level' | translate }} {{ companionStage() }}
+          </p>
+          <!-- Familiar greeting: the real AI greeting (progressive enhancement
+               via GET /api/familiar/daily-dose/ai) supersedes the deterministic
+               templated quote once it resolves; until then (or on AI
+               failure/degrade) the deterministic familiarQuote shows. -->
+          @if (familiarGreeting(); as greeting) {
+            <blockquote
+              class="dose-familiar__quote"
+              data-testid="dose-familiar-greeting">
+              {{ greeting }}
+            </blockquote>
+          } @else {
+            <blockquote
+              class="dose-familiar__quote"
+              data-testid="dose-familiar-quote">
+              {{ d.familiarQuote }}
+            </blockquote>
+          }
+          @if (recommenderNarrative(); as narrative) {
+            <p
+              class="dose-familiar__narrative"
+              data-testid="dose-familiar-narrative">
+              <i class="fa-solid fa-route" aria-hidden="true"></i>
+              {{ narrative }}
+            </p>
+          }
+          <!-- Deep-link the GREETER by id. The bare front door resolves by
+               `isActive`, a different rule from the greeting selection, so
+               without the id the learner opens a different companion. -->
+          <a
+            class="btn btn-secondary"
+            [routerLink]="familiarLink()"
+            data-testid="dose-familiar-link">
+            <i class="fa-solid fa-paw" aria-hidden="true"></i>
+            {{ 'aplus.daily_dose.familiar_open' | translate }}
+          </a>
+        </div>
+      </aside>
+    </div>
+
+    <!-- AI picks (M2 / ADR-196) — Recommender atom suggestions resolved to
+         cards async; only shown once ≥1 pick resolves (fail-soft per pick). -->
+    @if (hasAiPicks()) {
+      <section
+        class="dose-ai-picks glass-panel"
+        aria-labelledby="dose-ai-picks-heading"
+        data-testid="dose-ai-picks">
+        <h2 id="dose-ai-picks-heading" class="dose-ai-picks__heading">
+          <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+          {{ 'aplus.daily_dose.ai_picks_heading' | translate }}
+          <!-- ADR-225: these picks are AI-generated recommender suggestions. -->
+          <chora-ai-label-chip variant="aiGenerated" />
+        </h2>
+        <div class="dose-ai-picks__grid">
+          @for (pick of aiPickAtoms(); track pick.id) {
+            <chora-atom-card
+              [atom]="pick"
+              (selected)="openAiPick($event)"
+              [attr.data-testid]="'dose-ai-pick-' + pick.id" />
+          }
+        </div>
+      </section>
+    }
+  }
+</section>
+}

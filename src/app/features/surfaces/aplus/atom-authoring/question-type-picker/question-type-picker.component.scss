@@ -1,0 +1,233 @@
+// =====================================================================
+// QuestionTypePicker — A1 design refinement 2026-05-17
+// Primary tiles promoted to a 2-tile prominent row; reserved tiles
+// collapse into a "Coming soon" disclosure. Glassmorphism design system
+// — uses `--text-main`, `--text-muted`, `--glass-border`, `--primary`
+// CSS custom properties. Tablet-first (≥768px primary, ≥1280px desktop
+// enhanced). Per docs/m13/cj1-ui-design-refinement-plan-2026-05-17.md.
+// =====================================================================
+:host {
+  display: block;
+}
+
+.question-type-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md, 1rem);
+
+  // ─── Primary row — 2-up prominent tiles ──────────────────────────
+  &__primary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--chora-space-md, 1rem);
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 0.5rem);
+    padding: var(--chora-space-md, 1rem);
+    background: var(--chora-color-surface-0, #fff);
+    border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.08));
+    border-radius: var(--chora-radius-md, 12px);
+    cursor: pointer;
+    transition: background-color var(--chora-transition-fast, 160ms ease-out),
+                border-color var(--chora-transition-fast, 160ms ease-out),
+                box-shadow var(--chora-transition-fast, 160ms ease-out),
+                transform var(--chora-transition-fast, 160ms ease-out);
+
+    &:hover:not(&--disabled) {
+      border-color: var(--primary);
+      background: var(--chora-color-surface-1, #fafafa);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    &--selected {
+      border-color: var(--primary);
+      background: var(--chora-color-primary-surface, rgba(25, 118, 210, 0.08));
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.16);
+    }
+
+    &--disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      background: var(--chora-color-surface-1, #f7f7f7);
+
+      &:hover {
+        border-color: var(--glass-border, rgba(0, 0, 0, 0.08));
+        background: var(--chora-color-surface-1, #f7f7f7);
+      }
+    }
+
+    // Primary variant — larger, bolder. Author needs to spot these
+    // immediately. Min height bumped from the legacy 110px so the 2
+    // active question types feel like the "main event".
+    &--primary {
+      min-height: 132px;
+      padding: 1.25rem 1.25rem 1.1rem;
+
+      .question-type-picker__label {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+    }
+
+    // Reserved variant — smaller, monochrome, dense. They live inside
+    // the disclosure; the design plan asks them to be unobtrusive but
+    // still scannable.
+    &--reserved {
+      min-height: 84px;
+      padding: 0.75rem;
+
+      .question-type-picker__label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .question-type-picker__icon {
+        background: rgba(100, 116, 139, 0.18);
+        color: rgba(30, 41, 59, 0.65);
+        box-shadow: none;
+      }
+    }
+  }
+
+  // Glyph rendered as a pill: accent gradient on active tiles, muted
+  // slate on disabled. Auto-width with horizontal padding so 2- or
+  // 3-char codes both look balanced.
+  &__icon {
+    align-self: flex-start;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 0.55rem;
+    border-radius: 999px;
+    background: var(--surface-accent-fill, var(--primary));
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    letter-spacing: 0.04em;
+
+    &-glyph {
+      font-family: var(--chora-font-mono, 'JetBrains Mono', monospace);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      line-height: 1;
+      white-space: nowrap;
+    }
+  }
+
+  &__tile--disabled &__icon {
+    background: rgba(100, 116, 139, 0.18);
+    color: rgba(30, 41, 59, 0.65);
+    box-shadow: none;
+  }
+
+  &__label {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__description {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  &__badge {
+    position: absolute;
+    top: var(--chora-space-xs, 0.5rem);
+    right: var(--chora-space-xs, 0.5rem);
+    padding: 2px 6px;
+    background: var(--chora-color-surface-2, #e8e8e8);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: var(--chora-radius-sm, 6px);
+  }
+
+  // ─── Coming soon disclosure ──────────────────────────────────────
+  &__coming-soon-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+    padding: 0.5rem 0.85rem;
+    background: transparent;
+    border: 1px dashed var(--glass-border, rgba(0, 0, 0, 0.12));
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--chora-transition-fast, 160ms ease-out),
+                border-color var(--chora-transition-fast, 160ms ease-out),
+                color var(--chora-transition-fast, 160ms ease-out);
+
+    &:hover {
+      border-color: var(--primary);
+      color: var(--text-main);
+      background: rgba(25, 118, 210, 0.04);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__coming-soon-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 18px;
+    padding: 0 0.4rem;
+    background: rgba(25, 118, 210, 0.1);
+    color: var(--primary);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  &__coming-soon-panel {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--chora-space-sm, 0.75rem);
+    padding-top: 0.5rem;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .question-type-picker__tile,
+  .question-type-picker__coming-soon-toggle {
+    transition: none;
+  }
+}

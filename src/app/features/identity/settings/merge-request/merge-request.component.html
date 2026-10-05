@@ -1,0 +1,348 @@
+<section
+  class="merge-request"
+  role="main"
+  [attr.aria-label]="'identity.merge_request.title' | translate"
+  data-testid="merge-request-page">
+
+  <!-- Header -->
+  <header class="merge-request__header">
+    <a routerLink="/settings/identity" class="merge-request__back" data-testid="btn-back">
+      <span class="merge-request__back-icon" aria-hidden="true">arrow_back</span>
+      {{ 'identity.merge_request.back_to_identity' | translate }}
+    </a>
+    <h1 class="merge-request__title" data-testid="merge-request-title">
+      {{ 'identity.merge_request.title' | translate }}
+    </h1>
+    <p class="merge-request__subtitle">
+      {{ 'identity.merge_request.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="merge-request__loading" aria-live="polite" data-testid="merge-request-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="merge-request__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Existing Request: Approved -->
+  @if (!loading() && isApproved()) {
+    <div class="merge-request__result merge-request__result--approved" role="status" data-testid="merge-request-approved">
+      <span class="merge-request__result-icon" aria-hidden="true">check_circle</span>
+      <h2 class="merge-request__result-title">
+        {{ 'identity.merge_request.approved_title' | translate }}
+      </h2>
+      <p class="merge-request__result-desc">
+        {{ 'identity.merge_request.approved_desc' | translate }}
+      </p>
+
+      <!-- Timeline -->
+      <div class="merge-request__timeline" data-testid="merge-request-timeline" role="list">
+        @for (step of timelineSteps(); track step.key) {
+          <div
+            class="merge-request__timeline-step"
+            [class.merge-request__timeline-step--completed]="step.completed"
+            [class.merge-request__timeline-step--current]="step.current"
+            role="listitem">
+            <div class="merge-request__timeline-marker">
+              <span class="merge-request__timeline-icon" aria-hidden="true">{{ step.icon }}</span>
+            </div>
+            <div class="merge-request__timeline-content">
+              <span class="merge-request__timeline-label">{{ step.label | translate }}</span>
+              @if (step.timestamp) {
+                <span class="merge-request__timeline-time">{{ formatDateTime(step.timestamp) }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Existing Request: Pending -->
+  @if (!loading() && isPending()) {
+    <div class="merge-request__status" role="status" data-testid="merge-request-pending">
+      <div class="merge-request__status-header">
+        <span class="merge-request__status-icon merge-request__status-icon--pending" aria-hidden="true">hourglass_top</span>
+        <h2 class="merge-request__status-title">
+          {{ 'identity.merge_request.pending_title' | translate }}
+        </h2>
+      </div>
+      <p class="merge-request__status-desc">
+        {{ 'identity.merge_request.pending_desc' | translate }}
+      </p>
+
+      <!-- Timeline -->
+      <div class="merge-request__timeline" data-testid="merge-request-timeline" role="list">
+        @for (step of timelineSteps(); track step.key) {
+          <div
+            class="merge-request__timeline-step"
+            [class.merge-request__timeline-step--completed]="step.completed"
+            [class.merge-request__timeline-step--current]="step.current"
+            role="listitem">
+            <div class="merge-request__timeline-marker">
+              <span class="merge-request__timeline-icon" aria-hidden="true">{{ step.icon }}</span>
+            </div>
+            <div class="merge-request__timeline-content">
+              <span class="merge-request__timeline-label">{{ step.label | translate }}</span>
+              @if (step.timestamp) {
+                <span class="merge-request__timeline-time">{{ formatDateTime(step.timestamp) }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Existing Request: Denied -->
+  @if (!loading() && isDenied()) {
+    <div class="merge-request__status" role="status" data-testid="merge-request-denied">
+      <div class="merge-request__status-header">
+        <span class="merge-request__status-icon merge-request__status-icon--denied" aria-hidden="true">cancel</span>
+        <h2 class="merge-request__status-title">
+          {{ 'identity.merge_request.denied_title' | translate }}
+        </h2>
+      </div>
+
+      @if (existingRequest(); as req) {
+        @if (req.denial_reason) {
+          <div class="merge-request__denial-reason" data-testid="denial-reason">
+            <h3 class="merge-request__denial-reason-label">
+              {{ 'identity.merge_request.denial_reason_label' | translate }}
+            </h3>
+            <p class="merge-request__denial-reason-text">{{ req.denial_reason }}</p>
+          </div>
+        }
+      }
+
+      <!-- Timeline -->
+      <div class="merge-request__timeline" data-testid="merge-request-timeline" role="list">
+        @for (step of timelineSteps(); track step.key) {
+          <div
+            class="merge-request__timeline-step"
+            [class.merge-request__timeline-step--completed]="step.completed"
+            [class.merge-request__timeline-step--current]="step.current"
+            [class.merge-request__timeline-step--denied]="step.key === 'denied'"
+            role="listitem">
+            <div class="merge-request__timeline-marker">
+              <span class="merge-request__timeline-icon" aria-hidden="true">{{ step.icon }}</span>
+            </div>
+            <div class="merge-request__timeline-content">
+              <span class="merge-request__timeline-label">{{ step.label | translate }}</span>
+              @if (step.timestamp) {
+                <span class="merge-request__timeline-time">{{ formatDateTime(step.timestamp) }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="merge-request__resubmit">
+        <button
+          type="button"
+          class="merge-request__btn merge-request__btn--primary"
+          data-testid="btn-resubmit"
+          (click)="onResubmit()">
+          {{ 'identity.merge_request.resubmit' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Form (no existing request, or re-submitting after denial) -->
+  @if (!loading() && !hasExistingRequest()) {
+    <form
+      class="merge-request__form"
+      data-testid="merge-request-form"
+      (ngSubmit)="submitRequest()">
+
+      <!-- Target Email -->
+      <div class="merge-request__field">
+        <label class="merge-request__label" for="targetEmail">
+          {{ 'identity.merge_request.target_email_label' | translate }}
+        </label>
+        <p class="merge-request__field-hint">
+          {{ 'identity.merge_request.target_email_hint' | translate }}
+        </p>
+        <input
+          type="email"
+          id="targetEmail"
+          name="targetEmail"
+          class="merge-request__input"
+          data-testid="input-target-email"
+          [attr.aria-invalid]="targetEmail().length > 0 && !isEmailValid()"
+          [ngModel]="targetEmail()"
+          (ngModelChange)="onEmailInput($event)"
+          required />
+        @if (targetEmail().length > 0 && !isEmailValid()) {
+          <p class="merge-request__error-text" role="alert" aria-live="polite">
+            {{ 'identity.merge_request.invalid_email' | translate }}
+          </p>
+        }
+      </div>
+
+      <!-- Reason -->
+      <div class="merge-request__field">
+        <label class="merge-request__label" for="mergeReason">
+          {{ 'identity.merge_request.reason_label' | translate }}
+        </label>
+        <p class="merge-request__field-hint">
+          {{ 'identity.merge_request.reason_hint' | translate }}
+        </p>
+        <textarea
+          id="mergeReason"
+          name="mergeReason"
+          class="merge-request__textarea"
+          data-testid="input-reason"
+          rows="5"
+          [attr.minlength]="minReasonLength"
+          [attr.maxlength]="maxReasonLength"
+          [attr.aria-invalid]="reason().length > 0 && !isReasonValid()"
+          [ngModel]="reason()"
+          (ngModelChange)="onReasonInput($event)"
+          required></textarea>
+        <div class="merge-request__char-counter" aria-live="polite">
+          <span
+            [class.merge-request__char-counter--warning]="charsRemaining() < 100"
+            [class.merge-request__char-counter--error]="charsRemaining() < 0">
+            {{ charCount() }} / {{ maxReasonLength }}
+          </span>
+          @if (reason().length > 0 && reason().trim().length < minReasonLength) {
+            <span class="merge-request__error-text" role="alert">
+              {{ 'identity.merge_request.reason_too_short' | translate }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Evidence Upload -->
+      <div class="merge-request__field">
+        <span class="merge-request__label">
+          {{ 'identity.merge_request.evidence_label' | translate }}
+        </span>
+        <p class="merge-request__field-hint">
+          {{ 'identity.merge_request.evidence_hint' | translate }}
+        </p>
+
+        <!-- Drop zone -->
+        <div
+          class="merge-request__dropzone"
+          [class.merge-request__dropzone--active]="dragOver()"
+          [class.merge-request__dropzone--disabled]="files().length >= maxFiles"
+          data-testid="dropzone"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)">
+
+          <span class="merge-request__dropzone-icon" aria-hidden="true">cloud_upload</span>
+          <p class="merge-request__dropzone-text">
+            {{ 'identity.merge_request.drop_files' | translate }}
+          </p>
+          <p class="merge-request__dropzone-subtext">
+            {{ 'identity.merge_request.file_limits' | translate }}
+          </p>
+
+          <label class="merge-request__btn merge-request__btn--secondary merge-request__browse-btn">
+            {{ 'identity.merge_request.browse_files' | translate }}
+            <input
+              type="file"
+              class="merge-request__file-input"
+              data-testid="input-evidence"
+              [accept]="acceptedExtensions"
+              [disabled]="files().length >= maxFiles"
+              multiple
+              (change)="onFileSelect($event)" />
+          </label>
+        </div>
+
+        <!-- File errors -->
+        @if (fileErrors().length > 0) {
+          <div class="merge-request__file-errors" role="alert" aria-live="assertive">
+            @for (error of fileErrors(); track error) {
+              <p class="merge-request__error-text">{{ error | translate }}</p>
+            }
+          </div>
+        }
+
+        <!-- File list -->
+        @if (files().length > 0) {
+          <div class="merge-request__file-list" data-testid="file-list" role="list">
+            @for (file of files(); track file.name; let i = $index) {
+              <div class="merge-request__file-item" role="listitem" [attr.data-testid]="'file-' + i">
+                <!-- Thumbnail -->
+                <div class="merge-request__file-preview">
+                  @if (isImageFile(file)) {
+                    @if (getPreview(file.name); as previewUrl) {
+                      <img
+                        [src]="previewUrl"
+                        [alt]="file.name"
+                        class="merge-request__file-thumb" />
+                    }
+                  } @else {
+                    <span class="merge-request__file-icon" aria-hidden="true">description</span>
+                  }
+                </div>
+
+                <!-- File info -->
+                <div class="merge-request__file-info">
+                  <span class="merge-request__file-name">{{ file.name }}</span>
+                  <span class="merge-request__file-size">{{ formatFileSize(file.size) }}</span>
+                </div>
+
+                <!-- Remove button -->
+                <button
+                  type="button"
+                  class="merge-request__file-remove"
+                  [attr.data-testid]="'btn-remove-file-' + i"
+                  [attr.aria-label]="('identity.merge_request.remove_file' | translate) + ' ' + file.name"
+                  (click)="removeFile(i)">
+                  <span aria-hidden="true">close</span>
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Ownership Confirmation -->
+      <div class="merge-request__field merge-request__field--checkbox">
+        <label class="merge-request__checkbox-label">
+          <input
+            type="checkbox"
+            name="ownershipConfirmed"
+            class="merge-request__checkbox"
+            data-testid="checkbox-ownership"
+            [ngModel]="ownershipConfirmed()"
+            (ngModelChange)="onOwnershipToggle($event)" />
+          <span class="merge-request__checkbox-text">
+            {{ 'identity.merge_request.ownership_confirm' | translate }}
+          </span>
+        </label>
+      </div>
+
+      <!-- Submit -->
+      <div class="merge-request__actions">
+        <a
+          routerLink="/settings/identity"
+          class="merge-request__btn merge-request__btn--ghost"
+          data-testid="btn-cancel">
+          {{ 'identity.merge_request.cancel' | translate }}
+        </a>
+        <button
+          type="submit"
+          class="merge-request__btn merge-request__btn--primary"
+          data-testid="btn-submit"
+          [disabled]="!canSubmit()">
+          @if (submitting()) {
+            {{ 'identity.merge_request.submitting' | translate }}
+          } @else {
+            {{ 'identity.merge_request.submit' | translate }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+</section>

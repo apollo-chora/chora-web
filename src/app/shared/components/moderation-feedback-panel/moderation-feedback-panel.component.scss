@@ -1,0 +1,110 @@
+:host {
+  display: block;
+}
+
+.moderation-feedback-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm, 8px);
+  padding: var(--chora-space-md, 16px);
+  border-radius: var(--chora-radius-md, 12px);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  background: rgba(254, 243, 199, 0.65);
+  backdrop-filter: blur(8px);
+
+  &--reject,
+  &--unknown {
+    border-color: rgba(220, 38, 38, 0.5);
+    background: rgba(254, 226, 226, 0.65);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__icon {
+    font-size: 1.125rem;
+    flex-shrink: 0;
+  }
+
+  &__heading {
+    flex: 1;
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--chora-color-text, #1f2937);
+  }
+
+  &__dismiss {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.875rem;
+    line-height: 1;
+    padding: var(--chora-space-xs, 4px);
+    color: var(--chora-color-text-muted, #6b7280);
+    border-radius: var(--chora-radius-sm, 6px);
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  &__message {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--chora-color-text, #374151);
+  }
+
+  &__rewrite {
+    margin: 0;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-inline-start: 3px solid var(--chora-color-primary, #1976d2);
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: var(--chora-radius-sm, 6px);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__rewrite-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-muted, #6b7280);
+  }
+
+  &__rewrite-text {
+    font-size: 0.875rem;
+    color: var(--chora-color-text, #374151);
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+    flex-wrap: wrap;
+  }
+
+  &__cta {
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-sm, 6px);
+    border: 1px solid transparent;
+
+    &--primary {
+      background: var(--chora-color-primary, #1976d2);
+      color: #fff;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #1976d2);
+      outline-offset: 2px;
+    }
+  }
+}

@@ -1,0 +1,94 @@
+<section class="surface-rplus offerings-finder" data-testid="rplus-offerings-finder">
+  <!-- R4 (CHO-2269): portfolio header, the R+ landing summary that absorbed
+       the retired Rostering dashboard. Its own async state, isolated from the
+       list below; honest KPIs only (no fabricated at-risk / completion /
+       attendance). Hidden when the session has no teaching portfolio. -->
+  @if (portfolioState() === 'loading') {
+    <div
+      class="offerings-finder__portfolio offerings-finder__portfolio--loading glass-panel"
+      data-testid="portfolio-loading"
+      aria-live="polite"
+      aria-busy="true">
+      <span class="offerings-finder__portfolio-skeleton" aria-hidden="true"></span>
+      <span class="offerings-finder__portfolio-skeleton" aria-hidden="true"></span>
+    </div>
+  } @else if (portfolioState() === 'error') {
+    <div
+      class="offerings-finder__portfolio offerings-finder__portfolio--error glass-panel"
+      role="alert"
+      data-testid="portfolio-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p class="offerings-finder__portfolio-error-text">
+        {{ 'rplus.common.load_error' | translate }}
+        @if (portfolioError(); as err) {
+          <span class="offerings-finder__portfolio-error-detail">{{ err }}</span>
+        }
+      </p>
+      <button
+        type="button"
+        class="btn btn-ghost"
+        data-testid="portfolio-retry"
+        (click)="onPortfolioRetry()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        {{ 'rplus.common.retry' | translate }}
+      </button>
+    </div>
+  } @else if (showPortfolioHeader()) {
+    <header class="offerings-finder__portfolio glass-panel" data-testid="offerings-portfolio">
+      <div class="offerings-finder__portfolio-heading">
+        <h2 class="offerings-finder__portfolio-title">
+          {{ 'rplus.offerings.portfolio.title' | translate }}
+        </h2>
+        <span class="offerings-finder__portfolio-instructor" data-testid="portfolio-instructor">
+          <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+          {{ 'rplus.offerings.portfolio.instructor_label' | translate }}:
+          <strong>{{ instructorName() }}</strong>
+        </span>
+      </div>
+      <dl class="offerings-finder__portfolio-kpis">
+        <div class="offerings-finder__portfolio-kpi">
+          <dt>{{ 'rplus.offerings.portfolio.kpi.courses' | translate }}</dt>
+          <dd data-testid="portfolio-courses">{{ courseCount() }}</dd>
+        </div>
+        <div class="offerings-finder__portfolio-kpi">
+          <dt>{{ 'rplus.offerings.portfolio.kpi.learners' | translate }}</dt>
+          <dd data-testid="portfolio-learners">
+            {{ learnerCount() }}@if (learnerCountIsLowerBound()) {<span
+                class="offerings-finder__portfolio-floor"
+                data-testid="portfolio-learners-lowerbound"
+                [attr.aria-label]="'rplus.offerings.portfolio.learners_floor_aria' | translate"
+                >+</span
+              >}
+          </dd>
+        </div>
+      </dl>
+    </header>
+  }
+
+  <header class="offerings-finder__header">
+    <div class="offerings-finder__heading">
+      <h1 class="offerings-finder__title">{{ 'rplus.offerings.title' | translate }}</h1>
+      <p class="offerings-finder__subtitle">{{ 'rplus.offerings.subtitle' | translate }}</p>
+    </div>
+    @if (canCreate()) {
+      <a
+        class="btn btn-primary offerings-finder__new-cta"
+        data-testid="offerings-finder-new"
+        routerLink="/r/offerings/new">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{ 'rplus.offerings.new_cta' | translate }}
+      </a>
+    }
+  </header>
+
+  <chora-collection-view
+    [store]="store"
+    [columns]="columns"
+    [facetDefs]="facets"
+    [rowIdentity]="rowIdentity"
+    [rowLink]="rowLink"
+    [searchPlaceholderKey]="'rplus.offerings.search_placeholder'"
+    [emptyTitleKey]="'rplus.offerings.empty_title'"
+    [loadErrorKey]="'rplus.common.load_error'"
+    [retryKey]="'rplus.common.retry'" />
+</section>

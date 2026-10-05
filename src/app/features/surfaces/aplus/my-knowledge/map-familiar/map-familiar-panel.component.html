@@ -1,0 +1,533 @@
+<section
+  class="map-familiar"
+  [attr.aria-label]="'aplus.knowledge.familiar_panel' | translate"
+  data-testid="map-familiar-panel">
+  @if (hasFamiliar()) {
+    <!-- ── a. Bond header (familiar section) ──────────────────────── -->
+    @if (showFamiliar()) {
+      <header class="map-familiar__bond" data-testid="map-familiar-bond">
+        <span class="map-familiar__bond-label">
+          {{ 'aplus.knowledge.familiar_attached' | translate }}
+        </span>
+        <button
+          type="button"
+          class="map-familiar__btn map-familiar__btn--ghost"
+          [disabled]="dismissing()"
+          (click)="dismiss()"
+          data-testid="map-familiar-dismiss">
+          {{ 'aplus.knowledge.familiar_dismiss' | translate }}
+        </button>
+      </header>
+
+      <!-- Awakening resonance pick (R3-1): elect the focal concept as the
+           Familiar's ring-radius centre. Only when a concept is focal. -->
+      @if (canPickResonance()) {
+        <button
+          type="button"
+          class="map-familiar__resonance"
+          [disabled]="pickingResonance()"
+          (click)="pickResonance()"
+          data-testid="map-familiar-resonance-pick">
+          <i class="fa-solid fa-hexagon-nodes" aria-hidden="true"></i>
+          {{ 'aplus.knowledge.familiar_resonance_pick' | translate }}
+        </button>
+      }
+    }
+
+    <!-- ── b. Suggestions (re-voiced fog) ────────────────────────── -->
+    @if (showSuggestions()) {
+    <section
+      class="map-familiar__block"
+      [attr.aria-label]="'aplus.knowledge.familiar_suggest' | translate"
+      data-testid="map-familiar-suggestions">
+      <div class="map-familiar__block-head">
+        <h4 class="map-familiar__block-title">
+          {{ 'aplus.knowledge.familiar_suggest' | translate }}
+        </h4>
+        @if (canGenerate()) {
+          <button
+            type="button"
+            class="map-familiar__btn map-familiar__btn--sm"
+            [disabled]="generating() || suggestionsWaiting()"
+            (click)="generateSuggestions()"
+            data-testid="map-familiar-suggest">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.generate' | translate }}
+          </button>
+        }
+      </div>
+
+      @if (suggestionsWaiting()) {
+        <p
+          class="map-familiar__hint"
+          role="status"
+          aria-live="polite"
+          data-testid="map-familiar-suggesting">
+          {{ 'aplus.knowledge.familiar_suggesting' | translate }}
+        </p>
+      }
+
+      <!-- Goal-level suggestions (C4 slice 2 item 3). ADR-238 D4 anchors an
+           unmatched weakness's suggestion at the goal ROOT so it survives the
+           read-time goal fence, which made it reachable ONLY from the root.
+           Shown here as its own section, labelled as belonging to the map
+           rather than to the node the learner happens to be standing on, and
+           never fanned as a ghost around that node. Absent on the root itself,
+           where the same rows are already the node's own. -->
+      @if (goalLevelSuggestions().length > 0) {
+        <section
+          class="map-familiar__goal-suggestions"
+          data-testid="map-familiar-goal-suggestions">
+          <h5 class="map-familiar__goal-suggestions-title">
+            {{ 'aplus.knowledge.goal_suggestions_title' | translate }}
+          </h5>
+          <p class="map-familiar__hint">
+            {{ 'aplus.knowledge.goal_suggestions_hint' | translate }}
+          </p>
+          <ul
+            class="map-familiar__suggestions"
+            aria-live="polite"
+            [attr.aria-label]="
+              'aplus.knowledge.goal_suggestions_title' | translate
+            ">
+            @for (s of goalLevelSuggestions(); track s.suggestionId) {
+              <li
+                class="map-familiar__suggestion"
+                [attr.data-testid]="'map-familiar-suggestion-' + s.suggestionId">
+                <div class="map-familiar__suggestion-body">
+                  <span class="map-familiar__suggestion-title">
+                    {{ suggestionLabel(s) }}
+                  </span>
+                  @if (s.rationale) {
+                    <p class="map-familiar__suggestion-rationale">
+                      {{ s.rationale }}
+                    </p>
+                  }
+                </div>
+                <div class="map-familiar__suggestion-actions">
+                  <button
+                    type="button"
+                    class="map-familiar__btn map-familiar__btn--sm"
+                    [disabled]="mutatingSuggestion()"
+                    (click)="acceptSuggestion(s.suggestionId)"
+                    [attr.data-testid]="'map-familiar-accept-' + s.suggestionId">
+                    {{ 'aplus.knowledge.familiar_accept' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="map-familiar__btn map-familiar__btn--sm map-familiar__btn--ghost"
+                    [disabled]="mutatingSuggestion()"
+                    (click)="dismissSuggestion(s.suggestionId)"
+                    [attr.data-testid]="
+                      'map-familiar-dismiss-suggestion-' + s.suggestionId
+                    ">
+                    {{ 'aplus.knowledge.familiar_dismiss_suggestion' | translate }}
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (suggestions().length > 0) {
+        <ul
+          class="map-familiar__suggestions"
+          aria-live="polite"
+          [attr.aria-label]="'aplus.knowledge.familiar_suggestions_aria' | translate"
+          data-testid="map-familiar-suggestion-list">
+          @for (s of suggestions(); track s.suggestionId) {
+            <li
+              class="map-familiar__suggestion"
+              [attr.data-testid]="'map-familiar-suggestion-' + s.suggestionId">
+              <div class="map-familiar__suggestion-body">
+                <span class="map-familiar__suggestion-kind">
+                  {{
+                    'aplus.knowledge.familiar_suggestion_kind_' + s.kind
+                      | translate
+                  }}
+                </span>
+                <span class="map-familiar__suggestion-title">
+                  {{ suggestionLabel(s) }}
+                </span>
+                @if (s.rationale) {
+                  <p class="map-familiar__suggestion-rationale">
+                    {{ s.rationale }}
+                  </p>
+                }
+              </div>
+              <div class="map-familiar__suggestion-actions">
+                <button
+                  type="button"
+                  class="map-familiar__btn map-familiar__btn--sm"
+                  [disabled]="mutatingSuggestion()"
+                  (click)="acceptSuggestion(s.suggestionId)"
+                  [attr.data-testid]="'map-familiar-accept-' + s.suggestionId">
+                  {{ 'aplus.knowledge.familiar_accept' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="map-familiar__btn map-familiar__btn--sm map-familiar__btn--ghost"
+                  [disabled]="mutatingSuggestion()"
+                  (click)="dismissSuggestion(s.suggestionId)"
+                  [attr.data-testid]="
+                    'map-familiar-dismiss-suggestion-' + s.suggestionId
+                  ">
+                  {{ 'aplus.knowledge.familiar_dismiss_suggestion' | translate }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else if (isRoot()) {
+        <!-- The root IS the goal (ADR-214 / D14); breadth grows by authoring or
+             re-root, not an LLM win-to-reveal. Name the real lever, no Generate. -->
+        <p
+          class="map-familiar__empty"
+          role="status"
+          data-testid="map-familiar-suggest-root">
+          {{ 'aplus.knowledge.familiar_suggest_root' | translate }}
+        </p>
+      } @else if (!focalWon()) {
+        <!-- ADR-227 D2: the fog beyond a node lifts only by winning it. Show the
+             gate up front (and the sovereign authoring alternative). The copy
+             names "win this hex" as the lever, so OFFER that lever here: naming
+             it without a way to pull it reads as "there is nothing I can do". -->
+        <p
+          class="map-familiar__empty"
+          role="status"
+          data-testid="map-familiar-suggest-locked">
+          {{ 'aplus.knowledge.familiar_suggest_locked' | translate }}
+        </p>
+        <button
+          type="button"
+          class="map-familiar__btn map-familiar__btn--sm"
+          (click)="practiceRequested.emit()"
+          data-testid="map-familiar-suggest-practice">
+          <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+          {{ 'aplus.knowledge.familiar_suggest_practice' | translate }}
+        </button>
+      } @else if (suggestSlow()) {
+        <p
+          class="map-familiar__hint"
+          role="status"
+          aria-live="polite"
+          data-testid="map-familiar-suggest-slow">
+          {{ 'aplus.knowledge.familiar_suggest_slow' | translate }}
+          <button
+            type="button"
+            class="map-familiar__btn map-familiar__btn--sm map-familiar__btn--ghost"
+            (click)="loadSuggestions()"
+            data-testid="map-familiar-suggest-recheck">
+            {{ 'aplus.knowledge.familiar_suggest_recheck' | translate }}
+          </button>
+        </p>
+      } @else if (!suggestionsWaiting()) {
+        <p
+          class="map-familiar__empty"
+          role="status"
+          data-testid="map-familiar-no-suggestions">
+          {{ 'aplus.knowledge.familiar_no_suggestions' | translate }}
+        </p>
+      }
+    </section>
+    }
+
+    <!-- ── c. Memory (reused panel, familiar section) ────────────── -->
+    @if (showFamiliar()) {
+      <chora-familiar-map-memory-panel
+        class="map-familiar__memory"
+        [state]="memoryState()"
+        [portrait]="portrait()"
+        [goalKnowledge]="goalKnowledge()"
+        [reflection]="reflection()"
+        data-testid="map-familiar-memory" />
+    }
+
+    <!-- ── c2. Grimoire loadout (CHO-2013 P1.C) — the char-sheet's
+             equip/swap/use surface; goal-contextual so explain_anew targets
+             the map's focal concept. Only when a Familiar is bound. ──────── -->
+    @if (showFamiliar() && attachedFamiliarId()) {
+      <chora-familiar-loadout
+        class="map-familiar__loadout"
+        [familiarId]="attachedFamiliarId()!"
+        [focalConceptId]="focalConceptId()"
+        data-testid="map-familiar-loadout" />
+    }
+
+    <!-- ── d. Diagnose (growth-edge upload) ──────────────────────── -->
+    @if (showDiagnose()) {
+    <section
+      class="map-familiar__block"
+      [attr.aria-label]="'aplus.knowledge.familiar_diagnose' | translate"
+      data-testid="map-familiar-diagnose">
+      <h4 class="map-familiar__block-title">
+        {{ 'aplus.knowledge.familiar_diagnose' | translate }}
+      </h4>
+      <p class="map-familiar__hint">
+        {{ 'aplus.knowledge.familiar_diagnose_hint' | translate }}
+      </p>
+
+      <!-- Diagnoses already parked at the review interrupt (C4 slice 2). The
+           CTA further down is ephemeral (it dies with the drawer); this is the
+           durable way back, and it is the FIRST thing the tab shows, because
+           finishing work already started beats starting more. -->
+      @if (parkedDiagnoses().length) {
+        <div class="map-familiar__parked" data-testid="map-familiar-parked">
+          <h5 class="map-familiar__parked-title">
+            {{ 'aplus.knowledge.parked_title' | translate }}
+          </h5>
+          <ul class="map-familiar__parked-list">
+            @for (row of parkedDiagnoses(); track row.uploadId) {
+              <li class="map-familiar__parked-item">
+                <a
+                  class="map-familiar__parked-link"
+                  [routerLink]="['/a/growth-edges/review', row.uploadId]">
+                  {{
+                    'aplus.knowledge.familiar_diagnose_kind_' + row.uploadKind
+                      | translate
+                  }}
+                </a>
+                <span
+                  class="map-familiar__parked-state"
+                  [class.is-unknown]="!row.status.known">
+                  {{ row.status.labelKey | translate }}
+                  @if (!row.status.known) {
+                    <code>{{ row.status.raw }}</code>
+                  }
+                </span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      <label class="map-familiar__field">
+        <span class="map-familiar__field-label">
+          {{ 'aplus.knowledge.familiar_diagnose_kind' | translate }}
+        </span>
+        <select
+          class="map-familiar__select"
+          [disabled]="uploadBusy()"
+          (change)="onKindChange($event)"
+          data-testid="map-familiar-diagnose-kind">
+          @for (k of uploadKinds; track k) {
+            <option [value]="k" [selected]="k === uploadKind()">
+              {{ 'aplus.knowledge.familiar_diagnose_kind_' + k | translate }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <!-- Shared dropzone (same component as batch authoring + R+ assessment),
+           but with the DIAGNOSE door's accept list, not authoring's: authoring
+           advertises .docx/.webp, which this door answers with a 415. -->
+      <chora-file-dropzone
+        [label]="'aplus.knowledge.familiar_diagnose_file' | translate"
+        [hint]="'aplus.knowledge.familiar_diagnose_file_hint' | translate"
+        [formats]="'aplus.knowledge.familiar_diagnose_file_formats' | translate"
+        [accept]="diagnoseAccept"
+        [multiple]="false"
+        [files]="uploadFiles()"
+        [disabled]="uploadBusy()"
+        testIdPrefix="map-familiar-diagnose-dropzone"
+        (filesAdded)="onFilesAdded($event)"
+        (fileRemoved)="onFileRemoved()"
+        data-testid="map-familiar-diagnose-dropzone" />
+      @if (uploadError(); as err) {
+        <p
+          class="map-familiar__error"
+          role="alert"
+          data-testid="map-familiar-diagnose-file-error">
+          {{ err | translate }}
+        </p>
+      }
+
+      <button
+        type="button"
+        class="map-familiar__btn"
+        [disabled]="!uploadFile() || uploadBusy()"
+        (click)="startDiagnose()"
+        data-testid="map-familiar-diagnose-submit">
+        {{ 'aplus.knowledge.familiar_diagnose_submit' | translate }}
+      </button>
+
+      @if (uploadBusy()) {
+        <!-- Words alone read as a frozen page on a run that can take minutes.
+             The pulsing wand is the same working signal the campaign-practice
+             lane uses, so "the Companion is thinking" looks the same everywhere. -->
+        <p
+          class="map-familiar__hint map-familiar__working"
+          role="status"
+          aria-live="polite"
+          data-testid="map-familiar-diagnose-busy">
+          <i class="fa-solid fa-wand-magic-sparkles fa-fade" aria-hidden="true"></i>
+          {{ 'aplus.knowledge.familiar_diagnose_busy' | translate }}
+        </p>
+        @if (diagnoseSlow()) {
+          <!-- A multi-minute analysis is normal (real graph-mode multimodal runs
+               2 to 4 min). Once the wait is long, reassure the learner it is
+               still working and that their place is held, so a silent page never
+               reads as a stall. -->
+          <p
+            class="map-familiar__hint map-familiar__reassure"
+            role="status"
+            aria-live="polite"
+            data-testid="map-familiar-diagnose-reassure">
+            {{ 'aplus.knowledge.familiar_diagnose_reassure' | translate }}
+          </p>
+        }
+      }
+      @if (uploadPhase() === 'done') {
+        <!-- D5 (ADR-238): a goal-level summary of what the marked test revealed.
+             The parent has ALREADY switched to the Growth lens by now, so the
+             copy says the spots are lit up, not "go check the Growth lens" —
+             that told the learner to go somewhere they had been taken. -->
+        <p
+          class="map-familiar__ok"
+          [class.is-celebrating]="celebrating()"
+          role="status"
+          data-testid="map-familiar-diagnose-done">
+          <i class="fa-solid fa-seedling" aria-hidden="true"></i>
+          {{ diagnoseSummaryKey() | translate: { count: diagnoseResult()?.count ?? 0 } }}
+        </p>
+      } @else if (uploadPhase() === 'empty') {
+        <!-- D6 (ADR-238): the run COMPLETED but placed zero edges. "Processed" is
+             not "found" — say so explicitly, never a bare success over nothing. -->
+        <p
+          class="map-familiar__empty"
+          role="status"
+          data-testid="map-familiar-diagnose-empty">
+          {{ 'aplus.knowledge.familiar_diagnose_empty' | translate }}
+        </p>
+      } @else if (uploadPhase() === 'awaiting_review') {
+        <!-- ADR-205 D4 (O2, CHO-2301): the graduated crew paused for the learner
+             at its bounded HITL interrupt. This is a SUCCESS waiting on them, so
+             it reads as an invitation, never as the old false "couldn't finish".
+             It deep-links to the review ROUTE rather than mounting the panel
+             here: that component runs its own poller, and two pollers on one job
+             is the kind of duplication that later reads as a bug. -->
+        <p class="map-familiar__review" role="status">
+          {{ 'aplus.knowledge.familiar_diagnose_review_ready' | translate }}
+        </p>
+        <a
+          class="map-familiar__review-cta"
+          [routerLink]="['/a/growth-edges/review', reviewUploadId()]"
+          data-testid="map-familiar-diagnose-review">
+          <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+          {{ 'aplus.knowledge.familiar_diagnose_review_cta' | translate }}
+        </a>
+      } @else if (uploadPhase() === 'failed') {
+        <p
+          class="map-familiar__error"
+          role="alert"
+          data-testid="map-familiar-diagnose-error">
+          {{ 'aplus.knowledge.familiar_diagnose_error' | translate }}
+        </p>
+      }
+    </section>
+    }
+
+    <!-- ── e. Daily Dose CTA (familiar section) ──────────────────── -->
+    @if (showFamiliar()) {
+      <a
+        class="map-familiar__daily-dose"
+        routerLink="/a/daily-dose"
+        [queryParams]="doseQueryParams()"
+        data-testid="map-familiar-daily-dose">
+        {{ 'aplus.knowledge.familiar_daily_dose' | translate }}
+      </a>
+    }
+  } @else {
+    <!-- ── Summon a Familiar ─────────────────────────────────────── -->
+    <div class="map-familiar__summon">
+      <h4 class="map-familiar__block-title">
+        {{ 'aplus.knowledge.familiar_summon' | translate }}
+      </h4>
+      <p class="map-familiar__hint">
+        {{ 'aplus.knowledge.familiar_summon_hint' | translate }}
+      </p>
+
+      @switch (rosterState().status) {
+        @case ('loading') {
+          <p
+            class="map-familiar__hint"
+            role="status"
+            aria-live="polite"
+            data-testid="map-familiar-roster-loading">
+            {{ 'aplus.knowledge.familiar_roster_loading' | translate }}
+          </p>
+        }
+        @case ('error') {
+          <div
+            class="map-familiar__error"
+            role="alert"
+            data-testid="map-familiar-roster-error">
+            <p>{{ 'aplus.knowledge.familiar_roster_error' | translate }}</p>
+            <button
+              type="button"
+              class="map-familiar__btn map-familiar__btn--sm"
+              (click)="loadRoster()"
+              data-testid="map-familiar-roster-retry">
+              {{ 'aplus.knowledge.familiar_retry' | translate }}
+            </button>
+          </div>
+        }
+        @case ('success') {
+          @if (summonableFamiliars().length > 0) {
+            <ul class="map-familiar__roster" data-testid="map-familiar-roster">
+              @for (f of summonableFamiliars(); track f.familiarId) {
+                <li class="map-familiar__roster-item">
+                  <button
+                    type="button"
+                    class="map-familiar__summon-btn"
+                    [disabled]="summoning()"
+                    (click)="summon(f.familiarId)"
+                    [attr.data-testid]="'map-familiar-summon-' + f.familiarId">
+                    <!-- The list mixes hatched Companions with pods (a pod is
+                         summonable pre-hatch). rosterName() suppresses the
+                         backend's placeholder name on the Stage-0 rows. -->
+                    <span class="map-familiar__summon-name">
+                      {{
+                        rosterName(f) ||
+                          ('aplus.knowledge.familiar_untitled_pod' | translate)
+                      }}
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          } @else if (allCompanionsAssigned()) {
+            <!-- Owns Companions, but every one is already on another graph.
+                 A Companion belongs to at most one graph (CHO-2403), so the
+                 way forward is a new egg, not the roster they have filled.
+                 Saying "you have no Companion" here would be a lie. -->
+            <div
+              class="map-familiar__no-roster"
+              data-testid="map-familiar-all-assigned">
+              <p>{{ 'aplus.knowledge.familiar_all_assigned' | translate }}</p>
+              <a
+                class="map-familiar__btn map-familiar__btn--sm"
+                routerLink="/a/companion/marketplace"
+                data-testid="map-familiar-all-assigned-cta">
+                {{ 'aplus.knowledge.familiar_all_assigned_cta' | translate }}
+              </a>
+            </div>
+          } @else {
+            <div
+              class="map-familiar__no-roster"
+              data-testid="map-familiar-no-roster">
+              <p>{{ 'aplus.knowledge.familiar_no_roster' | translate }}</p>
+              <a
+                class="map-familiar__btn map-familiar__btn--sm"
+                routerLink="/a/companion"
+                data-testid="map-familiar-no-roster-cta">
+                {{ 'aplus.knowledge.familiar_no_roster_cta' | translate }}
+              </a>
+            </div>
+          }
+        }
+      }
+    </div>
+  }
+</section>

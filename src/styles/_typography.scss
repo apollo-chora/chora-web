@@ -1,0 +1,38 @@
+body {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.467; // 22px / 15px
+  font-weight: 400;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 36px;
+}
+
+h2 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 30px;
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+small,
+.text-small {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+code,
+pre,
+.font-mono {
+  font-family: 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 20px;
+}

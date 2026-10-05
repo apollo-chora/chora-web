@@ -1,0 +1,296 @@
+:host {
+  display: block;
+}
+
+.exam-summary-widget {
+  padding: var(--chora-space-md, 16px);
+  border-radius: var(--chora-radius-md, 8px);
+  background: var(--chora-color-surface-1, #ffffff);
+  border: 1px solid var(--chora-color-border, #e0e0e0);
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--chora-color-text-primary, #212121);
+  }
+
+  &__date {
+    font-size: 13px;
+    color: var(--chora-color-text-secondary, #757575);
+    white-space: nowrap;
+  }
+
+  &__familiar-icon {
+    font-size: 22px;
+    color: var(--chora-color-primary, #1976d2);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Readiness gauge
+  // ---------------------------------------------------------------------------
+
+  &__gauge {
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__gauge-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chora-color-text-secondary, #757575);
+    margin-bottom: var(--chora-space-xs, 4px);
+  }
+
+  &__gauge-bar {
+    height: 12px;
+    border-radius: 6px;
+    background: var(--chora-color-surface-2, #f5f5f5);
+    overflow: hidden;
+    margin-bottom: var(--chora-space-xs, 4px);
+  }
+
+  &__gauge-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 300ms ease;
+
+    &--high {
+      background: var(--chora-color-success, #4caf50);
+    }
+
+    &--medium {
+      background: var(--chora-color-warning, #ff9800);
+    }
+
+    &--low {
+      background: var(--chora-color-error, #f44336);
+    }
+  }
+
+  &__gauge-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--chora-color-text-primary, #212121);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Predicted score & threshold
+  // ---------------------------------------------------------------------------
+
+  &__prediction {
+    margin-bottom: var(--chora-space-md, 16px);
+    padding: var(--chora-space-sm, 8px);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-2, #f5f5f5);
+  }
+
+  &__prediction-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--chora-space-xs, 4px);
+  }
+
+  &__prediction-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chora-color-text-secondary, #757575);
+  }
+
+  &__prediction-value {
+    font-size: 20px;
+    font-weight: 700;
+
+    &--above {
+      color: var(--chora-color-success, #4caf50);
+    }
+
+    &--below {
+      color: var(--chora-color-error, #f44336);
+    }
+  }
+
+  &__confidence {
+    font-size: 12px;
+    color: var(--chora-color-text-secondary, #757575);
+    margin-bottom: var(--chora-space-xs, 4px);
+  }
+
+  &__threshold {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    font-size: 12px;
+    color: var(--chora-color-text-secondary, #757575);
+  }
+
+  &__threshold-icon {
+    font-size: 16px;
+
+    &--pass {
+      color: var(--chora-color-success, #4caf50);
+    }
+
+    &--fail {
+      color: var(--chora-color-warning, #ff9800);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Topic readiness bars
+  // ---------------------------------------------------------------------------
+
+  &__topics {
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__section-title {
+    margin: 0 0 var(--chora-space-sm, 8px);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--chora-color-text-primary, #212121);
+  }
+
+  &__topic {
+    margin-bottom: var(--chora-space-sm, 8px);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__topic-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+  }
+
+  &__topic-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--chora-color-text-primary, #212121);
+  }
+
+  &__topic-pct {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chora-color-text-secondary, #757575);
+  }
+
+  &__topic-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--chora-color-surface-2, #f5f5f5);
+    overflow: hidden;
+  }
+
+  &__topic-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 300ms ease;
+
+    &--high {
+      background: var(--chora-color-success, #4caf50);
+    }
+
+    &--medium {
+      background: var(--chora-color-warning, #ff9800);
+    }
+
+    &--low {
+      background: var(--chora-color-error, #f44336);
+    }
+  }
+
+  &__topic-atoms {
+    font-size: 11px;
+    color: var(--chora-color-text-secondary, #757575);
+    margin-top: 2px;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Revision stats grid
+  // ---------------------------------------------------------------------------
+
+  &__stats {
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--chora-space-sm, 8px);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-2, #f5f5f5);
+  }
+
+  &__stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--chora-color-text-primary, #212121);
+  }
+
+  &__stat-label {
+    font-size: 11px;
+    color: var(--chora-color-text-secondary, #757575);
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Familiar encouragement message
+  // ---------------------------------------------------------------------------
+
+  &__familiar {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-sm, 8px);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-2, #f5f5f5);
+    border-inline-start: 3px solid var(--chora-color-primary, #1976d2);
+  }
+
+  &__familiar-message {
+    margin: 0;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--chora-color-text-primary, #212121);
+    line-height: 1.5;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Desktop enhancement: wider stats grid
+// ---------------------------------------------------------------------------
+
+@media (min-width: 1280px) {
+  .exam-summary-widget__stats-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}

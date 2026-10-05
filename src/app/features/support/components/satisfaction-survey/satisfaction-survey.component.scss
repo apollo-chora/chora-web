@@ -1,0 +1,113 @@
+:host {
+  display: block;
+}
+
+.satisfaction-survey {
+  padding: var(--chora-space-lg, 24px);
+  max-width: 600px;
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__prompt {
+    font-size: 1rem;
+    margin-block-end: var(--chora-space-md, 16px);
+  }
+
+  &__rating-group {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-end: var(--chora-space-md, 16px);
+  }
+
+  &__rating-btn {
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--chora-color-surface-0, #fff);
+    font-size: 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &--selected {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__rating-label {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-secondary, #666);
+    margin-block-end: var(--chora-space-md, 16px);
+  }
+
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-block-end: var(--chora-space-md, 16px);
+  }
+
+  &__textarea {
+    padding: var(--chora-space-sm, 8px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+    resize: vertical;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__btn {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-lg, 24px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    cursor: pointer;
+    font-size: 0.875rem;
+
+    &--primary {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__success {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+  }
+
+  &__success-text {
+    font-size: 1.125rem;
+    color: #166534;
+  }
+}

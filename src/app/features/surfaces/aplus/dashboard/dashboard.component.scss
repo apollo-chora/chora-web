@@ -1,0 +1,737 @@
+// =====================================================================
+// A+ "My Knowledge" Dashboard-as-hub (SP2.2) — three-tier shell
+//   1. fixed header (identity + goal control + Today's Dose)
+//   2. conditional notifications ticker
+//   3. cdkDropList column of draggable wrapper cards (map / cast / courses)
+// Learner course tiles, the map hero, the streak pill, the growth-edges
+// tally, and the Familiar strip now live inside the wrapper components + the
+// ticker — their styles moved with them. The instructor panel is preserved.
+// =====================================================================
+
+:host {
+  display: block;
+  min-height: 100vh;
+  // Neutral ground — indigo/violet corner tint removed per owner CR 2026-07-06
+  // (scoped to My-Knowledge map/dashboard; other A+ surfaces keep the tint).
+  background: var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.aplus-dashboard {
+  // Container geometry (padding + max-width + inline centring) is centralised in
+  // `.aplus-hub-page` (src/styles/_aplus-hub.scss, CHO-2340) so the Learn sub-nav
+  // lines up across all 6 hub pages. This selector keeps only the hub's own flow.
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+// ─── TIER 1: Unified header — identity band + one "today" strip ───
+.dashboard__header {
+  padding: 1.15rem 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  // The glass panel's backdrop-filter makes this a stacking context; lift it so
+  // the goal-control popover (a descendant) paints ABOVE the ticker / cards
+  // below it instead of being obscured by later siblings.
+  position: relative;
+  z-index: 20;
+}
+
+// Identity band — the person (name + role badges) + the one-identity mark.
+.dashboard__id-band {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.dashboard__id-who { min-width: 0; }
+
+.dashboard__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.dashboard__person {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+  margin-top: 0.55rem;
+}
+
+.dashboard__name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+
+  &--neutral { color: var(--text-muted); font-style: italic; font-weight: 600; }
+}
+
+.dashboard__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+// Role badge. Content roles (learner/author/instructor) render as a light accent
+// pill; the elevated membership roles (admin/auditor) render as a shielded,
+// FILLED pill (CHO-2340) so "Admin" reads clearly instead of the old muted grey.
+.dashboard__role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(25, 118, 210, 0.1);
+  color: var(--primary);
+  border: 1px solid rgba(25, 118, 210, 0.28);
+  white-space: nowrap;
+
+  i { font-size: 9px; opacity: 0.85; }
+
+  // Elevated (admin/auditor): a solid indigo fill with white text (about 6.3:1,
+  // clears AA for this 11px bold pill) plus a fully-opaque shield glyph. It is
+  // the FILLED counterpart of the content pill's tint, NOT the old transparent
+  // muted-grey treatment that let an admin badge read as absent. Same #fff-on-
+  // fill idiom as the header's Dose / top-up CTAs in this file.
+  &--elevated {
+    background: #1976d2;
+    color: #fff;
+    border-color: #1565c0;
+
+    i { opacity: 1; }
+  }
+}
+
+.dashboard__gcid-pill {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  color: var(--primary);
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(25, 118, 210, 0.1);
+  border: 1px solid rgba(25, 118, 210, 0.2);
+  text-transform: uppercase;
+}
+
+// Hairline seam between the identity band and the today strip.
+.dashboard__hair {
+  height: 1px;
+  margin: 0.9rem 0;
+  background: linear-gradient(90deg, transparent, var(--glass-border) 10%, var(--glass-border) 90%, transparent);
+}
+
+// The "today" instrument strip — cells joined by hairline rules, not chips.
+.dashboard__today {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 0.5rem 0;
+}
+
+.dashboard__cell {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.35rem 1.1rem;
+  position: relative;
+
+  & + .dashboard__cell::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    width: 1px;
+    background: var(--glass-border);
+  }
+  &:first-child { padding-left: 0; }
+}
+
+// The goal-control renders its own trigger button — no icon, hug its height.
+.dashboard__cell--goal { padding-block: 0; }
+
+.dashboard__cell-ic {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(25, 118, 210, 0.1);
+  color: var(--primary);
+  font-size: 15px;
+
+  &--amber { background: rgba(224, 138, 30, 0.14); color: #d97e10; }
+}
+
+.dashboard__cell-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dashboard__cell-lab {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dashboard__cell-val {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-top: 0.25rem;
+  line-height: 1.15;
+
+  &--muted { color: var(--text-muted); font-weight: 600; font-size: 13px; }
+}
+
+.dashboard__figure { font-variant-numeric: tabular-nums; }
+
+// Mana ＋ top-up affordance — the interactive cue the balance is spendable.
+.dashboard__topup {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 4px 12px -4px rgba(25, 118, 210, 0.7);
+  transition: transform 0.25s var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  i { font-size: 11px; }
+  &:hover { transform: scale(1.12) rotate(90deg); }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+// Today's Dose = the one filled action, pushed to the strip's terminus.
+.dashboard__dose {
+  margin-left: auto;
+  gap: 0.6rem;
+  padding: 0.7rem 1.15rem;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: var(--surface-accent-fill, var(--primary));
+  box-shadow: 0 12px 26px -12px rgba(25, 118, 210, 0.8);
+  transition: transform 0.3s var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &::before { display: none; }
+  i:first-child { font-size: 16px; }
+  &:hover { transform: translateY(-2px); }
+  &:hover .dashboard__dose-arrow { transform: translateX(4px); }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+}
+.dashboard__dose-arrow {
+  transition: transform 0.3s var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard__topup, .dashboard__dose, .dashboard__dose-arrow { transition: none; }
+  .dashboard__topup:hover, .dashboard__dose:hover { transform: none; }
+  .dashboard__dose:hover .dashboard__dose-arrow { transform: none; }
+}
+
+// ─── TIER 2 + 3: learner hub (ticker + draggable wrapper column) ──
+.dashboard__hub {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dashboard__wrappers {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// Reorder toolbar — a quiet ⋯ that opens an explicit reorder pass; in reorder
+// mode it shows a hint + a Done button. Sits just above the cards.
+.dashboard__hub-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2rem;
+  margin-bottom: -0.5rem;
+}
+
+.dashboard__reorder-toggle {
+  margin-left: auto;
+  width: 2rem;
+  height: 2rem;
+  display: inline-grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover { background: rgba(2, 6, 23, 0.05); color: var(--text-main); }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+.dashboard__reorder-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+
+  i { font-size: 12px; }
+}
+
+.dashboard__reorder-done {
+  padding: 0.4rem 1rem;
+  font-size: 13px;
+}
+
+// A wrapper card + (only in reorder mode) its drag handle. Handle-free by
+// default → clean top-down layout; press-and-hold a card to drag it (long-press
+// via cdkDragStartDelay). Reorder mode reveals the grip for immediate drag.
+.dashboard__wrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+
+  &.is-reordering {
+    cursor: grab;
+    outline: 1.5px dashed var(--glass-border);
+    outline-offset: 3px;
+    border-radius: var(--panel-radius, 16px);
+    &:active { cursor: grabbing; }
+  }
+}
+
+.dashboard__wrapper-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+}
+
+// Slim left gutter grip — drag starts ONLY here, so the card's inner links
+// (map "Zoom in", continue-learning, summon) still click normally.
+.dashboard__drag-grip {
+  flex: none;
+  width: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: grab;
+  border-radius: var(--button-radius, 8px);
+  opacity: 0.55;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+  i { font-size: 14px; }
+
+  &:hover {
+    opacity: 1;
+    color: var(--primary);
+    background: rgba(25, 118, 210, 0.07);
+  }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; opacity: 1; }
+  &:active { cursor: grabbing; }
+}
+
+// cdk drag/drop feedback. The preview is a DOM clone (retains the wrapper's
+// encapsulation attr + classes), so these scoped rules still apply to it.
+.cdk-drag-preview {
+  box-shadow: var(--glass-shadow-hover, 0 12px 32px rgba(0, 0, 0, 0.22));
+  border-radius: var(--panel-radius, 16px);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.35;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.dashboard__wrappers.cdk-drop-list-dragging .dashboard__wrapper:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cdk-drag-animating,
+  .dashboard__wrappers.cdk-drop-list-dragging .dashboard__wrapper:not(.cdk-drag-placeholder) {
+    transition: none;
+  }
+}
+
+// ─── Instructor course tiles (role-gated, preserved) ──────────────
+.dashboard__tiles {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.dashboard__tile {
+  padding: 1.5rem 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+
+  &--instructor { border: 1.5px solid rgba(25, 118, 210, 0.2); }
+}
+
+.dashboard__tile-head { display: flex; flex-direction: column; gap: 0.35rem; }
+
+.dashboard__tile-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.role-banner {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  width: fit-content;
+
+  &--instructor {
+    background: rgba(25, 118, 210, 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(25, 118, 210, 0.2);
+  }
+}
+
+.dashboard__tile-students {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.dashboard__tile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+.mini-stat {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .value {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--primary);
+  }
+
+  &--danger {
+    border-color: rgba(239, 68, 68, 0.25);
+    .value { color: var(--danger); }
+  }
+}
+
+.dashboard__tile-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+// ─── Role signposts (author / instructor) ─────────────────────────
+// These were two FULL-WIDTH glass slabs stacked under the hub, each holding a
+// heading, one sentence and a small button — ~870px of panel to carry a link,
+// with the same visual weight as Continue learning, which carries real data.
+// They shouted while saying the least, and they broke the hub's card rhythm by
+// sitting outside the reorderable grid entirely.
+//
+// Now: a compact 2-up row of tiles, sized to their content and visually
+// SUBORDINATE to the hub (lighter surface, no glass, smaller type). They are
+// navigation, so they render as a <nav> of links, not as data panels.
+.dashboard__signposts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.dashboard__signpost {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--chora-color-border);
+  border-radius: 0.6rem;
+  background: var(--chora-color-surface-2);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 120ms ease,
+    transform 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+
+    .dashboard__signpost-go {
+      transform: translateX(2px);
+    }
+  }
+}
+
+.dashboard__signpost-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.dashboard__signpost-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.dashboard__signpost-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.dashboard__signpost-body {
+  font-size: 12px;
+  // 🔴 --chora-color-text-muted (#616161), NOT the legacy --text-muted (#64748b).
+  // Measured on the deployed page: #64748b on this tile's --chora-color-surface-2
+  // is 4.36:1 — a WCAG AA FAIL for 12px normal text (needs 4.5:1). #616161 is
+  // 5.68:1. The two token systems carry DIFFERENT muted values; the legacy one
+  // is not AA-safe at this size on this surface. jsdom cannot compute contrast,
+  // so only a real browser catches this.
+  color: var(--chora-color-text-muted);
+}
+
+.dashboard__signpost-go {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 12px;
+  // aria-hidden decorative, so no AA text requirement — but match the body's
+  // canonical token so the tile does not mix two muted greys.
+  color: var(--chora-color-text-muted);
+  transition: transform 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard__signpost,
+  .dashboard__signpost-go {
+    transition: none;
+  }
+
+  .dashboard__signpost:hover,
+  .dashboard__signpost:focus-visible {
+    transform: none;
+
+    .dashboard__signpost-go {
+      transform: none;
+    }
+  }
+}
+
+// ─── No-role fallback notice ──────────────────────────────────────
+.dashboard__no-role {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 14px;
+
+  i { color: var(--info); font-size: 1.2rem; flex-shrink: 0; }
+}
+
+// ─── Browse banner (quiet footer) ─────────────────────────────────
+.dashboard__browse {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+.dashboard__browse-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.85rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 14px;
+
+  .icon-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(25, 118, 210, 0.1);
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:hover { background: rgba(255, 255, 255, 0.7); }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+}
+
+// ─── Loading / error status panel (fail-loud) ────────────────────────
+.dashboard__status {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: center;
+
+  i {
+    font-size: 1.75rem;
+    color: var(--text-muted);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted);
+  }
+
+  &--error i {
+    color: var(--danger, #dc2626);
+  }
+}
+
+// ─── Success banner (course_submitted / resubmitted / saved) ────────
+.dashboard__banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--chora-radius-md, 10px);
+  background: rgba(63, 191, 111, 0.12);
+  border: 1px solid rgba(63, 191, 111, 0.4);
+  color: var(--text-base, #fff);
+  font-size: 14px;
+  animation: aplus-banner-fade-in 240ms ease-out;
+
+  i {
+    color: var(--chora-color-success, #3fbf6f);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+}
+
+.dashboard__banner-text {
+  margin: 0;
+  flex: 1;
+}
+
+.dashboard__banner-dismiss {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 0.4rem;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity 120ms ease, background 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+@keyframes aplus-banner-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ─── Partial / graceful-degradation notice (non-blocking) ────────────
+.dashboard__partial-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.6rem 1rem;
+  border-radius: var(--chora-radius-md, 10px);
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  color: var(--text-muted);
+  font-size: 13px;
+
+  i {
+    color: var(--warning, #d97706);
+  }
+}
+
+// ─── Empty-state copy (honest, no faked tiles) ───────────────────────
+.dashboard__empty {
+  margin: 0;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}

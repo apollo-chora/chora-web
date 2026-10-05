@@ -1,0 +1,79 @@
+<section
+  class="surface-rplus classroom"
+  data-testid="learner-answer">
+  @if (error(); as err) {
+    <div
+      class="classroom__error glass-panel"
+      role="alert"
+      data-testid="learner-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p class="classroom__error-detail">
+        {{ 'rplus.classroom.error_status' | translate }}
+        <strong>{{ err.status }}</strong>
+      </p>
+    </div>
+  } @else if (!sessionId()) {
+    <div
+      class="classroom__empty glass-panel"
+      data-testid="learner-no-session">
+      <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+      <p class="classroom__empty-body">
+        {{ 'rplus.learner.no_session' | translate }}
+      </p>
+    </div>
+  } @else if (snapshot(); as s) {
+    <header class="classroom__header glass-panel">
+      <span
+        class="badge classroom__state-badge"
+        [class.classroom__state-badge--armed]="s.state === 'ARMED'"
+        [class.classroom__state-badge--live]="s.state === 'LIVE'"
+        [class.classroom__state-badge--closed]="s.state === 'CLOSED'"
+        [attr.data-testid]="'learner-state-' + s.state">
+        {{ 'rplus.classroom.state.' + s.state | translate }}
+      </span>
+    </header>
+
+    <article class="classroom__quiz glass-panel">
+      @if (s.state === 'CLOSED') {
+        <p class="classroom__waiting" data-testid="learner-closed" aria-live="polite">
+          <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+          {{ 'rplus.learner.closed' | translate }}
+        </p>
+      } @else if (currentQuestion(); as q) {
+        <h2 class="classroom__question-prompt" data-testid="learner-prompt">
+          {{ q.prompt }}
+        </h2>
+        @if (alreadyAnswered()) {
+          <p class="classroom__answered" data-testid="learner-answered" aria-live="polite">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'rplus.learner.answered' | translate }}
+          </p>
+        } @else {
+          <ul class="learner__options" data-testid="learner-options">
+            @for (opt of q.options; track $index) {
+              <li class="learner__option-row">
+                <button
+                  type="button"
+                  class="btn learner__option"
+                  [attr.data-testid]="'learner-option-' + $index"
+                  [disabled]="submitting()"
+                  (click)="answer(opt.label)">
+                  {{ opt.label }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      } @else {
+        <p class="classroom__waiting" data-testid="learner-waiting" aria-live="polite">
+          <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+          {{ 'rplus.learner.waiting' | translate }}
+        </p>
+      }
+    </article>
+  } @else {
+    <p class="classroom__loading" data-testid="learner-loading" aria-live="polite">
+      {{ 'rplus.classroom.loading' | translate }}
+    </p>
+  }
+</section>

@@ -1,0 +1,153 @@
+<section class="qr-attendance" data-testid="qr-attendance" aria-label="QR Attendance">
+  <!-- QR Code display -->
+  <div class="qr-attendance__qr-panel" data-testid="qr-panel">
+    <h3 class="qr-attendance__heading">{{ 'shared.qr-attendance.scan-to-attend' | translate }}</h3>
+
+    @if (isLoading() && !hasQr()) {
+      <div class="qr-attendance__qr-loading" role="status" data-testid="qr-loading">
+        <p>{{ 'shared.qr-attendance.generating' | translate }}</p>
+      </div>
+    } @else if (hasQr()) {
+      <div class="qr-attendance__qr-container">
+        <img
+          class="qr-attendance__qr-image"
+          [src]="qrToken()!.qr_data_url"
+          [alt]="'shared.qr-attendance.qr-code-alt' | translate"
+          data-testid="qr-image"
+          width="240"
+          height="240" />
+      </div>
+    }
+
+    <!-- Refresh countdown -->
+    <div class="qr-attendance__refresh" data-testid="qr-refresh">
+      <div class="qr-attendance__refresh-bar">
+        <div
+          class="qr-attendance__refresh-fill"
+          [style.width.%]="(secondsUntilRefresh() / 30) * 100">
+        </div>
+      </div>
+      <span class="qr-attendance__refresh-label">
+        {{ 'shared.qr-attendance.refreshing-in' | translate }} {{ secondsUntilRefresh() }}s
+      </span>
+    </div>
+  </div>
+
+  <!-- Attendance summary -->
+  <div class="qr-attendance__stats" data-testid="qr-stats">
+    <div class="qr-attendance__stat">
+      <span class="qr-attendance__stat-value" data-testid="attendee-count">{{ attendeeCount() }}</span>
+      <span class="qr-attendance__stat-label">{{ 'shared.qr-attendance.checked-in' | translate }}</span>
+    </div>
+    @if (lateCount() > 0) {
+      <div class="qr-attendance__stat qr-attendance__stat--late" data-testid="late-count">
+        <span class="qr-attendance__stat-value">{{ lateCount() }}</span>
+        <span class="qr-attendance__stat-label">{{ 'shared.qr-attendance.late' | translate }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Attendee list -->
+  @if (attendees().length > 0) {
+    <div class="qr-attendance__attendees" data-testid="attendee-list">
+      <h4 class="qr-attendance__sub-heading">{{ 'shared.qr-attendance.attendees' | translate }}</h4>
+      <ul class="qr-attendance__list" role="list">
+        @for (attendee of attendees(); track attendee.gcid) {
+          <li class="qr-attendance__attendee"
+              [class.qr-attendance__attendee--late]="attendee.is_late"
+              [class.qr-attendance__attendee--manual]="attendee.is_manual"
+              [attr.data-testid]="'attendee-' + attendee.gcid">
+            <span class="qr-attendance__attendee-name">{{ attendee.display_name }}</span>
+            <span class="qr-attendance__attendee-time">{{ formatTime(attendee.checked_in_at) }}</span>
+            @if (attendee.is_late) {
+              <span class="qr-attendance__attendee-badge qr-attendance__attendee-badge--late"
+                    aria-label="Late arrival">
+                {{ 'shared.qr-attendance.late-badge' | translate }}
+              </span>
+            }
+            @if (attendee.is_manual) {
+              <span class="qr-attendance__attendee-badge qr-attendance__attendee-badge--manual"
+                    aria-label="Manual override">
+                {{ 'shared.qr-attendance.manual-badge' | translate }}
+              </span>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <!-- Manual override (admin only) -->
+  @if (showOverride()) {
+    <div class="qr-attendance__override" data-testid="override-panel">
+      <h4 class="qr-attendance__sub-heading">{{ 'shared.qr-attendance.manual-override' | translate }}</h4>
+      <div class="qr-attendance__override-form">
+        <div class="qr-attendance__override-field">
+          <label for="override-gcid" class="qr-attendance__override-label">
+            {{ 'shared.qr-attendance.gcid' | translate }}
+          </label>
+          <input
+            id="override-gcid"
+            type="text"
+            class="qr-attendance__override-input"
+            [value]="overrideGcid()"
+            (input)="overrideGcid.set($any($event.target).value)"
+            data-testid="override-gcid-input" />
+        </div>
+        <div class="qr-attendance__override-field">
+          <label for="override-reason" class="qr-attendance__override-label">
+            {{ 'shared.qr-attendance.reason' | translate }}
+          </label>
+          <input
+            id="override-reason"
+            type="text"
+            class="qr-attendance__override-input"
+            [value]="overrideReason()"
+            (input)="overrideReason.set($any($event.target).value)"
+            data-testid="override-reason-input" />
+        </div>
+        <button
+          class="qr-attendance__override-btn"
+          [disabled]="!canOverride()"
+          (click)="manualOverride()"
+          type="button"
+          data-testid="override-submit-btn">
+          @if (isOverriding()) {
+            {{ 'shared.qr-attendance.overriding' | translate }}
+          } @else {
+            {{ 'shared.qr-attendance.mark-present' | translate }}
+          }
+        </button>
+      </div>
+
+      <!-- Audit log toggle -->
+      <button
+        class="qr-attendance__audit-toggle"
+        (click)="toggleAuditLog()"
+        type="button"
+        [attr.aria-expanded]="showAuditLog()"
+        data-testid="audit-toggle-btn">
+        {{ 'shared.qr-attendance.audit-log' | translate }}
+      </button>
+
+      @if (showAuditLog()) {
+        <div class="qr-attendance__audit" data-testid="audit-log">
+          @if (auditLog().length === 0) {
+            <p class="qr-attendance__audit-empty">{{ 'shared.qr-attendance.no-overrides' | translate }}</p>
+          } @else {
+            <ul class="qr-attendance__audit-list" role="list">
+              @for (entry of auditLog(); track entry.timestamp) {
+                <li class="qr-attendance__audit-entry">
+                  <span class="qr-attendance__audit-gcid">{{ entry.gcid }}</span>
+                  <span class="qr-attendance__audit-reason">{{ entry.reason }}</span>
+                  <span class="qr-attendance__audit-by">{{ entry.overridden_by }}</span>
+                  <time class="qr-attendance__audit-time">{{ formatTime(entry.timestamp) }}</time>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

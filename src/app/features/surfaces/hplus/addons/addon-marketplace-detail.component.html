@@ -1,0 +1,251 @@
+<section class="surface-hplus addon-detail" data-testid="hplus-addon-detail">
+  <main class="addon-detail__main">
+    <nav
+      class="addon-detail__breadcrumb"
+      [attr.aria-label]="'hplus.addons.detail.breadcrumbLabel' | translate">
+      <a
+        class="addon-detail__back"
+        data-testid="addon-detail-back"
+        routerLink="/h/addons">
+        ‹ {{ 'hplus.addons.detail.backToDashboard' | translate }}
+      </a>
+    </nav>
+
+    @if (loading()) {
+      <p
+        class="addon-detail__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="addon-detail-loading">
+        {{ 'hplus.addons.detail.loading' | translate }}
+      </p>
+    }
+
+    @if (loadError(); as msg) {
+      @if (msg === 'hplus.addons.detail.error.unauthenticated') {
+        <p
+          class="addon-detail__load-error"
+          role="alert"
+          data-testid="addon-detail-unauthenticated">
+          {{ msg | translate }}
+        </p>
+      } @else {
+        <p
+          class="addon-detail__load-error"
+          role="alert"
+          data-testid="addon-detail-load-error">
+          {{ msg | translate }}
+        </p>
+      }
+    }
+
+    @if (notFound()) {
+      <p
+        class="addon-detail__not-found"
+        role="alert"
+        data-testid="addon-detail-not-found">
+        {{ 'hplus.addons.detail.notFound' | translate }}
+      </p>
+    }
+
+    @if (detail(); as d) {
+      <header class="addon-detail__hero">
+        <h1
+          class="addon-detail__title"
+          data-testid="addon-detail-title">
+          {{ d.display_name }}
+          <span class="addon-detail__code">{{ d.code }}</span>
+        </h1>
+        <span
+          class="addon-detail__category-badge"
+          data-testid="addon-detail-category">
+          {{ d.category }}
+        </span>
+        @if (d.description) {
+          <p
+            class="addon-detail__description"
+            data-testid="addon-detail-description">
+            {{ d.description }}
+          </p>
+        }
+      </header>
+
+      @if (subscription(); as sub) {
+        <section
+          class="glass-panel addon-detail__subscription"
+          data-testid="addon-detail-subscription">
+          <h2>{{ 'hplus.addons.detail.subscription.title' | translate }}</h2>
+          <dl class="addon-detail__subscription-grid">
+            @if (sub.current_tier) {
+              <div>
+                <dt>{{ 'hplus.addons.detail.subscription.currentTier' | translate }}</dt>
+                <dd>
+                  {{ sub.current_tier }}
+                  @if (scheduledTier(); as st) {
+                    <span
+                      class="addon-detail__scheduled-badge"
+                      data-testid="addon-detail-scheduled-badge">
+                      {{ st }} starting {{ formatScheduledDate(scheduledEffectiveAt() ?? '') }}
+                    </span>
+                  }
+                  @if (deactivationEffectiveAt(); as deact) {
+                    <span
+                      class="addon-detail__deactivating-badge"
+                      data-testid="addon-detail-deactivating-badge">
+                      {{ 'hplus.addons.scheduled.deactivating' | translate }}
+                      {{ formatScheduledDate(deact) }}
+                    </span>
+                  }
+                </dd>
+              </div>
+            }
+            <div>
+              <dt>{{ 'hplus.addons.detail.subscription.status' | translate }}</dt>
+              <dd>{{ sub.status }}</dd>
+            </div>
+            @if (sub.next_renewal_at) {
+              <div>
+                <dt>{{ 'hplus.addons.detail.subscription.nextRenewal' | translate }}</dt>
+                <dd data-testid="addon-detail-next-renewal">
+                  {{ formatScheduledDate(sub.next_renewal_at) }}
+                </dd>
+              </div>
+            }
+            @if (sub.billing_cycle) {
+              <div>
+                <dt>{{ 'hplus.addons.detail.subscription.billingCycle' | translate }}</dt>
+                <dd>{{ sub.billing_cycle }}</dd>
+              </div>
+            }
+          </dl>
+          <p class="addon-detail__manage-cta">
+            <a
+              class="btn btn-primary"
+              data-testid="addon-detail-manage"
+              routerLink="/h/addons">
+              {{ 'hplus.addons.detail.manage' | translate }}
+            </a>
+          </p>
+        </section>
+      } @else {
+        <section
+          class="glass-panel addon-detail__install-soon"
+          data-testid="addon-detail-install-soon">
+          <h2>{{ 'hplus.addons.detail.install.title' | translate }}</h2>
+          <p>{{ 'hplus.addons.detail.install.copy' | translate }}</p>
+        </section>
+      }
+
+      @if (entitlements().length > 0) {
+        <section class="addon-detail__section">
+          <h2>{{ 'hplus.addons.detail.entitlementsTitle' | translate }}</h2>
+          <ul class="addon-detail__entitlements">
+            @for (e of entitlements(); track trackByEntitlement($index, e)) {
+              <li
+                class="addon-detail__entitlement"
+                [attr.data-testid]="'addon-detail-entitlement-' + e.feature_code">
+                <strong>{{ e.label }}</strong>
+                <span class="addon-detail__entitlement-code">{{ e.feature_code }}</span>
+                @if (e.limit !== null && e.limit !== undefined) {
+                  <span class="addon-detail__entitlement-limit">
+                    {{ e.limit }} {{ e.limit_unit }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (integrations().length > 0) {
+        <section class="addon-detail__section">
+          <h2>{{ 'hplus.addons.detail.integrationsTitle' | translate }}</h2>
+          <ul class="addon-detail__integrations">
+            @for (i of integrations(); track trackByIntegration($index, i)) {
+              <li
+                class="addon-detail__integration"
+                [attr.data-testid]="'addon-detail-integration-' + i.type">
+                <strong>{{ i.label }}</strong>
+                <span class="addon-detail__integration-type">{{ i.type }}</span>
+                @if (i.status) {
+                  <span class="addon-detail__integration-status">
+                    {{ i.status }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <section class="addon-detail__section">
+        <h2>{{ 'hplus.addons.detail.complianceTitle' | translate }}</h2>
+        <ul class="addon-detail__compliance-pills">
+          @for (pill of compliancePills(); track pill.key) {
+            <li
+              class="addon-detail__pill"
+              [class.addon-detail__pill--compliant]="pill.compliant"
+              [attr.data-testid]="'addon-detail-compliance-' + pill.key"
+              [attr.data-compliant]="pill.compliant">
+              {{ pill.labelKey | translate }}
+              <span class="addon-detail__pill-status">
+                {{
+                  (pill.compliant
+                    ? 'hplus.addons.detail.compliance.yes'
+                    : 'hplus.addons.detail.compliance.no'
+                  ) | translate
+                }}
+              </span>
+            </li>
+          }
+        </ul>
+        @if (residencyRegions().length > 0) {
+          <p
+            class="addon-detail__residency-regions"
+            data-testid="addon-detail-residency-regions">
+            {{ 'hplus.addons.detail.residencyLabel' | translate }}
+            @for (region of residencyRegions(); track region) {
+              <span class="addon-detail__region-chip">{{ region }}</span>
+            }
+          </p>
+        }
+      </section>
+
+      @if (pricingTiers().length > 0) {
+        <section class="addon-detail__section">
+          <h2>{{ 'hplus.addons.detail.pricingTitle' | translate }}</h2>
+          <ul
+            class="addon-detail__tiers"
+            data-testid="addon-detail-tiers"
+            role="list">
+            @for (tier of pricingTiers(); track trackByTier($index, tier)) {
+              <li
+                class="glass-panel addon-detail__tier"
+                role="listitem"
+                [class.addon-detail__tier--current]="isCurrentTier(tier)"
+                [attr.aria-current]="isCurrentTier(tier)"
+                [attr.data-testid]="'addon-detail-tier-' + tier.tier_code">
+                <h3 class="addon-detail__tier-label">{{ tier.label }}</h3>
+                <p class="addon-detail__tier-price">{{ formatTierPrice(tier) }}</p>
+                <dl class="addon-detail__tier-meta">
+                  @if (tier.included_units !== null && tier.included_units !== undefined) {
+                    <div>
+                      <dt>{{ 'hplus.addons.detail.tier.includedUnits' | translate }}</dt>
+                      <dd>{{ tier.included_units }}</dd>
+                    </div>
+                  }
+                  @if (tier.overage_unit_cents !== null && tier.overage_unit_cents !== undefined) {
+                    <div>
+                      <dt>{{ 'hplus.addons.detail.tier.overageUnitCents' | translate }}</dt>
+                      <dd>{{ tier.overage_unit_cents }}¢</dd>
+                    </div>
+                  }
+                </dl>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  </main>
+</section>

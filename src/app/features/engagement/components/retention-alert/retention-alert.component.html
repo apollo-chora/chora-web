@@ -1,0 +1,105 @@
+<div
+  class="retention-alert"
+  role="region"
+  aria-label="Retention Alert"
+  data-testid="retention-alert">
+
+  <div class="retention-alert__header">
+    <span class="material-icons-outlined" aria-hidden="true">psychology</span>
+    <h3>{{ 'engagement.retention.title' | translate }}</h3>
+  </div>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div class="retention-alert__loading" role="status" data-testid="retention-loading">
+        <span class="retention-alert__spinner"></span>
+        <span>{{ 'engagement.retention.loading' | translate }}</span>
+      </div>
+    }
+
+    @case ('error') {
+      <p class="retention-alert__error-msg" role="alert" data-testid="retention-error">
+        {{ 'engagement.retention.error' | translate }}
+      </p>
+    }
+
+    @case ('success') {
+      <!-- Retention score gauge -->
+      <div class="retention-alert__gauge" data-testid="retention-gauge">
+        <div class="retention-alert__gauge-track">
+          <div
+            class="retention-alert__gauge-fill"
+            [class]="'retention-alert__gauge-fill--' + scoreLevel()"
+            [style.transform]="gaugeRotation()"
+            [attr.aria-label]="'Retention score: ' + retentionScore() + '%'"
+            data-testid="retention-gauge-fill">
+          </div>
+        </div>
+        <span
+          class="retention-alert__gauge-value"
+          [class]="'retention-alert__gauge-value--' + scoreLevel()"
+          data-testid="retention-score">
+          {{ retentionScore() }}%
+        </span>
+        <span class="retention-alert__gauge-label">
+          {{ 'engagement.retention.score-label' | translate }}
+        </span>
+      </div>
+
+      <!-- At-risk atoms -->
+      @if (atRiskAtoms().length > 0) {
+        <div class="retention-alert__at-risk" data-testid="retention-at-risk">
+          <h4>{{ 'engagement.retention.at-risk-title' | translate }}</h4>
+          <ul class="retention-alert__list" role="list">
+            @for (atom of atRiskAtoms(); track atom.atom_id) {
+              <li class="retention-alert__item" role="listitem">
+                <button
+                  class="retention-alert__atom-btn"
+                  [attr.aria-label]="atom.topic_name + ', ' + atom.predicted_retention + '% retention'"
+                  [attr.data-testid]="'retention-atom-' + atom.atom_id"
+                  (click)="openAtom(atom.atom_id)">
+                  <span class="retention-alert__atom-name">{{ atom.topic_name }}</span>
+                  <div class="retention-alert__bar-container">
+                    <div
+                      class="retention-alert__bar"
+                      [style.width]="barWidth(atom.predicted_retention)"
+                      [style.background]="barColor(atom.predicted_retention)">
+                    </div>
+                  </div>
+                  <span class="retention-alert__atom-pct">{{ atom.predicted_retention }}%</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      <!-- Forgetting curve mini chart -->
+      @if (forgettingCurve().length > 0) {
+        <div
+          class="retention-alert__curve"
+          role="img"
+          [attr.aria-label]="'Forgetting curve visualization'"
+          data-testid="retention-curve">
+          <h4>{{ 'engagement.retention.curve-title' | translate }}</h4>
+          <div class="retention-alert__curve-chart">
+            @for (point of forgettingCurve(); track point.days_since_review) {
+              <div
+                class="retention-alert__curve-bar"
+                [style.height.%]="(point.predicted_retention / maxCurveRetention()) * 100"
+                [style.background]="barColor(point.predicted_retention)"
+                [attr.aria-label]="'Day ' + point.days_since_review + ': ' + point.predicted_retention + '%'"
+                [attr.data-testid]="'curve-bar-' + point.days_since_review">
+              </div>
+            }
+          </div>
+          <div class="retention-alert__curve-labels">
+            @for (point of forgettingCurve(); track point.days_since_review) {
+              <span class="retention-alert__curve-day">{{ point.days_since_review }}d</span>
+            }
+          </div>
+        </div>
+      }
+    }
+  }
+</div>

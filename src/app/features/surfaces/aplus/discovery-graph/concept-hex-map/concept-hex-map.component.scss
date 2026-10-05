@@ -1,0 +1,401 @@
+// =====================================================================
+// Concept hex fisheye (ADR-212) — focal concept + up to 6 related
+// concepts on a hex ring. Geometry (clip-path faces + radial --dx/--dy
+// offsets keyed by data-position) is reused from the ADR-143 atom canvas,
+// rebound onto the learner-sovereign concept model.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.concept-hex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+// ─── Hex grid ───────────────────────────────────────────────────────
+.hex-grid {
+  --hex-w: 190px;
+  --hex-h: 165px; // ≈ 0.866 × W for a flat-top hex
+  --hex-gap: 22px;
+
+  position: relative;
+  width: 100%;
+  height: calc(var(--hex-h) * 3 + var(--hex-gap) * 2 + 72px);
+  min-height: 520px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--hex-w) * 2.6);
+    height: calc(var(--hex-h) * 2.6);
+    margin-left: calc(var(--hex-w) * -1.3);
+    margin-top: calc(var(--hex-h) * -1.3);
+    background: radial-gradient(
+      ellipse closest-side,
+      rgba(25, 118, 210, 0.08) 0%,
+      rgba(236, 72, 153, 0.04) 45%,
+      transparent 75%
+    );
+    pointer-events: none;
+  }
+
+  &.is-loading {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  // Recenter PAN: while a pan is in flight the grid eases the tapped node to the
+  // centre on the owner's reveal curve; clearing the transform (rebuild) drops
+  // the class so the new focal renders centred with no reverse animation.
+  &.is-panning {
+    transition: transform 320ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+    will-change: transform;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hex-grid {
+    --hex-w: 230px;
+    --hex-h: 200px;
+    --hex-gap: 26px;
+    min-height: 600px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .hex-grid {
+    --hex-w: 258px;
+    --hex-h: 224px;
+    --hex-gap: 30px;
+    min-height: 700px;
+  }
+}
+
+// ─── Cells ──────────────────────────────────────────────────────────
+.hex-cell {
+  --dx: 0px;
+  --dy: 0px;
+
+  position: absolute;
+  left: calc(50% + var(--dx));
+  top: calc(50% + var(--dy));
+  width: var(--hex-w);
+  height: var(--hex-h);
+  margin-left: calc(var(--hex-w) / -2);
+  margin-top: calc(var(--hex-h) / -2);
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &[disabled] {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 4px;
+    border-radius: 12px;
+  }
+}
+
+.hex-cell--focal {
+  // Now a <button> that opens the focal's detail — inherits the .hex-cell
+  // button reset; make the pointer affordance explicit (it is interactive).
+  cursor: pointer;
+  z-index: 2;
+
+  // The focal reveals its detail on click — mirror the neighbour hover lift so
+  // the affordance reads the same across every hex (design-language.md §6.9).
+  &:hover:not([disabled]) {
+    z-index: 4;
+    filter: drop-shadow(0 16px 34px rgba(25, 118, 210, 0.34));
+
+    .hex-cell__clip--focal {
+      transform: scale3d(1.2, 1.2, 1.2);
+    }
+  }
+}
+
+.hex-cell--neighbor {
+  z-index: 1;
+  transition: filter 0.3s var(--chora-ease-reveal, ease);
+
+  // Node micro-interaction (design-language.md §6.9): hover lifts the hex with a
+  // hardware-accelerated scale3d(1.20) + border highlight on the owner's reveal
+  // easing (never linear on a reveal). Click-affordance for the fisheye.
+  &:hover:not([disabled]) {
+    z-index: 3;
+    filter: drop-shadow(0 14px 30px rgba(25, 118, 210, 0.3));
+
+    .hex-cell__clip {
+      transform: scale3d(1.2, 1.2, 1.2);
+      background: var(--primary);
+    }
+    .hex-cell__surface {
+      background: linear-gradient(
+        160deg,
+        rgba(255, 255, 255, 0.94),
+        rgba(255, 255, 255, 0.76)
+      );
+    }
+  }
+}
+
+// Nested clip-paths: outer carries the ring tint, inner (inset) the glass.
+.hex-cell__clip {
+  width: 100%;
+  height: 100%;
+  display: block;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(203, 213, 225, 0.55)
+  );
+  position: relative;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.hex-cell__surface {
+  position: absolute;
+  inset: 1.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.82),
+    rgba(255, 255, 255, 0.58)
+  );
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  transition: background 0.25s ease;
+}
+
+.hex-cell__clip--focal {
+  background: linear-gradient(
+    135deg,
+    rgba(25, 118, 210, 0.65),
+    rgba(236, 72, 153, 0.55)
+  );
+}
+
+.hex-cell--is-root .hex-cell__clip--focal {
+  background: linear-gradient(135deg, #f59e0b, #ec4899);
+}
+
+.hex-cell__surface--focal {
+  inset: 2px;
+  background:
+    linear-gradient(135deg, rgba(25, 118, 210, 0.1), rgba(236, 72, 153, 0.1)),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78));
+}
+
+.hex-cell__inner {
+  padding: 0.6rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.3rem;
+  width: 100%;
+  max-width: 80%;
+}
+
+// ─── Neighbour relation accent ──────────────────────────────────────
+.hex-cell__relation {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  background: rgba(25, 118, 210, 0.08);
+  padding: 0.1rem 0.5rem;
+  border-radius: 8px;
+}
+
+.hex-cell--neighbor[data-relation='parent'] .hex-cell__relation {
+  color: #9a3412;
+  background: rgba(234, 88, 12, 0.1);
+}
+.hex-cell--neighbor[data-relation='child'] .hex-cell__relation {
+  color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.12);
+}
+.hex-cell--neighbor[data-relation='lateral'] .hex-cell__relation {
+  color: #db2777;
+  background: rgba(219, 39, 119, 0.1);
+}
+
+.hex-cell__title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hex-cell__title--focal {
+  font-size: 14.5px;
+  font-weight: 800;
+}
+
+@media (min-width: 1024px) {
+  .hex-cell__title--focal {
+    font-size: 16.5px;
+  }
+}
+
+// ─── Atom-count badge ───────────────────────────────────────────────
+.hex-cell__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+
+  i {
+    font-size: 9px;
+    color: var(--primary);
+  }
+}
+
+.hex-cell__badge--focal {
+  font-size: 11px;
+  color: var(--text-main);
+}
+
+.hex-cell__root-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  i {
+    font-size: 9px;
+  }
+}
+
+// ─── Radial position offsets (uniform-gutter tessellation) ──────────
+.hex-cell--neighbor {
+  &[data-position='N'] {
+    --dy: calc((var(--hex-h) + var(--hex-gap)) * -1);
+  }
+  &[data-position='S'] {
+    --dy: calc(var(--hex-h) + var(--hex-gap));
+  }
+  &[data-position='NE'] {
+    --dx: calc(var(--hex-w) * 0.75 + var(--hex-gap) * 0.866);
+    --dy: calc((var(--hex-h) + var(--hex-gap)) * -0.5);
+  }
+  &[data-position='SE'] {
+    --dx: calc(var(--hex-w) * 0.75 + var(--hex-gap) * 0.866);
+    --dy: calc((var(--hex-h) + var(--hex-gap)) * 0.5);
+  }
+  &[data-position='SW'] {
+    --dx: calc((var(--hex-w) * 0.75 + var(--hex-gap) * 0.866) * -1);
+    --dy: calc((var(--hex-h) + var(--hex-gap)) * 0.5);
+  }
+  &[data-position='NW'] {
+    --dx: calc((var(--hex-w) * 0.75 + var(--hex-gap) * 0.866) * -1);
+    --dy: calc((var(--hex-h) + var(--hex-gap)) * -0.5);
+  }
+}
+
+// ─── "Make this my root" control (outside the hex clip) ─────────────
+.concept-hex__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.concept-hex__root-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: var(--surface-accent-fill, var(--primary));
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+
+  i {
+    font-size: 12px;
+  }
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.42);
+  }
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: rgba(148, 163, 184, 0.25);
+    color: var(--text-muted);
+    border-color: var(--glass-border);
+    box-shadow: none;
+  }
+  &:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.concept-hex__lonely {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 40ch;
+}
+
+// ─── Motion ─────────────────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .hex-cell,
+  .hex-cell__clip,
+  .hex-cell__surface,
+  .hex-cell--neighbor {
+    transition: none;
+    animation: none;
+  }
+  .hex-cell--neighbor:hover:not([disabled]),
+  .hex-cell--focal:hover:not([disabled]) {
+    filter: none;
+
+    .hex-cell__clip,
+    .hex-cell__clip--focal {
+      transform: none;
+    }
+  }
+}

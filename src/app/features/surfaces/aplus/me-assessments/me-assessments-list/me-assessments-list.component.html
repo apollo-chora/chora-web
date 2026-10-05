@@ -1,0 +1,178 @@
+<section
+  class="me-assessments-list aplus-hub-page surface-aplus"
+  aria-labelledby="me-assessments-list-heading"
+  data-testid="me-assessments-list">
+  <chora-courses-sub-nav />
+  <header class="me-assessments-list__header">
+    <h1 id="me-assessments-list-heading" class="me-assessments-list__title">
+      {{ 'aplus.me_assessments.list.heading' | translate }}
+    </h1>
+    <p class="me-assessments-list__subtitle">
+      {{ 'aplus.me_assessments.list.subtitle' | translate }}
+    </p>
+  </header>
+
+  @switch (listState().status) {
+    @case ('loading') {
+      <div
+        class="me-assessments-list__loading glass-panel"
+        role="status"
+        aria-busy="true"
+        data-testid="me-assessments-list-loading">
+        <p>{{ 'aplus.me_assessments.list.loading' | translate }}</p>
+        <div class="me-assessments-list__skeleton-grid" aria-hidden="true">
+          <div class="me-assessments-list__skeleton-card"></div>
+          <div class="me-assessments-list__skeleton-card"></div>
+          <div class="me-assessments-list__skeleton-card"></div>
+        </div>
+      </div>
+    }
+    @case ('error') {
+      <div
+        class="me-assessments-list__error glass-panel"
+        role="alert"
+        data-testid="me-assessments-list-error">
+        <p>{{ errorKey() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-testid="me-assessments-list-retry"
+          (click)="retry()">
+          {{ 'aplus.me_assessments.list.retry' | translate }}
+        </button>
+      </div>
+    }
+    @case ('success') {
+      @if (isEmpty()) {
+        <div
+          class="me-assessments-list__empty glass-panel"
+          role="status"
+          data-testid="me-assessments-list-empty">
+          <i class="fa-solid fa-inbox" aria-hidden="true"></i>
+          <p>{{ 'aplus.me_assessments.list.empty' | translate }}</p>
+        </div>
+      } @else {
+        <div class="me-assessments-list__toolbar">
+          <div class="me-assessments-list__search">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input
+              type="search"
+              class="me-assessments-list__search-input"
+              data-testid="me-assessments-search"
+              [value]="searchQuery()"
+              (input)="onSearchInput($any($event.target).value)"
+              [attr.placeholder]="'aplus.me_assessments.list.search_placeholder' | translate"
+              [attr.aria-label]="'aplus.me_assessments.list.search_label' | translate" />
+          </div>
+          <div class="me-assessments-list__pagination-controls">
+            <label for="me-assessments-page-size-select" class="sr-only">
+              {{ 'aplus.me_assessments.list.page_size_label' | translate }}
+            </label>
+            <select
+              id="me-assessments-page-size-select"
+              data-testid="me-assessments-page-size"
+              [value]="pageSize()"
+              (change)="onPageSizeChange(+($any($event.target).value))"
+              aria-label="{{ 'aplus.me_assessments.list.page_size_label' | translate }}">
+              @for (opt of PAGE_SIZE_OPTIONS; track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        @if (hasNoMatch()) {
+          <div
+            class="me-assessments-list__empty glass-panel"
+            role="status"
+            data-testid="me-assessments-list-no-match">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <p>{{ 'aplus.me_assessments.list.no_match' | translate }}</p>
+          </div>
+        } @else {
+          <ul
+            class="me-assessments-list__rows"
+            data-testid="me-assessments-list-grid">
+            @for (vm of cards(); track vm.summary.assessment_id) {
+              <li
+                class="me-assessments-list__row glass-panel"
+                [attr.data-testid]="'me-assessments-card-' + vm.summary.assessment_id">
+                <div class="me-assessments-list__row-info">
+                  <div class="me-assessments-list__row-titles">
+                    <span
+                      class="me-assessments-list__chip"
+                      data-testid="me-assessments-card-status"
+                      [attr.data-attempt-status]="vm.attemptStatus">
+                      {{ ('aplus.me_assessments.list.status_' + vm.attemptStatus) | translate }}
+                    </span>
+                    <h2
+                      class="me-assessments-list__row-title"
+                      data-testid="me-assessments-card-title">
+                      {{ vm.summary.title }}
+                    </h2>
+                  </div>
+                  <dl class="me-assessments-list__meta">
+                    <div>
+                      <dt>{{ 'aplus.me_assessments.list.window' | translate }}</dt>
+                      <dd data-testid="me-assessments-card-window">
+                        {{ (vm.summary.scheduled_open_at | date:'medium') ?? vm.summary.scheduled_open_at }} -
+                        {{ (vm.summary.scheduled_close_at | date:'medium') ?? vm.summary.scheduled_close_at }}
+                      </dd>
+                    </div>
+                    @if (vm.summary.question_count !== undefined) {
+                      <div>
+                        <dt>{{ 'aplus.me_assessments.list.questions' | translate }}</dt>
+                        <dd>{{ vm.summary.question_count }}</dd>
+                      </div>
+                    }
+                    @if (vm.summary.total_points !== undefined) {
+                      <div>
+                        <dt>{{ 'aplus.me_assessments.list.points' | translate }}</dt>
+                        <dd>{{ vm.summary.total_points }}</dd>
+                      </div>
+                    }
+                    <div>
+                      <dt>{{ 'aplus.me_assessments.list.attempts' | translate }}</dt>
+                      <dd>
+                        {{ vm.summary.learner_attempt_count }} /
+                        {{ vm.summary.max_attempts }}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+                <div class="me-assessments-list__row-actions">
+                  <a
+                    class="btn btn-primary"
+                    [routerLink]="cardHref(vm.summary)"
+                    [attr.href]="cardHref(vm.summary)"
+                    data-testid="me-assessments-card-open">
+                    {{ 'aplus.me_assessments.list.open' | translate }}
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                  </a>
+                  @if (vm.resultHref) {
+                    <a
+                      class="btn btn-secondary"
+                      [routerLink]="vm.resultHref"
+                      [attr.href]="vm.resultHref"
+                      data-testid="me-assessments-card-result">
+                      {{ 'aplus.me_assessments.list.view_result' | translate }}
+                    </a>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+          @if (hasMore()) {
+            <button
+              type="button"
+              class="btn btn-secondary me-assessments-list__load-more"
+              data-testid="me-assessments-load-more"
+              (click)="loadMore()">
+              {{ 'aplus.me_assessments.list.load_more' | translate }}
+            </button>
+          }
+        }
+      }
+    }
+  }
+</section>

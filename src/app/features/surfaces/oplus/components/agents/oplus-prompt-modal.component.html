@@ -1,0 +1,175 @@
+<div
+  class="modal-overlay oplus-prompt-modal__overlay"
+  data-testid="oplus-prompt-modal-backdrop"
+  role="presentation"
+  tabindex="-1"
+  (click)="onBackdropClick()"
+  (keydown)="onKeydown($event)"
+>
+  <div
+    #dialogPanel
+    class="modal-content oplus-prompt-modal__panel"
+    data-testid="oplus-prompt-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="oplus-prompt-modal-title"
+    tabindex="-1"
+    (click)="$event.stopPropagation()"
+    (keydown)="$event.stopPropagation(); onKeydown($event)"
+  >
+    <header class="oplus-prompt-modal__head">
+      <h2 id="oplus-prompt-modal-title" class="oplus-prompt-modal__title">
+        <i class="fa-solid fa-scroll" aria-hidden="true"></i>
+        {{ 'oplus.agents.prompt_modal_title' | translate }}
+        <code class="oplus-prompt-modal__agent">{{ agentId() }}</code>
+      </h2>
+      <button
+        type="button"
+        class="oplus-prompt-modal__close"
+        data-testid="oplus-prompt-modal-close"
+        [attr.aria-label]="'oplus.agents.prompt_modal_close' | translate"
+        (click)="onCancel()"
+      >
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    @switch (listState()) {
+      @case ('loading') {
+        <p class="oplus-prompt-modal__status" data-testid="oplus-prompt-modal-loading">
+          <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+          {{ 'oplus.agents.prompt_modal_loading' | translate }}
+        </p>
+      }
+      @case ('forbidden') {
+        <p class="oplus-prompt-modal__status" role="alert" data-testid="oplus-prompt-modal-forbidden">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          {{ 'oplus.agents.prompt_modal_forbidden' | translate }}
+        </p>
+      }
+      @case ('error') {
+        <p class="oplus-prompt-modal__status" role="alert" data-testid="oplus-prompt-modal-error">
+          {{ 'oplus.agents.prompt_modal_error' | translate }}
+        </p>
+        <button
+          type="button"
+          class="oplus-prompt-modal__retry"
+          data-testid="oplus-prompt-modal-retry"
+          (click)="loadVersions()"
+        >
+          {{ 'oplus.agents.prompt_modal_retry' | translate }}
+        </button>
+      }
+      @case ('ready') {
+        <div class="oplus-prompt-modal__selector-row">
+          <label class="oplus-prompt-modal__selector-label" for="oplus-prompt-version-select">
+            {{ 'oplus.agents.prompt_modal_version_label' | translate }}
+          </label>
+          <select
+            id="oplus-prompt-version-select"
+            class="oplus-prompt-modal__selector"
+            data-testid="oplus-prompt-modal-version-select"
+            [value]="selectedVersion()"
+            (change)="onVersionChange($event)"
+          >
+            @for (v of versions(); track v.version) {
+              <option [value]="v.version" [selected]="v.version === selectedVersion()">
+                {{ v.version }} ({{ tagKey(v) | translate }})
+              </option>
+            }
+          </select>
+        </div>
+
+        @if (detail(); as d) {
+          <dl class="oplus-prompt-modal__meta" data-testid="oplus-prompt-modal-meta">
+            <div class="oplus-prompt-modal__meta-item">
+              @if (d.kind === 'baseline') {
+                <dt>{{ 'oplus.agents.prompt_modal_kind_label' | translate }}</dt>
+                <dd>
+                  <span
+                    class="oplus-prompt-modal__kind oplus-prompt-modal__kind--{{ d.kind }}"
+                    >{{ 'oplus.agents.prompt_modal_kind_' + d.kind | translate }}</span
+                  >
+                </dd>
+              } @else {
+                <dt>{{ 'oplus.agents.prompt_modal_status_label' | translate }}</dt>
+                <dd>
+                  <span
+                    class="oplus-prompt-modal__state oplus-prompt-modal__state--{{ d.status }}"
+                    data-testid="oplus-prompt-modal-state"
+                    >{{ statusKey(d.status) | translate }}</span
+                  >
+                </dd>
+              }
+            </div>
+            @if (d.activated_at !== null) {
+              <div class="oplus-prompt-modal__meta-item">
+                <dt>{{ 'oplus.agents.prompt_modal_activated' | translate }}</dt>
+                <dd>{{ stamp(d.activated_at) }} UTC</dd>
+              </div>
+            }
+            @if (d.approved_by !== null) {
+              <div class="oplus-prompt-modal__meta-item">
+                <dt>{{ 'oplus.agents.prompt_modal_approved_by' | translate }}</dt>
+                <dd><code>{{ d.approved_by }}</code></dd>
+              </div>
+            }
+            @if (d.eval_run_id !== null) {
+              <div class="oplus-prompt-modal__meta-item">
+                <dt>{{ 'oplus.agents.prompt_modal_eval_run' | translate }}</dt>
+                <dd><code>{{ d.eval_run_id }}</code></dd>
+              </div>
+            }
+          </dl>
+        }
+
+        @switch (contentState()) {
+          @case ('loading') {
+            <p class="oplus-prompt-modal__status" data-testid="oplus-prompt-modal-content-loading">
+              <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+              {{ 'oplus.agents.prompt_modal_loading' | translate }}
+            </p>
+          }
+          @case ('error') {
+            <p class="oplus-prompt-modal__status" role="alert" data-testid="oplus-prompt-modal-content-error">
+              {{ 'oplus.agents.prompt_modal_error' | translate }}
+            </p>
+          }
+          @case ('ready') {
+            @if (detail(); as d) {
+              <ul
+                class="oplus-prompt-modal__segments"
+                role="list"
+                [attr.aria-label]="'oplus.agents.prompt_modal_segments_aria' | translate"
+              >
+                @for (s of d.segments; track s.segment_id) {
+                  <li
+                    class="oplus-prompt-modal__segment"
+                    [attr.data-testid]="'oplus-prompt-segment-' + s.segment_id"
+                  >
+                    <div class="oplus-prompt-modal__segment-head">
+                      <code class="oplus-prompt-modal__segment-id">{{ s.segment_id }}</code>
+                      @if (s.locked) {
+                        <span
+                          class="oplus-prompt-modal__locked"
+                          [attr.data-testid]="'oplus-prompt-locked-' + s.segment_id"
+                        >
+                          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                          {{ 'oplus.agents.prompt_modal_locked_badge' | translate }}
+                        </span>
+                      }
+                    </div>
+                    @if (s.note !== '') {
+                      <p class="oplus-prompt-modal__segment-note">{{ s.note }}</p>
+                    }
+                    <pre class="oplus-prompt-modal__segment-body">{{ s.body }}</pre>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        }
+      }
+    }
+  </div>
+</div>

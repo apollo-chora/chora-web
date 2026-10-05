@@ -1,0 +1,58 @@
+// RTL support via CSS logical properties
+// Activated when [dir="rtl"] is set on the <html> element by TranslateService
+// Uses CSS logical properties so LTR continues to work without any changes
+
+// ── Global RTL overrides ──────────────────────────────────────────────
+
+[dir="rtl"] {
+  text-align: right;
+
+  // Sidebar positioning — inset-inline keeps sidebar on the correct side
+  .chora-sidebar {
+    inset-inline-start: 0;
+    inset-inline-end: auto;
+  }
+
+  // Lists — reset logical padding that browsers apply by default
+  ul,
+  ol {
+    padding-inline-start: 0;
+  }
+}
+
+// ── Logical-property utility classes ──────────────────────────────────
+// These work correctly in both LTR and RTL without any direction check.
+
+// Margin utilities
+.ms-auto  { margin-inline-start: auto; }
+.me-auto  { margin-inline-end: auto; }
+.ms-0     { margin-inline-start: 0; }
+.me-0     { margin-inline-end: 0; }
+.ms-xs    { margin-inline-start: var(--chora-space-xs); }
+.me-xs    { margin-inline-end: var(--chora-space-xs); }
+.ms-sm    { margin-inline-start: var(--chora-space-sm); }
+.me-sm    { margin-inline-end: var(--chora-space-sm); }
+.ms-md    { margin-inline-start: var(--chora-space-md); }
+.me-md    { margin-inline-end: var(--chora-space-md); }
+
+// Padding utilities
+.ps-0     { padding-inline-start: 0; }
+.pe-0     { padding-inline-end: 0; }
+.ps-xs    { padding-inline-start: var(--chora-space-xs); }
+.pe-xs    { padding-inline-end: var(--chora-space-xs); }
+.ps-sm    { padding-inline-start: var(--chora-space-sm); }
+.pe-sm    { padding-inline-end: var(--chora-space-sm); }
+.ps-md    { padding-inline-start: var(--chora-space-md); }
+.pe-md    { padding-inline-end: var(--chora-space-md); }
+
+// Text alignment utilities
+.text-start { text-align: start; }
+.text-end   { text-align: end; }
+
+// Float utilities (logical)
+.float-start { float: inline-start; }
+.float-end   { float: inline-end; }
+
+// Border utilities (logical)
+.border-start { border-inline-start: 1px solid var(--chora-color-border); }
+.border-end   { border-inline-end: 1px solid var(--chora-color-border); }

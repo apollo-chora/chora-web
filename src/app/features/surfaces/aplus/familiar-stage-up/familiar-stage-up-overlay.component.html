@@ -1,0 +1,154 @@
+<!-- FamiliarStageUpOverlayComponent — glass-panel modal overlay (WS-2) -->
+<div
+  class="fsu-overlay"
+  role="presentation"
+  (click)="onBackdropClick()"
+  (keydown)="onKeydown($event)"
+  data-testid="fsu-overlay-backdrop">
+  <!-- Backdrop blur scrim -->
+  <div class="fsu-overlay__scrim" aria-hidden="true"></div>
+
+  <!-- Modal dialog card -->
+  <div
+    #dialogPanel
+    class="fsu-overlay__card glass-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="fsu-heading"
+    tabindex="-1"
+    (click)="$event.stopPropagation()"
+    (keydown)="$event.stopPropagation()"
+    data-testid="fsu-overlay-card">
+
+    <!-- Sparkle decoration -->
+    <div class="fsu-overlay__sparkles" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <span></span><span></span>
+    </div>
+
+    <header class="fsu-overlay__head">
+      <p class="fsu-overlay__eyebrow">
+        {{ 'aplus.familiar_stage_up_overlay.eyebrow' | translate }}
+      </p>
+      <h2 id="fsu-heading" class="fsu-overlay__heading" data-testid="fsu-heading">
+        {{ 'aplus.familiar_stage_up_overlay.heading_prefix' | translate }}
+        <strong class="fsu-overlay__new-label">{{ toLabel() }}</strong>!
+      </h2>
+      <p class="fsu-overlay__transition" data-testid="fsu-transition">
+        {{ fromLabel() }} &rarr; {{ toLabel() }}
+      </p>
+    </header>
+
+    <!-- Breed-art morph row -->
+    <div class="fsu-overlay__art-row">
+      <div class="fsu-overlay__art-cell fsu-overlay__art-cell--from">
+        <chora-breed-art
+          [species]="species()"
+          [stage]="fromStage()"
+          size="sm"
+          mood="idle"
+          [altText]="fromLabel()" />
+        <span class="fsu-overlay__art-label">{{ fromLabel() }}</span>
+      </div>
+      <div class="fsu-overlay__morph-arrow" aria-hidden="true">
+        <i class="fa-solid fa-right-long"></i>
+      </div>
+      <div class="fsu-overlay__art-cell fsu-overlay__art-cell--to">
+        <chora-breed-art
+          [species]="species()"
+          [stage]="toStage()"
+          size="md"
+          mood="celebrating"
+          [altText]="toLabel()" />
+        <span class="fsu-overlay__art-label fsu-overlay__art-label--new">
+          {{ toLabel() }}
+        </span>
+      </div>
+    </div>
+
+    <!-- CHO-2030 (R3-9) ceremony reveals: slot grant + woke Skills + named-tease -->
+    <div class="fsu-overlay__reveals" data-testid="fsu-reveals">
+      @switch (reveals().status) {
+        @case ('loading') {
+          <p class="fsu-overlay__reveals-loading" data-testid="fsu-reveals-loading">
+            {{ 'aplus.familiar_stage_up_overlay.reveals_loading' | translate }}
+          </p>
+        }
+        @case ('error') {
+          <p class="fsu-overlay__reveals-error" data-testid="fsu-reveals-error">
+            {{ 'aplus.familiar_stage_up_overlay.reveals_error' | translate }}
+          </p>
+        }
+        @case ('success') {
+          @let d = revealData();
+          @if (d) {
+            <p class="fsu-overlay__slots" data-testid="fsu-reveal-slots">
+              <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+              {{ 'aplus.familiar_stage_up_overlay.reveal_slots' | translate }}
+              <strong>{{ d.slotsUnlocked }}</strong>
+            </p>
+
+            @if (d.justWoke.length > 0) {
+              <h3 class="fsu-overlay__reveal-heading">
+                {{ 'aplus.familiar_stage_up_overlay.reveal_woke' | translate }}
+              </h3>
+              <ul class="fsu-overlay__reveal-list" data-testid="fsu-reveal-woke">
+                @for (g of d.justWoke; track g.skillKey) {
+                  <li
+                    class="fsu-overlay__reveal-item"
+                    [class.is-dormant]="!g.catalogueActive"
+                    [attr.data-testid]="'fsu-woke-' + g.skillKey">
+                    <i
+                      class="fa-solid"
+                      [class.fa-wand-magic-sparkles]="g.catalogueActive"
+                      [class.fa-moon]="!g.catalogueActive"
+                      aria-hidden="true"></i>
+                    <span>{{ ('familiar_skill.' + g.skillKey) | translate }}</span>
+                    @if (!g.catalogueActive) {
+                      <span class="fsu-overlay__dormant-chip">
+                        {{ 'familiar_loadout.dormant' | translate }}
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (d.nextUnlocks.length > 0) {
+              <h3 class="fsu-overlay__reveal-heading">
+                {{ 'aplus.familiar_stage_up_overlay.reveal_next' | translate }}
+              </h3>
+              <ul
+                class="fsu-overlay__reveal-list fsu-overlay__reveal-list--tease"
+                data-testid="fsu-reveal-next">
+                @for (n of d.nextUnlocks; track n.skillKey) {
+                  <li
+                    class="fsu-overlay__reveal-item fsu-overlay__reveal-item--tease"
+                    [attr.data-testid]="'fsu-next-' + n.skillKey">
+                    <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
+                    <span>{{ ('familiar_skill.' + n.skillKey) | translate }}</span>
+                    <span class="fsu-overlay__tease-stage">
+                      {{ 'aplus.familiar_stage_up_overlay.unlocks_at_stage' | translate }}
+                      {{ n.unlocksAtStage }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        }
+      }
+    </div>
+
+    <footer class="fsu-overlay__footer">
+      <button
+        type="button"
+        class="btn btn-primary fsu-overlay__close-btn"
+        (click)="onClose()"
+        data-testid="fsu-overlay-close">
+        <i class="fa-solid fa-star" aria-hidden="true"></i>
+        {{ 'aplus.familiar_stage_up_overlay.continue_cta' | translate }}
+      </button>
+    </footer>
+  </div>
+</div>

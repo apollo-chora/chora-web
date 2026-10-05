@@ -1,0 +1,127 @@
+<section class="create-tenant glass-panel" aria-labelledby="create-tenant-heading">
+  <header class="create-tenant__head">
+    <h1 id="create-tenant-heading">{{ 'hplus.tenants_new.title' | translate }}</h1>
+    <p class="create-tenant__lede">{{ 'hplus.tenants_new.lede' | translate }}</p>
+  </header>
+
+  @if (created(); as tenant) {
+    <div class="create-tenant__done" role="status">
+      <h2>{{ 'hplus.tenants_new.success.title' | translate }}</h2>
+      <p class="create-tenant__owner-note">
+        {{ 'hplus.tenants_new.success.you_administer' | translate }}
+      </p>
+      <!-- The roster reads the identity mirror, fed asynchronously through the
+           outbox. Everything else here is immediate; this is not. -->
+      <p class="create-tenant__roster-note">
+        {{ 'hplus.tenants_new.success.roster_pending' | translate }}
+      </p>
+      <p class="create-tenant__tenant-id" data-testid="created-tenant-id">{{ tenant.tenant_id }}</p>
+      @if (errorKey(); as key) {
+        <p class="create-tenant__error" role="alert" data-testid="switch-error">
+          {{ key | translate }}
+        </p>
+      } @else {
+        <a class="create-tenant__continue" [routerLink]="continueSetupPath" data-testid="continue-setup">
+          {{ 'hplus.tenants_new.success.continue' | translate }}
+        </a>
+      }
+    </div>
+  } @else {
+    <form class="create-tenant__form" (submit)="$event.preventDefault(); submit()">
+      <label class="create-tenant__field" for="ct-name">
+        <span class="create-tenant__label">{{ 'hplus.tenants_new.fields.name' | translate }}</span>
+        <input
+          id="ct-name"
+          data-testid="display-name"
+          type="text"
+          [value]="displayName()"
+          (input)="onName($any($event.target).value)"
+          [attr.minlength]="nameMin"
+          [attr.maxlength]="nameMax"
+          required
+        />
+        <span class="create-tenant__hint">{{ 'hplus.tenants_new.fields.name_hint' | translate }}</span>
+      </label>
+
+      <label class="create-tenant__field" for="ct-parent">
+        <span class="create-tenant__label">{{ 'hplus.tenants_new.fields.parent' | translate }}</span>
+        <input
+          id="ct-parent"
+          data-testid="parent-tenant-id"
+          type="text"
+          [value]="parentTenantId"
+          readonly
+        />
+        <span class="create-tenant__hint">{{ 'hplus.tenants_new.fields.parent_hint' | translate }}</span>
+      </label>
+
+      <label class="create-tenant__field" for="ct-hosting">
+        <span class="create-tenant__label">{{ 'hplus.tenants_new.fields.hosting_mode' | translate }}</span>
+        <select
+          id="ct-hosting"
+          data-testid="hosting-mode"
+          [value]="hostingMode()"
+          (change)="onHostingMode($any($event.target).value)"
+        >
+          @for (mode of hostingModes; track mode) {
+            <option [value]="mode">{{ 'hplus.tenants_new.hosting.' + mode | translate }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="create-tenant__field" for="ct-owner">
+        <span class="create-tenant__label">{{ 'hplus.tenants_new.fields.owner' | translate }}</span>
+        <input
+          id="ct-owner"
+          data-testid="owner-gcid"
+          type="text"
+          [value]="ownerGcid()"
+          (input)="onOwnerGcid($any($event.target).value)"
+          required
+        />
+        <!-- R10: the operator holds ownership temporarily. Say so here, where
+             the decision is made, not on the roster where it is discovered. -->
+        <span class="create-tenant__hint">{{ 'hplus.tenants_new.fields.owner_hint' | translate }}</span>
+      </label>
+
+      <fieldset class="create-tenant__addons">
+        <legend>{{ 'hplus.tenants_new.addons.legend' | translate }}</legend>
+        @if (catalogueUnavailable()) {
+          <p class="create-tenant__warning" role="alert" data-testid="catalogue-unavailable">
+            {{ 'hplus.tenants_new.addons.unavailable' | translate }}
+          </p>
+        } @else if (catalogue().length === 0) {
+          <p class="create-tenant__hint" data-testid="catalogue-empty">
+            {{ 'hplus.tenants_new.addons.empty' | translate }}
+          </p>
+        } @else {
+          @for (choice of catalogue(); track choice.code) {
+            <label class="create-tenant__addon">
+              <input
+                type="checkbox"
+                [attr.data-testid]="'addon-' + choice.code"
+                [checked]="isChosen(choice.code)"
+                (change)="toggleAddOn(choice.code)"
+              />
+              <span class="create-tenant__addon-name">{{ choice.displayName }}</span>
+              <span class="create-tenant__addon-category">{{ choice.category }}</span>
+            </label>
+          }
+        }
+      </fieldset>
+
+      @if (errorKey(); as key) {
+        <p class="create-tenant__error" role="alert" data-testid="create-error">
+          {{ key | translate }}
+          @if (errorDetail(); as detail) {
+            <span class="create-tenant__error-detail" data-testid="create-error-detail">{{ detail }}</span>
+          }
+        </p>
+      }
+
+      <button type="submit" class="create-tenant__submit" [disabled]="submitting()" data-testid="submit">
+        {{ (submitting() ? 'hplus.tenants_new.submitting' : 'hplus.tenants_new.submit') | translate }}
+      </button>
+    </form>
+  }
+</section>

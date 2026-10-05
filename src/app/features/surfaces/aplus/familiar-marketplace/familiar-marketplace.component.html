@@ -1,0 +1,44 @@
+<section
+  class="aplus-marketplace surface-aplus"
+  aria-labelledby="aplus-marketplace-heading"
+  data-testid="aplus-familiar-marketplace">
+  <header class="aplus-marketplace__header glass-panel">
+    <div>
+      <h1 id="aplus-marketplace-heading" class="aplus-marketplace__title">
+        <i class="fa-solid fa-seedling" aria-hidden="true"></i>
+        {{ 'aplus.familiar_marketplace.heading' | translate }}
+      </h1>
+      <p class="aplus-marketplace__tagline">
+        {{ 'aplus.familiar_marketplace.tagline' | translate }}
+      </p>
+    </div>
+  </header>
+
+  @if (catalog().skus.length > 0) {
+    <ul class="aplus-marketplace__grid" data-testid="aplus-marketplace-grid">
+      @for (s of catalog().skus; track s.sku) {
+        <li>
+          <chora-egg-card [sku]="s" (checkoutRequested)="onCheckout($event)" />
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="aplus-marketplace__loading" role="status">
+      {{ 'aplus.familiar_marketplace.loading' | translate }}
+    </p>
+  }
+
+  <!-- Lootbox transparency footer — required on every egg-related
+       screen per handoff §4.4. -->
+  <footer class="aplus-marketplace__footer" data-testid="aplus-marketplace-footer">
+    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+    <p>
+      {{ 'aplus.familiar_marketplace.transparency_body' | translate }}
+      <a routerLink="/h/marketplace/companion-eggs"
+         class="aplus-marketplace__policy-link"
+         data-testid="aplus-marketplace-policy-link">
+        {{ 'aplus.familiar_marketplace.policy_link' | translate }}
+      </a>
+    </p>
+  </footer>
+</section>

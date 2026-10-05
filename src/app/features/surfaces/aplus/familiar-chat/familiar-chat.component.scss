@@ -1,0 +1,300 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.familiar-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--chora-space-lg, 24px);
+  gap: var(--chora-space-md, 16px);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__heading {
+    font-size: 1.5rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+
+    .fa-wand-sparkles {
+      color: var(--chora-color-accent, #9a3412);
+    }
+  }
+
+  &__mana-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    background: rgba(253, 186, 116, 0.12);
+    border: 1px solid rgba(253, 186, 116, 0.32);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  &__cost-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+
+  &__error-banner {
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    color: var(--chora-color-danger, #f87171);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-sm, 8px);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__transcript {
+    flex: 1;
+    min-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-md, 16px);
+    padding: var(--chora-space-md, 16px);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--chora-radius-md, 12px);
+  }
+
+  &__empty {
+    text-align: center;
+    opacity: 0.5;
+    margin: auto;
+    font-style: italic;
+  }
+
+  &__msg {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-md, 12px);
+
+    &--user {
+      align-self: flex-end;
+      max-width: 80%;
+      background: linear-gradient(
+        135deg,
+        rgba(129, 140, 248, 0.18),
+        rgba(253, 186, 116, 0.18)
+      );
+      border: 1px solid rgba(129, 140, 248, 0.32);
+    }
+
+    &--familiar {
+      align-self: flex-start;
+      max-width: 95%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__msg-role {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+    font-weight: 600;
+  }
+
+  &__msg-text {
+    margin: 0;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  &__tool-pills {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__tool-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    background: rgba(96, 165, 250, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.32);
+    border-radius: 999px;
+    color: var(--chora-color-info, #60a5fa);
+  }
+
+  &__tool-pill-name {
+    font-family: monospace;
+    opacity: 0.8;
+  }
+
+  &__streaming {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    margin: 0;
+    color: var(--chora-color-info, #60a5fa);
+  }
+
+  &__completion {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    display: flex;
+    gap: var(--chora-space-md, 16px);
+    margin-top: var(--chora-space-xs, 4px);
+  }
+
+  // CHO-2192 — the sources behind a recalled research note.
+  //
+  // The rule (ADR-231 D5) is that attribution must never be mistakable for the
+  // answer. So it is fenced off: a hairline rule and a step down in weight put it
+  // visibly BELOW the prose. This is transparency metadata — it answers "where did
+  // that come from", never "what is true".
+  &__grounded {
+    margin-top: var(--chora-space-sm, 8px);
+    padding-top: var(--chora-space-sm, 8px);
+    border-top: 1px solid var(--chora-glass-border, rgba(255, 255, 255, 0.12));
+  }
+
+  &__grounded-unrecorded {
+    margin: 0;
+    font-size: 0.75rem;
+    opacity: 0.7;
+    display: flex;
+    align-items: baseline;
+    gap: var(--chora-space-xs, 4px);
+    font-style: italic;
+  }
+
+  &__composer {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+    align-items: flex-end;
+  }
+
+  &__input {
+    flex: 1;
+    resize: vertical;
+    min-height: 56px;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--chora-radius-sm, 8px);
+    color: inherit;
+    font-family: inherit;
+    font-size: 0.95rem;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-accent, #9a3412);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__send {
+    background: linear-gradient(
+      135deg,
+      var(--chora-color-accent, #9a3412),
+      var(--chora-color-primary, #818cf8)
+    );
+    color: white;
+    border: 0;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-sm, 8px);
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ── CHO-2095: identity header (which familiar am I talking to?) ───────
+.familiar-chat__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.familiar-chat__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.familiar-chat__identity-stage {
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(25, 118, 210, 0.1);
+  border: 1px solid rgba(25, 118, 210, 0.25);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}

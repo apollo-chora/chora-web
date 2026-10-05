@@ -1,0 +1,160 @@
+<section
+  class="escalation-tracker"
+  role="main"
+  [attr.aria-label]="'admin.governance.escalation_title' | translate"
+  data-testid="escalation-tracker">
+
+  <header class="escalation-tracker__header">
+    <h1 class="escalation-tracker__title" data-testid="escalation-title">
+      {{ 'admin.governance.escalation_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="escalation-tracker__loading" aria-live="polite" data-testid="escalation-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="escalation-tracker__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (isError()) {
+    <div class="escalation-tracker__error" role="alert" data-testid="escalation-error">
+      <p class="escalation-tracker__error-text">
+        {{ 'admin.governance.escalation_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  @if (escalation()) {
+    <!-- Current Tier -->
+    <div class="escalation-tracker__current" data-testid="current-tier">
+      <span class="escalation-tracker__current-label">
+        {{ 'admin.governance.current_tier' | translate }}
+      </span>
+      <span
+        class="escalation-tracker__current-value"
+        [class]="tierClass(currentTier())">
+        {{ tierLabels[currentTier()] | translate }}
+      </span>
+    </div>
+
+    <!-- Warning Progress Bar -->
+    @if (nextThreshold(); as next) {
+      <div class="escalation-tracker__progress" data-testid="warning-progress">
+        <div class="escalation-tracker__progress-header">
+          <span class="escalation-tracker__progress-label">
+            {{ warningCount() }} / {{ next.warnings_required }}
+            {{ 'admin.governance.before' | translate }}
+            {{ tierLabels[next.tier] | translate }}
+          </span>
+        </div>
+        <div
+          class="escalation-tracker__progress-track"
+          role="progressbar"
+          [attr.aria-valuenow]="warningCount()"
+          [attr.aria-valuemin]="0"
+          [attr.aria-valuemax]="next.warnings_required"
+          [attr.aria-label]="'admin.governance.warning_progress' | translate">
+          <div
+            class="escalation-tracker__progress-fill"
+            [class.escalation-tracker__progress-fill--danger]="progressPercent() >= 80"
+            [class.escalation-tracker__progress-fill--warning]="progressPercent() >= 50 && progressPercent() < 80"
+            [style.width.%]="progressPercent()">
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Threshold Display -->
+    @if (thresholds().length > 0) {
+      <div class="escalation-tracker__thresholds" data-testid="thresholds">
+        <h2 class="escalation-tracker__section-heading">
+          {{ 'admin.governance.escalation_thresholds' | translate }}
+        </h2>
+        <div class="escalation-tracker__threshold-list">
+          @for (threshold of thresholds(); track threshold.tier) {
+            <div
+              class="escalation-tracker__threshold-item"
+              [class.escalation-tracker__threshold-item--current]="isCurrentTier(threshold.tier)"
+              data-testid="threshold-item">
+              <div class="escalation-tracker__threshold-header">
+                <span
+                  class="escalation-tracker__threshold-tier"
+                  [class]="tierClass(threshold.tier)">
+                  {{ threshold.label_key | translate }}
+                </span>
+                <span class="escalation-tracker__threshold-count">
+                  {{ threshold.warnings_required }} {{ 'admin.governance.warnings' | translate }}
+                </span>
+              </div>
+              <p class="escalation-tracker__threshold-desc">
+                {{ threshold.description_key | translate }}
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- De-escalation -->
+    <div class="escalation-tracker__actions" data-testid="de-escalation-controls">
+      <h2 class="escalation-tracker__section-heading">
+        {{ 'admin.governance.admin_controls' | translate }}
+      </h2>
+      <button
+        type="button"
+        class="escalation-tracker__btn escalation-tracker__btn--primary"
+        data-testid="btn-de-escalate"
+        [disabled]="deEscalating() || currentTier() === 'tier_1'"
+        [attr.aria-label]="'admin.governance.de_escalate' | translate"
+        (click)="deEscalate()">
+        @if (deEscalating()) {
+          {{ 'admin.governance.de_escalating' | translate }}
+        } @else {
+          {{ 'admin.governance.de_escalate' | translate }}
+        }
+      </button>
+    </div>
+
+    <!-- Escalation History -->
+    @if (history().length > 0) {
+      <div class="escalation-tracker__history" data-testid="escalation-history">
+        <h2 class="escalation-tracker__section-heading">
+          {{ 'admin.governance.escalation_history' | translate }}
+        </h2>
+        <table class="escalation-tracker__history-table" role="table"
+               [attr.aria-label]="'admin.governance.escalation_history' | translate">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'admin.governance.date' | translate }}</th>
+              <th scope="col">{{ 'admin.governance.from_tier' | translate }}</th>
+              <th scope="col">{{ 'admin.governance.to_tier' | translate }}</th>
+              <th scope="col">{{ 'admin.governance.reason' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of history(); track entry.id) {
+              <tr data-testid="history-row">
+                <td>{{ formatDate(entry.escalated_at) }}</td>
+                <td>
+                  <span class="escalation-tracker__tier-badge" [class]="tierClass(entry.from_tier)">
+                    {{ tierLabels[entry.from_tier] | translate }}
+                  </span>
+                </td>
+                <td>
+                  <span class="escalation-tracker__tier-badge" [class]="tierClass(entry.to_tier)">
+                    {{ tierLabels[entry.to_tier] | translate }}
+                  </span>
+                </td>
+                <td>{{ entry.reason }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</section>

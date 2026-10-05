@@ -1,0 +1,249 @@
+<section class="a2a-connections" data-testid="a2a-connections" aria-labelledby="a2a-connections-title">
+  <!-- Header -->
+  <header class="a2a-connections__header">
+    <h2 id="a2a-connections-title" class="a2a-connections__title">
+      {{ 'a2a.connections.title' | translate }}
+    </h2>
+    <p class="a2a-connections__subtitle">
+      {{ 'a2a.connections.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Active grants list -->
+  @if (activeGrants().length === 0) {
+    <div class="a2a-connections__empty" role="status">
+      <p>{{ 'a2a.connections.no_grants' | translate }}</p>
+    </div>
+  } @else {
+    <ul class="a2a-connections__list" role="list" [attr.aria-label]="'a2a.connections.grants_list_aria' | translate">
+      @for (grant of activeGrants(); track grant.id) {
+        <li class="a2a-connections__grant" [class.a2a-connections__grant--expanded]="isExpanded(grant.id)">
+          <!-- Grant summary -->
+          <button
+            type="button"
+            class="a2a-connections__grant-header"
+            [attr.aria-expanded]="isExpanded(grant.id)"
+            [attr.aria-controls]="'grant-detail-' + grant.id"
+            (click)="toggleGrant(grant.id)">
+            <div class="a2a-connections__grant-info">
+              <span class="a2a-connections__partner-name">{{ grant.partnerName }}</span>
+              <span class="a2a-connections__agent-name">{{ grant.agentName }}</span>
+            </div>
+            <div class="a2a-connections__grant-meta">
+              <span class="a2a-connections__scope-badge">
+                {{ scopeLabels[grant.scope] | translate }}
+              </span>
+              <span class="a2a-connections__grant-date">
+                {{ formatDate(grant.grantedAt) }}
+              </span>
+            </div>
+            <svg class="a2a-connections__chevron"
+              [class.a2a-connections__chevron--open]="isExpanded(grant.id)"
+              xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          <!-- Grant detail (expanded) -->
+          @if (isExpanded(grant.id)) {
+            <div [id]="'grant-detail-' + grant.id" class="a2a-connections__grant-detail"
+              role="region" [attr.aria-label]="grant.partnerName">
+
+              <!-- Grant metadata -->
+              <dl class="a2a-connections__detail-grid">
+                <div class="a2a-connections__detail-item">
+                  <dt>{{ 'a2a.connections.skill' | translate }}</dt>
+                  <dd>{{ skillLabels[grant.skill] | translate }}</dd>
+                </div>
+                <div class="a2a-connections__detail-item">
+                  <dt>{{ 'a2a.connections.scope' | translate }}</dt>
+                  <dd>{{ scopeLabels[grant.scope] | translate }}</dd>
+                </div>
+                <div class="a2a-connections__detail-item">
+                  <dt>{{ 'a2a.connections.duration' | translate }}</dt>
+                  <dd>{{ durationLabels[grant.duration] | translate }}</dd>
+                </div>
+                <div class="a2a-connections__detail-item">
+                  <dt>{{ 'a2a.connections.granted' | translate }}</dt>
+                  <dd>{{ formatDate(grant.grantedAt) }}</dd>
+                </div>
+                <div class="a2a-connections__detail-item">
+                  <dt>{{ 'a2a.connections.expires' | translate }}</dt>
+                  <dd>{{ formatDate(grant.expiresAt) }}</dd>
+                </div>
+                <div class="a2a-connections__detail-item">
+                  <dt>{{ 'a2a.connections.last_used' | translate }}</dt>
+                  <dd>{{ formatDate(grant.lastUsedAt) }}</dd>
+                </div>
+              </dl>
+
+              <!-- Activity log -->
+              <div class="a2a-connections__activity-section">
+                <h4 class="a2a-connections__activity-title">
+                  {{ 'a2a.connections.activity_log' | translate }}
+                </h4>
+                @if (activityLog().length === 0) {
+                  <p class="a2a-connections__activity-empty">
+                    {{ 'a2a.connections.no_activity' | translate }}
+                  </p>
+                } @else {
+                  <ul class="a2a-connections__activity-list" role="log">
+                    @for (entry of activityLog(); track entry.id) {
+                      <li class="a2a-connections__activity-entry">
+                        <time class="a2a-connections__activity-time">
+                          {{ formatDateTime(entry.timestamp) }}
+                        </time>
+                        <span class="a2a-connections__activity-action">
+                          {{ entry.action }}
+                        </span>
+                        <span class="a2a-connections__activity-agent">
+                          {{ entry.agentName }}
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+
+              <!-- Actions -->
+              <div class="a2a-connections__actions">
+                <button
+                  type="button"
+                  class="a2a-connections__btn a2a-connections__btn--modify"
+                  [attr.aria-label]="'a2a.connections.modify_scope_aria' | translate"
+                  (click)="openScopeModify(grant)">
+                  {{ 'a2a.connections.modify_scope' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="a2a-connections__btn a2a-connections__btn--revoke"
+                  [attr.aria-label]="'a2a.connections.revoke_aria' | translate"
+                  (click)="openRevokeDialog(grant)">
+                  {{ 'a2a.connections.revoke' | translate }}
+                </button>
+              </div>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- Revocation confirmation dialog -->
+  @if (isRevokeDialogOpen()) {
+    <div class="a2a-connections__dialog-backdrop" (click)="closeRevokeDialog()" aria-hidden="true"></div>
+    <div class="a2a-connections__dialog" role="alertdialog" aria-modal="true"
+      aria-labelledby="revoke-dialog-title">
+      <h3 id="revoke-dialog-title" class="a2a-connections__dialog-title">
+        {{ 'a2a.connections.revoke_title' | translate }}
+      </h3>
+      <p class="a2a-connections__dialog-desc">
+        {{ 'a2a.connections.revoke_confirm_text' | translate }}
+        <strong>{{ revokeDialogGrant()?.partnerName }}</strong>
+      </p>
+
+      @if (requiresTypedRevoke(revokeDialogGrant()!)) {
+        <div class="a2a-connections__typed-confirm">
+          <label for="revoke-confirm-input" class="a2a-connections__typed-label">
+            {{ 'a2a.connections.type_revoke' | translate }}
+          </label>
+          <input
+            id="revoke-confirm-input"
+            type="text"
+            class="a2a-connections__typed-input"
+            [value]="revokeConfirmText()"
+            (input)="updateRevokeConfirmText($event)"
+            autocomplete="off"
+            spellcheck="false" />
+        </div>
+      }
+
+      @if (webauthnError(); as err) {
+        <div class="a2a-connections__dialog-error" role="alert" aria-live="polite">
+          {{ err | translate }}
+        </div>
+      }
+
+      <div class="a2a-connections__dialog-actions">
+        <button
+          type="button"
+          class="a2a-connections__btn a2a-connections__btn--cancel"
+          (click)="closeRevokeDialog()">
+          {{ 'a2a.connections.cancel' | translate }}
+        </button>
+        <button
+          type="button"
+          class="a2a-connections__btn a2a-connections__btn--confirm-revoke"
+          [disabled]="!isRevokeConfirmed() || isSubmitting()"
+          (click)="confirmRevoke()">
+          {{ 'a2a.connections.confirm_revoke' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Scope modification dialog -->
+  @if (isScopeModifyOpen()) {
+    <div class="a2a-connections__dialog-backdrop" (click)="closeScopeModify()" aria-hidden="true"></div>
+    <div class="a2a-connections__dialog" role="dialog" aria-modal="true"
+      aria-labelledby="scope-modify-title">
+      <h3 id="scope-modify-title" class="a2a-connections__dialog-title">
+        {{ 'a2a.connections.modify_scope_title' | translate }}
+      </h3>
+      <p class="a2a-connections__dialog-desc">
+        {{ 'a2a.connections.modify_scope_desc' | translate }}
+        <strong>{{ scopeModifyGrant()?.partnerName }}</strong>
+      </p>
+
+      <fieldset class="a2a-connections__scope-fieldset">
+        <legend class="a2a-connections__scope-legend">
+          {{ 'a2a.connections.select_new_scope' | translate }}
+        </legend>
+        @for (scope of allScopes; track scope) {
+          <label class="a2a-connections__scope-option"
+            [class.a2a-connections__scope-option--selected]="newScope() === scope">
+            <input
+              type="radio"
+              name="newScope"
+              class="a2a-connections__scope-radio"
+              [value]="scope"
+              [checked]="newScope() === scope"
+              (change)="selectNewScope(scope)" />
+            <div class="a2a-connections__scope-content">
+              <span class="a2a-connections__scope-label">
+                {{ scopeLabels[scope] | translate }}
+              </span>
+              <span class="a2a-connections__scope-desc">
+                {{ scopeDescriptions[scope] | translate }}
+              </span>
+            </div>
+          </label>
+        }
+      </fieldset>
+
+      @if (webauthnError(); as err) {
+        <div class="a2a-connections__dialog-error" role="alert" aria-live="polite">
+          {{ err | translate }}
+        </div>
+      }
+
+      <div class="a2a-connections__dialog-actions">
+        <button
+          type="button"
+          class="a2a-connections__btn a2a-connections__btn--cancel"
+          (click)="closeScopeModify()">
+          {{ 'a2a.connections.cancel' | translate }}
+        </button>
+        <button
+          type="button"
+          class="a2a-connections__btn a2a-connections__btn--confirm-modify"
+          [disabled]="newScope() === scopeModifyGrant()?.scope || isSubmitting()"
+          (click)="confirmScopeModify()">
+          {{ 'a2a.connections.confirm_modify' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+</section>

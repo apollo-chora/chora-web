@@ -1,0 +1,210 @@
+:host {
+  display: block;
+}
+
+.chora-question-image {
+  position: relative;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.3rem;
+
+  &__caption {
+    margin: 0 0 0.1rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted, #64748b);
+  }
+
+  // The image is wrapped in a real <button> so click-to-zoom is keyboard
+  // reachable. It shrink-wraps the image so the zoom affordance anchors to the
+  // image corner, while still allowing the image to fill the column.
+  &__trigger {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: default;
+
+    &.is-zoomable {
+      cursor: zoom-in;
+    }
+
+    // Reserve space while the natural dimensions are still unknown so the
+    // loading spinner has a box to sit in (no collapse / layout jump).
+    &.is-loading {
+      min-width: 8rem;
+      min-height: 6rem;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, var(--primary, #1976d2));
+      outline-offset: 2px;
+    }
+  }
+
+  // WIDTH-PRIMARY, aspect-aware. The two caps are bound inline from the natural
+  // dimensions (`min(100%, Wpx)` / `min(70vh, Hpx)`); width/height auto let the
+  // browser scale down preserving aspect ratio — never upscaling past natural.
+  &__img {
+    display: block;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border, rgba(15, 23, 42, 0.12));
+    background: var(--chora-color-surface-1, #f8fafc);
+  }
+
+  // Small zoom affordance, revealed on hover/focus (and always shown on touch,
+  // which is the tablet-first primary).
+  &__expand-hint {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.55);
+    color: #fff;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+  }
+
+  &__trigger:hover &__expand-hint,
+  &__trigger:focus-visible &__expand-hint {
+    opacity: 1;
+  }
+
+  &__loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--text-muted, #64748b);
+    pointer-events: none;
+  }
+
+  // FAIL-LOUD broken state — visible, never a silent swallow.
+  &__broken {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px dashed var(--chora-color-error, #dc2626);
+    border-radius: 8px;
+    background: rgba(220, 38, 38, 0.05);
+    color: var(--chora-color-error-dark, #b91c1c);
+
+    i {
+      font-size: 1.4rem;
+    }
+  }
+
+  &__broken-text {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__broken-alt {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-muted, #64748b);
+  }
+
+  // ── Lightbox overlay ───────────────────────────────────────────────
+  &__lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    cursor: zoom-out;
+    outline: none;
+    animation: qi-lightbox-fade-in 0.15s ease-out;
+  }
+
+  &__lightbox-img {
+    max-width: 95vw;
+    max-height: 95vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+    cursor: default;
+  }
+
+  &__lightbox-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+  }
+}
+
+@keyframes qi-lightbox-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Always reveal the zoom affordance on touch (tablet-first primary) — there is
+// no hover there.
+@media (hover: none) {
+  .chora-question-image__expand-hint {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chora-question-image__lightbox {
+    animation: none;
+  }
+
+  .chora-question-image__expand-hint {
+    transition: none;
+  }
+}

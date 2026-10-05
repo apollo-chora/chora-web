@@ -1,0 +1,291 @@
+<section
+  class="enrollment"
+  aria-labelledby="enrollment-heading"
+  data-testid="cross-tenant-enrollment">
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="enrollment__loading" aria-live="polite" data-testid="enrollment-loading">
+      <div class="enrollment__spinner-lg" aria-hidden="true"></div>
+      <p class="enrollment__loading-text">{{ 'onboarding.enrollment.validating' | translate }}</p>
+    </div>
+  }
+
+  <!-- Error (token invalid / expired) -->
+  @if (!isLoading() && errorMessage(); as errMsg) {
+    <div class="enrollment__error-page" role="alert" aria-live="assertive" data-testid="enrollment-error">
+      <h1 class="enrollment__error-title">{{ 'onboarding.enrollment.error_title' | translate }}</h1>
+      <p class="enrollment__error-text">{{ errMsg | translate }}</p>
+      <a class="enrollment__btn enrollment__btn--primary" href="/" data-testid="btn-go-home">
+        {{ 'onboarding.enrollment.go_home' | translate }}
+      </a>
+    </div>
+  }
+
+  <!-- Enrollment Flow -->
+  @if (!isLoading() && !errorMessage() && invite()) {
+
+    <!-- Step Progress Indicator -->
+    <div class="enrollment__progress" role="navigation" [attr.aria-label]="'onboarding.enrollment.steps' | translate" data-testid="step-progress">
+      @for (step of ['identity', 'portable-data', 'tenant-setup', 'confirm']; track step; let i = $index) {
+        <div
+          class="enrollment__step-indicator"
+          [class.enrollment__step-indicator--active]="i === stepIndex()"
+          [class.enrollment__step-indicator--completed]="i < stepIndex()"
+          [attr.data-testid]="'step-indicator-' + step">
+          <span class="enrollment__step-number">{{ i + 1 }}</span>
+        </div>
+        @if (i < 3) {
+          <div
+            class="enrollment__step-line"
+            [class.enrollment__step-line--completed]="i < stepIndex()">
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Step 1: Identity Confirmation -->
+    @if (currentStep() === 'identity') {
+      <div class="enrollment__step" data-testid="step-identity">
+        <h1 id="enrollment-heading" class="enrollment__heading">
+          {{ 'onboarding.enrollment.identity_title' | translate }}
+        </h1>
+
+        <div class="enrollment__identity-card" data-testid="identity-card">
+          <p class="enrollment__identity-joining">
+            {{ 'onboarding.enrollment.joining_message' | translate }}
+          </p>
+          <div class="enrollment__identity-tenant">
+            <span class="enrollment__tenant-name" data-testid="tenant-name">{{ tenantName() }}</span>
+            <span class="enrollment__identity-role" data-testid="invite-role">{{ roleName() }}</span>
+          </div>
+
+          <div class="enrollment__identity-info" data-testid="identity-info">
+            <div class="enrollment__identity-row">
+              <span class="enrollment__identity-label">{{ 'onboarding.enrollment.your_name' | translate }}</span>
+              <span class="enrollment__identity-value" data-testid="user-name">{{ userName() }}</span>
+            </div>
+            <div class="enrollment__identity-row">
+              <span class="enrollment__identity-label">{{ 'onboarding.enrollment.your_email' | translate }}</span>
+              <span class="enrollment__identity-value" data-testid="user-email">{{ userEmail() }}</span>
+            </div>
+            <div class="enrollment__identity-row">
+              <span class="enrollment__identity-label">{{ 'onboarding.enrollment.existing_tenants' | translate }}</span>
+              <span class="enrollment__identity-value" data-testid="tenant-count">{{ userTenantCount() }}</span>
+            </div>
+          </div>
+
+          <label class="enrollment__confirm-checkbox" data-testid="identity-confirm-label">
+            <input
+              type="checkbox"
+              class="enrollment__checkbox"
+              [checked]="identityConfirmed()"
+              (change)="onIdentityConfirmChange($event)"
+              data-testid="checkbox-identity-confirm" />
+            <span>{{ 'onboarding.enrollment.confirm_identity' | translate }}</span>
+          </label>
+        </div>
+
+        <div class="enrollment__nav">
+          <button
+            type="button"
+            class="enrollment__btn enrollment__btn--primary"
+            [disabled]="!canProceed()"
+            data-testid="btn-next"
+            (click)="nextStep()">
+            {{ 'onboarding.enrollment.next' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Portable Data Preview -->
+    @if (currentStep() === 'portable-data') {
+      <div class="enrollment__step" data-testid="step-portable-data">
+        <h2 class="enrollment__heading">
+          {{ 'onboarding.enrollment.portable_data_title' | translate }}
+        </h2>
+        <p class="enrollment__step-desc">
+          {{ 'onboarding.enrollment.portable_data_desc' | translate }}
+        </p>
+
+        <div class="enrollment__data-grid" role="list" data-testid="portable-data-grid">
+          @for (item of portableDataItems(); track item.key) {
+            <div
+              class="enrollment__data-card"
+              role="listitem"
+              [attr.data-testid]="'portable-card-' + item.key">
+              <div class="enrollment__data-icon" [attr.data-icon]="item.icon" aria-hidden="true"></div>
+              <span class="enrollment__data-label">{{ item.labelKey | translate }}</span>
+              <span class="enrollment__data-value">{{ item.value }}</span>
+              <span class="enrollment__data-badge" data-testid="portable-badge">
+                {{ 'onboarding.enrollment.follows_you' | translate }}
+              </span>
+            </div>
+          }
+        </div>
+
+        <div class="enrollment__nav">
+          <button
+            type="button"
+            class="enrollment__btn enrollment__btn--secondary"
+            data-testid="btn-back"
+            (click)="previousStep()">
+            {{ 'onboarding.enrollment.back' | translate }}
+          </button>
+          <button
+            type="button"
+            class="enrollment__btn enrollment__btn--primary"
+            data-testid="btn-next"
+            (click)="nextStep()">
+            {{ 'onboarding.enrollment.next' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 3: Tenant-Specific Setup -->
+    @if (currentStep() === 'tenant-setup') {
+      <div class="enrollment__step" data-testid="step-tenant-setup">
+        <h2 class="enrollment__heading">
+          {{ 'onboarding.enrollment.tenant_setup_title' | translate }}
+        </h2>
+        <p class="enrollment__step-desc">
+          {{ 'onboarding.enrollment.tenant_setup_desc' | translate }}
+        </p>
+
+        <!-- Available Paths -->
+        @if (tenantPreview(); as preview) {
+          @if (preview.available_paths.length > 0) {
+            <div class="enrollment__section" data-testid="available-paths">
+              <h3 class="enrollment__section-title">
+                {{ 'onboarding.enrollment.available_paths' | translate }}
+              </h3>
+              <div class="enrollment__path-list" role="list">
+                @for (path of preview.available_paths; track path.id) {
+                  <div class="enrollment__path-card" role="listitem" [attr.data-testid]="'path-' + path.id">
+                    <span class="enrollment__path-title">{{ path.title }}</span>
+                    <span class="enrollment__path-meta">
+                      {{ path.atom_count }} {{ 'onboarding.enrollment.atoms' | translate }}
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Enabled Features -->
+          @if (preview.enabled_features.length > 0) {
+            <div class="enrollment__section" data-testid="enabled-features">
+              <h3 class="enrollment__section-title">
+                {{ 'onboarding.enrollment.enabled_features' | translate }}
+              </h3>
+              <div class="enrollment__feature-list">
+                @for (feature of preview.enabled_features; track feature) {
+                  <span class="enrollment__feature-chip" [attr.data-testid]="'feature-' + feature">
+                    {{ feature }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Org Unit Assignment -->
+          @if (preview.org_unit; as orgUnit) {
+            <div class="enrollment__section" data-testid="org-unit-assignment">
+              <h3 class="enrollment__section-title">
+                {{ 'onboarding.enrollment.org_unit' | translate }}
+              </h3>
+              <div class="enrollment__org-card">
+                <span class="enrollment__org-name" data-testid="org-unit-name">{{ orgUnit.name }}</span>
+                <span class="enrollment__org-location">{{ orgUnit.location }}</span>
+              </div>
+            </div>
+          }
+        }
+
+        <div class="enrollment__nav">
+          <button
+            type="button"
+            class="enrollment__btn enrollment__btn--secondary"
+            data-testid="btn-back"
+            (click)="previousStep()">
+            {{ 'onboarding.enrollment.back' | translate }}
+          </button>
+          <button
+            type="button"
+            class="enrollment__btn enrollment__btn--primary"
+            data-testid="btn-next"
+            (click)="nextStep()">
+            {{ 'onboarding.enrollment.next' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 4: Confirm Enrollment -->
+    @if (currentStep() === 'confirm') {
+      <div class="enrollment__step" data-testid="step-confirm">
+        <h2 class="enrollment__heading">
+          {{ 'onboarding.enrollment.confirm_title' | translate }}
+        </h2>
+
+        <!-- Summary Card -->
+        <div class="enrollment__summary-card" data-testid="enrollment-summary">
+          <div class="enrollment__summary-row">
+            <span class="enrollment__summary-label">{{ 'onboarding.enrollment.summary_tenant' | translate }}</span>
+            <span class="enrollment__summary-value" data-testid="summary-tenant">{{ tenantName() }}</span>
+          </div>
+          <div class="enrollment__summary-row">
+            <span class="enrollment__summary-label">{{ 'onboarding.enrollment.summary_role' | translate }}</span>
+            <span class="enrollment__summary-value" data-testid="summary-role">{{ roleName() }}</span>
+          </div>
+          <div class="enrollment__summary-row">
+            <span class="enrollment__summary-label">{{ 'onboarding.enrollment.summary_portable_data' | translate }}</span>
+            <span class="enrollment__summary-value" data-testid="summary-data-count">
+              {{ portableDataItems().length }} {{ 'onboarding.enrollment.data_categories' | translate }}
+            </span>
+          </div>
+        </div>
+
+        @if (errorMessage(); as errMsg) {
+          <div class="enrollment__error" role="alert" aria-live="polite" data-testid="confirm-error">
+            {{ errMsg | translate }}
+          </div>
+        }
+
+        <div class="enrollment__nav enrollment__nav--confirm">
+          <button
+            type="button"
+            class="enrollment__btn enrollment__btn--secondary"
+            data-testid="btn-back"
+            [disabled]="isSubmitting()"
+            (click)="previousStep()">
+            {{ 'onboarding.enrollment.back' | translate }}
+          </button>
+
+          <button
+            type="button"
+            class="enrollment__btn enrollment__btn--danger"
+            data-testid="btn-decline"
+            [disabled]="isSubmitting()"
+            (click)="declineEnrollment()">
+            {{ 'onboarding.enrollment.decline' | translate }}
+          </button>
+
+          <button
+            type="button"
+            class="enrollment__btn enrollment__btn--primary"
+            data-testid="btn-confirm"
+            [disabled]="isSubmitting()"
+            (click)="confirmEnrollment()">
+            @if (isSubmitting()) {
+              <span class="enrollment__spinner" aria-hidden="true"></span>
+            }
+            {{ 'onboarding.enrollment.join_btn' | translate }} {{ tenantName() }}
+          </button>
+        </div>
+      </div>
+    }
+  }
+</section>

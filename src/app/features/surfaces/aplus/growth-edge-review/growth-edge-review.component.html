@@ -1,0 +1,270 @@
+<section class="ge-review" aria-labelledby="ge-review-title">
+  <header class="ge-review-header">
+    <h1 id="ge-review-title">{{ 'aplus.growth_edge_review.title' | translate }}</h1>
+    <p class="ge-review-sub">
+      @if (familiarName()) {
+        <span class="ge-review-familiar-name" data-testid="ge-review-familiar-line">
+          <i class="fa-solid fa-paw" aria-hidden="true"></i>
+          <strong>{{ familiarName() }}</strong>
+        </span>
+      }
+      {{ 'aplus.growth_edge_review.familiar_intro' | translate }}
+    </p>
+  </header>
+
+  @if (submitState() === 'done') {
+    <!-- Familiar-fronted success: edges saved + outputs generating -->
+    <div class="glass-panel ge-review-success" data-testid="ge-review-done" role="status">
+      <i class="fa-solid fa-seedling" aria-hidden="true"></i>
+      <h2>{{ 'aplus.growth_edge_review.done_title' | translate }}</h2>
+      <p>{{ 'aplus.growth_edge_review.done_body' | translate }}</p>
+      <a class="btn-primary" routerLink="/a/growth-edges" data-testid="ge-review-see-edges">
+        {{ 'aplus.growth_edge_review.see_edges' | translate }}
+      </a>
+    </div>
+  } @else {
+    @switch (state()) {
+      @case ('loading') {
+        <p class="ge-review-muted" data-testid="ge-review-loading">
+          <span class="ge-review-spinner" aria-hidden="true"></span>
+          {{ 'aplus.growth_edge_review.loading' | translate }}
+        </p>
+      }
+      @case ('analyzing') {
+        <p class="ge-review-muted" data-testid="ge-review-analyzing">
+          <span class="ge-review-spinner" aria-hidden="true"></span>
+          {{ 'aplus.growth_edge_review.analyzing' | translate }}
+        </p>
+      }
+      @case ('error') {
+        <div class="glass-panel ge-review-error" role="alert" data-testid="ge-review-error">
+          @if (unknownStatus(); as unknown) {
+            <p>
+              {{ 'aplus.growth_edge_review.unknown_status' | translate }}
+              <code data-testid="ge-review-unknown-status">{{ unknown }}</code>
+            </p>
+          } @else {
+            <p>{{ 'aplus.growth_edge_review.load_error' | translate }}</p>
+          }
+          <button type="button" class="btn-secondary" (click)="retry()" data-testid="ge-review-retry">
+            {{ 'aplus.growth_edge_review.retry' | translate }}
+          </button>
+        </div>
+      }
+      @case ('failed') {
+        <div class="glass-panel ge-review-error" role="alert" data-testid="ge-review-failed">
+          <p>{{ 'aplus.growth_edge_review.failed' | translate }}</p>
+          <a class="btn-secondary" routerLink="/a/growth-edges">
+            {{ 'aplus.growth_edge_review.back_to_edges' | translate }}
+          </a>
+        </div>
+      }
+      @case ('completed') {
+        <div class="glass-panel ge-review-success" role="status" data-testid="ge-review-completed">
+          <p>{{ 'aplus.growth_edge_review.already_reviewed' | translate }}</p>
+          <a class="btn-primary" routerLink="/a/growth-edges">
+            {{ 'aplus.growth_edge_review.see_edges' | translate }}
+          </a>
+        </div>
+      }
+      @case ('review') {
+        @if (panel(); as p) {
+        <div class="ge-review-panes" data-testid="ge-review-panes">
+          <!-- ── Pane 1: the Familiar fronts the diagnosis + add-a-struggle ── -->
+          <aside class="glass-panel ge-review-familiar" aria-label="{{ 'aplus.growth_edge_review.familiar_pane_aria' | translate }}">
+            <div class="ge-review-avatar" aria-hidden="true">
+              <i class="fa-solid fa-paw"></i>
+            </div>
+            <p class="ge-review-voiced">
+              {{ 'aplus.growth_edge_review.voiced_intro' | translate }}
+            </p>
+
+            <h3 class="ge-review-rail-title">
+              {{ 'aplus.growth_edge_review.add_struggle_title' | translate }}
+            </h3>
+            <p class="ge-review-rail-hint">
+              {{ 'aplus.growth_edge_review.add_struggle_hint' | translate }}
+            </p>
+            @for (s of p.candidate_struggles; track s.concept_key) {
+              <label class="ge-review-chip">
+                <input
+                  type="checkbox"
+                  [checked]="isStruggleAdded(s.concept_key)"
+                  (change)="toggleStruggle(s.concept_key)"
+                  [attr.data-testid]="'ge-review-struggle-' + s.concept_key"
+                />
+                <span>{{ s.concept_label }}</span>
+              </label>
+            }
+          </aside>
+
+          <!-- ── Pane 2: the proposed Growth Edges (bounded review) ── -->
+          <div class="ge-review-edges">
+            <h3 class="ge-review-rail-title">
+              {{ 'aplus.growth_edge_review.edges_title' | translate }}
+              <span class="ge-review-count">{{ acceptedCount() }}</span>
+            </h3>
+            @for (edge of proposedEdges(); track edge.proposed_edge_id) {
+              <article
+                class="glass-panel ge-review-edge"
+                [class.ge-review-edge-rejected]="!isAccepted(edge.proposed_edge_id)"
+                [attr.data-testid]="'ge-review-edge-' + edge.proposed_edge_id"
+              >
+                <h4 class="ge-review-edge-label">{{ edge.concept_label }}</h4>
+                <p class="ge-review-edge-summary">{{ edge.summary }}</p>
+
+                @if (edge.suggested_angles?.length) {
+                  <ul class="ge-review-angles">
+                    @for (a of edge.suggested_angles; track a) {
+                      <li>{{ a }}</li>
+                    }
+                  </ul>
+                }
+
+                <!-- Decision: accept / reject / merge (bounded segmented control) -->
+                <div
+                  class="ge-review-segmented"
+                  role="group"
+                  [attr.aria-label]="'aplus.growth_edge_review.decision_aria' | translate"
+                >
+                  @for (k of decisionKinds; track k) {
+                    <button
+                      type="button"
+                      class="ge-review-seg-btn"
+                      [class.is-active]="decisionFor(edge.proposed_edge_id)?.decision === k"
+                      [attr.aria-pressed]="decisionFor(edge.proposed_edge_id)?.decision === k"
+                      (click)="setDecision(edge.proposed_edge_id, k)"
+                      [attr.data-testid]="'ge-review-decision-' + edge.proposed_edge_id + '-' + k"
+                    >
+                      {{ decisionKey(k) | translate }}
+                    </button>
+                  }
+                </div>
+
+                <!-- Merge target (bounded select — appears only when merging) -->
+                @if (decisionFor(edge.proposed_edge_id)?.decision === 'merge') {
+                  <label class="ge-review-merge">
+                    <span>{{ 'aplus.growth_edge_review.merge_into' | translate }}</span>
+                    <select
+                      class="ge-review-select"
+                      (change)="setMergeTarget(edge.proposed_edge_id, $any($event.target).value)"
+                      [attr.data-testid]="'ge-review-merge-' + edge.proposed_edge_id"
+                    >
+                      <option value="" disabled [selected]="!decisionFor(edge.proposed_edge_id)?.merge_into_id">
+                        {{ 'aplus.growth_edge_review.merge_choose' | translate }}
+                      </option>
+                      @for (t of mergeTargetsFor(edge.proposed_edge_id); track t.proposed_edge_id) {
+                        <option
+                          [value]="t.proposed_edge_id"
+                          [selected]="decisionFor(edge.proposed_edge_id)?.merge_into_id === t.proposed_edge_id"
+                        >
+                          {{ t.concept_label }}
+                        </option>
+                      }
+                    </select>
+                  </label>
+                }
+
+                <!-- Difficulty tri-toggle (bounded — only when kept) -->
+                @if (isAccepted(edge.proposed_edge_id)) {
+                  <div
+                    class="ge-review-segmented ge-review-difficulty"
+                    role="group"
+                    [attr.aria-label]="'aplus.growth_edge_review.difficulty_aria' | translate"
+                  >
+                    @for (d of difficulties; track d) {
+                      <button
+                        type="button"
+                        class="ge-review-seg-btn"
+                        [class.is-active]="decisionFor(edge.proposed_edge_id)?.difficulty === d"
+                        [attr.aria-pressed]="decisionFor(edge.proposed_edge_id)?.difficulty === d"
+                        (click)="setDifficulty(edge.proposed_edge_id, d)"
+                        [attr.data-testid]="'ge-review-difficulty-' + edge.proposed_edge_id + '-' + d"
+                      >
+                        {{ difficultyKey(d) | translate }}
+                      </button>
+                    }
+                  </div>
+                }
+              </article>
+            }
+          </div>
+
+          <!-- ── Pane 3: outputs + mana running total + confirm / reiterate ── -->
+          <aside class="glass-panel ge-review-commit" aria-label="{{ 'aplus.growth_edge_review.commit_pane_aria' | translate }}">
+            <h3 class="ge-review-rail-title">
+              {{ 'aplus.growth_edge_review.outputs_title' | translate }}
+            </h3>
+            @for (o of p.available_outputs; track o.kind) {
+              <label class="ge-review-output">
+                <input
+                  type="checkbox"
+                  [checked]="isOutputSelected(o.kind)"
+                  (change)="toggleOutput(o.kind)"
+                  [attr.data-testid]="'ge-review-output-' + o.kind"
+                />
+                <span class="ge-review-output-label">{{ outputKey(o.kind) | translate }}</span>
+                <span class="ge-review-output-price">
+                  @if (o.mana_price > 0) {
+                    {{ o.mana_price }} {{ 'aplus.growth_edge_review.mana' | translate }}
+                  } @else {
+                    {{ 'aplus.growth_edge_review.free' | translate }}
+                  }
+                </span>
+              </label>
+            }
+
+            <div class="ge-review-total" data-testid="ge-review-total">
+              <span>{{ 'aplus.growth_edge_review.total' | translate }}</span>
+              <strong [class.ge-review-over]="!affordable()">
+                {{ manaTotal() }} {{ 'aplus.growth_edge_review.mana' | translate }}
+              </strong>
+            </div>
+            <p class="ge-review-wallet" data-testid="ge-review-wallet">
+              {{ 'aplus.growth_edge_review.wallet' | translate }}
+              {{ walletBalance() }} {{ 'aplus.growth_edge_review.mana' | translate }}
+            </p>
+
+            @if (!affordable()) {
+              <div class="ge-review-insufficient" role="alert" data-testid="ge-review-insufficient">
+                <p>{{ 'aplus.growth_edge_review.insufficient' | translate }}</p>
+                <a class="btn-secondary" routerLink="/a/wallet">
+                  {{ 'aplus.growth_edge_review.top_up' | translate }}
+                </a>
+              </div>
+            }
+
+            @if (submitState() === 'error') {
+              <p class="ge-review-submit-error" role="alert" data-testid="ge-review-submit-error">
+                {{ 'aplus.growth_edge_review.submit_error' | translate }}
+              </p>
+            }
+
+            <button
+              type="button"
+              class="ge-review-confirm"
+              [disabled]="!affordable() || submitState() === 'submitting'"
+              (click)="confirm()"
+              data-testid="ge-review-confirm"
+            >
+              {{ 'aplus.growth_edge_review.confirm' | translate }}
+            </button>
+            <button
+              type="button"
+              class="ge-review-reiterate"
+              [disabled]="submitState() === 'submitting'"
+              (click)="reiterate()"
+              data-testid="ge-review-reiterate"
+            >
+              {{ 'aplus.growth_edge_review.reiterate' | translate }}
+            </button>
+            <p class="ge-review-reiterate-hint">
+              {{ 'aplus.growth_edge_review.reiterate_hint' | translate }}
+            </p>
+          </aside>
+        </div>
+        }
+      }
+    }
+  }
+</section>

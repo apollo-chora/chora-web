@@ -1,0 +1,526 @@
+<section
+  class="atom-editor"
+  role="main"
+  [attr.aria-label]="pageTitle() | translate"
+  data-testid="atom-editor">
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="atom-editor__loading" data-testid="atom-editor-loading" aria-live="polite">
+      <div class="atom-editor__skeleton atom-editor__skeleton--header"></div>
+      <div class="atom-editor__skeleton atom-editor__skeleton--body"></div>
+    </div>
+  }
+
+  @if (!loading()) {
+    <!-- Page Header -->
+    <header class="atom-editor__header">
+      <h1 class="atom-editor__title" data-testid="atom-editor-title">
+        {{ pageTitle() | translate }}
+      </h1>
+      @if (mode() === 'edit' && currentAtom()) {
+        <span
+          class="atom-editor__status-badge"
+          [class]="statusBadgeClass()"
+          data-testid="atom-editor-status">
+          {{ getStatusLabel() }}
+        </span>
+      }
+    </header>
+
+    <!-- Metadata Form -->
+    <form [formGroup]="metaForm" class="atom-editor__meta-form" data-testid="atom-editor-meta">
+      <!-- Atom Type Selector -->
+      <div class="atom-editor__field">
+        <label for="atom-type" class="atom-editor__label">
+          {{ 'admin.atoms.editor.atom_type' | translate }}
+        </label>
+        <select
+          id="atom-type"
+          formControlName="atom_type"
+          class="atom-editor__select"
+          data-testid="atom-type-select"
+          [attr.aria-label]="'admin.atoms.editor.atom_type' | translate">
+          @for (type of allAtomTypes; track type) {
+            <option [value]="type">{{ atomTypeLabels[type] | translate }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Difficulty Slider -->
+      <div class="atom-editor__field">
+        <label for="difficulty" class="atom-editor__label">
+          {{ 'admin.atoms.editor.difficulty' | translate }}
+          <span class="atom-editor__difficulty-value" data-testid="difficulty-value">
+            ({{ getDifficultyValue() }}/5)
+          </span>
+        </label>
+        <input
+          id="difficulty"
+          type="range"
+          min="1"
+          max="5"
+          step="1"
+          formControlName="difficulty"
+          class="atom-editor__slider"
+          data-testid="difficulty-slider"
+          [attr.aria-label]="'admin.atoms.editor.difficulty' | translate"
+          [attr.aria-valuenow]="getDifficultyValue()"
+          aria-valuemin="1"
+          aria-valuemax="5" />
+        <div class="atom-editor__difficulty-stars" aria-hidden="true">
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <span
+              class="atom-editor__star"
+              [class.atom-editor__star--filled]="i <= getDifficultyValue()">★</span>
+          }
+        </div>
+      </div>
+
+      <!-- Language Code -->
+      <div class="atom-editor__field">
+        <label for="language-code" class="atom-editor__label">
+          {{ 'admin.atoms.editor.language_code' | translate }}
+        </label>
+        <input
+          id="language-code"
+          type="text"
+          formControlName="language_code"
+          class="atom-editor__input"
+          data-testid="language-code-input"
+          placeholder="en" />
+      </div>
+
+      <!-- Tags -->
+      <div class="atom-editor__field">
+        <label for="tags" class="atom-editor__label">
+          {{ 'admin.atoms.editor.tags' | translate }}
+        </label>
+        <input
+          id="tags"
+          type="text"
+          formControlName="tags"
+          class="atom-editor__input"
+          data-testid="tags-input"
+          [placeholder]="'admin.atoms.editor.tags_placeholder' | translate" />
+        <small class="atom-editor__hint">{{ 'admin.atoms.editor.tags_hint' | translate }}</small>
+      </div>
+    </form>
+
+    <!-- Content Form (Type-Specific) -->
+    <section class="atom-editor__content-section" data-testid="atom-editor-content">
+      <h2 class="atom-editor__section-title">{{ 'admin.atoms.editor.content' | translate }}</h2>
+
+      <form [formGroup]="contentForm">
+        @switch (selectedAtomType()) {
+          <!-- MCQ -->
+          @case ('multiple_choice') {
+            <div class="atom-editor__field">
+              <label for="mcq-stem" class="atom-editor__label">{{ 'admin.atoms.editor.stem' | translate }}</label>
+              <textarea
+                id="mcq-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="mcq-stem"
+                rows="3"></textarea>
+            </div>
+
+            <div class="atom-editor__options-section" data-testid="mcq-options">
+              <h3 class="atom-editor__subsection-title">{{ 'admin.atoms.editor.options' | translate }}</h3>
+              @for (option of mcqOptions.controls; track $index) {
+                <div class="atom-editor__option-row" [formGroup]="$any(option)">
+                  <input
+                    type="text"
+                    formControlName="text"
+                    class="atom-editor__input atom-editor__input--flex"
+                    [attr.data-testid]="'mcq-option-' + $index"
+                    [placeholder]="'admin.atoms.editor.option_placeholder' | translate" />
+                  <label class="atom-editor__checkbox-label">
+                    <input type="checkbox" formControlName="is_correct" [attr.data-testid]="'mcq-correct-' + $index" />
+                    {{ 'admin.atoms.editor.correct' | translate }}
+                  </label>
+                  <button
+                    type="button"
+                    class="atom-editor__btn-icon atom-editor__btn-icon--danger"
+                    (click)="removeMcqOption($index)"
+                    [attr.aria-label]="'admin.atoms.editor.remove_option' | translate"
+                    [attr.data-testid]="'mcq-remove-' + $index">
+                    &times;
+                  </button>
+                </div>
+              }
+              <button
+                type="button"
+                class="atom-editor__btn-secondary"
+                (click)="addMcqOption()"
+                data-testid="mcq-add-option">
+                {{ 'admin.atoms.editor.add_option' | translate }}
+              </button>
+            </div>
+
+            <div class="atom-editor__field">
+              <label for="mcq-explanation" class="atom-editor__label">{{ 'admin.atoms.editor.explanation' | translate }}</label>
+              <textarea
+                id="mcq-explanation"
+                formControlName="explanation"
+                class="atom-editor__textarea"
+                data-testid="mcq-explanation"
+                rows="2"></textarea>
+            </div>
+          }
+
+          <!-- Fill Blank -->
+          @case ('fill_blank') {
+            <div class="atom-editor__field">
+              <label for="fb-stem" class="atom-editor__label">{{ 'admin.atoms.editor.stem_with_blanks' | translate }}</label>
+              <textarea
+                id="fb-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="fb-stem"
+                rows="3"
+                [placeholder]="'admin.atoms.editor.fill_blank_placeholder' | translate"></textarea>
+            </div>
+            <div class="atom-editor__field">
+              <label for="fb-blanks" class="atom-editor__label">{{ 'admin.atoms.editor.acceptable_answers' | translate }}</label>
+              <input
+                id="fb-blanks"
+                type="text"
+                formControlName="blanks"
+                class="atom-editor__input"
+                data-testid="fb-blanks" />
+              <small class="atom-editor__hint">{{ 'admin.atoms.editor.blanks_hint' | translate }}</small>
+            </div>
+          }
+
+          <!-- True/False -->
+          @case ('true_false') {
+            <div class="atom-editor__field">
+              <label for="tf-stem" class="atom-editor__label">{{ 'admin.atoms.editor.statement' | translate }}</label>
+              <textarea
+                id="tf-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="tf-stem"
+                rows="3"></textarea>
+            </div>
+          }
+
+          <!-- Short Answer -->
+          @case ('short_answer') {
+            <div class="atom-editor__field">
+              <label for="sa-stem" class="atom-editor__label">{{ 'admin.atoms.editor.question' | translate }}</label>
+              <textarea
+                id="sa-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="sa-stem"
+                rows="3"></textarea>
+            </div>
+            <div class="atom-editor__field">
+              <label for="sa-expected" class="atom-editor__label">{{ 'admin.atoms.editor.expected_answers' | translate }}</label>
+              <input
+                id="sa-expected"
+                type="text"
+                formControlName="expected_answers"
+                class="atom-editor__input"
+                data-testid="sa-expected"
+                [placeholder]="'admin.atoms.editor.answers_comma_separated' | translate" />
+            </div>
+            <div class="atom-editor__field">
+              <label for="sa-tolerance" class="atom-editor__label">{{ 'admin.atoms.editor.tolerance' | translate }}</label>
+              <input
+                id="sa-tolerance"
+                type="number"
+                formControlName="tolerance"
+                class="atom-editor__input atom-editor__input--narrow"
+                data-testid="sa-tolerance"
+                step="0.1" />
+            </div>
+          }
+
+          <!-- Matching -->
+          @case ('matching') {
+            <div class="atom-editor__field">
+              <label for="match-stem" class="atom-editor__label">{{ 'admin.atoms.editor.instructions' | translate }}</label>
+              <textarea
+                id="match-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="match-stem"
+                rows="2"></textarea>
+            </div>
+            <div class="atom-editor__pairs-section" data-testid="match-pairs">
+              <h3 class="atom-editor__subsection-title">{{ 'admin.atoms.editor.pairs' | translate }}</h3>
+              @for (pair of matchingPairs.controls; track $index) {
+                <div class="atom-editor__pair-row" [formGroup]="$any(pair)">
+                  <input
+                    type="text"
+                    formControlName="left"
+                    class="atom-editor__input atom-editor__input--flex"
+                    [attr.data-testid]="'match-left-' + $index"
+                    [placeholder]="'admin.atoms.editor.left_item' | translate" />
+                  <span class="atom-editor__pair-arrow" aria-hidden="true">&harr;</span>
+                  <input
+                    type="text"
+                    formControlName="right"
+                    class="atom-editor__input atom-editor__input--flex"
+                    [attr.data-testid]="'match-right-' + $index"
+                    [placeholder]="'admin.atoms.editor.right_item' | translate" />
+                  <button
+                    type="button"
+                    class="atom-editor__btn-icon atom-editor__btn-icon--danger"
+                    (click)="removeMatchingPair($index)"
+                    [attr.aria-label]="'admin.atoms.editor.remove_pair' | translate"
+                    [attr.data-testid]="'match-remove-' + $index">
+                    &times;
+                  </button>
+                </div>
+              }
+              <button
+                type="button"
+                class="atom-editor__btn-secondary"
+                (click)="addMatchingPair()"
+                data-testid="match-add-pair">
+                {{ 'admin.atoms.editor.add_pair' | translate }}
+              </button>
+            </div>
+          }
+
+          <!-- Ordering -->
+          @case ('ordering') {
+            <div class="atom-editor__field">
+              <label for="order-stem" class="atom-editor__label">{{ 'admin.atoms.editor.instructions' | translate }}</label>
+              <textarea
+                id="order-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="order-stem"
+                rows="2"></textarea>
+            </div>
+            <div class="atom-editor__items-section" data-testid="order-items">
+              <h3 class="atom-editor__subsection-title">{{ 'admin.atoms.editor.items_correct_order' | translate }}</h3>
+              @for (item of orderingItems.controls; track $index) {
+                <div class="atom-editor__item-row">
+                  <span class="atom-editor__item-index">{{ $index + 1 }}.</span>
+                  <input
+                    type="text"
+                    [formControl]="$any(item)"
+                    class="atom-editor__input atom-editor__input--flex"
+                    [attr.data-testid]="'order-item-' + $index" />
+                  <button
+                    type="button"
+                    class="atom-editor__btn-icon atom-editor__btn-icon--danger"
+                    (click)="removeOrderingItem($index)"
+                    [attr.aria-label]="'admin.atoms.editor.remove_item' | translate"
+                    [attr.data-testid]="'order-remove-' + $index">
+                    &times;
+                  </button>
+                </div>
+              }
+              <button
+                type="button"
+                class="atom-editor__btn-secondary"
+                (click)="addOrderingItem()"
+                data-testid="order-add-item">
+                {{ 'admin.atoms.editor.add_item' | translate }}
+              </button>
+            </div>
+          }
+
+          <!-- Code -->
+          @case ('code') {
+            <div class="atom-editor__field">
+              <label for="code-stem" class="atom-editor__label">{{ 'admin.atoms.editor.question' | translate }}</label>
+              <textarea
+                id="code-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="code-stem"
+                rows="4"></textarea>
+            </div>
+          }
+
+          <!-- Essay -->
+          @case ('essay') {
+            <div class="atom-editor__field">
+              <label for="essay-stem" class="atom-editor__label">{{ 'admin.atoms.editor.prompt' | translate }}</label>
+              <textarea
+                id="essay-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="essay-stem"
+                rows="4"></textarea>
+            </div>
+          }
+
+          <!-- Multimedia -->
+          @case ('multimedia') {
+            <div class="atom-editor__field">
+              <label for="mm-stem" class="atom-editor__label">{{ 'admin.atoms.editor.question' | translate }}</label>
+              <textarea
+                id="mm-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="mm-stem"
+                rows="3"></textarea>
+            </div>
+            <div class="atom-editor__field">
+              <label for="mm-media-url" class="atom-editor__label">{{ 'admin.atoms.editor.media_url' | translate }}</label>
+              <input
+                id="mm-media-url"
+                type="url"
+                formControlName="media_url"
+                class="atom-editor__input"
+                data-testid="mm-media-url" />
+            </div>
+          }
+
+          <!-- Simulation -->
+          @case ('simulation') {
+            <div class="atom-editor__field">
+              <label for="sim-stem" class="atom-editor__label">{{ 'admin.atoms.editor.scenario' | translate }}</label>
+              <textarea
+                id="sim-stem"
+                formControlName="stem"
+                class="atom-editor__textarea"
+                data-testid="sim-stem"
+                rows="4"></textarea>
+            </div>
+          }
+
+          <!-- Flashcard (fallback) -->
+          @default {
+            <div class="atom-editor__field">
+              <label for="fc-front" class="atom-editor__label">{{ 'admin.atoms.editor.front' | translate }}</label>
+              <textarea
+                id="fc-front"
+                formControlName="front"
+                class="atom-editor__textarea"
+                data-testid="fc-front"
+                rows="3"></textarea>
+            </div>
+            <div class="atom-editor__field">
+              <label for="fc-back" class="atom-editor__label">{{ 'admin.atoms.editor.back' | translate }}</label>
+              <textarea
+                id="fc-back"
+                formControlName="back"
+                class="atom-editor__textarea"
+                data-testid="fc-back"
+                rows="3"></textarea>
+            </div>
+          }
+        }
+      </form>
+    </section>
+
+    <!-- Validation Rules -->
+    <section class="atom-editor__rules-section" data-testid="atom-editor-rules">
+      <h2 class="atom-editor__section-title">{{ 'admin.atoms.editor.validation_rules' | translate }}</h2>
+      @for (rule of validationRulesForm.controls; track $index) {
+        <div class="atom-editor__rule-row" [formGroup]="$any(rule)" [attr.data-testid]="'rule-' + $index">
+          <select
+            formControlName="rule_type"
+            class="atom-editor__select atom-editor__select--compact"
+            [attr.data-testid]="'rule-type-' + $index"
+            [attr.aria-label]="'admin.atoms.editor.rule_type' | translate">
+            @for (ruleType of allRuleTypes; track ruleType) {
+              <option [value]="ruleType">{{ ruleLabels[ruleType] | translate }}</option>
+            }
+          </select>
+          <input
+            type="text"
+            formControlName="expected"
+            class="atom-editor__input atom-editor__input--flex"
+            [attr.data-testid]="'rule-expected-' + $index"
+            [placeholder]="'admin.atoms.editor.expected_value' | translate" />
+          <input
+            type="number"
+            formControlName="tolerance"
+            class="atom-editor__input atom-editor__input--narrow"
+            [attr.data-testid]="'rule-tolerance-' + $index"
+            [placeholder]="'admin.atoms.editor.tolerance' | translate"
+            step="0.1" />
+          <label class="atom-editor__checkbox-label">
+            <input type="checkbox" formControlName="case_sensitive" [attr.data-testid]="'rule-case-' + $index" />
+            {{ 'admin.atoms.editor.case_sensitive' | translate }}
+          </label>
+          <button
+            type="button"
+            class="atom-editor__btn-icon atom-editor__btn-icon--danger"
+            (click)="removeValidationRule($index)"
+            [attr.aria-label]="'admin.atoms.editor.remove_rule' | translate"
+            [attr.data-testid]="'rule-remove-' + $index">
+            &times;
+          </button>
+        </div>
+      }
+      <button
+        type="button"
+        class="atom-editor__btn-secondary"
+        (click)="addValidationRule()"
+        data-testid="add-rule">
+        {{ 'admin.atoms.editor.add_rule' | translate }}
+      </button>
+    </section>
+
+    <!-- Preview Toggle -->
+    <div class="atom-editor__preview-toggle">
+      <button
+        type="button"
+        class="atom-editor__btn-secondary"
+        (click)="togglePreview()"
+        data-testid="toggle-preview"
+        [attr.aria-expanded]="previewVisible()"
+        aria-controls="atom-preview-panel">
+        {{ (previewVisible() ? 'admin.atoms.editor.hide_preview' : 'admin.atoms.editor.show_preview') | translate }}
+      </button>
+    </div>
+
+    @if (previewVisible()) {
+      <section
+        id="atom-preview-panel"
+        class="atom-editor__preview"
+        data-testid="atom-preview"
+        aria-label="Atom preview">
+        <h2 class="atom-editor__section-title">{{ 'admin.atoms.editor.preview' | translate }}</h2>
+        <div class="atom-editor__preview-card">
+          <p class="atom-editor__preview-type">{{ atomTypeLabels[selectedAtomType()] | translate }}</p>
+          <p class="atom-editor__preview-content">{{ contentForm.get('stem')?.value || contentForm.get('front')?.value || '...' }}</p>
+        </div>
+      </section>
+    }
+
+    <!-- Action Buttons -->
+    <footer class="atom-editor__actions" data-testid="atom-editor-actions">
+      <button
+        type="button"
+        class="atom-editor__btn-secondary"
+        (click)="cancel()"
+        data-testid="btn-cancel"
+        [disabled]="saving()">
+        {{ 'admin.atoms.editor.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="atom-editor__btn-primary"
+        (click)="saveDraft()"
+        data-testid="btn-save-draft"
+        [disabled]="saving()">
+        @if (saving()) {
+          {{ 'admin.atoms.editor.saving' | translate }}
+        } @else {
+          {{ 'admin.atoms.editor.save_draft' | translate }}
+        }
+      </button>
+      <button
+        type="button"
+        class="atom-editor__btn-primary atom-editor__btn-primary--publish"
+        (click)="saveAndPublish()"
+        data-testid="btn-publish"
+        [disabled]="saving()">
+        {{ 'admin.atoms.editor.publish' | translate }}
+      </button>
+    </footer>
+  }
+</section>

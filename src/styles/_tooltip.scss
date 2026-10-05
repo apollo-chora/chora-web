@@ -1,0 +1,49 @@
+// =====================================================================
+// Helpful-UX info affordance - global styles for the [choraInfo] trigger.
+//
+// InfoTooltipDirective injects its trigger <button> into arbitrary host DOM,
+// so the button lives OUTSIDE any component's emulated styles and must be
+// styled globally here. (The tooltip card itself is a CDK-portaled component
+// with its own scoped styles - see chora-tooltip.component.scss.)
+//
+// Depends on tokens in _tokens.scss + _polyglass-tokens.scss (info cursor,
+// colours, radius). Tokens MUST load first.
+// =====================================================================
+
+.chora-info-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  // Logical margin so it trails the label correctly in LTR and RTL.
+  margin-inline-start: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--info, #3b82f6);
+  font-size: 0.8em; // scales with the label it sits beside
+  line-height: 1;
+  vertical-align: middle;
+  cursor: var(--cursor-info, help);
+  border-radius: var(--chora-radius-full, 9999px);
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.chora-info-trigger:hover {
+  color: var(--primary, #1976d2);
+  background: rgba(25, 118, 210, 0.1);
+}
+
+// Visible keyboard focus ring (never rely on colour alone) - WCAG 2.1 AA.
+.chora-info-trigger:focus-visible {
+  outline: 2px solid var(--primary, #1976d2);
+  outline-offset: 2px;
+  color: var(--primary, #1976d2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chora-info-trigger {
+    transition: none;
+  }
+}

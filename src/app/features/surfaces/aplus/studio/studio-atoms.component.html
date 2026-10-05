@@ -1,0 +1,405 @@
+<section
+  class="surface-aplus studio-atoms"
+  data-testid="aplus-studio-atoms"
+  role="region"
+  aria-labelledby="studio-atoms-heading">
+  <header class="studio-atoms__header">
+    <div class="studio-atoms__heading-group">
+      <h1 id="studio-atoms-heading" class="studio-atoms__title">
+        {{ 'aplus.studio_atoms.title' | translate }}
+      </h1>
+      <p class="studio-atoms__subtitle" data-testid="studio-atoms-subtitle">
+        {{ 'aplus.studio_atoms.subtitle' | translate }}
+      </p>
+    </div>
+    <a
+      class="btn btn-primary studio-atoms__new"
+      data-testid="studio-atoms-new"
+      routerLink="/a/studio/atoms/new">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      {{ 'aplus.studio_atoms.new_cta' | translate }}
+    </a>
+  </header>
+
+  <chora-studio-sub-nav />
+
+  <!-- Filters -->
+  <div class="studio-atoms__filters glass-panel">
+    <div class="studio-atoms__field studio-atoms__field--grow">
+      <label class="studio-atoms__label" for="studio-atoms-search">
+        {{ 'aplus.studio_atoms.search_label' | translate }}
+      </label>
+      <input
+        id="studio-atoms-search"
+        type="search"
+        class="studio-atoms__input"
+        data-testid="studio-atoms-search"
+        [attr.placeholder]="'aplus.studio_atoms.search_placeholder' | translate"
+        (input)="onNeedleInput($event)" />
+    </div>
+
+    <div class="studio-atoms__field">
+      <label class="studio-atoms__label" for="studio-atoms-state">
+        {{ 'aplus.studio_atoms.state_label' | translate }}
+      </label>
+      <select
+        id="studio-atoms-state"
+        class="studio-atoms__input"
+        data-testid="studio-atoms-state"
+        (change)="onStateChange($event)">
+        <option value="" [selected]="stateFilter() === ''">
+          {{ 'aplus.studio_atoms.state_any' | translate }}
+        </option>
+        @for (s of stateOptions; track s) {
+          <option [value]="s" [selected]="stateFilter() === s">
+            {{ 'aplus.studio_atoms.state_' + s | translate }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <!-- CHO-2216 AC: "filter by type/status". Options are the AUTHORABLE set
+         only — the reserved_* types have no authoring surface, so offering one
+         would list rows the author cannot open. "Any type" means any AUTHORABLE
+         type, not an unbounded query. -->
+    <div class="studio-atoms__field">
+      <label class="studio-atoms__label" for="studio-atoms-type">
+        {{ 'aplus.studio_atoms.type_label' | translate }}
+      </label>
+      <select
+        id="studio-atoms-type"
+        class="studio-atoms__input"
+        data-testid="studio-atoms-type"
+        (change)="onTypeChange($event)">
+        <option value="" [selected]="typeFilter() === ''">
+          {{ 'aplus.studio_atoms.type_any' | translate }}
+        </option>
+        @for (t of typeOptions; track t) {
+          <option [value]="t" [selected]="typeFilter() === t">
+            {{ 'aplus.studio_atoms.type_' + t | translate }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <!-- CHO-2216 AC: "sort by updated". Every value is a BE-whitelisted field
+         (question.sortFieldColumns); an unlisted one 400s at the boundary. -->
+    <div class="studio-atoms__field">
+      <label class="studio-atoms__label" for="studio-atoms-sort">
+        {{ 'aplus.studio_atoms.sort_label' | translate }}
+      </label>
+      <select
+        id="studio-atoms-sort"
+        class="studio-atoms__input"
+        data-testid="studio-atoms-sort"
+        (change)="onSortChange($event)">
+        @for (s of sortOptions; track s) {
+          <option [value]="s" [selected]="sort() === s">
+            {{ sortLabelKey(s) | translate }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="studio-atoms__field">
+      <label class="studio-atoms__label" for="studio-atoms-per">
+        {{ 'aplus.studio_atoms.per_label' | translate }}
+      </label>
+      <select
+        id="studio-atoms-per"
+        class="studio-atoms__input"
+        data-testid="studio-atoms-per"
+        (change)="onPerChange($event)">
+        @for (p of pageSizeOptions; track p) {
+          <option [value]="p" [selected]="per() === p">{{ p }}</option>
+        }
+      </select>
+    </div>
+
+    @if (total() !== null) {
+      <p class="studio-atoms__total" data-testid="studio-atoms-total">
+        {{ 'aplus.studio_atoms.total_label' | translate }}
+        <strong>{{ total() }}</strong>
+      </p>
+    }
+  </div>
+
+  <!-- Body -->
+  @if (isLoading()) {
+    <p class="studio-atoms__loading glass-panel" data-testid="studio-atoms-loading" aria-busy="true">
+      {{ 'aplus.studio_atoms.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div class="studio-atoms__error glass-panel" data-testid="studio-atoms-error" role="alert">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <span class="studio-atoms__error-text">{{ errorKey() | translate }}</span>
+      <button
+        type="button"
+        class="btn btn-ghost"
+        data-testid="studio-atoms-retry"
+        (click)="retry()">
+        {{ 'common.retry' | translate }}
+      </button>
+    </div>
+  } @else if (isEmpty()) {
+    <div class="studio-atoms__empty glass-panel" data-testid="studio-atoms-empty" role="status">
+      <i class="fa-solid fa-cubes studio-atoms__empty-icon" aria-hidden="true"></i>
+      <p class="studio-atoms__empty-title">
+        {{ 'aplus.studio_atoms.empty_title' | translate }}
+      </p>
+      <p class="studio-atoms__empty-body">
+        {{ 'aplus.studio_atoms.empty_body' | translate }}
+      </p>
+      <a class="btn btn-primary" routerLink="/a/studio/atoms/new">
+        {{ 'aplus.studio_atoms.new_cta' | translate }}
+      </a>
+    </div>
+  } @else {
+    <ul class="studio-atoms__cards" data-testid="studio-atoms-list" role="list">
+      @for (atom of items(); track atom.id) {
+        <li class="studio-atoms__card glass-panel" [attr.data-testid]="'studio-atom-card-' + atom.id">
+          <span class="studio-atoms__type" [attr.data-question-type]="atom.question_type">
+            {{ 'aplus.studio_atoms.type_' + atom.question_type | translate }}
+          </span>
+          <span class="studio-atoms__card-main">
+            <a
+              class="studio-atoms__card-title"
+              [attr.data-testid]="'studio-atom-link-' + atom.id"
+              [routerLink]="['/a/atoms', atom.id, 'edit']">
+              {{ atom.title || atom.stem || atom.id.slice(0, 8) }}
+            </a>
+            @if (atom.title && atom.stem) {
+              <span class="studio-atoms__card-stem">{{ atom.stem }}</span>
+            }
+          </span>
+          <!-- Shows the timestamp the ACTIVE SORT orders by. Rendering
+               created_at while sorting on updated_at makes a correct list look
+               random — the visible numbers are not the ordered ones. -->
+          <span
+            class="studio-atoms__card-time"
+            [attr.title]="rowTimestampLabelKey() | translate">
+            {{ rowTimestampLabelKey() | translate }} {{ rowTimestamp(atom) | timeAgo }}
+          </span>
+          <!-- ADR-229 WS-5 (CHO-2401): the author-consent audience chip. The
+               chip states the persisted audience and opens the control; it is
+               NOT the C+ share (that promotes to the feed, this governs who
+               may REUSE the question in their own sets). -->
+          <button
+            type="button"
+            class="btn btn-secondary studio-atoms__card-audience"
+            [attr.data-testid]="'studio-atom-audience-' + atom.id"
+            [attr.data-audience]="atomAudience(atom)"
+            [attr.aria-label]="'aplus.studio_atoms.audience.cta' | translate"
+            [attr.aria-expanded]="isAudienceOpen(atom.id)"
+            [title]="'aplus.studio_atoms.audience.cta' | translate"
+            (click)="openAudiencePanel(atom)">
+            <i [class]="'fa-solid ' + audienceIcon(atom)" aria-hidden="true"></i>
+            {{ 'aplus.studio_atoms.audience.value_' + atomAudience(atom) | translate }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary studio-atoms__card-share"
+            [attr.data-testid]="'studio-atom-share-' + atom.id"
+            [attr.aria-label]="'aplus.studio_atoms.share.cta' | translate"
+            [attr.aria-expanded]="isSharing(atom.id)"
+            [title]="'aplus.studio_atoms.share.cta' | translate"
+            (click)="openShare(atom.id)">
+            <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+          </button>
+        </li>
+
+        @if (isAudienceOpen(atom.id)) {
+          <li class="studio-atoms__audience glass-panel" data-testid="studio-atoms-audience-panel">
+            <p class="studio-atoms__audience-title">
+              {{ 'aplus.studio_atoms.audience.title' | translate }}
+            </p>
+            @if (audienceErrorMessage(); as msg) {
+              <p class="studio-atoms__audience-error" data-testid="studio-atoms-audience-error" role="alert">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                {{ msg | translate }}
+              </p>
+            }
+            <div class="studio-atoms__audience-options" role="radiogroup"
+                 [attr.aria-label]="'aplus.studio_atoms.audience.title' | translate">
+              @for (a of reuseAudiences; track a) {
+                <label class="studio-atoms__audience-option">
+                  <input
+                    type="radio"
+                    [attr.name]="'studio-audience-' + atom.id"
+                    [attr.data-testid]="'studio-atoms-audience-option-' + a"
+                    [value]="a"
+                    [checked]="audienceSelection() === a"
+                    (change)="pickAudience(a)" />
+                  <span class="studio-atoms__audience-option-text">
+                    <span class="studio-atoms__audience-option-label">
+                      {{ 'aplus.studio_atoms.audience.value_' + a | translate }}
+                    </span>
+                    <span class="studio-atoms__audience-option-hint">
+                      {{ 'aplus.studio_atoms.audience.hint_' + a | translate }}
+                    </span>
+                  </span>
+                </label>
+              }
+            </div>
+            @if (audienceNarrowing(atom)) {
+              <!-- A1.3 truthfulness: narrowing strands nobody silently. -->
+              <p class="studio-atoms__audience-narrow" data-testid="studio-atoms-audience-narrow-note" role="note">
+                <i class="fa-solid fa-snowflake" aria-hidden="true"></i>
+                {{ 'aplus.studio_atoms.audience.narrow_note' | translate }}
+              </p>
+            }
+            <div class="studio-atoms__share-actions">
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="studio-atoms-audience-cancel"
+                (click)="closeAudience()">
+                {{ 'aplus.studio_atoms.audience.cancel' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                data-testid="studio-atoms-audience-apply"
+                [disabled]="audienceSubmitting() || audienceUnchanged(atom)"
+                (click)="applyAudience(atom)">
+                @if (audienceSubmitting()) {
+                  {{ 'aplus.studio_atoms.audience.applying' | translate }}
+                } @else {
+                  {{ 'aplus.studio_atoms.audience.apply' | translate }}
+                }
+              </button>
+            </div>
+          </li>
+        }
+
+        @if (isSharing(atom.id)) {
+          <li class="studio-atoms__share glass-panel" data-testid="studio-atoms-share-panel">
+            @if (shareSucceeded()) {
+              <p class="studio-atoms__share-success" data-testid="studio-atoms-share-success" role="status">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'aplus.studio_atoms.share.success' | translate }}
+              </p>
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="studio-atoms-share-done"
+                (click)="closeShare()">
+                {{ 'aplus.studio_atoms.share.done' | translate }}
+              </button>
+            } @else {
+              @if (shareErrorMessage(); as msg) {
+                <p class="studio-atoms__share-error" data-testid="studio-atoms-share-error" role="alert">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ msg | translate }}
+                </p>
+              }
+              <div class="studio-atoms__field">
+                <label class="studio-atoms__label" [attr.for]="'studio-share-license-' + atom.id">
+                  {{ 'aplus.studio_atoms.share.license_label' | translate }}
+                </label>
+                <select
+                  [attr.id]="'studio-share-license-' + atom.id"
+                  class="studio-atoms__input"
+                  data-testid="studio-atoms-share-license"
+                  (change)="onShareLicenseChange($event)">
+                  @for (opt of licenseOptions; track opt.value) {
+                    <option [value]="opt.value" [selected]="shareLicense() === opt.value">
+                      {{ opt.labelKey | translate }}
+                    </option>
+                  }
+                </select>
+              </div>
+              @if (isRoyaltyLicense()) {
+                <div class="studio-atoms__field">
+                  <label class="studio-atoms__label" [attr.for]="'studio-share-royalty-' + atom.id">
+                    {{ shareLicense() === 'royalty_pct'
+                      ? ('aplus.studio_atoms.share.royalty_pct_label' | translate)
+                      : ('aplus.studio_atoms.share.royalty_fixed_label' | translate) }}
+                  </label>
+                  <input
+                    [attr.id]="'studio-share-royalty-' + atom.id"
+                    type="number"
+                    class="studio-atoms__input"
+                    [value]="shareRoyaltyRate()"
+                    [min]="0"
+                    [max]="shareLicense() === 'royalty_pct' ? 100 : undefined"
+                    (input)="onShareRoyaltyRateInput($event)" />
+                  <span class="studio-atoms__hint">
+                    {{ shareLicense() === 'royalty_pct'
+                      ? ('aplus.studio_atoms.share.royalty_pct_hint' | translate)
+                      : ('aplus.studio_atoms.share.royalty_fixed_hint' | translate) }}
+                  </span>
+                </div>
+              }
+              <div class="studio-atoms__field studio-atoms__field--grow">
+                <label class="studio-atoms__label" [attr.for]="'studio-share-caption-' + atom.id">
+                  {{ 'aplus.studio_atoms.share.caption_label' | translate }}
+                </label>
+                <input
+                  [attr.id]="'studio-share-caption-' + atom.id"
+                  type="text"
+                  class="studio-atoms__input"
+                  data-testid="studio-atoms-share-caption"
+                  maxlength="280"
+                  [attr.placeholder]="'aplus.studio_atoms.share.caption_placeholder' | translate"
+                  (input)="onShareCaptionInput($event)" />
+              </div>
+              <div class="studio-atoms__share-actions">
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  data-testid="studio-atoms-share-cancel"
+                  (click)="closeShare()">
+                  {{ 'aplus.studio_atoms.share.cancel' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  data-testid="studio-atoms-share-submit"
+                  [disabled]="shareSubmitting()"
+                  (click)="submitShare()">
+                  @if (shareSubmitting()) {
+                    {{ 'aplus.studio_atoms.share.submitting' | translate }}
+                  } @else {
+                    {{ 'aplus.studio_atoms.share.submit' | translate }}
+                  }
+                </button>
+              </div>
+            }
+          </li>
+        }
+      }
+    </ul>
+
+    <!-- Pager -->
+    @if (hasPrevPage() || hasNextPage()) {
+      <nav
+        class="studio-atoms__pager"
+        [attr.aria-label]="'aplus.studio_atoms.pager_label' | translate">
+        @if (hasPrevPage()) {
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-testid="studio-atoms-prev"
+            (click)="prevPage()">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            {{ 'aplus.studio_atoms.prev' | translate }}
+          </button>
+        }
+        <span class="studio-atoms__pager-page" data-testid="studio-atoms-page">
+          {{ 'aplus.studio_atoms.page_label' | translate }} {{ currentPage() }}
+        </span>
+        @if (hasNextPage()) {
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-testid="studio-atoms-next"
+            (click)="nextPage()">
+            {{ 'aplus.studio_atoms.next' | translate }}
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        }
+      </nav>
+    }
+  }
+</section>

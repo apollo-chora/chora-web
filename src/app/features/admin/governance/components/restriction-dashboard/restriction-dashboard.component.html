@@ -1,0 +1,148 @@
+<section
+  class="restriction-dashboard"
+  role="main"
+  [attr.aria-label]="'admin.governance.restrictions_title' | translate"
+  data-testid="restriction-dashboard">
+
+  <!-- Page Header -->
+  <header class="restriction-dashboard__header">
+    <div class="restriction-dashboard__header-nav">
+      <h1 class="restriction-dashboard__title" data-testid="restrictions-title">
+        {{ 'admin.governance.restrictions_title' | translate }}
+      </h1>
+    </div>
+    <div class="restriction-dashboard__header-actions">
+      <button
+        type="button"
+        class="restriction-dashboard__btn restriction-dashboard__btn--danger"
+        (click)="applyRestriction()"
+        data-testid="btn-apply-restriction"
+        [attr.aria-label]="'admin.governance.apply_restriction' | translate">
+        {{ 'admin.governance.apply_restriction' | translate }}
+      </button>
+      <button
+        type="button"
+        class="restriction-dashboard__btn restriction-dashboard__btn--primary"
+        (click)="loadRestrictions()"
+        data-testid="btn-refresh-restrictions"
+        [attr.aria-label]="'admin.governance.refresh' | translate">
+        {{ 'admin.governance.refresh' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="restriction-dashboard__filters" data-testid="restriction-filters" role="search">
+    <div class="restriction-dashboard__filter-group">
+      <label for="tier-filter" class="restriction-dashboard__filter-label">
+        {{ 'admin.governance.tier' | translate }}
+      </label>
+      <select
+        id="tier-filter"
+        class="restriction-dashboard__select"
+        data-testid="tier-filter"
+        (change)="onTierFilter($any($event.target).value)">
+        <option value="">{{ 'admin.governance.all_tiers' | translate }}</option>
+        @for (tier of allTiers; track tier) {
+          <option [value]="tier">{{ tierLabels[tier] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="restriction-dashboard__filter-group">
+      <label for="status-filter" class="restriction-dashboard__filter-label">
+        {{ 'admin.governance.status' | translate }}
+      </label>
+      <select
+        id="status-filter"
+        class="restriction-dashboard__select"
+        data-testid="status-filter"
+        (change)="onStatusFilter($any($event.target).value)">
+        <option value="">{{ 'admin.governance.all_statuses' | translate }}</option>
+        @for (st of allStatuses; track st) {
+          <option [value]="st">{{ statusLabels[st] | translate }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="restriction-dashboard__loading" data-testid="restrictions-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="restriction-dashboard__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="restriction-dashboard__empty" data-testid="restrictions-empty" role="status">
+      <p class="restriction-dashboard__empty-text">
+        {{ 'admin.governance.no_restrictions' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Restrictions List -->
+  @if (!loading() && !isEmpty()) {
+    <div class="restriction-dashboard__layout">
+      <div class="restriction-dashboard__list" data-testid="restriction-list" role="list">
+        @for (restriction of filteredRestrictions(); track restriction.id) {
+          <div
+            class="restriction-dashboard__card"
+            role="listitem"
+            [attr.data-testid]="'restriction-' + restriction.id">
+
+            <!-- Card Header -->
+            <div class="restriction-dashboard__card-header">
+              <span
+                class="restriction-dashboard__tier"
+                [class]="tierClass(restriction.tier)">
+                {{ tierLabels[restriction.tier] | translate }}
+              </span>
+              <span
+                class="restriction-dashboard__status"
+                [class]="statusClass(restriction.status)">
+                {{ statusLabels[restriction.status] | translate }}
+              </span>
+            </div>
+
+            <!-- Card Body -->
+            <div class="restriction-dashboard__card-body">
+              <div class="restriction-dashboard__gcid">
+                <span class="restriction-dashboard__label">
+                  {{ 'admin.governance.target_gcid' | translate }}:
+                </span>
+                {{ restriction.target_gcid }}
+              </div>
+              <p class="restriction-dashboard__reason">{{ restriction.reason }}</p>
+            </div>
+
+            <!-- Card Meta -->
+            <div class="restriction-dashboard__card-meta">
+              <span>{{ formatDateTime(restriction.applied_at) }}</span>
+              <span class="restriction-dashboard__applied-by">
+                {{ 'admin.governance.applied_by' | translate }}: {{ restriction.applied_by }}
+              </span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="restriction-dashboard__actions">
+              @if (canLift(restriction)) {
+                <button
+                  type="button"
+                  class="restriction-dashboard__btn restriction-dashboard__btn--success"
+                  [attr.data-testid]="'btn-lift-' + restriction.id"
+                  [attr.aria-label]="'admin.governance.lift_restriction' | translate"
+                  (click)="liftRestriction(restriction)">
+                  {{ 'admin.governance.lift' | translate }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>

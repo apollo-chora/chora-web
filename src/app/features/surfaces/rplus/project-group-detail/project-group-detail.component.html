@@ -1,0 +1,270 @@
+<section
+  class="surface-rplus project-group-detail"
+  data-testid="rplus-project-group-detail"
+  role="region"
+  aria-labelledby="rplus-project-group-detail-heading">
+  <header class="project-group-detail__header glass-panel">
+    <nav
+      class="project-group-detail__breadcrumb"
+      [attr.aria-label]="'rplus.projectGroupDetail.breadcrumb_aria' | translate">
+      <a
+        class="project-group-detail__breadcrumb-link"
+        data-testid="project-group-detail-back-link"
+        routerLink="/r/project-groups">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        {{ 'rplus.projectGroupDetail.breadcrumb_root' | translate }}
+      </a>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.projectGroupDetail.breadcrumb_leaf' | translate }}
+      </span>
+    </nav>
+
+    <div class="project-group-detail__title-row">
+      <h1
+        id="rplus-project-group-detail-heading"
+        class="project-group-detail__title"
+        data-testid="project-group-detail-title">
+        {{ 'rplus.projectGroupDetail.title' | translate }}
+      </h1>
+      <code
+        class="project-group-detail__group-id"
+        data-testid="project-group-detail-id">
+        {{ id() }}
+      </code>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <p
+      class="project-group-detail__loading glass-panel"
+      data-testid="project-group-detail-loading"
+      role="status"
+      aria-busy="true">
+      {{ 'rplus.projectGroupDetail.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div
+      class="project-group-detail__error glass-panel"
+      data-testid="project-group-detail-error"
+      role="alert">
+      <p class="project-group-detail__error-message">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        {{ errorKey() | translate }}
+      </p>
+      <button
+        type="button"
+        class="btn btn-ghost project-group-detail__retry"
+        data-testid="project-group-detail-retry"
+        (click)="retry()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        {{ 'rplus.projectGroupDetail.retry' | translate }}
+      </button>
+    </div>
+  } @else if (group(); as g) {
+    <article
+      class="project-group-detail__panel glass-panel"
+      [attr.data-testid]="'project-group-detail-panel-' + g.id">
+      <div class="project-group-detail__panel-head">
+        <span
+          class="badge"
+          [class]="'badge project-group-detail__badge ' + badgeClass(g.state)"
+          [attr.data-testid]="'project-group-detail-state-' + g.id">
+          <i
+            class="fa-solid"
+            [class]="'fa-solid ' + stateIcon(g.state)"
+            aria-hidden="true"></i>
+          {{ 'rplus.projectGroups.state.' + g.state | translate }}
+        </span>
+        <h2
+          class="project-group-detail__group-name"
+          data-testid="project-group-detail-name">
+          {{ g.name }}
+        </h2>
+      </div>
+
+      <dl class="project-group-detail__fields">
+        <div class="project-group-detail__field">
+          <dt>{{ 'rplus.projectGroupDetail.field.course' | translate }}</dt>
+          <dd data-testid="project-group-detail-course">{{ g.courseId }}</dd>
+        </div>
+        <div class="project-group-detail__field">
+          <dt>{{ 'rplus.projectGroupDetail.field.member_count' | translate }}</dt>
+          <dd data-testid="project-group-detail-member-count">
+            {{ g.members.length }}
+          </dd>
+        </div>
+        @if (g.submittedAt) {
+          <div class="project-group-detail__field">
+            <dt>{{ 'rplus.projectGroupDetail.field.submitted_at' | translate }}</dt>
+            <dd>
+              <time
+                data-testid="project-group-detail-submitted"
+                [attr.datetime]="g.submittedAt">{{ g.submittedAt | date: 'medium' }}</time>
+            </dd>
+          </div>
+        }
+        @if (g.scorePct !== undefined) {
+          <div class="project-group-detail__field">
+            <dt>{{ 'rplus.projectGroupDetail.field.score' | translate }}</dt>
+            <dd data-testid="project-group-detail-score">
+              <strong>{{ g.scorePct }}%</strong>
+            </dd>
+          </div>
+        }
+        @if (g.graderGcid) {
+          <div class="project-group-detail__field">
+            <dt>{{ 'rplus.projectGroupDetail.field.grader' | translate }}</dt>
+            <dd data-testid="project-group-detail-grader">{{ g.graderGcid }}</dd>
+          </div>
+        }
+        @if (g.gradedAt) {
+          <div class="project-group-detail__field">
+            <dt>{{ 'rplus.projectGroupDetail.field.graded_at' | translate }}</dt>
+            <dd>
+              <time
+                data-testid="project-group-detail-graded-at"
+                [attr.datetime]="g.gradedAt">{{ g.gradedAt | date: 'medium' }}</time>
+            </dd>
+          </div>
+        }
+        <div class="project-group-detail__field">
+          <dt>{{ 'rplus.projectGroupDetail.field.created_at' | translate }}</dt>
+          <dd>
+            <time [attr.datetime]="g.createdAt">{{ g.createdAt | date: 'shortDate' }}</time>
+          </dd>
+        </div>
+        <div class="project-group-detail__field">
+          <dt>{{ 'rplus.projectGroupDetail.field.updated_at' | translate }}</dt>
+          <dd>
+            <time [attr.datetime]="g.updatedAt">{{ g.updatedAt | date: 'medium' }}</time>
+          </dd>
+        </div>
+      </dl>
+
+      @if (g.feedback) {
+        <section
+          class="project-group-detail__feedback-block"
+          [attr.aria-label]="'rplus.projectGroupDetail.feedback.aria' | translate">
+          <h3 class="project-group-detail__section-title">
+            {{ 'rplus.projectGroupDetail.feedback.title' | translate }}
+          </h3>
+          <p
+            class="project-group-detail__feedback"
+            data-testid="project-group-detail-feedback">
+            <i class="fa-solid fa-quote-left" aria-hidden="true"></i>
+            {{ g.feedback }}
+          </p>
+        </section>
+      }
+
+      <section
+        class="project-group-detail__members-block"
+        [attr.aria-label]="'rplus.projectGroupDetail.members.aria' | translate">
+        <h3 class="project-group-detail__section-title">
+          {{ 'rplus.projectGroupDetail.members.title' | translate }}
+        </h3>
+        <ul
+          class="project-group-detail__members"
+          role="list"
+          data-testid="project-group-detail-members">
+          @for (m of g.members; track m.gcid) {
+            <li
+              class="project-group-detail__member"
+              [class.project-group-detail__member--leader]="m.role === 'leader'"
+              [attr.data-testid]="'project-group-detail-member-' + m.gcid">
+              <i
+                class="fa-solid"
+                [class.fa-crown]="m.role === 'leader'"
+                [class.fa-user]="m.role !== 'leader'"
+                aria-hidden="true"></i>
+              <span class="project-group-detail__member-id">{{ shortGcid(m.gcid) }}</span>
+              <span class="project-group-detail__member-role">
+                {{ 'rplus.projectGroups.role.' + m.role | translate }}
+              </span>
+              @if (canEditMembers()) {
+                <button
+                  type="button"
+                  class="btn btn-ghost project-group-detail__member-remove"
+                  [attr.data-testid]="'project-group-detail-remove-' + m.gcid"
+                  [disabled]="isWritePending()"
+                  (click)="removeMember(m.gcid)"
+                  [attr.aria-label]="'rplus.projectGroupDetail.members.remove_aria' | translate">
+                  <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
+                </button>
+              }
+            </li>
+          }
+        </ul>
+
+        @if (canEditMembers()) {
+          <div
+            class="project-group-detail__add-member"
+            data-testid="project-group-detail-add-member">
+            <chora-entity-picker
+              entityType="member"
+              [searchPortOverride]="memberSearch"
+              variant="single"
+              [minChars]="2"
+              [label]="'rplus.projectGroupDetail.members.add_label' | translate"
+              [placeholder]="'rplus.projectGroupDetail.members.add_placeholder' | translate"
+              (picked)="onMemberPicked($event)" />
+          </div>
+        }
+
+        @if (memberEditError(); as mErr) {
+          <p
+            class="project-group-detail__member-error"
+            data-testid="project-group-detail-member-error"
+            role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ mErr | translate }}
+          </p>
+        }
+      </section>
+
+      <footer class="project-group-detail__panel-foot">
+        <a
+          class="btn btn-ghost project-group-detail__back-cta"
+          data-testid="project-group-detail-back-cta"
+          routerLink="/r/project-groups">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          {{ 'rplus.projectGroupDetail.back_cta' | translate }}
+        </a>
+        <div class="project-group-detail__actions">
+          @if (canSubmitGroup()) {
+            <button
+              type="button"
+              class="btn btn-primary project-group-detail__action"
+              data-testid="project-group-detail-submit"
+              [disabled]="isWritePending()"
+              (click)="submit()"
+              [attr.aria-label]="'rplus.projectGroupDetail.submit_aria' | translate">
+              <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+              {{ 'rplus.projectGroupDetail.submit_cta' | translate }}
+            </button>
+          }
+          @if (canGradeGroup()) {
+            <button
+              type="button"
+              class="btn btn-primary project-group-detail__action"
+              data-testid="project-group-detail-grade"
+              [disabled]="isWritePending()"
+              (click)="grade()"
+              [attr.aria-label]="'rplus.projectGroupDetail.grade_aria' | translate">
+              <i class="fa-solid fa-square-check" aria-hidden="true"></i>
+              {{ 'rplus.projectGroupDetail.grade_cta' | translate }}
+            </button>
+          }
+          @if (!canSubmitGroup() && !canGradeGroup()) {
+            <span
+              class="project-group-detail__action-placeholder"
+              data-testid="project-group-detail-no-action">
+              {{ 'rplus.projectGroupDetail.no_action' | translate }}
+            </span>
+          }
+        </div>
+      </footer>
+    </article>
+  }
+</section>

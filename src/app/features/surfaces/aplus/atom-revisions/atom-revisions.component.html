@@ -1,0 +1,212 @@
+<section
+  class="atom-revisions surface-aplus"
+  aria-labelledby="atom-revisions-heading"
+  data-testid="atom-revisions">
+
+  <header class="atom-revisions__header glass-panel">
+    <div class="atom-revisions__header-content">
+      <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+      <div>
+        <h1 id="atom-revisions-heading" class="atom-revisions__title">
+          Revision history
+        </h1>
+        <p class="atom-revisions__subtitle" data-testid="atom-revisions-atom-id">
+          Atom <code>{{ atomId() }}</code>
+        </p>
+      </div>
+    </div>
+  </header>
+
+  @switch (state().status) {
+
+    @case ('loading') {
+      <div
+        class="glass-panel atom-revisions__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="atom-revisions-loading">
+        <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        <span>Loading revision history…</span>
+      </div>
+    }
+
+    @case ('error') {
+      @if (isContractGap()) {
+        <!--
+          WS-7-BE-A1: BFF endpoint not yet wired in chora-gateway.
+          GET /api/atoms/:atomId/revisions → GATEWAY_ROUTE_NOT_FOUND.
+          This is a known contract gap — not a transient failure.
+        -->
+        <div
+          class="glass-panel atom-revisions__contract-gap"
+          role="alert"
+          data-testid="atom-revisions-contract-gap">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <div>
+            <strong>Revision history not yet available</strong>
+            <p>
+              The BFF endpoint
+              <code>GET /api/atoms/:atomId/revisions</code>
+              is contracted in <code>creation-admin.yaml §listAtomRevisions</code>
+              but not yet proxied in chora-gateway. Follow-up BE ask:
+              <strong>WS-7-BE-A1</strong>.
+            </p>
+          </div>
+        </div>
+      } @else {
+        <div
+          class="glass-panel atom-revisions__error"
+          role="alert"
+          data-testid="atom-revisions-error">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          <div>
+            <p class="atom-revisions__error-message" data-testid="atom-revisions-error-msg">
+              {{ errorKey() | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="retryLoad()"
+              data-testid="atom-revisions-retry">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              Retry
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    @case ('success') {
+      @if (isEmpty()) {
+        <div
+          class="glass-panel atom-revisions__empty"
+          data-testid="atom-revisions-empty">
+          <i class="fa-solid fa-inbox" aria-hidden="true"></i>
+          <p>No revisions yet.</p>
+          <p class="atom-revisions__empty-hint">
+            Every time an atom is saved a new revision is appended here
+            (append-only per DDD aggregate invariant).
+          </p>
+        </div>
+      } @else {
+        <ol
+          class="atom-revisions__timeline"
+          aria-label="Atom revision timeline"
+          data-testid="atom-revisions-timeline">
+          @for (rev of revisions(); track rev.revision_id; let i = $index) {
+            <li
+              class="atom-revisions__card glass-panel"
+              [attr.data-testid]="'atom-revisions-card-' + rev.revision_number"
+              [attr.data-revision-id]="rev.revision_id">
+
+              <!-- Timeline marker + connector line -->
+              <div class="atom-revisions__marker" aria-hidden="true">
+                <span class="atom-revisions__marker-dot">{{ rev.revision_number }}</span>
+              </div>
+
+              <div class="atom-revisions__card-body">
+                <!-- Revision header row -->
+                <div class="atom-revisions__card-header">
+                  <span
+                    class="atom-revisions__rev-number"
+                    data-testid="atom-revisions-rev-number">
+                    Rev #{{ rev.revision_number }}
+                  </span>
+                  @if (i === 0) {
+                    <span class="atom-revisions__badge-current">Current</span>
+                  }
+                  <time
+                    class="atom-revisions__timestamp"
+                    [attr.datetime]="rev.published_at"
+                    [attr.data-testid]="'atom-revisions-timestamp-' + rev.revision_number">
+                    {{ rev.published_at | date:'d MMM yyyy, HH:mm' : 'UTC' }}
+                  </time>
+                </div>
+
+                <!-- Author -->
+                <p class="atom-revisions__author">
+                  <i class="fa-solid fa-circle-user" aria-hidden="true"></i>
+                  <span
+                    class="atom-revisions__gcid"
+                    [attr.title]="rev.published_by_gcid"
+                    [attr.data-testid]="'atom-revisions-author-' + rev.revision_number">
+                    {{ gcidShort(rev.published_by_gcid) }}
+                  </span>
+                </p>
+
+                <!-- Optional summary / commit message -->
+                @if (rev.summary) {
+                  <p
+                    class="atom-revisions__summary"
+                    [attr.data-testid]="'atom-revisions-summary-' + rev.revision_number">
+                    {{ rev.summary }}
+                  </p>
+                }
+
+                <!-- Content hash -->
+                <p class="atom-revisions__hash">
+                  <i class="fa-solid fa-fingerprint" aria-hidden="true"></i>
+                  <code
+                    class="atom-revisions__hash-code"
+                    [attr.title]="rev.content_hash"
+                    [attr.data-testid]="'atom-revisions-hash-' + rev.revision_number">
+                    {{ rev.content_hash.slice(0, 12) }}…
+                  </code>
+                </p>
+
+                <!-- View diff toggle -->
+                <button
+                  type="button"
+                  class="btn btn-secondary atom-revisions__diff-toggle"
+                  [attr.aria-expanded]="isExpanded(rev.revision_id)"
+                  [attr.aria-controls]="'diff-' + rev.revision_id"
+                  [attr.data-testid]="'atom-revisions-diff-toggle-' + rev.revision_number"
+                  (click)="toggleDiff(rev.revision_id)">
+                  @if (isExpanded(rev.revision_id)) {
+                    <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
+                    Hide diff
+                  } @else {
+                    <i class="fa-solid fa-code-compare" aria-hidden="true"></i>
+                    View diff
+                  }
+                </button>
+
+                <!-- Diff panel (expanded) -->
+                @if (isExpanded(rev.revision_id)) {
+                  @let diff = buildDiff(rev, i);
+                  <div
+                    [id]="'diff-' + rev.revision_id"
+                    class="atom-revisions__diff"
+                    [attr.data-testid]="'atom-revisions-diff-' + rev.revision_number">
+                    <div class="atom-revisions__diff-panels">
+                      <figure class="atom-revisions__diff-before">
+                        <figcaption class="atom-revisions__diff-label atom-revisions__diff-label--before">
+                          <i class="fa-solid fa-minus" aria-hidden="true"></i>
+                          Before (Rev #{{ (rev.revision_number - 1) }})
+                        </figcaption>
+                        <pre
+                          class="atom-revisions__diff-pre"
+                          [attr.data-testid]="'atom-revisions-diff-before-' + rev.revision_number">{{ diff.before }}</pre>
+                      </figure>
+                      <figure class="atom-revisions__diff-after">
+                        <figcaption class="atom-revisions__diff-label atom-revisions__diff-label--after">
+                          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                          After (Rev #{{ rev.revision_number }})
+                        </figcaption>
+                        <pre
+                          class="atom-revisions__diff-pre"
+                          [attr.data-testid]="'atom-revisions-diff-after-' + rev.revision_number">{{ diff.after }}</pre>
+                      </figure>
+                    </div>
+                  </div>
+                }
+
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    }
+  }
+
+</section>

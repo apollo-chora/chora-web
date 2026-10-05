@@ -1,0 +1,205 @@
+<div
+  class="oplus-costs surface-oplus"
+  data-testid="oplus-costs-root"
+  [attr.data-state]="state().state"
+>
+  <!-- Header -->
+  <header class="oplus-costs__header glass-panel">
+    <div class="oplus-costs__title-row">
+      <h1
+        class="oplus-costs__title surface-accent-text"
+        data-testid="oplus-costs-title"
+      >
+        {{ 'oplus.costs.title' | translate }}
+      </h1>
+
+      <span
+        class="oplus-costs__live"
+        data-testid="oplus-costs-live"
+        role="status"
+        [attr.aria-label]="badgeKey() | translate"
+        [attr.data-variant]="badge()"
+      >
+        <span class="oplus-costs__live-dot" aria-hidden="true"></span>
+        {{ badgeKey() | translate }}
+      </span>
+    </div>
+    <p class="oplus-costs__subtitle">
+      {{ 'oplus.costs.subtitle' | translate }}
+    </p>
+
+    <div
+      class="oplus-costs__filter"
+      role="group"
+      [attr.aria-label]="'oplus.costs.filter_label' | translate"
+      data-testid="oplus-costs-filter"
+    >
+      @for (opt of rangeOptions; track opt.value) {
+        <button
+          type="button"
+          class="oplus-costs__filter-btn"
+          [class.oplus-costs__filter-btn--active]="range() === opt.value"
+          [attr.aria-pressed]="range() === opt.value"
+          [attr.data-testid]="'oplus-costs-filter-' + opt.value"
+          (click)="setRange(opt.value)"
+        >
+          {{ opt.key | translate }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (isAuditorGated()) {
+    <!-- Auditor-role gate (per IMDA skill three-audience explainability) -->
+    <section
+      class="glass-panel oplus-costs__gate"
+      data-testid="oplus-costs-auditor-gate"
+      role="alert"
+    >
+      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+      <h2 class="oplus-costs__gate-title">
+        {{ 'oplus.errors.auditor_required_title' | translate }}
+      </h2>
+      <p class="oplus-costs__gate-body">
+        {{ 'oplus.errors.auditor_required' | translate }}
+      </p>
+    </section>
+  } @else if (hasErrorOnly()) {
+    <!-- Generic error block -->
+    <section
+      class="glass-panel oplus-costs__error"
+      data-testid="oplus-costs-error"
+      role="alert"
+    >
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p>{{ errorKey() | translate }}</p>
+    </section>
+  } @else {
+    <!-- Cumulative cost headline -->
+    <section
+      class="glass-panel oplus-costs__cumulative"
+      data-testid="oplus-costs-cumulative"
+      [attr.aria-label]="'oplus.costs.cumulative_aria' | translate"
+    >
+      <i class="fa-solid fa-coins" aria-hidden="true"></i>
+      <span class="oplus-costs__cumulative-num">{{ fmtMoney(cumulativeCost()) }}</span>
+      <span class="oplus-costs__cumulative-label">
+        {{ 'oplus.costs.cumulative_label' | translate }}
+      </span>
+      @if (fxRate() !== 1) {
+        <span
+          class="oplus-costs__fx-note"
+          data-testid="oplus-costs-fx-note"
+        >
+          {{ 'oplus.costs.fx_note' | translate }} {{ fxRate() }}
+        </span>
+      }
+    </section>
+
+    <!-- By model -->
+    <section
+      class="glass-panel oplus-costs__panel"
+      [attr.aria-labelledby]="'oplus-costs-by-model-heading'"
+    >
+      <h2
+        id="oplus-costs-by-model-heading"
+        class="oplus-costs__section-heading dim-d3"
+      >
+        <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+        {{ 'oplus.costs.by_model_heading' | translate }}
+        <span class="dim-badge dim-d3">D3</span>
+      </h2>
+
+      @if (byModel().length === 0) {
+        <p class="oplus-costs__empty" data-testid="oplus-costs-by-model-empty">
+          {{ 'oplus.costs.by_model_empty' | translate }}
+        </p>
+      } @else {
+        <div class="oplus-costs__table-wrap">
+          <table
+            class="oplus-costs__table"
+            [attr.aria-label]="'oplus.costs.by_model_table_aria' | translate"
+          >
+            <caption class="oplus-costs__caption">
+              {{ 'oplus.costs.by_model_caption' | translate }}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'oplus.costs.col_model' | translate }}</th>
+                <th scope="col">{{ 'oplus.costs.col_prompt_tokens' | translate }}</th>
+                <th scope="col">{{ 'oplus.costs.col_completion_tokens' | translate }}</th>
+                <th scope="col">{{ 'oplus.costs.col_cost' | translate }} ({{ currency() }})</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of byModel(); track b.key) {
+                <tr
+                  class="oplus-costs__row"
+                  [attr.data-testid]="'oplus-costs-model-row-' + b.key"
+                >
+                  <td class="oplus-costs__cell-mono">{{ b.key }}</td>
+                  <td class="oplus-costs__cell-num">{{ fmtTokens(b.prompt_tokens) }}</td>
+                  <td class="oplus-costs__cell-num">{{ fmtTokens(b.completion_tokens) }}</td>
+                  <td class="oplus-costs__cell-num">{{ fmtMoney(b.cost_usd) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <!-- By agent -->
+    <section
+      class="glass-panel oplus-costs__panel"
+      [attr.aria-labelledby]="'oplus-costs-by-agent-heading'"
+    >
+      <h2
+        id="oplus-costs-by-agent-heading"
+        class="oplus-costs__section-heading dim-d1"
+      >
+        <i class="fa-solid fa-robot" aria-hidden="true"></i>
+        {{ 'oplus.costs.by_agent_heading' | translate }}
+        <span class="dim-badge dim-d1">D1</span>
+      </h2>
+
+      @if (byAgent().length === 0) {
+        <p class="oplus-costs__empty" data-testid="oplus-costs-by-agent-empty">
+          {{ 'oplus.costs.by_agent_empty' | translate }}
+        </p>
+      } @else {
+        <div class="oplus-costs__table-wrap">
+          <table
+            class="oplus-costs__table"
+            [attr.aria-label]="'oplus.costs.by_agent_table_aria' | translate"
+          >
+            <caption class="oplus-costs__caption">
+              {{ 'oplus.costs.by_agent_caption' | translate }}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'oplus.costs.col_agent' | translate }}</th>
+                <th scope="col">{{ 'oplus.costs.col_prompt_tokens' | translate }}</th>
+                <th scope="col">{{ 'oplus.costs.col_completion_tokens' | translate }}</th>
+                <th scope="col">{{ 'oplus.costs.col_cost' | translate }} ({{ currency() }})</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of byAgent(); track b.key) {
+                <tr
+                  class="oplus-costs__row"
+                  [attr.data-testid]="'oplus-costs-agent-row-' + b.key"
+                >
+                  <td class="oplus-costs__cell-mono">{{ b.key }}</td>
+                  <td class="oplus-costs__cell-num">{{ fmtTokens(b.prompt_tokens) }}</td>
+                  <td class="oplus-costs__cell-num">{{ fmtTokens(b.completion_tokens) }}</td>
+                  <td class="oplus-costs__cell-num">{{ fmtMoney(b.cost_usd) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

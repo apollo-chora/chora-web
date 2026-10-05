@@ -1,0 +1,123 @@
+<div
+  class="hud"
+  role="complementary"
+  [attr.aria-label]="'aplus.shell.hud.aria' | translate"
+  data-testid="hud">
+  <!-- Bottom left: the mini world. Desktop only; the stylesheet hides it below
+       1280px so it can never overlap the content on a 768px tablet. -->
+  <div class="hud__world" data-testid="hud-world">
+    <a
+      class="hud__map-jump"
+      routerLink="/a/knowledge"
+      data-testid="hud-map-jump">
+      <i class="fa-solid fa-map" aria-hidden="true"></i>
+      <span>{{ 'aplus.shell.hud.map_jump' | translate }}</span>
+    </a>
+
+    <!-- The party: one portrait per companion, linking to the goal map it is
+         stationed on or to the roster otherwise. A NAVIGATION strip over reads
+         the shell already holds, not a fourth companion surface. -->
+    @if (party().length > 0) {
+      <div
+        class="hud__party"
+        role="group"
+        [attr.aria-label]="'aplus.shell.hud.party_aria' | translate"
+        data-testid="hud-party">
+        @for (p of party(); track p.familiarId) {
+          <a
+            class="hud__portrait"
+            [class.hud__portrait--stationed]="p.station.kind === 'stationed'"
+            [routerLink]="p.route"
+            [attr.data-testid]="'hud-portrait-' + p.familiarId"
+            [attr.data-station]="p.station.kind"
+            [title]="portraitTitle(p)"
+            [attr.aria-label]="portraitTitle(p)">
+            <!-- The initial, not the id. A UUID is not a portrait, and the
+                 name is what the learner knows the companion by. -->
+            <span class="hud__portrait-initial" aria-hidden="true">{{ initialOf(p) }}</span>
+          </a>
+        }
+      </div>
+    }
+
+    <!-- Lens and Roads switches, only while a map is open. Driven through
+         MapLayersService so the HUD and the canvas share one owner. -->
+    @if (openMapId()) {
+      <div
+        class="hud__layers"
+        role="group"
+        [attr.aria-label]="'aplus.shell.hud.layers_aria' | translate">
+        @for (l of lenses; track l) {
+          <button
+            type="button"
+            class="hud__lens"
+            [class.hud__lens--active]="lens() === l"
+            [attr.aria-pressed]="lens() === l"
+            [attr.data-testid]="'hud-lens-' + l"
+            (click)="selectLens(l)">
+            {{ 'aplus.shell.hud.lens.' + l | translate }}
+          </button>
+        }
+        <button
+          type="button"
+          class="hud__lens"
+          [class.hud__lens--active]="roadsVisible()"
+          [attr.aria-pressed]="roadsVisible()"
+          data-testid="hud-roads-toggle"
+          (click)="toggleRoads()">
+          {{ 'aplus.shell.hud.roads' | translate }}
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Right edge: the quest stack, the top five of the ranked home read.
+       Drawn only once the read has REPORTED: an empty HUD is honest, an empty
+       stack that looks answered is not. Desktop only, like the mini world. -->
+  @if (questState() !== 'loading' && quests().length > 0) {
+    <div
+      class="hud__quests"
+      role="group"
+      [attr.aria-label]="'aplus.shell.hud.quests_aria' | translate"
+      data-testid="hud-quests">
+      @for (q of quests(); track q.cardId) {
+        @if (q.mounted) {
+          <a
+            class="hud__quest"
+            [routerLink]="q.route"
+            [attr.data-urgency]="q.urgency"
+            [attr.data-testid]="'hud-quest-' + q.cardId">
+            <span class="hud__quest-title">{{ q.titleKey | translate: q.titleParams }}</span>
+          </a>
+        } @else {
+          <!-- Not mounted: still news, but a link would be a dead end. The home
+               draws it the same way. -->
+          <span
+            class="hud__quest hud__quest--unmounted"
+            [attr.data-urgency]="q.urgency"
+            [attr.data-testid]="'hud-quest-' + q.cardId">
+            <span class="hud__quest-title">{{ q.titleKey | translate: q.titleParams }}</span>
+          </span>
+        }
+      }
+    </div>
+  }
+
+  <!-- Bottom right: the dock above the turn action. -->
+  <div class="hud__turn">
+    <chora-companion-dock />
+
+    @if (turnAction(); as action) {
+      @if (action.kind !== 'suppressed' && action.route && action.labelKey) {
+        <a
+          class="hud__turn-action"
+          [routerLink]="action.route"
+          [attr.data-turn-kind]="action.kind"
+          data-testid="hud-turn-action">
+          <i class="fa-solid fa-play" aria-hidden="true"></i>
+          <span>{{ action.labelKey | translate }}</span>
+        </a>
+      }
+    }
+  </div>
+</div>

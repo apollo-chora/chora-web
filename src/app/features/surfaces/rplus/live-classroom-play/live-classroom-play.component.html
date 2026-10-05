@@ -1,0 +1,144 @@
+<section
+  class="surface-rplus live-play"
+  data-testid="rplus-live-classroom-play">
+  <header class="live-play__header glass-panel">
+    <div class="live-play__title-row">
+      <h1 class="live-play__title" data-testid="live-play-title">
+        <i class="fa-solid fa-bolt surface-accent-text" aria-hidden="true"></i>
+        {{ 'rplus.liveClassroom.title' | translate }}
+      </h1>
+      <span
+        class="badge live-play__conn"
+        [class.live-play__conn--ok]="connectionState() === 'connected'"
+        [class.live-play__conn--warn]="
+          connectionState() === 'connecting' ||
+          connectionState() === 'reconnecting'
+        "
+        [class.live-play__conn--off]="connectionState() === 'closed'"
+        data-testid="live-play-connection"
+        aria-live="polite">
+        {{ 'rplus.liveClassroom.connection.' + connectionState() | translate }}
+      </span>
+    </div>
+    <dl class="live-play__kpis">
+      <div class="live-play__kpi">
+        <dt>{{ 'rplus.liveClassroom.kpi_state' | translate }}</dt>
+        <dd data-testid="live-play-state">
+          {{ 'rplus.liveClassroom.state.' + state() | translate }}
+        </dd>
+      </div>
+      <div class="live-play__kpi">
+        <dt>{{ 'rplus.liveClassroom.kpi_responses' | translate }}</dt>
+        <dd data-testid="live-play-total-responses">{{ totalResponses() }}</dd>
+      </div>
+    </dl>
+  </header>
+
+  <div class="live-play__main">
+    <section
+      class="live-play__tally glass-panel"
+      aria-labelledby="live-play-tally-heading"
+      data-testid="live-play-tally">
+      <h2 id="live-play-tally-heading" class="live-play__pane-title">
+        <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
+        {{ 'rplus.liveClassroom.tally_title' | translate }}
+      </h2>
+      @if (tallyRows().length > 0) {
+        <ol class="live-play__bars">
+          @for (row of tallyRows(); track row.marker) {
+            <li
+              class="live-play__bar-row"
+              [attr.data-testid]="'live-play-bar-' + row.marker">
+              <span class="live-play__bar-marker">{{ row.marker }}</span>
+              <div class="live-play__bar-track">
+                <div
+                  class="live-play__bar-fill surface-accent-bg"
+                  [style.width.%]="row.percent"></div>
+              </div>
+              <span class="live-play__bar-count">
+                {{ row.count }} ({{ row.percent }}%)
+              </span>
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="live-play__empty" data-testid="live-play-tally-empty">
+          <i class="fa-regular fa-hourglass" aria-hidden="true"></i>
+          {{ 'rplus.liveClassroom.tally_empty' | translate }}
+        </p>
+      }
+
+      @if (explainersRevealed()) {
+        <p
+          class="live-play__reveal-note"
+          data-testid="live-play-reveal-note"
+          role="status">
+          <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+          {{ 'rplus.liveClassroom.explainers_revealed' | translate }}
+        </p>
+      }
+    </section>
+
+    <aside
+      class="live-play__leaderboard glass-panel"
+      aria-labelledby="live-play-leaderboard-heading"
+      data-testid="live-play-leaderboard">
+      <h2 id="live-play-leaderboard-heading" class="live-play__pane-title">
+        <i class="fa-solid fa-ranking-star" aria-hidden="true"></i>
+        {{ 'rplus.liveClassroom.leaderboard_title' | translate }}
+      </h2>
+      @if (boardRows().length > 0) {
+        <ol class="live-play__board" data-testid="live-play-board">
+          @for (entry of boardRows(); track entry.name; let rank = $index) {
+            <li
+              class="live-play__board-row"
+              [class.live-play__board-row--top]="rank === 0"
+              [attr.data-testid]="'live-play-board-row-' + rank">
+              <span class="live-play__board-rank">{{ rank + 1 }}</span>
+              <span class="live-play__board-name">{{ entry.name }}</span>
+              <span class="live-play__board-score">{{ entry.score }}</span>
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="live-play__empty" data-testid="live-play-board-empty">
+          <i class="fa-regular fa-circle-user" aria-hidden="true"></i>
+          {{ 'rplus.liveClassroom.leaderboard_empty' | translate }}
+        </p>
+      }
+    </aside>
+  </div>
+
+  @if (podium().length > 0) {
+    <section
+      class="live-play__podium glass-panel"
+      aria-label="Final podium"
+      data-testid="live-play-podium">
+      <h2 class="live-play__pane-title">
+        <i class="fa-solid fa-trophy" aria-hidden="true"></i>
+        {{ 'rplus.liveClassroom.podium_title' | translate }}
+      </h2>
+      <ol class="live-play__podium-steps">
+        @for (row of podium(); track row.nickname) {
+          <li
+            class="live-play__podium-step"
+            [attr.data-testid]="'live-play-podium-' + row.rank">
+            <span class="live-play__board-rank">#{{ row.rank }}</span>
+            <span class="live-play__board-name">{{ row.nickname }}</span>
+            <span class="live-play__board-score">{{ row.score }}</span>
+          </li>
+        }
+      </ol>
+    </section>
+  }
+
+  @if (isClosed()) {
+    <footer
+      class="live-play__closed glass-panel"
+      role="status"
+      data-testid="live-play-closed">
+      <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+      {{ 'rplus.liveClassroom.session_closed' | translate }}
+    </footer>
+  }
+</section>

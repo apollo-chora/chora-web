@@ -1,0 +1,178 @@
+<section
+  class="ticket-list"
+  role="main"
+  [attr.aria-label]="'support.ticket_list_title' | translate"
+  data-testid="ticket-list">
+
+  <!-- Page Header -->
+  <header class="ticket-list__header">
+    <h1 class="ticket-list__title" data-testid="ticket-list-title">
+      {{ 'support.ticket_list_title' | translate }}
+    </h1>
+    <button
+      type="button"
+      class="ticket-list__btn ticket-list__btn--primary"
+      data-testid="btn-create-ticket"
+      [attr.aria-label]="'support.create_ticket' | translate"
+      (click)="navigateToCreate()">
+      {{ 'support.create_ticket' | translate }}
+    </button>
+  </header>
+
+  <!-- Filters -->
+  <div class="ticket-list__filters" data-testid="ticket-filters" role="search" [attr.aria-label]="'support.filter_tickets' | translate">
+    <!-- Status Filter -->
+    <div class="ticket-list__filter-group">
+      <span class="ticket-list__filter-label" id="filter-status-label">
+        {{ 'support.filter_status' | translate }}
+      </span>
+      <div class="ticket-list__filter-chips" role="group" aria-labelledby="filter-status-label">
+        <button
+          type="button"
+          class="ticket-list__chip"
+          [class.ticket-list__chip--active]="selectedStatus() === null"
+          data-testid="filter-status-all"
+          (click)="filterByStatus(null)">
+          {{ 'support.filter_all' | translate }}
+        </button>
+        @for (status of allStatuses; track status) {
+          <button
+            type="button"
+            class="ticket-list__chip"
+            [class.ticket-list__chip--active]="selectedStatus() === status"
+            [attr.data-testid]="'filter-status-' + status"
+            (click)="filterByStatus(status)">
+            {{ statusLabels[status] | translate }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Priority Filter -->
+    <div class="ticket-list__filter-group">
+      <span class="ticket-list__filter-label" id="filter-priority-label">
+        {{ 'support.filter_priority' | translate }}
+      </span>
+      <div class="ticket-list__filter-chips" role="group" aria-labelledby="filter-priority-label">
+        <button
+          type="button"
+          class="ticket-list__chip"
+          [class.ticket-list__chip--active]="selectedPriority() === null"
+          data-testid="filter-priority-all"
+          (click)="filterByPriority(null)">
+          {{ 'support.filter_all' | translate }}
+        </button>
+        @for (priority of allPriorities; track priority) {
+          <button
+            type="button"
+            class="ticket-list__chip"
+            [class.ticket-list__chip--active]="selectedPriority() === priority"
+            [attr.data-testid]="'filter-priority-' + priority"
+            (click)="filterByPriority(priority)">
+            {{ priorityLabels[priority] | translate }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (ticketListState().status === 'loading') {
+    <div class="ticket-list__loading" data-testid="ticket-list-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="ticket-list__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (ticketListState().status === 'error') {
+    <div class="ticket-list__error" data-testid="ticket-list-error" role="alert">
+      <p class="ticket-list__error-text">
+        {{ 'support.tickets_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (ticketListState().status === 'success' && tickets().length === 0) {
+    <div class="ticket-list__empty" data-testid="ticket-list-empty" role="status">
+      <p class="ticket-list__empty-text">
+        {{ 'support.no_tickets' | translate }}
+      </p>
+      <button
+        type="button"
+        class="ticket-list__btn ticket-list__btn--primary"
+        data-testid="btn-create-first-ticket"
+        [attr.aria-label]="'support.create_first_ticket' | translate"
+        (click)="navigateToCreate()">
+        {{ 'support.create_first_ticket' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Ticket Table -->
+  @if (ticketListState().status === 'success' && tickets().length > 0) {
+    <div class="ticket-list__table-wrapper" data-testid="ticket-table">
+      <table class="ticket-list__table" role="table" [attr.aria-label]="'support.ticket_table' | translate">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'support.col_subject' | translate }}</th>
+            <th scope="col">{{ 'support.col_status' | translate }}</th>
+            <th scope="col">{{ 'support.col_priority' | translate }}</th>
+            <th scope="col">{{ 'support.col_category' | translate }}</th>
+            <th scope="col">{{ 'support.col_created' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ticket of tickets(); track ticket.id) {
+            <tr
+              class="ticket-list__row"
+              [attr.data-testid]="'ticket-row-' + ticket.id"
+              tabindex="0"
+              role="row"
+              (click)="navigateToTicket(ticket.id)"
+              (keydown.enter)="navigateToTicket(ticket.id)">
+              <td class="ticket-list__cell ticket-list__cell--subject">
+                {{ ticket.subject }}
+              </td>
+              <td class="ticket-list__cell">
+                <span
+                  class="ticket-list__status"
+                  [class]="statusClass(ticket.status)">
+                  {{ statusLabels[ticket.status] | translate }}
+                </span>
+              </td>
+              <td class="ticket-list__cell">
+                <span
+                  class="ticket-list__priority"
+                  [class]="priorityClass(ticket.priority)">
+                  {{ priorityLabels[ticket.priority] | translate }}
+                </span>
+              </td>
+              <td class="ticket-list__cell">
+                {{ ticket.category }}
+              </td>
+              <td class="ticket-list__cell ticket-list__cell--date">
+                {{ formatDate(ticket.created_at) }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Load More -->
+    @if (hasMore()) {
+      <div class="ticket-list__pagination">
+        <button
+          type="button"
+          class="ticket-list__btn ticket-list__btn--secondary"
+          data-testid="btn-load-more"
+          (click)="loadMore()">
+          {{ 'support.load_more' | translate }}
+        </button>
+      </div>
+    }
+  }
+</section>

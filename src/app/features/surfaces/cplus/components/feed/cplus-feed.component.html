@@ -1,0 +1,200 @@
+<chora-cplus-page-header
+  [title]="'cplus.feed.title' | translate"
+  [description]="'cplus.feed.shared_by' | translate"
+  [breadcrumb]="breadcrumb"
+></chora-cplus-page-header>
+
+<div class="cplus-feed__toolbar">
+  <div class="cplus-feed__scope">
+    <chora-cplus-tabs [tabs]="scopeTabs" [activeId]="scope()" (activeChange)="onScopeChange($event)" />
+  </div>
+
+  <div class="cplus-feed__filters">
+    <label class="cplus-feed__filter">
+      <span class="cplus-feed__filter-label">{{ 'cplus.feed.sort_label' | translate }}</span>
+      <select
+        class="cplus-feed__select"
+        [value]="sortMode()"
+        (change)="onSortChange($event)"
+        aria-label="{{ 'cplus.feed.sort_label' | translate }}"
+      >
+        @for (opt of sortOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="cplus-feed__filter">
+      <span class="cplus-feed__filter-label">{{ 'cplus.feed.filter_label' | translate }}</span>
+      <select
+        class="cplus-feed__select"
+        [value]="questionTypeFilter()"
+        (change)="onFilterChange($event)"
+        aria-label="{{ 'cplus.feed.filter_label' | translate }}"
+      >
+        @for (opt of questionTypeOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+        }
+      </select>
+    </label>
+  </div>
+</div>
+
+@if (state().status === 'loading') {
+  <p class="cplus-feed__status" role="status">{{ 'cplus.feed.loading' | translate }}</p>
+}
+
+@if (state().status === 'error') {
+  <p class="cplus-feed__status cplus-feed__status--error" role="alert">
+    {{ $any(state()).error.message | translate }}
+  </p>
+}
+
+@if (state().status === 'success') {
+  @if (cards().length === 0) {
+    <chora-cplus-empty-state [heading]="'cplus.feed.empty' | translate" [icon]="'fire'" />
+  } @else {
+    <div class="cplus-feed__list" role="feed" aria-label="{{ 'cplus.feed.title' | translate }}">
+      @for (card of cards(); track card.share_entry_id) {
+        <chora-cplus-card elevation="raised">
+          <div class="cplus-feed-card">
+            <button
+              type="button"
+              class="cplus-feed-card__author-row"
+              (click)="viewAuthor(card.author_gcid, authorDisplay(card), $event)"
+            >
+              <span class="cplus-feed-card__avatar">{{ authorInitial(card) }}</span>
+              <div class="cplus-feed-card__author-info">
+                <strong class="cplus-feed-card__author-name">{{ authorDisplay(card) }}</strong>
+                <time class="cplus-feed-card__time" [attr.datetime]="card.created_at">{{ card.created_at | timeAgo }}</time>
+              </div>
+            </button>
+
+            @if (card.caption) {
+            <p class="cplus-feed-card__caption">{{ card.caption }}</p>
+            }
+
+            <div class="cplus-feed-card__preview">
+              <p class="cplus-feed-card__stem">{{ card.atom_stem_preview }}</p>
+              @if (card.atom_options?.length) {
+                <ul class="cplus-feed-card__options" role="list">
+                  @for (opt of card.atom_options; track $index) {
+                    <li class="cplus-feed-card__option">{{ opt }}</li>
+                  }
+                </ul>
+              }
+            </div>
+
+            <div class="cplus-feed-card__tags">
+              <span class="cplus-feed-card__badge" [attr.data-license]="card.license_terms">
+                {{ licenseKey(card.license_terms) | translate }}
+              </span>
+              <span class="cplus-feed-card__badge cplus-feed-card__badge--muted">
+                {{ questionTypeKey(card.question_type) | translate }}
+              </span>
+              @if (royaltyDisplay(card); as royalty) {
+                <span class="cplus-feed-card__badge cplus-feed-card__badge--accent">{{ royalty }}</span>
+              }
+            </div>
+
+            <div class="cplus-feed-card__bar">
+              <div class="cplus-feed-card__reactions">
+                @for (r of reactions; track r.kind) {
+                  <button
+                    type="button"
+                    class="cplus-feed-card__react-btn"
+                    [class.cplus-feed-card__react-btn--active]="getReaction(card.share_entry_id) === r.kind"
+                    [attr.aria-pressed]="getReaction(card.share_entry_id) === r.kind"
+                    [attr.aria-label]="r.labelKey | translate"
+                    [title]="r.labelKey | translate"
+                    (click)="react(card.share_entry_id, r.kind, $event)"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+                      <path [attr.d]="r.icon" />
+                    </svg>
+                    <span>{{ reactionCount(card, r.kind) }}</span>
+                  </button>
+                }
+              </div>
+              @if (myGcid() === card.author_gcid) {
+                <button
+                  type="button"
+                  class="cplus-feed-card__revoke-btn"
+                  [disabled]="revoking() === card.atom_id"
+                  [attr.aria-label]="'cplus.feed.remove_from_feed' | translate"
+                  [title]="'cplus.feed.remove_from_feed' | translate"
+                  (click)="revokeShare(card, $event)"
+                >
+                  @if (revoking() === card.atom_id) {
+                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                  } @else {
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                  }
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="cplus-feed-card__bookmark-btn"
+                  [class.cplus-feed-card__bookmark-btn--active]="isBookmarked(card.atom_id)"
+                  [attr.aria-label]="isBookmarked(card.atom_id)
+                    ? ('cplus.feed.remove_bookmark' | translate)
+                    : ('cplus.feed.save_to_collection' | translate)"
+                  [attr.aria-pressed]="isBookmarked(card.atom_id)"
+                  [title]="isBookmarked(card.atom_id)
+                    ? ('cplus.feed.saved' | translate)
+                    : ('cplus.feed.save_to_collection' | translate)"
+                  (click)="toggleBookmark(card.atom_id, $event)"
+                >
+                  <svg class="cplus-feed-card__bookmark-icon" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                       width="16" height="16" aria-hidden="true">
+                    @if (isBookmarked(card.atom_id)) {
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="currentColor" />
+                    } @else {
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    }
+                  </svg>
+                </button>
+              }
+            </div>
+          </div>
+        </chora-cplus-card>
+      }
+    </div>
+
+    @if (hasMore()) {
+      <div #sentinel class="cplus-feed__sentinel" aria-hidden="true">
+        @if (loadingMore()) {
+          <span class="cplus-feed__loading-more">{{ 'cplus.feed.loading_more' | translate }}</span>
+        }
+      </div>
+    }
+  }
+}
+
+@if (selectedAuthor(); as author) {
+  <div class="cplus-feed__profile-overlay" (click)="closeAuthor()">
+    <div class="cplus-feed__profile-card" (click)="$event.stopPropagation()">
+      <chora-cplus-person-card
+        [gcid]="author.gcid"
+        [displayName]="author.displayName"
+        [shareCount]="authorShareCount(author.gcid)"
+        [recentAtoms]="authorAtoms(author.gcid)"
+        [showBack]="false"
+        [showFollowBlock]="myGcid() !== null && myGcid() !== author.gcid"
+        [isFollowing]="isFollowingAuthor(author.gcid)"
+        [isBlocked]="isBlockedAuthor(author.gcid)"
+        [actionPending]="actingGcid() === author.gcid"
+        (followToggle)="toggleFollowAuthor(author.gcid)"
+        (blockToggle)="toggleBlockAuthor(author.gcid)"
+      />
+      <button
+        type="button"
+        class="cplus-feed__profile-close"
+        (click)="closeAuthor()"
+        aria-label="{{ 'cplus.feed.close' | translate }}"
+      >×</button>
+    </div>
+  </div>
+}

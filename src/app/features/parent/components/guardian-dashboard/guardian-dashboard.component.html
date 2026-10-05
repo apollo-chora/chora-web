@@ -1,0 +1,176 @@
+<section
+  class="guardian-dashboard"
+  role="main"
+  [attr.aria-label]="'parent.dashboard_title' | translate"
+  data-testid="guardian-dashboard">
+
+  <!-- Page Header -->
+  <header class="guardian-dashboard__header">
+    <h1 class="guardian-dashboard__title" data-testid="dashboard-title">
+      {{ 'parent.dashboard_title' | translate }}
+    </h1>
+    <button
+      type="button"
+      class="guardian-dashboard__btn guardian-dashboard__btn--primary"
+      data-testid="btn-manage-consent"
+      [attr.aria-label]="'parent.manage_consent' | translate"
+      (click)="manageConsent()">
+      {{ 'parent.manage_consent' | translate }}
+    </button>
+  </header>
+
+  <!-- Alerts Banner -->
+  @if (hasAlerts()) {
+    <div
+      class="guardian-dashboard__alerts-banner"
+      data-testid="alerts-banner"
+      role="alert"
+      aria-live="polite">
+      <h2 class="guardian-dashboard__alerts-heading">
+        {{ 'parent.unresolved_alerts' | translate }}
+        <span class="guardian-dashboard__alert-count" data-testid="alert-count">
+          ({{ alertCount() }})
+        </span>
+      </h2>
+      <ul class="guardian-dashboard__alerts-list" role="list">
+        @for (alert of unresolvedAlerts(); track alert.id) {
+          <li class="guardian-dashboard__alert-item" role="listitem">
+            <span
+              class="guardian-dashboard__alert-severity"
+              [class]="severityClass(alert.severity)"
+              data-testid="alert-severity">
+              {{ severityLabels[alert.severity] | translate }}
+            </span>
+            <span class="guardian-dashboard__alert-type" data-testid="alert-type">
+              {{ alertTypeLabels[alert.alert_type] | translate }}
+            </span>
+            <span class="guardian-dashboard__alert-message">
+              {{ alert.message }}
+            </span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (linkState().status === 'loading') {
+    <div class="guardian-dashboard__loading" data-testid="dashboard-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="guardian-dashboard__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (linkState().status === 'error') {
+    <div class="guardian-dashboard__error" data-testid="dashboard-error" role="alert">
+      <p class="guardian-dashboard__error-text">
+        {{ 'parent.links_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- No Links -->
+  @if (linkState().status === 'success' && guardianLinks().length === 0) {
+    <div class="guardian-dashboard__empty" data-testid="dashboard-empty" role="status">
+      <p class="guardian-dashboard__empty-text">
+        {{ 'parent.no_linked_learners' | translate }}
+      </p>
+      <button
+        type="button"
+        class="guardian-dashboard__btn guardian-dashboard__btn--primary"
+        data-testid="btn-link-learner"
+        [attr.aria-label]="'parent.link_learner' | translate"
+        (click)="manageConsent()">
+        {{ 'parent.link_learner' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Pending Links -->
+  @if (hasPendingLinks()) {
+    <div class="guardian-dashboard__section" data-testid="pending-links-section">
+      <h2 class="guardian-dashboard__section-heading">
+        {{ 'parent.pending_links' | translate }}
+      </h2>
+      <ul class="guardian-dashboard__link-list" role="list">
+        @for (link of pendingLinks(); track link.id) {
+          <li class="guardian-dashboard__link-card guardian-dashboard__link-card--pending" role="listitem" data-testid="pending-link-card">
+            <div class="guardian-dashboard__link-info">
+              <span class="guardian-dashboard__learner-id" data-testid="learner-id">
+                {{ link.learner_gcid }}
+              </span>
+              <span
+                class="guardian-dashboard__status"
+                [class]="statusClass(link.status)"
+                data-testid="link-status">
+                {{ statusLabels[link.status] | translate }}
+              </span>
+            </div>
+            <div class="guardian-dashboard__link-meta">
+              <span class="guardian-dashboard__relationship" data-testid="link-relationship">
+                {{ relationshipLabels[link.relationship] | translate }}
+              </span>
+              <span class="guardian-dashboard__link-date">
+                {{ formatDate(link.created_at) }}
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <!-- Active Links (Linked Learners) -->
+  @if (hasActiveLinks()) {
+    <div class="guardian-dashboard__section" data-testid="active-links-section">
+      <h2 class="guardian-dashboard__section-heading">
+        {{ 'parent.linked_learners' | translate }}
+      </h2>
+      <ul class="guardian-dashboard__link-list" role="list">
+        @for (link of activeLinks(); track link.id) {
+          <li class="guardian-dashboard__link-card" role="listitem" data-testid="active-link-card">
+            <div class="guardian-dashboard__link-info">
+              <span class="guardian-dashboard__learner-id" data-testid="learner-id">
+                {{ link.learner_gcid }}
+              </span>
+              <span
+                class="guardian-dashboard__status"
+                [class]="statusClass(link.status)"
+                data-testid="link-status">
+                {{ statusLabels[link.status] | translate }}
+              </span>
+            </div>
+            <div class="guardian-dashboard__link-meta">
+              <span class="guardian-dashboard__relationship" data-testid="link-relationship">
+                {{ relationshipLabels[link.relationship] | translate }}
+              </span>
+              <span class="guardian-dashboard__link-date">
+                {{ formatDate(link.created_at) }}
+              </span>
+            </div>
+            <div class="guardian-dashboard__link-actions">
+              <button
+                type="button"
+                class="guardian-dashboard__btn guardian-dashboard__btn--secondary"
+                data-testid="btn-view-progress"
+                [attr.aria-label]="'parent.view_progress' | translate"
+                (click)="viewProgress(link.learner_gcid)">
+                {{ 'parent.view_progress' | translate }}
+              </button>
+              <button
+                type="button"
+                class="guardian-dashboard__btn guardian-dashboard__btn--secondary"
+                data-testid="btn-view-activity"
+                [attr.aria-label]="'parent.view_activity' | translate"
+                (click)="viewActivity(link.learner_gcid)">
+                {{ 'parent.view_activity' | translate }}
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</section>

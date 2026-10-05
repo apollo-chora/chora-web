@@ -1,0 +1,157 @@
+:host {
+  display: block;
+}
+
+.familiar-persona-card {
+  padding: var(--chora-space-md, 16px);
+
+  &__loading,
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-lg, 24px);
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__error {
+    color: var(--chora-color-danger, #991b1b);
+  }
+
+  // Header
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--chora-color-primary, #2563eb);
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__archetype {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    text-transform: capitalize;
+  }
+
+  &__skin {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  // Level
+  &__level-section {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__level-header {
+    display: flex;
+    justify-content: space-between;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__level-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  &__level-value {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--chora-color-primary, #2563eb);
+  }
+
+  &__level-bar {
+    height: 8px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  &__level-fill {
+    height: 100%;
+    background: var(--chora-color-primary, #2563eb);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  // Traits
+  &__traits {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__traits-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__trait {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__trait-header {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &__trait-label {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+    text-transform: capitalize;
+  }
+
+  &__trait-value {
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  &__trait-bar {
+    height: 6px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  &__trait-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--chora-color-primary, #2563eb);
+    transition: width 0.3s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .familiar-persona-card__level-fill,
+  .familiar-persona-card__trait-fill {
+    transition: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .familiar-persona-card {
+    max-width: 400px;
+  }
+}

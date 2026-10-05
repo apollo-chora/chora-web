@@ -1,0 +1,310 @@
+// =====================================================================
+// Shell /home launcher (ADR-240 Track B H3). Polyglass design language:
+// glass panels over the shell atmosphere, and each pin card tinted by its
+// OWNING surface accent (`.surface-{name}` sets --surface-accent-gradient),
+// so the launcher visibly reads as "your entry points across the surfaces".
+// =====================================================================
+
+:host {
+  display: block;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.chora-home {
+  padding: 2rem clamp(1rem, 3vw, 2rem);
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// ─── Header (.glass-panel from the template) ───────────────────────────
+.chora-home__header {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.chora-home__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.chora-home__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.chora-home__subtitle {
+  margin: 0;
+  color: var(--chora-color-text-muted);
+}
+
+// Customise / Done: a secondary glass button (translucent, primary-tinted).
+.chora-home__edit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-radius: var(--button-radius, 8px);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--chora-color-primary-strong);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.chora-home__sync-degraded {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--warning-text, #92400e);
+}
+
+// ─── Empty state ───────────────────────────────────────────────────────
+.chora-home__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2.5rem;
+  text-align: center;
+
+  > i {
+    font-size: 2rem;
+    color: var(--chora-color-primary-strong);
+    opacity: 0.85;
+  }
+}
+
+.chora-home__empty-text {
+  margin: 0;
+  color: var(--chora-color-text-muted);
+}
+
+// ─── Pinned grid ───────────────────────────────────────────────────────
+.chora-home__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+// Pin card: the glass AESTHETIC (translucent gradient + light-caught top/left
+// edges + soft shadow) WITHOUT a per-card backdrop-filter. The header + palette
+// carry the real blur; up to ~15 blurred cards would blow the design's ~10
+// blurred-layers-per-viewport budget. Surface-tinted via `.surface-{name}`.
+.chora-home__pin {
+  position: relative;
+  border-radius: var(--panel-radius, 16px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.42));
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-top: 1px solid var(--glass-border-top, rgba(255, 255, 255, 0.9));
+  border-left: 1px solid var(--glass-border-top, rgba(255, 255, 255, 0.9));
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
+  transition: transform 0.25s var(--chora-ease-reveal, ease), box-shadow 0.25s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--glass-shadow-hover, 0 12px 40px rgba(31, 38, 135, 0.12));
+  }
+
+  &.is-editing {
+    cursor: grab;
+  }
+
+  &.cdk-drag-preview {
+    box-shadow: var(--glass-shadow-hover, 0 12px 40px rgba(31, 38, 135, 0.18));
+  }
+
+  &.cdk-drag-placeholder {
+    opacity: 0.4;
+  }
+}
+
+.chora-home__pin-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  color: var(--text-main);
+  text-decoration: none;
+  text-align: center;
+}
+
+// The icon circle: the OWNING surface's accent gradient (falls back to the
+// polyglass primary/secondary when no `.surface-*` ancestor is present).
+.chora-home__pin-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface-accent-gradient, linear-gradient(135deg, var(--primary), var(--secondary)));
+  color: #fff;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(31, 38, 135, 0.15);
+}
+
+.chora-home__pin-label {
+  font-weight: 600;
+}
+
+.chora-home__pin-grip,
+.chora-home__pin-remove {
+  position: absolute;
+  top: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--chora-color-text-muted);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(31, 38, 135, 0.12);
+}
+
+.chora-home__pin-grip {
+  left: 0.4rem;
+  cursor: grab;
+}
+
+.chora-home__pin-remove {
+  right: 0.4rem;
+
+  &:hover {
+    background: var(--danger, #ef4444);
+    color: #fff;
+  }
+}
+
+// ─── Add palette (reveal-eased, per the owner's motion language) ────────
+.chora-home__palette {
+  padding: 1.25rem 1.5rem;
+  animation: home-reveal 0.25s var(--chora-ease-reveal, ease) both;
+}
+
+.chora-home__palette-heading {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.chora-home__palette-empty {
+  margin: 0;
+  color: var(--chora-color-text-muted);
+}
+
+.chora-home__palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.chora-home__add {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px dashed rgba(100, 116, 139, 0.4);
+  border-radius: var(--panel-radius, 16px);
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.7);
+    border-style: solid;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  .chora-home__pin-ic {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+}
+
+.chora-home__add-plus {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  color: var(--chora-color-primary-strong);
+}
+
+@keyframes home-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ─── a11y: visible focus, reduced motion ───────────────────────────────
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chora-home__pin,
+  .chora-home__add,
+  .chora-home__edit-toggle {
+    transition: none;
+  }
+
+  .chora-home__pin:hover,
+  .chora-home__add:hover {
+    transform: none;
+  }
+
+  .chora-home__palette {
+    animation: none;
+  }
+}
+
+/* The launcher's own heading, since C1b put the ranked section above it and an
+   unlabelled grid under a labelled list reads as part of the same list. */
+.chora-home__pins-heading {
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chora-color-text-muted);
+}

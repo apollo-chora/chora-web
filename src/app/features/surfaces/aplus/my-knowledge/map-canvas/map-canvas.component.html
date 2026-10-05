@@ -1,0 +1,1350 @@
+<section
+  class="map-canvas"
+  [attr.data-lens]="lens()"
+  [attr.data-drawer]="detailOpen() ? 'open' : null"
+  data-testid="map-canvas">
+  @switch (state().status) {
+    <!-- ── Loading ──────────────────────────────────────────────────── -->
+    @case ('loading') {
+      <div class="mc-state" role="status" data-testid="map-canvas-loading">
+        <span class="mc-spinner" aria-hidden="true"></span>
+        <span>{{ 'aplus.knowledge.canvas_loading' | translate }}</span>
+      </div>
+    }
+
+    <!-- ── Error (retry) ────────────────────────────────────────────── -->
+    @case ('error') {
+      <div class="mc-state mc-state--error" role="alert" data-testid="map-canvas-error">
+        <p>{{ 'aplus.knowledge.canvas_error' | translate }}</p>
+        <button
+          type="button"
+          class="mc-btn mc-btn--primary"
+          (click)="retry()"
+          data-testid="map-canvas-retry">
+          {{ 'aplus.knowledge.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    <!-- ── Success ──────────────────────────────────────────────────── -->
+    @case ('success') {
+      <header class="mc-header">
+        <div class="mc-titlebar">
+          <a
+            class="mc-crumb mc-crumb--home"
+            routerLink="/a/knowledge"
+            data-testid="map-canvas-crumb-maps">
+            <i class="fa-solid fa-compass" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.maps_crumb' | translate }}
+          </a>
+          <h1 class="mc-title" data-testid="map-canvas-title">
+            {{ mapTitle() || ('aplus.knowledge.untitled_map' | translate) }}
+          </h1>
+          <button
+            type="button"
+            class="mc-switch-trigger"
+            (click)="openSwitcher()"
+            data-testid="map-canvas-switch-trigger">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.switch_map' | translate }}
+          </button>
+        </div>
+
+        @if (concepts().length > 0) {
+          <!-- Lens layer selector — composable overlays, not modes (§5.1). -->
+          <div class="mc-lensbar">
+            <fieldset class="mc-lens" data-testid="map-canvas-lens">
+              <legend class="mc-lens__legend">
+                {{ 'aplus.knowledge.lens_label' | translate }}
+              </legend>
+              <div class="mc-lens__opts">
+                @for (opt of lensOptions; track opt.value) {
+                  <label
+                    class="mc-lens__opt"
+                    [class.is-active]="lens() === opt.value">
+                    <input
+                      type="radio"
+                      class="mc-lens__radio"
+                      name="mc-lens"
+                      [value]="opt.value"
+                      [checked]="lens() === opt.value"
+                      (change)="setLens(opt.value)"
+                      [attr.data-testid]="'map-canvas-lens-' + opt.value" />
+                    <span class="mc-lens__pill">
+                      <i class="fa-solid {{ opt.icon }}" aria-hidden="true"></i>
+                      {{ opt.labelKey | translate }}
+                    </span>
+                  </label>
+                }
+              </div>
+            </fieldset>
+            <p class="mc-lens__caption" data-testid="map-canvas-lens-caption">
+              {{ lensCaptionKey() | translate }}
+            </p>
+            <!-- Roads (C4): offered only for a map that HAS a road, so the
+                 switch always does something. When the layer could not be READ
+                 we say that instead, because an absent toggle would otherwise
+                 read as "this map has no course". -->
+            @if (roadsUnread()) {
+              <p class="mc-roads-note" data-testid="map-canvas-roads-unread">
+                {{ 'aplus.knowledge.roads_unread' | translate }}
+              </p>
+            } @else if (hasRoads()) {
+              <button
+                type="button"
+                class="mc-roads-toggle"
+                [class.is-on]="roadsVisible()"
+                [attr.aria-pressed]="roadsVisible()"
+                [attr.aria-label]="'aplus.knowledge.roads_toggle_aria' | translate"
+                (click)="toggleRoads()"
+                data-testid="map-canvas-roads-toggle">
+                <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                {{ 'aplus.knowledge.roads_toggle' | translate }}
+              </button>
+            }
+            <!-- Goal-level Diagnose entry (ADR-238 D2): resolution is goal-wide,
+                 so this opens Diagnose without a pre-picked concept. -->
+            <button
+              type="button"
+              class="mc-diagnose-map"
+              (click)="diagnoseMyMap()"
+              [attr.aria-label]="'aplus.knowledge.diagnose_my_map' | translate"
+              data-testid="map-canvas-diagnose-my-map">
+              <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+              {{ 'aplus.knowledge.diagnose_my_map' | translate }}
+            </button>
+          </div>
+        }
+
+        <nav
+          class="mc-breadcrumb"
+          [attr.aria-label]="'aplus.knowledge.breadcrumb_label' | translate"
+          data-testid="map-canvas-breadcrumb">
+          @for (crumb of crumbs(); track crumb.id; let i = $index, last = $last) {
+            @if (i > 0) {
+              <span class="mc-sep" aria-hidden="true">/</span>
+            }
+            @if (last) {
+              <span
+                class="mc-crumb mc-crumb--current"
+                aria-current="page"
+                data-testid="map-canvas-crumb-current">
+                {{ crumb.title }}
+              </span>
+            } @else {
+              <button
+                type="button"
+                class="mc-crumb mc-crumb--link"
+                (click)="jumpTo(i)"
+                [attr.data-testid]="'map-canvas-crumb-' + i">
+                {{ crumb.title }}
+              </button>
+            }
+          }
+          <button
+            type="button"
+            class="mc-back"
+            (click)="back()"
+            [disabled]="!canGoBack()"
+            data-testid="map-canvas-back">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.back' | translate }}
+          </button>
+        </nav>
+      </header>
+
+      <!-- Map switcher (overlay, SP1): a left drawer + scrim. Opening it closes
+           the concept drawer (mutually exclusive — never two drawers at once). A
+           row selects a map (in-place switch) or arms an inline soft-delete. -->
+      @if (switcherOpen()) {
+        <div
+          class="mc-switcher-backdrop"
+          (click)="closeSwitcher()"
+          data-testid="map-canvas-switcher-backdrop"
+          aria-hidden="true"></div>
+      }
+      <aside
+        class="mc-switcher"
+        [class.is-open]="switcherOpen()"
+        [attr.aria-hidden]="!switcherOpen()"
+        [attr.aria-label]="'aplus.knowledge.switcher_heading' | translate"
+        data-testid="map-canvas-switcher">
+        <div class="mc-switcher__bar">
+          <span class="mc-switcher__title">
+            {{ 'aplus.knowledge.switcher_heading' | translate }}
+          </span>
+          <button
+            type="button"
+            class="mc-switcher__close"
+            (click)="closeSwitcher()"
+            [attr.aria-label]="'aplus.knowledge.details_close' | translate"
+            data-testid="map-canvas-switcher-close">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="mc-switcher__list">
+          @for (m of maps(); track m.goalId) {
+            <div
+              class="mc-switcher__row"
+              [class.is-current]="m.goalId === goalId()"
+              [attr.data-testid]="'map-switch-row-' + m.goalId">
+              <button
+                type="button"
+                class="mc-switcher__pick"
+                (click)="switchToMap(m.goalId)"
+                [attr.data-testid]="'map-switch-' + m.goalId">
+                <span class="mc-switcher__name">
+                  {{
+                    m.title ||
+                      m.northStarNote ||
+                      ('aplus.knowledge.untitled_map' | translate)
+                  }}
+                </span>
+                <span class="mc-switcher__meta">
+                  {{ m.conceptCount }}
+                  {{ 'aplus.knowledge.concepts_count' | translate }}
+                  @if (m.goalId === goalId()) {
+                    <span class="mc-switcher__current">
+                      · {{ 'aplus.knowledge.switch_current' | translate }}
+                    </span>
+                  }
+                </span>
+              </button>
+              <button
+                type="button"
+                class="mc-switcher__trash"
+                [disabled]="mapDeletingId() === m.goalId"
+                (click)="promptDeleteMap(m.goalId)"
+                [attr.aria-label]="'aplus.knowledge.map_delete' | translate"
+                [attr.data-testid]="'map-switch-delete-' + m.goalId">
+                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+              </button>
+            </div>
+          }
+        </div>
+      </aside>
+
+      <!-- Create a concept (shared across empty + full modes) -->
+      @if (createOpen()) {
+        <div class="mc-create" data-testid="map-canvas-create-form">
+          <label class="mc-field">
+            <span class="mc-field__label">
+              {{ 'aplus.knowledge.add_concept_label' | translate }}
+            </span>
+            <input
+              #createTitleInput
+              type="text"
+              class="mc-input"
+              [value]="createTitle()"
+              (input)="onCreateTitleInput($event)"
+              [attr.placeholder]="'aplus.knowledge.add_concept_placeholder' | translate"
+              [attr.maxlength]="128"
+              data-testid="map-canvas-create-title" />
+          </label>
+          @if (focalConcept(); as fc) {
+            <label class="mc-check">
+              <input
+                type="checkbox"
+                [checked]="createConnect()"
+                (change)="onCreateConnectChange($event)"
+                data-testid="map-canvas-create-connect" />
+              <span data-testid="map-canvas-create-connect-label">{{
+                'aplus.knowledge.connect_as_child' | translate: { label: fc.title }
+              }}</span>
+            </label>
+          }
+          <div class="mc-actions">
+            <button
+              type="button"
+              class="mc-btn mc-btn--primary"
+              (click)="submitCreate()"
+              [disabled]="mutating() || !createTitle().trim()"
+              data-testid="map-canvas-create-submit">
+              {{ 'aplus.knowledge.create' | translate }}
+            </button>
+            <button
+              type="button"
+              class="mc-btn"
+              (click)="cancelCreate()"
+              data-testid="map-canvas-create-cancel">
+              {{ 'aplus.knowledge.cancel' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Click-to-connect panel -->
+      @if (connectMode()) {
+        <div class="mc-connect" data-testid="map-canvas-connect-panel">
+          <div class="mc-connect__head">
+            <span
+              class="mc-connect__hint"
+              role="status"
+              data-testid="map-canvas-connect-hint">
+              @if (connectSourceId()) {
+                {{ 'aplus.knowledge.connect_hint_target' | translate }}
+              } @else {
+                {{ 'aplus.knowledge.connect_hint_source' | translate }}
+              }
+            </span>
+            <div
+              class="mc-connect__class"
+              role="group"
+              [attr.aria-label]="'aplus.knowledge.connect_class' | translate">
+              <button
+                type="button"
+                class="mc-toggle"
+                [class.is-active]="connectClass() === 'hierarchy'"
+                [attr.aria-pressed]="connectClass() === 'hierarchy'"
+                (click)="setConnectClass('hierarchy')"
+                data-testid="map-canvas-connect-class-hierarchy">
+                {{ 'aplus.knowledge.connect_class_hierarchy' | translate }}
+              </button>
+              <button
+                type="button"
+                class="mc-toggle"
+                [class.is-active]="connectClass() === 'lateral'"
+                [attr.aria-pressed]="connectClass() === 'lateral'"
+                (click)="setConnectClass('lateral')"
+                data-testid="map-canvas-connect-class-lateral">
+                {{ 'aplus.knowledge.connect_class_lateral' | translate }}
+              </button>
+            </div>
+            <button
+              type="button"
+              class="mc-btn"
+              (click)="cancelConnect()"
+              data-testid="map-canvas-connect-cancel">
+              {{ 'aplus.knowledge.connect_cancel' | translate }}
+            </button>
+          </div>
+          <ul class="mc-connect__nodes" data-testid="map-canvas-connect-nodes">
+            @for (c of concepts(); track c.conceptId) {
+              <li>
+                <button
+                  type="button"
+                  class="mc-node"
+                  [class.is-source]="connectSourceId() === c.conceptId"
+                  [attr.aria-pressed]="connectSourceId() === c.conceptId"
+                  [disabled]="mutating()"
+                  (click)="pickConnectNode(c.conceptId)"
+                  [attr.data-testid]="'map-canvas-connect-node-' + c.conceptId">
+                  {{ c.title }}
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (concepts().length === 0) {
+        <!-- Empty map — add the first concept -->
+        <div class="mc-empty" data-testid="map-canvas-empty">
+          <h2 class="mc-empty__title">
+            {{ 'aplus.knowledge.canvas_empty_title' | translate }}
+          </h2>
+          <p class="mc-empty__body">
+            {{ 'aplus.knowledge.canvas_empty_body' | translate }}
+          </p>
+          <button
+            type="button"
+            class="mc-btn mc-btn--primary"
+            (click)="openCreate()"
+            data-testid="map-canvas-empty-create">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.add_first_concept' | translate }}
+          </button>
+        </div>
+      } @else {
+        <div class="mc-layout">
+          <!-- Canvas: whole-map fisheye lens + toolbar -->
+          <div class="mc-canvas">
+            <!-- Campaign HUD (WS-C7): the Familiar's march over the map. Shown
+                 only when a Familiar rides the campaign; a campaign with none
+                 shows an inviting empty slot; no campaign block → nothing. -->
+            @if (showCampaignHud()) {
+              <div
+                class="mc-campaign-hud glass-panel"
+                [attr.aria-label]="'aplus.knowledge.campaign_hud_title' | translate"
+                data-testid="map-canvas-campaign-hud">
+                <div class="mc-campaign-hud__lead">
+                  <i class="fa-solid fa-chess-rook" aria-hidden="true"></i>
+                  <span
+                    class="mc-campaign-hud__march"
+                    data-testid="map-canvas-campaign-march">
+                    @if (isFocusUnassigned()) {
+                      {{ 'aplus.knowledge.campaign_hud_march_unassigned' | translate }}
+                    } @else if (familiarName()) {
+                      {{
+                        'aplus.knowledge.campaign_hud_march_named'
+                          | translate: { name: familiarName(), focus: focusTitle() }
+                      }}
+                    } @else {
+                      {{
+                        'aplus.knowledge.campaign_hud_march'
+                          | translate: { focus: focusTitle() }
+                      }}
+                    }
+                  </span>
+                  @if (!isFocusUnassigned() && focusAdvancedToday()) {
+                    <span
+                      class="mc-campaign-chip mc-campaign-chip--advanced"
+                      data-testid="map-canvas-campaign-focus-state">
+                      <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                      {{ 'aplus.knowledge.campaign_advanced_today' | translate }}
+                    </span>
+                  } @else if (!isFocusUnassigned() && focusCooling()) {
+                    <span
+                      class="mc-campaign-chip mc-campaign-chip--cooling"
+                      data-testid="map-canvas-campaign-focus-state">
+                      <i class="fa-solid fa-snowflake" aria-hidden="true"></i>
+                      {{ 'aplus.knowledge.campaign_cooling' | translate }}
+                    </span>
+                  }
+                </div>
+                <div class="mc-campaign-hud__tail">
+                  <span
+                    class="mc-campaign-hud__progress"
+                    data-testid="map-canvas-campaign-progress">
+                    {{
+                      'aplus.knowledge.campaign_hud_progress'
+                        | translate: { won: frontierWon(), total: frontierTotal() }
+                    }}
+                  </span>
+                  @if (canSeal()) {
+                    <button
+                      type="button"
+                      class="mc-btn mc-btn--primary mc-campaign-hud__seal"
+                      (click)="sealNow()"
+                      [disabled]="sealing() || mutating()"
+                      data-testid="map-canvas-campaign-seal">
+                      <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                      {{ 'aplus.knowledge.campaign_seal_cta' | translate }}
+                    </button>
+                  }
+                </div>
+                @if (sealError()) {
+                  <p
+                    class="mc-campaign-hud__error"
+                    role="alert"
+                    data-testid="map-canvas-campaign-seal-error">
+                    @if (sealErrorCount() > 0) {
+                      {{
+                        'aplus.knowledge.campaign_seal_frontier_not_empty'
+                          | translate: { count: sealErrorCount() }
+                      }}
+                    } @else {
+                      {{ sealError() | translate }}
+                    }
+                  </p>
+                }
+              </div>
+            } @else if (showCampaignHudEmpty()) {
+              <p
+                class="mc-campaign-hud mc-campaign-hud--empty"
+                data-testid="map-canvas-campaign-hud-empty">
+                <i class="fa-solid fa-dragon" aria-hidden="true"></i>
+                {{ 'aplus.knowledge.campaign_hud_empty' | translate }}
+              </p>
+            }
+
+            <chora-aplus-concept-lens-map
+              [concepts]="concepts()"
+              [edges]="conceptEdges()"
+              [focusId]="focalId()"
+              [rootId]="rootConceptId()"
+              [loading]="mutating()"
+              [shiftX]="lensShiftX()"
+              [lens]="lens()"
+              [roadsVisible]="roadsVisible()"
+              [campaign]="campaign()"
+              [fogGhosts]="fogGhosts()"
+              (select)="onSelect($event)"
+              (fogTap)="onFogTap($event)"
+              (makeRoot)="onMakeRoot()" />
+
+            <div class="mc-toolbar" data-testid="map-canvas-toolbar">
+              <button
+                type="button"
+                class="mc-tool"
+                (click)="openCreate()"
+                [disabled]="mutating()"
+                data-testid="map-canvas-create-toggle">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                {{ 'aplus.knowledge.add_concept' | translate }}
+              </button>
+              <button
+                type="button"
+                class="mc-tool"
+                (click)="openConnect()"
+                [disabled]="mutating() || concepts().length < 2"
+                data-testid="map-canvas-connect-toggle">
+                <i class="fa-solid fa-link" aria-hidden="true"></i>
+                {{ 'aplus.knowledge.connect' | translate }}
+              </button>
+            </div>
+
+            @if (lens() === 'mastery') {
+              <!-- Map-level PERSONAL "done for me" (ADR-213). Self-declared —
+                   NOT an operator-verified credential. -->
+              <div
+                class="mc-mastery-panel"
+                data-testid="map-canvas-mastery-panel">
+                <div class="mc-mastery-panel__text">
+                  <h3 class="mc-mastery-panel__title">
+                    {{ 'aplus.knowledge.done_for_me' | translate }}
+                  </h3>
+                  <p class="mc-mastery-panel__note">
+                    {{ 'aplus.knowledge.done_for_me_note' | translate }}
+                  </p>
+                  @if (isDone()) {
+                    <span
+                      class="mc-done-badge"
+                      data-testid="map-canvas-done-badge">
+                      <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                      {{ 'aplus.knowledge.done_for_me_state' | translate }}
+                    </span>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="mc-btn"
+                  [class.mc-btn--primary]="!isDone()"
+                  (click)="toggleDoneForMe()"
+                  [disabled]="mutating()"
+                  [attr.aria-pressed]="isDone()"
+                  data-testid="map-canvas-done-toggle">
+                  @if (isDone()) {
+                    {{ 'aplus.knowledge.reopen' | translate }}
+                  } @else {
+                    {{ 'aplus.knowledge.mark_done' | translate }}
+                  }
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Detail drawer: focal concept. Closed by default; OPENED by clicking
+               a concept hex; CLOSED by the × button or Escape. Long content
+               scrolls INSIDE the drawer so the page never grows tall behind it. -->
+          @if (detailOpen()) {
+            <!-- Non-modal dim: recedes the map WITHOUT blocking it, so the lens
+                 selector + toolbar stay live while the drawer is open. Close is
+                 via the × button or Escape (no click-outside). -->
+            <div
+              class="mc-detail-backdrop"
+              data-testid="map-canvas-detail-backdrop"
+              aria-hidden="true"></div>
+          }
+          <aside
+            id="mc-detail-drawer"
+            class="mc-detail mc-detail--drawer"
+            [class.is-open]="detailOpen()"
+            [attr.aria-hidden]="!detailOpen()"
+            [attr.aria-label]="'aplus.knowledge.details_panel' | translate"
+            data-testid="map-canvas-detail">
+            <div class="mc-detail__bar">
+              <span class="mc-detail__bar-title">
+                {{ 'aplus.knowledge.details_panel' | translate }}
+              </span>
+              <button
+                type="button"
+                class="mc-detail__close"
+                (click)="closeDetail()"
+                [attr.aria-label]="'aplus.knowledge.details_close' | translate"
+                data-testid="map-canvas-detail-close">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </div>
+            @if (focalConcept(); as fc) {
+              <h2 class="mc-detail__title" data-testid="map-canvas-detail-title">
+                {{ fc.title }}
+              </h2>
+
+              <!-- Tabs (owner: declutter → tabs). ORTHOGONAL to the map lens:
+                   the lens colours the map hexes, the tabs organise the drawer. -->
+              <div
+                class="mc-tabs"
+                role="tablist"
+                [attr.aria-label]="'aplus.knowledge.details_panel' | translate"
+                data-testid="map-canvas-tabs">
+                @for (t of tabs; track t.value) {
+                  <button
+                    type="button"
+                    class="mc-tab"
+                    role="tab"
+                    [id]="'mc-tab-' + t.value"
+                    [class.is-active]="activeTab() === t.value"
+                    [attr.aria-selected]="activeTab() === t.value"
+                    [attr.tabindex]="activeTab() === t.value ? 0 : -1"
+                    aria-controls="mc-drawer-tabpanel"
+                    (click)="setTab(t.value)"
+                    [attr.data-testid]="'map-canvas-tab-' + t.value">
+                    <i class="fa-solid {{ t.icon }}" aria-hidden="true"></i>
+                    {{ t.labelKey | translate }}
+                  </button>
+                }
+              </div>
+
+              @if (activeTab() === 'overview') {
+              <div
+                id="mc-drawer-tabpanel"
+                class="mc-tabpanel"
+                role="tabpanel"
+                aria-labelledby="mc-tab-overview"
+                tabindex="0"
+                data-testid="map-canvas-tabpanel-overview">
+
+              <span
+                class="mc-prov"
+                [attr.data-provenance]="focalProvenance()"
+                data-testid="map-canvas-provenance">
+                @switch (focalProvenance()) {
+                  @case ('you') {
+                    <span class="mc-prov__mark" aria-hidden="true">&#9679;</span>
+                    {{ 'aplus.knowledge.provenance_you' | translate }}
+                  }
+                  @case ('familiar') {
+                    <span class="mc-prov__mark" aria-hidden="true">&#10024;</span>
+                    {{ 'aplus.knowledge.provenance_familiar' | translate }}
+                  }
+                  @default {
+                    {{ 'aplus.knowledge.provenance_system' | translate }}
+                  }
+                }
+              </span>
+
+              <!-- Delete this concept (learner-owned soft-delete). Relocated to the
+                   TOP of the panel (CHO-2324 follow-up) so it is visible on open
+                   without scrolling. NEVER the root (it would orphan the map —
+                   hidden for the root). Two-step INLINE confirm; never
+                   window.confirm (a JS dialog would block the automation extension). -->
+              @if (!isFocalRoot()) {
+                <div class="mc-danger" data-testid="map-canvas-concept-delete">
+                  @if (deleteArmed()) {
+                    <span class="mc-danger__ask" role="alert">
+                      {{ 'aplus.knowledge.concept_delete_confirm' | translate }}
+                    </span>
+                    <div class="mc-danger__actions">
+                      <button
+                        type="button"
+                        class="mc-danger__yes"
+                        [disabled]="mutating()"
+                        (click)="deleteFocalConcept()"
+                        data-testid="map-canvas-concept-delete-yes">
+                        {{ 'aplus.knowledge.concept_delete_yes' | translate }}
+                      </button>
+                      <button
+                        type="button"
+                        class="mc-danger__no"
+                        (click)="disarmDelete()"
+                        data-testid="map-canvas-concept-delete-cancel">
+                        {{ 'aplus.knowledge.cancel' | translate }}
+                      </button>
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="mc-danger__trigger"
+                      (click)="armDelete()"
+                      data-testid="map-canvas-concept-delete-trigger">
+                      <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                      {{ 'aplus.knowledge.concept_delete' | translate }}
+                    </button>
+                  }
+                </div>
+              }
+
+              <div class="mc-terrain">
+                @if (fc.growthEdge) {
+                  <span
+                    class="mc-chip mc-chip--shaky"
+                    data-testid="map-canvas-shaky">
+                    {{ 'aplus.knowledge.shaky' | translate }}
+                  </span>
+                  @if (fc.growthEdge.isDue) {
+                    <span
+                      class="mc-chip mc-chip--due"
+                      data-testid="map-canvas-due">
+                      {{ 'aplus.knowledge.due' | translate }}
+                    </span>
+                  }
+                }
+                @if (fc.intent === 'remediate') {
+                  <span
+                    class="mc-chip mc-chip--remediate"
+                    data-testid="map-canvas-intent-remediate">
+                    {{ 'aplus.knowledge.intent_remediate' | translate }}
+                  </span>
+                }
+                @if (fc.intent === 'explore') {
+                  <span
+                    class="mc-chip mc-chip--explore"
+                    data-testid="map-canvas-intent-explore">
+                    {{ 'aplus.knowledge.intent_explore' | translate }}
+                  </span>
+                }
+                @if (fc.mastered) {
+                  <span
+                    class="mc-chip mc-chip--mastered"
+                    data-testid="map-canvas-mastered">
+                    {{ 'aplus.knowledge.mastered' | translate }}
+                  </span>
+                }
+              </div>
+
+              <!-- Roads through THIS concept (C4 slice 2): "also on <course>,
+                   module N". The ordinal is TEXT, never a deep link: the learn
+                   route reads courseId and no query params
+                   (course-learn.component.ts:73) and no path-scoped route
+                   exists, so a module anchor would point at a parameter no route
+                   reads. The link opens the course; the module is said, not
+                   linked. Absent entirely when the concept sits on no road, and
+                   when the graph came from the flat /concept-graph read, which
+                   sends no roads at all. -->
+              @if (focalRoads().length) {
+                <section class="mc-roads" data-testid="map-canvas-focal-roads">
+                  <h3 class="mc-roads__head">
+                    {{ 'aplus.knowledge.road_also_on' | translate }}
+                  </h3>
+                  <ul class="mc-roads__list">
+                    @for (road of focalRoads(); track road.pathId) {
+                      <li class="mc-roads__item">
+                        <a
+                          class="mc-roads__link"
+                          [class.is-unresolved]="road.label.isCourseId"
+                          [routerLink]="['/a/courses', road.courseId, 'learn']"
+                          [attr.aria-label]="
+                            (road.label.isCourseId
+                              ? 'aplus.knowledge.road_aria_unresolved'
+                              : 'aplus.knowledge.road_aria'
+                            ) | translate
+                          ">
+                          {{ road.label.text }}
+                        </a>
+                        <span
+                          class="mc-roads__module"
+                          [attr.data-position]="road.atomPosition"
+                          data-testid="road-module">
+                          {{
+                            'aplus.knowledge.road_module'
+                              | translate: { position: road.atomPosition }
+                          }}
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                </section>
+              }
+
+              <!-- Per-node objective / sub-goal (ADR-247, CHO-2328): the
+                   learner's own "what am I trying to achieve with this concept".
+                   Inline-editable; a small provenance pill mirrors the concept
+                   provenance idiom (● you / ✨ Companion). -->
+              <section class="mc-subgoal" data-testid="map-canvas-subgoal">
+                <h3 class="mc-subgoal__head">
+                  {{ 'aplus.knowledge.subgoal' | translate }}
+                </h3>
+                @if (subGoalEditing()) {
+                  <div class="mc-subgoal__edit" data-testid="subgoal-edit">
+                    <input
+                      #subGoalInput
+                      type="text"
+                      class="mc-input"
+                      [value]="subGoalDraft()"
+                      (input)="onSubGoalInput($event)"
+                      (keydown.enter)="saveSubGoal()"
+                      (keydown.escape)="onSubGoalEscape($event)"
+                      [attr.placeholder]="
+                        'aplus.knowledge.subgoal_placeholder' | translate
+                      "
+                      [attr.maxlength]="200"
+                      [attr.aria-label]="'aplus.knowledge.subgoal' | translate"
+                      data-testid="subgoal-input" />
+                    <div class="mc-actions">
+                      <button
+                        type="button"
+                        class="mc-btn mc-btn--primary"
+                        (click)="saveSubGoal()"
+                        [disabled]="mutating()"
+                        data-testid="subgoal-save">
+                        {{ 'aplus.knowledge.subgoal_save' | translate }}
+                      </button>
+                      <button
+                        type="button"
+                        class="mc-btn"
+                        (click)="cancelSubGoalEdit()"
+                        data-testid="subgoal-cancel">
+                        {{ 'aplus.knowledge.cancel' | translate }}
+                      </button>
+                    </div>
+                  </div>
+                } @else if (hasSubGoal()) {
+                  <button
+                    type="button"
+                    class="mc-subgoal__display"
+                    (click)="openSubGoalEdit()"
+                    data-testid="subgoal-display">
+                    <span class="mc-subgoal__text" data-testid="subgoal-text">
+                      {{ focalSubGoal() }}
+                    </span>
+                    @switch (subGoalProvenanceKind()) {
+                      @case ('you') {
+                        <span
+                          class="mc-prov mc-subgoal__pill"
+                          data-provenance="you"
+                          data-testid="subgoal-provenance-pill">
+                          <span class="mc-prov__mark" aria-hidden="true">&#9679;</span>
+                          {{ 'aplus.knowledge.subgoal_provenance_you' | translate }}
+                        </span>
+                      }
+                      @case ('familiar') {
+                        <span
+                          class="mc-prov mc-subgoal__pill"
+                          data-provenance="familiar"
+                          data-testid="subgoal-provenance-pill">
+                          <span class="mc-prov__mark" aria-hidden="true">&#10024;</span>
+                          {{ 'aplus.knowledge.subgoal_provenance_familiar' | translate }}
+                        </span>
+                      }
+                    }
+                    <i
+                      class="fa-solid fa-pen mc-subgoal__edit-icon"
+                      aria-hidden="true"></i>
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="mc-subgoal__set"
+                    (click)="openSubGoalEdit()"
+                    data-testid="subgoal-display">
+                    <i class="fa-solid fa-bullseye" aria-hidden="true"></i>
+                    {{ 'aplus.knowledge.subgoal_placeholder' | translate }}
+                  </button>
+                }
+              </section>
+
+              <!-- Campaign ladder + march / practice / restructure (WS-C7).
+                   Renders only when this map has a campaign; a won hex shows the
+                   province state + held-count and drops the march/practice/
+                   restructure actions (it has left the game). -->
+              @if (hasCampaign()) {
+                <section class="mc-campaign" data-testid="map-canvas-campaign-panel">
+                  <h3 class="mc-campaign__head">
+                    <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                    {{ 'aplus.knowledge.campaign_ladder' | translate }}
+                  </h3>
+
+                  <div
+                    class="mc-campaign__ladder"
+                    role="img"
+                    [attr.aria-label]="'aplus.knowledge.campaign_ladder' | translate"
+                    data-testid="map-canvas-campaign-ladder">
+                    @for (filled of focalRungPips(); track $index) {
+                      <span
+                        class="mc-campaign__pip"
+                        [class.is-filled]="filled"
+                        aria-hidden="true"></span>
+                    }
+                  </div>
+                  @if (focalNextRungLabelKey(); as nextKey) {
+                    <p class="mc-campaign__next" data-testid="map-canvas-campaign-next">
+                      {{
+                        'aplus.knowledge.campaign_rung_next'
+                          | translate: { label: (nextKey | translate) }
+                      }}
+                    </p>
+                  }
+
+                  <p class="mc-campaign__state" data-testid="map-canvas-campaign-state">
+                    <span
+                      class="mc-campaign-chip"
+                      [class.mc-campaign-chip--province]="focalWon()"
+                      [class.mc-campaign-chip--cooling]="!focalWon() && focalCooling()">
+                      @if (focalWon()) {
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                      } @else if (focalCooling()) {
+                        <i class="fa-solid fa-snowflake" aria-hidden="true"></i>
+                      } @else {
+                        <i class="fa-solid fa-mountain-sun" aria-hidden="true"></i>
+                      }
+                      {{ focalCampaignStateKey() | translate }}
+                    </span>
+                    @if (focalWon() && focalWonAt()) {
+                      @let wonAtText = (focalWonAt()! | date: 'mediumDate') ?? '';
+                      <span
+                        class="mc-campaign__won-at"
+                        data-testid="map-canvas-campaign-won-at">
+                        {{
+                          'aplus.knowledge.campaign_won_at'
+                            | translate: { date: wonAtText }
+                        }}
+                      </span>
+                    }
+                    @if (focalWon() && focalHeldCount() > 0) {
+                      <span
+                        class="mc-campaign-chip mc-campaign-chip--holds"
+                        data-testid="map-canvas-campaign-holds">
+                        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                        {{
+                          'aplus.knowledge.campaign_held_count'
+                            | translate: { count: focalHeldCount() }
+                        }}
+                      </span>
+                    }
+                  </p>
+
+                  @if (!focalWon()) {
+                    <div class="mc-campaign__actions">
+                      @if (focalIsCampaignFocus()) {
+                        <span
+                          class="mc-campaign-chip mc-campaign-chip--focus"
+                          data-testid="map-canvas-campaign-focus-here">
+                          <i class="fa-solid fa-chess-rook" aria-hidden="true"></i>
+                          {{ 'aplus.knowledge.campaign_focus_here' | translate }}
+                        </span>
+                        <button
+                          type="button"
+                          class="mc-btn"
+                          (click)="clearFocus()"
+                          [disabled]="mutating()"
+                          data-testid="map-canvas-campaign-stand-down">
+                          {{ 'aplus.knowledge.campaign_focus_clear' | translate }}
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="mc-btn mc-btn--primary"
+                          (click)="marchHere()"
+                          [disabled]="mutating()"
+                          data-testid="map-canvas-campaign-march-here">
+                          <i class="fa-solid fa-chess-rook" aria-hidden="true"></i>
+                          {{ 'aplus.knowledge.campaign_focus_set' | translate }}
+                        </button>
+                      }
+                      <button
+                        type="button"
+                        class="mc-btn"
+                        (click)="practiceHex()"
+                        data-testid="map-canvas-campaign-practice">
+                        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                        {{ 'aplus.knowledge.campaign_practice' | translate }}
+                      </button>
+                      @if (focalCanRestructure()) {
+                        @if (focalNeighbours().length > 0) {
+                          <button
+                            type="button"
+                            class="mc-btn"
+                            (click)="openMerge()"
+                            [disabled]="mutating()"
+                            data-testid="map-canvas-campaign-merge-toggle">
+                            <i class="fa-solid fa-object-group" aria-hidden="true"></i>
+                            {{ 'aplus.knowledge.campaign_merge' | translate }}
+                          </button>
+                        }
+                        <button
+                          type="button"
+                          class="mc-btn"
+                          (click)="openSplit()"
+                          [disabled]="mutating()"
+                          data-testid="map-canvas-campaign-split-toggle">
+                          <i class="fa-solid fa-object-ungroup" aria-hidden="true"></i>
+                          {{ 'aplus.knowledge.campaign_split' | translate }}
+                        </button>
+                      }
+                    </div>
+                  }
+
+                  @if (campaignActionError()) {
+                    <p
+                      class="mc-campaign__error"
+                      role="alert"
+                      data-testid="map-canvas-campaign-error">
+                      {{ campaignActionError() | translate }}
+                    </p>
+                  }
+
+                  @if (mergeOpen()) {
+                    <div
+                      class="mc-campaign__restructure"
+                      data-testid="map-canvas-campaign-merge">
+                      <p class="mc-campaign__restructure-hint">
+                        {{ 'aplus.knowledge.campaign_merge_pick' | translate }}
+                      </p>
+                      <ul class="mc-campaign__pick-list">
+                        @for (n of focalNeighbours(); track n.conceptId) {
+                          <li>
+                            <button
+                              type="button"
+                              class="mc-node"
+                              (click)="confirmMerge(n.conceptId)"
+                              [disabled]="mutating()"
+                              [attr.data-testid]="
+                                'map-canvas-campaign-merge-into-' + n.conceptId
+                              ">
+                              {{ n.title }}
+                            </button>
+                          </li>
+                        }
+                      </ul>
+                      <button
+                        type="button"
+                        class="mc-btn"
+                        (click)="cancelMerge()"
+                        data-testid="map-canvas-campaign-merge-cancel">
+                        {{ 'aplus.knowledge.cancel' | translate }}
+                      </button>
+                    </div>
+                  }
+
+                  @if (splitOpen()) {
+                    <div
+                      class="mc-campaign__restructure"
+                      data-testid="map-canvas-campaign-split">
+                      <p class="mc-campaign__restructure-hint">
+                        {{ 'aplus.knowledge.campaign_split_title' | translate }}
+                      </p>
+                      <ul class="mc-campaign__split-list">
+                        @for (
+                          child of splitChildren();
+                          track $index;
+                          let i = $index
+                        ) {
+                          <li class="mc-campaign__split-row">
+                            <label
+                              class="mc-campaign__split-focus"
+                              [attr.aria-label]="
+                                'aplus.knowledge.campaign_split_focus_child'
+                                  | translate
+                              ">
+                              <input
+                                type="radio"
+                                name="mc-split-focus"
+                                [checked]="splitFocusIndex() === i"
+                                (change)="setSplitFocusIndex(i)"
+                                [attr.data-testid]="
+                                  'map-canvas-campaign-split-focus-' + i
+                                " />
+                            </label>
+                            <input
+                              type="text"
+                              class="mc-input"
+                              [value]="child"
+                              (input)="onSplitChildInput(i, $event)"
+                              [attr.placeholder]="
+                                'aplus.knowledge.campaign_split_child_placeholder'
+                                  | translate
+                              "
+                              [attr.maxlength]="128"
+                              [attr.data-testid]="
+                                'map-canvas-campaign-split-child-' + i
+                              " />
+                          </li>
+                        }
+                      </ul>
+                      <div class="mc-actions">
+                        @if (splitChildren().length < 6) {
+                          <button
+                            type="button"
+                            class="mc-btn"
+                            (click)="addSplitChild()"
+                            data-testid="map-canvas-campaign-split-add">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                            {{ 'aplus.knowledge.campaign_split_add_child' | translate }}
+                          </button>
+                        }
+                        <button
+                          type="button"
+                          class="mc-btn mc-btn--primary"
+                          (click)="confirmSplit()"
+                          [disabled]="mutating() || !canSplit()"
+                          data-testid="map-canvas-campaign-split-confirm">
+                          {{ 'aplus.knowledge.campaign_split_confirm' | translate }}
+                        </button>
+                        <button
+                          type="button"
+                          class="mc-btn"
+                          (click)="cancelSplit()"
+                          data-testid="map-canvas-campaign-split-cancel">
+                          {{ 'aplus.knowledge.cancel' | translate }}
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </section>
+              }
+
+              <!-- Growth diagnosis for THIS concept (fail-soft join). Tab-gated
+                   (Overview) — always available, no longer lens-gated. Populates
+                   once the Growth lens has loaded the learner's Growth Edges. -->
+              <section class="mc-diagnosis" data-testid="map-canvas-diagnosis">
+                  <h3 class="mc-diagnosis__head">
+                    <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                    {{ 'aplus.knowledge.diagnosis' | translate }}
+                  </h3>
+                  @if (focalDiagnosis(); as dx) {
+                    @if (dx.descriptor.summary) {
+                      <p
+                        class="mc-diagnosis__summary"
+                        data-testid="map-canvas-diagnosis-summary">
+                        {{ dx.descriptor.summary }}
+                      </p>
+                    }
+                    @if (focalMisconceptions().length > 0) {
+                      <div
+                        class="mc-diagnosis__group"
+                        data-testid="map-canvas-misconceptions">
+                        <h4 class="mc-diagnosis__label">
+                          {{ 'aplus.knowledge.misconceptions' | translate }}
+                        </h4>
+                        <ul class="mc-diagnosis__list">
+                          @for (m of focalMisconceptions(); track m) {
+                            <li>{{ m }}</li>
+                          }
+                        </ul>
+                      </div>
+                    }
+                    @if (focalTryNext().length > 0) {
+                      <div
+                        class="mc-diagnosis__group"
+                        data-testid="map-canvas-try-next">
+                        <h4 class="mc-diagnosis__label">
+                          {{ 'aplus.knowledge.try_next' | translate }}
+                        </h4>
+                        <ul class="mc-diagnosis__list">
+                          @for (a of focalTryNext(); track a) {
+                            <li>{{ a }}</li>
+                          }
+                        </ul>
+                      </div>
+                    }
+                    @if (focalDrills().length > 0) {
+                      <button
+                        type="button"
+                        class="mc-btn mc-btn--practice"
+                        (click)="requestPractice()"
+                        data-testid="map-canvas-practice">
+                        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                        {{ 'aplus.knowledge.practice' | translate }}
+                        <span class="mc-diagnosis__count">
+                          {{ focalDrills().length }}
+                        </span>
+                      </button>
+                    }
+                  } @else if (edgesLoading()) {
+                    <p
+                      class="mc-muted"
+                      data-testid="map-canvas-diagnosis-loading">
+                      {{ 'aplus.knowledge.diagnosis_loading' | translate }}
+                    </p>
+                  } @else if (edgesFailed()) {
+                    <p
+                      class="mc-muted"
+                      data-testid="map-canvas-diagnosis-error">
+                      {{ 'aplus.knowledge.diagnosis_error' | translate }}
+                    </p>
+                  } @else if (fc.growthEdge || fc.intent === 'remediate') {
+                    <!-- Reads shaky on the map (an evidenced growthEdge OR a
+                         remediate learning-edge — isShakyNode folds both) but no
+                         detail joined (thin stub / key mismatch): acknowledge it +
+                         point at a diagnosis — never deny it with "no weakness". -->
+                    <p
+                      class="mc-muted"
+                      data-testid="map-canvas-shaky-undiagnosed">
+                      {{ 'aplus.knowledge.shaky_undiagnosed' | translate }}
+                    </p>
+                  } @else {
+                    <p class="mc-muted" data-testid="map-canvas-no-weakness">
+                      {{ 'aplus.knowledge.no_weakness' | translate }}
+                    </p>
+                  }
+                </section>
+
+              <!-- Mastery band (per-node) as INFORMATION, not a gate (ADR-213 /
+                   design §5). Tab-gated (Overview), no longer lens-gated. -->
+              @let pct = focalMasteryPercent();
+              <section class="mc-band" data-testid="map-canvas-mastery-band">
+                  <h3 class="mc-band__head">
+                    <i class="fa-solid fa-award" aria-hidden="true"></i>
+                    {{ 'aplus.knowledge.mastery_band' | translate }}
+                  </h3>
+                  @if (pct !== null) {
+                    <div
+                      class="mc-band__meter"
+                      role="img"
+                      [attr.aria-label]="
+                        ('aplus.knowledge.mastery_info' | translate) +
+                        ' ' +
+                        pct +
+                        '%'
+                      ">
+                      <div class="mc-band__fill" [style.width.%]="pct"></div>
+                    </div>
+                    <p class="mc-muted mc-band__note">
+                      {{ 'aplus.knowledge.mastery_info' | translate }}
+                    </p>
+                  } @else {
+                    <p class="mc-muted" data-testid="map-canvas-mastery-unknown">
+                      {{ 'aplus.knowledge.mastery_unknown' | translate }}
+                    </p>
+                  }
+                </section>
+
+              <section class="mc-atoms">
+                <h3 class="mc-atoms__head">
+                  {{ 'aplus.knowledge.atoms_heading' | translate }}
+                  ({{ fc.atomRefs.length }})
+                </h3>
+                @if (fc.atomRefs.length === 0) {
+                  <p class="mc-muted" data-testid="map-canvas-atoms-empty">
+                    {{ 'aplus.knowledge.atoms_none' | translate }}
+                  </p>
+                } @else {
+                  <ul class="mc-atom-list" data-testid="map-canvas-atoms">
+                    @for (ref of fc.atomRefs; track ref; let i = $index) {
+                      <li class="mc-atom">
+                        <code class="mc-atom__id">{{ ref }}</code>
+                        <button
+                          type="button"
+                          class="mc-atom__detach"
+                          (click)="detachAtom(ref)"
+                          [disabled]="mutating()"
+                          [attr.data-testid]="'map-canvas-atom-detach-' + i"
+                          [attr.aria-label]="
+                            ('aplus.knowledge.detach' | translate) + ': ' + ref
+                          ">
+                          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                }
+
+                <button
+                  type="button"
+                  class="mc-btn mc-btn--attach"
+                  (click)="togglePicker()"
+                  [attr.aria-expanded]="showPicker()"
+                  data-testid="map-canvas-attach-toggle">
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  @if (showPicker()) {
+                    {{ 'aplus.knowledge.attach_atoms_done' | translate }}
+                  } @else {
+                    {{ 'aplus.knowledge.attach_atoms' | translate }}
+                  }
+                </button>
+                @if (showPicker()) {
+                  <div class="mc-picker" data-testid="map-canvas-picker">
+                    <!-- ADR-243: open on the ENROLMENT entitlement. A learner
+                         attaching to their own map wants the atoms they are
+                         already studying; the reuse-entitled corpus admits
+                         almost nothing for them (measured 2 of 367). Both
+                         sources stay reachable via the source chips, and every
+                         row is badged with the entitlement that admitted it.
+                         This is the ONE host that may offer the enrolment
+                         source: attaching to your own private map is not a
+                         reuse act, so ADR-229's consent gate does not govern it.
+                         Every other host of this picker builds shareable work
+                         and must keep the reuse-only entitlement. -->
+                    <chora-aplus-atom-question-picker
+                      defaultSource="enrolled"
+                      [offerEnrolledSource]="true"
+                      (pickedQuestion)="onAtomPicked($event)"
+                      (pickedQuestions)="onAtomsPicked($event)" />
+                  </div>
+                }
+              </section>
+
+              <!-- Practice today's dose — the live drill / dose surface, scoped
+                   to the focal concept's growth edge when one exists. -->
+              <a
+                class="mc-dose-link"
+                routerLink="/a/daily-dose"
+                [queryParams]="doseQueryParams()"
+                data-testid="map-canvas-dose-link">
+                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                {{ 'aplus.knowledge.familiar_daily_dose' | translate }}
+              </a>
+              </div>
+              } @else {
+                <!-- Suggestions / Familiar / Diagnose tabs share ONE Familiar
+                     panel instance; [section] re-slices it with the active tab
+                     (no remount / refetch on tab switch). -->
+                <div
+                  id="mc-drawer-tabpanel"
+                  class="mc-tabpanel"
+                  role="tabpanel"
+                  [attr.aria-labelledby]="'mc-tab-' + activeTab()"
+                  tabindex="0"
+                  [attr.data-testid]="'map-canvas-tabpanel-' + activeTab()">
+                  <chora-aplus-map-familiar-panel
+                    [goalId]="goalId()"
+                    [attachedFamiliarId]="graph()?.attachedFamiliarId"
+                    [focalConceptId]="focalId()"
+                    [concepts]="concepts()"
+                    [focalWon]="focalWon()"
+                    [isRoot]="isFocalRoot()"
+                    [rootConceptId]="rootConceptId() ?? ''"
+                    [section]="panelSection()"
+                    [doseQueryParams]="doseQueryParams()"
+                    [diagnoseScope]="diagnoseScope()"
+                    (changed)="refresh()"
+                    (diagnosed)="onDiagnosed()"
+                    (practiceRequested)="practiceHex()"
+                    data-testid="map-canvas-familiar" />
+                </div>
+              }
+            } @else {
+              <p class="mc-muted" data-testid="map-canvas-detail-empty">
+                {{ 'aplus.knowledge.detail_empty' | translate }}
+              </p>
+            }
+          </aside>
+        </div>
+      }
+
+      <!-- Seal ceremony (Topology C progressive overlay). The frontier fell —
+           celebrate the fortified provinces (staggered reveal, reduced-motion
+           honoured in SCSS), then the map has already silently refetched. -->
+      @if (sealResult(); as seal) {
+        <div
+          class="mc-seal-backdrop"
+          data-testid="map-canvas-seal-backdrop"
+          aria-hidden="true"></div>
+        <div
+          class="mc-seal glass-panel"
+          role="dialog"
+          aria-modal="true"
+          [attr.aria-label]="'aplus.knowledge.campaign_seal_title' | translate"
+          data-testid="map-canvas-seal-modal">
+          <div class="mc-seal__crest" aria-hidden="true">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h2 class="mc-seal__title">
+            {{ 'aplus.knowledge.campaign_seal_title' | translate }}
+          </h2>
+          <p class="mc-seal__body" data-testid="map-canvas-seal-body">
+            @if (seal.isReseal) {
+              {{
+                'aplus.knowledge.campaign_seal_reseal'
+                  | translate: { count: seal.nodesWon }
+              }}
+            } @else {
+              {{
+                'aplus.knowledge.campaign_seal_celebrate'
+                  | translate: { count: seal.nodesWon }
+              }}
+            }
+          </p>
+          <button
+            type="button"
+            class="mc-btn mc-btn--primary"
+            (click)="dismissSeal()"
+            data-testid="map-canvas-seal-dismiss">
+            {{ 'aplus.knowledge.details_close' | translate }}
+          </button>
+        </div>
+      }
+    }
+  }
+</section>

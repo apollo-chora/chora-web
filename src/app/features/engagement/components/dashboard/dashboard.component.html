@@ -1,0 +1,129 @@
+<div
+  class="dashboard"
+  role="main"
+  aria-label="Learner Dashboard"
+  data-testid="dashboard">
+
+  @switch (dashboardState().status) {
+    @case ('loading') {
+      <div class="dashboard__loading" role="status" aria-label="Loading dashboard" data-testid="dashboard-loading">
+        <div class="dashboard__spinner"></div>
+        <p>{{ 'engagement.dashboard.loading' | translate }}</p>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="dashboard__error" role="alert" data-testid="dashboard-error">
+        <span class="material-icons-outlined" aria-hidden="true">error_outline</span>
+        <p>{{ 'engagement.dashboard.error' | translate }}</p>
+        <button
+          class="dashboard__btn dashboard__btn--primary"
+          (click)="retry()"
+          data-testid="dashboard-retry">
+          {{ 'engagement.dashboard.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    @case ('success') {
+      <div class="dashboard__grid" data-testid="dashboard-grid">
+        <!-- Exam Day Summary Widget (top, most prominent) -->
+        @if (examReadiness(); as examState) {
+          @if (examState.status === 'success') {
+            <div class="dashboard__widget dashboard__widget--exam-summary" role="region" aria-label="Exam Day Summary" data-testid="dashboard-exam-summary">
+              <chora-exam-summary-widget [readiness]="examState.data" />
+            </div>
+          }
+        }
+
+        <!-- DailyDose Widget (top-left, prominent) -->
+        <div class="dashboard__widget dashboard__widget--dose" role="region" aria-label="DailyDose" data-testid="dashboard-dose-widget">
+          <div class="dashboard__dose">
+            <div class="dashboard__dose-header">
+              <span class="material-icons-outlined" aria-hidden="true">bolt</span>
+              <h3>{{ 'engagement.daily-dose.title' | translate }}</h3>
+            </div>
+            @switch (dailyDoseStatus()) {
+              @case ('completed') {
+                <p class="dashboard__dose-done" data-testid="dose-completed">
+                  <span class="material-icons-outlined" aria-hidden="true">check_circle</span>
+                  {{ 'engagement.daily-dose.completed' | translate }}
+                </p>
+              }
+              @case ('available') {
+                <button
+                  class="dashboard__btn dashboard__btn--primary"
+                  (click)="openDailyDose()"
+                  data-testid="dose-start-btn">
+                  {{ 'engagement.daily-dose.start' | translate }}
+                </button>
+              }
+              @default {
+                <p class="dashboard__dose-empty" data-testid="dose-empty">
+                  {{ 'engagement.daily-dose.all-caught-up' | translate }}
+                </p>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Streak Widget (top-right) -->
+        @if (streak(); as streakData) {
+          <div class="dashboard__widget dashboard__widget--streak">
+            <chora-streak-widget [streak]="streakData" />
+          </div>
+        }
+
+        <!-- XP & Level Widget -->
+        @if (xp(); as xpData) {
+          <div class="dashboard__widget dashboard__widget--xp">
+            <chora-xp-widget [xp]="xpData" />
+          </div>
+        }
+
+        <!-- Goal Challenges Widget -->
+        <div class="dashboard__widget dashboard__widget--goals">
+          <chora-goal-widget
+            [goals]="goals()"
+            (goalAccepted)="onGoalAccepted($event)" />
+        </div>
+
+        <!-- Path Progress Widget -->
+        <div class="dashboard__widget dashboard__widget--paths">
+          <chora-path-progress-widget
+            [paths]="pathProgress()"
+            (pathSelected)="onPathSelected($event)" />
+        </div>
+
+        <!-- Leaderboard Widget -->
+        @if (leaderboard(); as lb) {
+          <div class="dashboard__widget dashboard__widget--leaderboard">
+            <chora-leaderboard-widget
+              [leaderboard]="lb"
+              (periodChanged)="onLeaderboardPeriodChanged($event)" />
+          </div>
+        }
+
+        <!-- AI Recommendation Widget (full-width horizontal scroll) -->
+        <div class="dashboard__widget dashboard__widget--recommendations" role="region" aria-label="AI Recommendations" data-testid="dashboard-recommendations">
+          <chora-recommendation-widget />
+        </div>
+
+        <!-- Exam Coaching Widget -->
+        <div class="dashboard__widget dashboard__widget--exam-coaching" role="region" aria-label="Exam Coaching" data-testid="dashboard-exam-coaching">
+          <chora-exam-coaching-widget />
+        </div>
+
+        <!-- Retention Alert Widget -->
+        <div class="dashboard__widget dashboard__widget--retention" role="region" aria-label="Retention Alert" data-testid="dashboard-retention">
+          <chora-retention-alert />
+        </div>
+
+        <!-- Nudge Preview Widget -->
+        <div class="dashboard__widget dashboard__widget--nudge" role="region" aria-label="Streak Nudge" data-testid="dashboard-nudge">
+          <chora-nudge-preview />
+        </div>
+      </div>
+    }
+  }
+</div>

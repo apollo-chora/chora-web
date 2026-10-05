@@ -1,0 +1,84 @@
+// C+ (Circle+) flat design tokens — ADR-196.
+//
+// Scoped to the C+ surface ONLY. Built exclusively on the canonical
+// `--chora-*` token vocabulary (`src/styles/_tokens.scss`, 8px grid). C+
+// components opt OUT of glassmorphism by NOT using `.glass-panel` /
+// `.surface-cplus` / the polyglass aliases (`--glass-bg`, `--primary`,
+// `--text-main`...) and instead consuming the `--cplus-*` aliases below,
+// which resolve to `--chora-*`.
+//
+// Anti-slop contract (enforced by review + specs):
+//  - NO gradient as a primary design element (brand wordmark stays flat).
+//  - NO `backdrop-filter: blur` — surfaces are solid.
+//  - NO colored side-stripes (`border-inline-start: 4px solid <accent>`).
+//  - NO neon glows / aurora blobs — shadows via `--chora-shadow-*` only.
+//  - Specific-property transitions (color/border-color/background), 150–200ms.
+//  - Visible `:focus-visible` ring on every interactive primitive.
+//  - `@media (prefers-reduced-motion: reduce)` kills all motion.
+//
+// These aliases exist so a C+ component never reaches past `--chora-*` —
+// a single change here re-skins the whole surface consistently.
+
+:root {
+  // Surfaces — solid, never blurred.
+  --cplus-surface: var(--chora-color-surface-1); // #ffffff — card body
+  --cplus-surface-raised: var(--chora-color-surface-0); // #fafafa — page bg
+  --cplus-surface-muted: var(--chora-color-surface-2); // #f5f5f5 — inset panels
+
+  // Text.
+  --cplus-text: var(--chora-color-text-primary); // #212121
+  --cplus-text-secondary: var(--chora-color-text-secondary); // #616161
+  --cplus-text-disabled: var(--chora-color-text-disabled); // #9e9e9e
+
+  // Lines.
+  --cplus-border: var(--chora-color-border); // #e0e0e0 — hairline
+  --cplus-border-strong: #bdbdbd; // divider emphasis
+
+  // Single reserved accent — social cyan, SOLID only (tint/icon/badge),
+  // never a gradient fill, never text-clip. Paired with a strong variant
+  // for AA text on the tinted bg (the --chora-color-primary-strong pattern).
+  --cplus-accent: var(--chora-color-social); // #00bcd4
+  --cplus-accent-tint: rgba(0, 188, 212, 0.12);
+  --cplus-accent-strong: #0097a7; // AA-safe on --cplus-accent-tint over white
+
+  // Semantic (mirror the canonical semantic tokens).
+  --cplus-success: var(--chora-color-success);
+  --cplus-warning: var(--chora-color-warning);
+  --cplus-danger: var(--chora-color-danger);
+
+  // Spacing — the unified 8px grid.
+  --cplus-space-xs: var(--chora-space-xs); // 4px
+  --cplus-space-sm: var(--chora-space-sm); // 8px
+  --cplus-space-md: var(--chora-space-md); // 16px
+  --cplus-space-lg: var(--chora-space-lg); // 24px
+  --cplus-space-xl: var(--chora-space-xl); // 32px
+  --cplus-space-2xl: var(--chora-space-2xl); // 48px
+
+  // Radii — varied by role, NOT rounded-2xl-uniform.
+  --cplus-radius-card: var(--chora-radius-lg); // 12px — cards
+  --cplus-radius-control: var(--chora-radius-md); // 8px — inputs/buttons
+  --cplus-radius-pill: var(--chora-radius-full); // badges
+
+  // Shadows — soft, neutral, alpha.
+  --cplus-shadow-sm: var(--chora-shadow-sm);
+  --cplus-shadow-md: var(--chora-shadow-md);
+  --cplus-shadow-lg: var(--chora-shadow-lg);
+
+  // Motion — specific properties only; consumers must NOT use `transition: all`.
+  --cplus-transition-fast: var(--chora-transition-fast); // 150ms
+  --cplus-transition-normal: var(--chora-transition-normal); // 200ms
+
+  // Focus — visible ring, never relying on color alone.
+  --cplus-focus-ring: var(--chora-color-primary); // #1976d2
+  --cplus-focus-ring-offset: 2px;
+}
+
+// Honour the reduced-motion preference at the surface root. Any motion a C+
+// component introduces is neutralised here so we don't rely on every author
+// remembering the guard.
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cplus-transition-fast: 0ms;
+    --cplus-transition-normal: 0ms;
+  }
+}

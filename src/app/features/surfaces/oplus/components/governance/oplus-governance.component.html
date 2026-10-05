@@ -1,0 +1,569 @@
+<div
+  class="oplus-governance surface-oplus"
+  data-testid="oplus-governance-root"
+  [attr.data-state]="state().state"
+>
+  <!-- Header -->
+  <header class="oplus-governance__header glass-panel">
+    <div class="oplus-governance__title-row">
+      <h1
+        id="oplus-governance-heading"
+        class="oplus-governance__title surface-accent-text"
+        data-testid="oplus-governance-title"
+      >
+        {{ 'oplus.governance.title' | translate }}
+      </h1>
+      <span
+        class="oplus-governance__live"
+        data-testid="oplus-governance-live"
+        role="status"
+        [attr.data-variant]="badge()"
+        [attr.aria-label]="badgeKey() | translate"
+      >
+        <span class="oplus-governance__live-dot" aria-hidden="true"></span>
+        {{ badgeKey() | translate }}
+      </span>
+    </div>
+    <p class="oplus-governance__subtitle">
+      {{ 'oplus.governance.subtitle' | translate }}
+    </p>
+  </header>
+
+  @if (isAuditorGated()) {
+    <section
+      class="glass-panel oplus-governance__gate"
+      data-testid="oplus-governance-auditor-gate"
+      role="alert"
+    >
+      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+      <h2>{{ 'oplus.errors.auditor_required_title' | translate }}</h2>
+      <p>{{ 'oplus.errors.auditor_required' | translate }}</p>
+    </section>
+  } @else if (hasErrorOnly()) {
+    <section
+      class="glass-panel oplus-governance__error"
+      data-testid="oplus-governance-error"
+      role="alert"
+    >
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p>{{ errorKey() | translate }}</p>
+    </section>
+  } @else {
+    <!-- Tab navigation -->
+    <div
+      class="oplus-governance__tablist glass-panel"
+      role="tablist"
+      aria-labelledby="oplus-governance-heading"
+    >
+      <button
+        type="button"
+        role="tab"
+        [id]="tabId('decisions')"
+        [attr.aria-selected]="isActive('decisions')"
+        [attr.aria-controls]="tabPanelId('decisions')"
+        [attr.tabindex]="isActive('decisions') ? 0 : -1"
+        class="oplus-governance__tab"
+        [class.is-active]="isActive('decisions')"
+        data-testid="oplus-governance-tab-decisions"
+        (click)="selectTab('decisions')"
+      >
+        <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+        <span>{{ 'oplus.governance.tab_decisions' | translate }}</span>
+        <span class="oplus-governance__chip">{{ decisionCount() }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [id]="tabId('oversight')"
+        [attr.aria-selected]="isActive('oversight')"
+        [attr.aria-controls]="tabPanelId('oversight')"
+        [attr.tabindex]="isActive('oversight') ? 0 : -1"
+        class="oplus-governance__tab"
+        [class.is-active]="isActive('oversight')"
+        data-testid="oplus-governance-tab-oversight"
+        (click)="selectTab('oversight')"
+      >
+        <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+        <span>{{ 'oplus.governance.tab_oversight' | translate }}</span>
+        <span class="oplus-governance__chip">{{ hitlCount() }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [id]="tabId('data')"
+        [attr.aria-selected]="isActive('data')"
+        [attr.aria-controls]="tabPanelId('data')"
+        [attr.tabindex]="isActive('data') ? 0 : -1"
+        class="oplus-governance__tab"
+        [class.is-active]="isActive('data')"
+        data-testid="oplus-governance-tab-data"
+        (click)="selectTab('data')"
+      >
+        <i class="fa-solid fa-database" aria-hidden="true"></i>
+        <span>{{ 'oplus.governance.tab_data' | translate }}</span>
+        <span class="oplus-governance__chip">{{ lineageCount() }}</span>
+      </button>
+    </div>
+
+    <!-- DECISIONS panel -->
+    @if (isActive('decisions')) {
+      <section
+        role="tabpanel"
+        [id]="tabPanelId('decisions')"
+        [attr.aria-labelledby]="tabId('decisions')"
+        tabindex="0"
+        class="glass-panel oplus-governance__panel"
+        data-testid="oplus-governance-panel-decisions"
+      >
+        <h2
+          class="oplus-governance__section-heading dim-d1"
+          data-testid="oplus-governance-decisions-heading"
+        >
+          <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+          {{ 'oplus.governance.decisions_heading' | translate }}
+          <span class="dim-badge dim-d1">D1</span>
+        </h2>
+        <p class="oplus-governance__panel-subtitle">
+          {{ 'oplus.governance.decisions_subtitle' | translate }}
+        </p>
+
+        @if (data(); as gov) {
+          <p
+            class="oplus-governance__data-currency oplus-governance__cell-muted"
+            role="note"
+            data-testid="oplus-governance-data-currency"
+          >
+            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+            {{ 'oplus.governance.data_currency_last' | translate }}
+            {{ gov.window_days ?? 90 }}
+            {{ 'oplus.governance.data_currency_days_asof' | translate }}
+            {{ fmtTime(gov.fetched_at) }}
+          </p>
+        }
+
+        @if (decisions().length === 0) {
+          <p
+            class="oplus-governance__empty"
+            data-testid="oplus-governance-decisions-empty"
+          >
+            {{ 'oplus.governance.decisions_empty' | translate }}
+          </p>
+        } @else {
+          <div class="oplus-governance__table-wrap">
+            <table
+              class="oplus-governance__table"
+              [attr.aria-label]="'oplus.governance.decisions_table_aria' | translate"
+            >
+              <caption class="oplus-governance__caption">
+                {{ 'oplus.governance.decisions_table_caption' | translate }}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'oplus.governance.col_decision' | translate }}</th>
+                  <th scope="col">{{ 'oplus.governance.col_workflow' | translate }}</th>
+                  <th scope="col">{{ 'oplus.governance.col_agent' | translate }}</th>
+                  <th scope="col">{{ 'oplus.governance.col_time' | translate }}</th>
+                  <th scope="col">{{ 'oplus.governance.col_trace' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of decisions(); track d.id) {
+                  <tr
+                    class="oplus-governance__row oplus-governance__row--clickable"
+                    [class.is-expanded]="isExpanded(d.id)"
+                    [attr.data-testid]="'oplus-governance-decision-row-' + d.id"
+                    [attr.data-verdict]="d.decision_type"
+                    (click)="toggleRow(d.id)"
+                  >
+                    <td class="oplus-governance__cell-mono">
+                      <button
+                        type="button"
+                        class="oplus-governance__disclosure"
+                        (click)="toggleRow(d.id); $event.stopPropagation()"
+                        [attr.aria-expanded]="isExpanded(d.id)"
+                        [attr.aria-controls]="'oplus-governance-reasoning-' + d.id"
+                        [attr.data-testid]="'oplus-governance-disclosure-' + d.id"
+                        [attr.aria-label]="
+                          ('oplus.governance.reasoning_toggle_aria' | translate) + ' ' + d.id
+                        "
+                      >
+                        <i
+                          class="fa-solid"
+                          [class.fa-chevron-down]="isExpanded(d.id)"
+                          [class.fa-chevron-right]="!isExpanded(d.id)"
+                          aria-hidden="true"
+                        ></i>
+                        <span class="oplus-governance__verdict" [attr.data-verdict]="d.decision_type">{{
+                          verdictLabel(d.decision_type)
+                        }}</span>
+                      </button>
+                    </td>
+                    <td class="oplus-governance__cell-mono">{{ d.workflow_id }}</td>
+                    <td>{{ d.agent }}</td>
+                    <td class="oplus-governance__cell-muted">{{ fmtTime(d.timestamp) }}</td>
+                    <td>
+                      @if (d.cloud_trace_url !== null) {
+                        <a
+                          class="oplus-deep-link"
+                          [href]="d.cloud_trace_url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          (click)="$event.stopPropagation()"
+                          [attr.data-testid]="'oplus-governance-trace-' + d.id"
+                          [attr.aria-label]="
+                            ('oplus.governance.view_trace_aria' | translate) + ' ' + d.id
+                          "
+                        >
+                          <i class="fa-solid fa-stream" aria-hidden="true"></i>
+                          {{ 'oplus.governance.view_in_cloud_trace' | translate }}
+                          <i
+                            class="fa-solid fa-arrow-up-right-from-square oplus-deep-link__icon"
+                            aria-hidden="true"
+                          ></i>
+                        </a>
+                      } @else {
+                        <span class="oplus-governance__cell-muted">–</span>
+                      }
+                    </td>
+                  </tr>
+                  @if (isExpanded(d.id)) {
+                    <tr
+                      class="oplus-governance__reasoning-row"
+                      [id]="'oplus-governance-reasoning-' + d.id"
+                      [attr.data-testid]="'oplus-governance-reasoning-' + d.id"
+                    >
+                      <td [attr.colspan]="6">
+                        <div class="oplus-governance__reasoning-panel">
+                          <h3 class="oplus-governance__reasoning-heading">
+                            {{ 'oplus.governance.reasoning_chain_heading' | translate }}
+                            <span class="oplus-governance__cell-mono">{{ d.workflow_id }}</span>
+                          </h3>
+                          <p class="oplus-governance__reasoning-meta oplus-governance__cell-muted">
+                            {{ 'oplus.governance.decision_id_label' | translate }}
+                            <span
+                              class="oplus-governance__cell-mono"
+                              [attr.data-testid]="'oplus-governance-decision-id-' + d.id"
+                              >{{ d.id }}</span
+                            >
+                          </p>
+                          <ol class="oplus-governance__reasoning-steps">
+                            @for (step of workflowChainOf(d.id); track step.id) {
+                              <li
+                                class="oplus-governance__reasoning-step"
+                                [class.is-focused]="step.id === d.id"
+                                [attr.data-testid]="'oplus-governance-reasoning-step-' + step.id"
+                              >
+                                <div class="oplus-governance__reasoning-step-head">
+                                  <span class="oplus-governance__reasoning-agent">{{ step.agent }}</span>
+                                  <span
+                                    class="oplus-governance__verdict-pill"
+                                    [attr.data-verdict]="step.decision_type"
+                                  >{{ verdictLabel(step.decision_type) }}</span>
+                                </div>
+                                @if (hasReasoning(step)) {
+                                  <p class="oplus-governance__reasoning-text">{{ step.reasoning_summary }}</p>
+                                } @else {
+                                  <p class="oplus-governance__reasoning-text oplus-governance__cell-muted">
+                                    {{ 'oplus.governance.reasoning_absent' | translate }}
+                                  </p>
+                                }
+                                @if (step.input_hash || step.output_hash) {
+                                  <p class="oplus-governance__reasoning-citation oplus-governance__cell-muted">
+                                    {{ 'oplus.governance.reasoning_citation' | translate }}
+                                    {{ step.input_hash || '–' }} / {{ step.output_hash || '–' }}
+                                  </p>
+                                }
+                                @if (hasPromptConditions(step)) {
+                                  <div
+                                    class="oplus-governance__prompt-conditions"
+                                    [attr.data-testid]="'oplus-governance-prompt-conditions-' + step.id"
+                                  >
+                                    <span class="oplus-governance__prompt-conditions-label">
+                                      {{ 'oplus.governance.prompt_conditions_heading' | translate }}
+                                    </span>
+                                    <dl class="oplus-governance__prompt-conditions-list">
+                                      @for (entry of conditionEntries(step); track entry.key) {
+                                        <div
+                                          class="oplus-governance__prompt-condition"
+                                          [attr.data-testid]="
+                                            'oplus-governance-prompt-condition-' + step.id + '-' + entry.key
+                                          "
+                                        >
+                                          <dt class="oplus-governance__prompt-condition-key">{{ entry.key }}</dt>
+                                          <dd class="oplus-governance__prompt-condition-value oplus-governance__cell-mono">
+                                            {{ entry.value }}
+                                          </dd>
+                                        </div>
+                                      }
+                                    </dl>
+                                  </div>
+                                }
+                                @if (step.cloud_trace_url !== null) {
+                                  <a
+                                    class="oplus-deep-link"
+                                    [href]="step.cloud_trace_url"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    (click)="$event.stopPropagation()"
+                                    [attr.data-testid]="'oplus-governance-reasoning-trace-' + step.id"
+                                  >
+                                    <i class="fa-solid fa-stream" aria-hidden="true"></i>
+                                    {{ 'oplus.governance.reasoning_view_span' | translate }} {{ step.agent }}
+                                    <i
+                                      class="fa-solid fa-arrow-up-right-from-square oplus-deep-link__icon"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </a>
+                                }
+                              </li>
+                            }
+                          </ol>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- OVERSIGHT panel -->
+    @if (isActive('oversight')) {
+      <section
+        role="tabpanel"
+        [id]="tabPanelId('oversight')"
+        [attr.aria-labelledby]="tabId('oversight')"
+        tabindex="0"
+        class="glass-panel oplus-governance__panel"
+        data-testid="oplus-governance-panel-oversight"
+      >
+        <h2 class="oplus-governance__section-heading dim-d4">
+          <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+          {{ 'oplus.governance.oversight_heading' | translate }}
+          <span class="dim-badge dim-d4">D4</span>
+        </h2>
+        <p class="oplus-governance__panel-subtitle">
+          {{ 'oplus.governance.oversight_subtitle' | translate }}
+        </p>
+
+        <!-- Autonomy ladder legend -->
+        <div class="oplus-governance__autonomy-legend" role="note">
+          <span class="oplus-governance__autonomy-legend-label">
+            {{ 'oplus.governance.autonomy_legend' | translate }}
+          </span>
+          <span class="oplus-governance__autonomy-pill" data-level="HOOTL">HOOTL</span>
+          <span class="oplus-governance__autonomy-pill" data-level="HOTL">HOTL</span>
+          <span class="oplus-governance__autonomy-pill" data-level="HITL-L0">HITL-L0</span>
+          <span class="oplus-governance__autonomy-pill" data-level="HITL-L1">HITL-L1</span>
+          <span class="oplus-governance__autonomy-pill" data-level="HITL-L2">HITL-L2</span>
+          <span class="oplus-governance__autonomy-pill is-prohibited" data-level="prohibited">
+            {{ 'oplus.governance.l3_prohibited' | translate }}
+          </span>
+        </div>
+
+        @if (hitlQueue().length === 0) {
+          <p
+            class="oplus-governance__empty"
+            data-testid="oplus-governance-oversight-empty"
+          >
+            {{ 'oplus.governance.oversight_empty' | translate }}
+          </p>
+        } @else {
+          <ul class="oplus-governance__hitl-list" role="list">
+            @for (h of hitlQueue(); track h.id) {
+              <li
+                class="oplus-governance__hitl-card"
+                [attr.data-testid]="'oplus-governance-hitl-card-' + h.id"
+                [attr.data-autonomy-level]="h.autonomy_level"
+              >
+                <header class="oplus-governance__hitl-head">
+                  <span
+                    class="oplus-governance__autonomy-pill"
+                    [attr.data-level]="h.autonomy_level"
+                  >
+                    {{ h.autonomy_level }}
+                  </span>
+                  <span class="oplus-governance__hitl-gate">
+                    {{ 'oplus.governance.gate_' + h.gate | translate }}
+                  </span>
+                  <span class="oplus-governance__hitl-workflow oplus-governance__cell-mono">
+                    {{ h.workflow_id }}
+                  </span>
+                </header>
+                <p class="oplus-governance__hitl-summary">{{ h.summary }}</p>
+                <footer class="oplus-governance__hitl-foot">
+                  <span
+                    class="oplus-governance__hitl-meta"
+                    [class.oplus-governance__hitl-meta--unassigned]="h.assignee === null"
+                  >
+                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                    @if (h.assignee !== null) {
+                      {{ h.assignee }}
+                    } @else {
+                      {{ 'oplus.governance.assignee_unassigned' | translate }}
+                    }
+                  </span>
+                  <span class="oplus-governance__hitl-meta">
+                    <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                    {{ fmtTime(h.waiting_since) }}
+                  </span>
+                  <div class="oplus-governance__hitl-actions">
+                    <button
+                      type="button"
+                      class="oplus-governance__btn oplus-governance__btn--approve"
+                      [attr.data-testid]="'oplus-governance-hitl-approve-' + h.id"
+                      [attr.aria-label]="('oplus.governance.approve' | translate) + ' ' + h.id"
+                      [disabled]="isHitlBusy(h.id)"
+                      (click)="approveHitlItem(h.id)"
+                    >
+                      <i class="fa-solid fa-check" aria-hidden="true"></i>
+                      {{ 'oplus.governance.approve' | translate }}
+                    </button>
+                    <button
+                      type="button"
+                      class="oplus-governance__btn oplus-governance__btn--reject"
+                      [attr.data-testid]="'oplus-governance-hitl-reject-' + h.id"
+                      [attr.aria-label]="('oplus.governance.reject' | translate) + ' ' + h.id"
+                      [disabled]="isHitlBusy(h.id)"
+                      (click)="rejectHitlItem(h.id)"
+                    >
+                      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                      {{ 'oplus.governance.reject' | translate }}
+                    </button>
+                  </div>
+                </footer>
+              </li>
+            }
+          </ul>
+        }
+        @if (hitlActionError() !== null) {
+          <p
+            class="oplus-governance__action-error"
+            data-testid="oplus-governance-hitl-action-error"
+            role="alert"
+            aria-live="polite"
+          >
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ hitlActionError()! | translate }}
+          </p>
+        }
+      </section>
+    }
+
+    <!-- DATA panel -->
+    @if (isActive('data')) {
+      <section
+        role="tabpanel"
+        [id]="tabPanelId('data')"
+        [attr.aria-labelledby]="tabId('data')"
+        tabindex="0"
+        class="glass-panel oplus-governance__panel"
+        data-testid="oplus-governance-panel-data"
+      >
+        <h2 class="oplus-governance__section-heading dim-d2">
+          <i class="fa-solid fa-database" aria-hidden="true"></i>
+          {{ 'oplus.governance.data_heading' | translate }}
+          <span class="dim-badge dim-d2">D2</span>
+        </h2>
+        <p class="oplus-governance__panel-subtitle">
+          {{ 'oplus.governance.data_subtitle' | translate }}
+        </p>
+
+        <!-- Data lineage table -->
+        <h3 class="oplus-governance__subsection-heading">
+          <i class="fa-solid fa-route" aria-hidden="true"></i>
+          {{ 'oplus.governance.lineage_heading' | translate }}
+        </h3>
+        @if (lineage().length === 0) {
+          <p
+            class="oplus-governance__empty"
+            data-testid="oplus-governance-lineage-empty"
+          >
+            {{ 'oplus.governance.lineage_empty' | translate }}
+          </p>
+        } @else {
+          <div class="oplus-governance__table-wrap">
+            <table
+              class="oplus-governance__table"
+              [attr.aria-label]="'oplus.governance.lineage_table_aria' | translate"
+            >
+              <caption class="oplus-governance__caption">
+                {{ 'oplus.governance.lineage_table_caption' | translate }}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'oplus.governance.col_domain' | translate }}</th>
+                  <th scope="col">{{ 'oplus.governance.col_db' | translate }}</th>
+                  <th scope="col">{{ 'oplus.governance.col_table' | translate }}</th>
+                  <th scope="col">{{ 'oplus.governance.col_classification' | translate }}</th>
+                  <th scope="col">{{ 'oplus.governance.col_retention' | translate }}</th>
+                  <th scope="col">{{ 'oplus.governance.col_pii_map' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (l of lineage(); track l.table) {
+                  <tr
+                    [attr.data-testid]="'oplus-governance-lineage-row-' + l.table"
+                  >
+                    <td>{{ l.domain }}</td>
+                    <td class="oplus-governance__cell-mono">{{ l.db }}</td>
+                    <td class="oplus-governance__cell-mono">{{ l.table }}</td>
+                    <td>
+                      <span
+                        class="oplus-governance__class-pill"
+                        [attr.data-classification]="l.classification"
+                      >
+                        {{ l.classification }}
+                      </span>
+                    </td>
+                    <td>{{ l.retention }}</td>
+                    <td>
+                      @if (l.pii_closure_map) {
+                        <i
+                          class="fa-solid fa-circle-check"
+                          [attr.aria-label]="'oplus.governance.pii_map_yes' | translate"
+                        ></i>
+                      } @else {
+                        <i
+                          class="fa-solid fa-minus"
+                          [attr.aria-label]="'oplus.governance.pii_map_no' | translate"
+                        ></i>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <!-- RACI matrix -->
+        <h3 class="oplus-governance__subsection-heading">
+          <i class="fa-solid fa-sitemap" aria-hidden="true"></i>
+          {{ 'oplus.governance.raci_heading' | translate }}
+        </h3>
+        <div class="oplus-governance__raci-grid">
+          @for (r of raci(); track r.role) {
+            <article
+              class="oplus-governance__raci-card"
+              [class]="'oplus-governance__raci-card dim-' + r.accent"
+              [attr.data-testid]="'oplus-governance-raci-card-' + r.role"
+              [attr.data-role]="r.role"
+            >
+              <h4 class="oplus-governance__raci-role">{{ r.role }}</h4>
+              <p class="oplus-governance__raci-title">{{ r.title }}</p>
+              <ul class="oplus-governance__raci-items">
+                @for (item of r.items; track item) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

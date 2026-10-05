@@ -1,0 +1,113 @@
+:host {
+  display: block;
+}
+
+.toast-container {
+  position: fixed;
+  top: var(--chora-space-lg);
+  right: var(--chora-space-lg);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+  max-width: 400px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  // CHO-2206 walk feedback: a substantial, high-contrast block so a toast is
+  // noticed at the top-right rather than read as "nothing happened".
+  min-width: 300px;
+  padding: var(--chora-space-md);
+  border-radius: var(--chora-radius-md);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
+  pointer-events: auto;
+  animation: toast-slide-in 0.2s ease-out;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 500;
+
+  &--success {
+    background: var(--chora-color-success-surface, #e8f5e9);
+    color: var(--chora-color-success-text, #1b5e20);
+    border-left: 4px solid var(--chora-color-success, #4caf50);
+  }
+
+  &--error {
+    background: var(--chora-color-error-surface, #ffebee);
+    color: var(--chora-color-error-text, #b71c1c);
+    border-left: 4px solid var(--chora-color-error, #f44336);
+  }
+
+  &--warning {
+    background: var(--chora-color-warning-surface, #fff3e0);
+    color: var(--chora-color-warning-text, #e65100);
+    border-left: 4px solid var(--chora-color-warning, #ff9800);
+  }
+
+  &--info {
+    background: var(--chora-color-info-surface, #e3f2fd);
+    color: var(--chora-color-info-text, #0d47a1);
+    border-left: 4px solid var(--chora-color-info, #2196f3);
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  &__message {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  &__dismiss {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--chora-space-xs);
+    color: inherit;
+    opacity: 0.7;
+    font-size: 12px;
+    line-height: 1;
+    border-radius: var(--chora-radius-sm);
+    transition: opacity var(--chora-transition-fast);
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+  }
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

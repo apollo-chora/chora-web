@@ -1,0 +1,186 @@
+<section
+  class="trigger-rule-manager"
+  role="main"
+  [attr.aria-label]="'admin.communication.trigger_rules_title' | translate"
+  data-testid="trigger-rule-manager">
+
+  <!-- Header -->
+  <header class="trigger-rule-manager__header">
+    <div class="trigger-rule-manager__header-nav">
+      <a
+        routerLink="../"
+        class="trigger-rule-manager__back-link"
+        data-testid="btn-back"
+        [attr.aria-label]="'admin.communication.back_to_communication' | translate">
+        &larr; {{ 'admin.communication.back_to_communication' | translate }}
+      </a>
+      <h1 class="trigger-rule-manager__title" data-testid="trigger-rules-title">
+        {{ 'admin.communication.trigger_rules_title' | translate }}
+      </h1>
+    </div>
+    <button
+      type="button"
+      class="trigger-rule-manager__btn trigger-rule-manager__btn--primary"
+      (click)="openCreateForm()"
+      data-testid="btn-create-rule"
+      [attr.aria-label]="'admin.communication.create_rule' | translate">
+      {{ 'admin.communication.create_rule' | translate }}
+    </button>
+  </header>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="trigger-rule-manager__loading" data-testid="rules-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="trigger-rule-manager__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="trigger-rule-manager__empty" data-testid="rules-empty" role="status">
+      <p class="trigger-rule-manager__empty-text">
+        {{ 'admin.communication.no_rules' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Inline Create Form -->
+  @if (showCreateForm()) {
+    <div class="trigger-rule-manager__create-form" data-testid="create-rule-form" role="form"
+      [attr.aria-label]="'admin.communication.create_rule' | translate">
+      <h2 class="trigger-rule-manager__form-title">
+        {{ 'admin.communication.create_rule' | translate }}
+      </h2>
+      <div class="trigger-rule-manager__form-fields">
+        <div class="trigger-rule-manager__field">
+          <label for="rule-name" class="trigger-rule-manager__field-label">
+            {{ 'admin.communication.rule_name' | translate }}
+          </label>
+          <input
+            type="text"
+            id="rule-name"
+            class="trigger-rule-manager__input"
+            [value]="newRuleName()"
+            (input)="onNameChange($any($event.target).value)"
+            data-testid="input-rule-name"
+            [attr.aria-label]="'admin.communication.rule_name' | translate" />
+        </div>
+        <div class="trigger-rule-manager__field">
+          <label for="rule-event-type" class="trigger-rule-manager__field-label">
+            {{ 'admin.communication.event_type' | translate }}
+          </label>
+          <input
+            type="text"
+            id="rule-event-type"
+            class="trigger-rule-manager__input"
+            [value]="newRuleEventType()"
+            (input)="onEventTypeChange($any($event.target).value)"
+            data-testid="input-event-type"
+            [attr.aria-label]="'admin.communication.event_type' | translate" />
+        </div>
+        <div class="trigger-rule-manager__field">
+          <label for="rule-channel" class="trigger-rule-manager__field-label">
+            {{ 'admin.communication.channel' | translate }}
+          </label>
+          <select
+            id="rule-channel"
+            class="trigger-rule-manager__select"
+            (change)="onChannelChange($any($event.target).value)"
+            data-testid="select-channel">
+            @for (ch of allChannels; track ch) {
+              <option [value]="ch" [selected]="newRuleChannel() === ch">
+                {{ channelLabels[ch] | translate }}
+              </option>
+            }
+          </select>
+        </div>
+        <div class="trigger-rule-manager__field">
+          <label for="rule-template" class="trigger-rule-manager__field-label">
+            {{ 'admin.communication.template' | translate }}
+          </label>
+          <select
+            id="rule-template"
+            class="trigger-rule-manager__select"
+            (change)="onTemplateChange($any($event.target).value)"
+            data-testid="select-template">
+            <option value="">{{ 'admin.communication.no_template' | translate }}</option>
+            @for (tpl of templates(); track tpl.id) {
+              <option [value]="tpl.id">{{ tpl.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="trigger-rule-manager__form-actions">
+        <button
+          type="button"
+          class="trigger-rule-manager__btn trigger-rule-manager__btn--primary"
+          [disabled]="!canSubmitCreate()"
+          (click)="submitCreate()"
+          data-testid="btn-submit-rule"
+          [attr.aria-label]="'admin.communication.save_rule' | translate">
+          {{ 'admin.communication.save_rule' | translate }}
+        </button>
+        <button
+          type="button"
+          class="trigger-rule-manager__btn"
+          (click)="cancelCreate()"
+          data-testid="btn-cancel-create"
+          [attr.aria-label]="'admin.communication.cancel' | translate">
+          {{ 'admin.communication.cancel' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Rules Table -->
+  @if (!loading() && !isEmpty()) {
+    <div class="trigger-rule-manager__table-wrap" data-testid="rules-table">
+      <table class="trigger-rule-manager__table" role="table"
+        [attr.aria-label]="'admin.communication.trigger_rules_title' | translate">
+        <thead>
+          <tr>
+            <th class="trigger-rule-manager__th">{{ 'admin.communication.rule_name' | translate }}</th>
+            <th class="trigger-rule-manager__th">{{ 'admin.communication.event_type' | translate }}</th>
+            <th class="trigger-rule-manager__th">{{ 'admin.communication.channel' | translate }}</th>
+            <th class="trigger-rule-manager__th">{{ 'admin.communication.template' | translate }}</th>
+            <th class="trigger-rule-manager__th">{{ 'admin.communication.status' | translate }}</th>
+            <th class="trigger-rule-manager__th">{{ 'admin.communication.actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (rule of rules(); track rule.id) {
+            <tr [attr.data-testid]="'rule-' + rule.id">
+              <td class="trigger-rule-manager__td">{{ rule.name }}</td>
+              <td class="trigger-rule-manager__td trigger-rule-manager__td--mono">{{ rule.event_type }}</td>
+              <td class="trigger-rule-manager__td">{{ channelLabels[rule.channel] | translate }}</td>
+              <td class="trigger-rule-manager__td">{{ templateName(rule.template_id) }}</td>
+              <td class="trigger-rule-manager__td">
+                <span class="trigger-rule-manager__status" [class]="statusClass(rule.status)">
+                  {{ rule.status }}
+                </span>
+              </td>
+              <td class="trigger-rule-manager__td">
+                <label class="trigger-rule-manager__switch"
+                  [for]="'toggle-rule-' + rule.id">
+                  <input
+                    type="checkbox"
+                    class="trigger-rule-manager__switch-input"
+                    [id]="'toggle-rule-' + rule.id"
+                    [checked]="rule.status === 'active'"
+                    (change)="toggleRuleStatus(rule)"
+                    [attr.data-testid]="'toggle-rule-' + rule.id"
+                    [attr.aria-label]="rule.name + ' ' + ('admin.communication.toggle_status' | translate)"
+                    role="switch"
+                    [attr.aria-checked]="rule.status === 'active'" />
+                  <span class="trigger-rule-manager__switch-slider"></span>
+                </label>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

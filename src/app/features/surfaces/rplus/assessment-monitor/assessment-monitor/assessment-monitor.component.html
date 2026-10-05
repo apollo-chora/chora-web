@@ -1,0 +1,377 @@
+<section
+  data-testid="rplus-assessment-monitor"
+  class="surface-rplus assessment-monitor">
+  <nav class="assessment-monitor__breadcrumbs">
+    <a [routerLink]="['/r', 'assessments']">
+      {{ 'rplus.assessment_monitor.back_to_list' | translate }}
+    </a>
+    @if (assessmentId) {
+      <a
+        data-testid="assessment-monitor-grading-queue-link"
+        class="assessment-monitor__grading-queue-cta"
+        [class.assessment-monitor__grading-queue-cta--pending]="hasPendingReview()"
+        [routerLink]="['/r', 'assessments', assessmentId, 'grading-queue']">
+        <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+        {{ 'rplus.assessment_monitor.grading_queue_link' | translate }}
+        @if (pendingReviewCount() > 0) {
+          <span
+            class="assessment-monitor__grading-queue-count"
+            data-testid="grading-queue-pending-count">
+            {{ pendingReviewCount() }}
+            {{ 'rplus.assessment_monitor.grading_queue_pending_suffix' | translate }}
+          </span>
+        }
+      </a>
+    }
+  </nav>
+
+  @if (isLoading()) {
+    <div
+      data-testid="assessment-monitor-loading"
+      class="assessment-monitor__loading"
+      aria-busy="true">
+      <p>{{ 'rplus.assessment_monitor.loading' | translate }}</p>
+    </div>
+  } @else if (isError()) {
+    <div
+      data-testid="assessment-monitor-error"
+      class="assessment-monitor__error"
+      role="alert">
+      <p>{{ errorKey() | translate }}</p>
+      <button
+        type="button"
+        data-testid="assessment-monitor-retry"
+        class="assessment-monitor__retry"
+        (click)="retry()">
+        {{ 'rplus.assessment_monitor.retry' | translate }}
+      </button>
+    </div>
+  } @else if (assessment(); as a) {
+    <article
+      data-testid="assessment-monitor-body"
+      class="assessment-monitor__body">
+
+      <!-- Header: title + state pill + lifecycle CTAs -->
+      <header class="assessment-monitor__header">
+        <div class="assessment-monitor__header-titles">
+          <h1
+            data-testid="assessment-monitor-title"
+            class="assessment-monitor__title">
+            {{ a.title }}
+          </h1>
+          <span
+            data-testid="assessment-monitor-state"
+            [attr.data-state]="a.state"
+            class="assessment-monitor__pill {{ badgeClass(a.state) }}">
+            {{ 'rplus.assessment_state.' + a.state | translate }}
+          </span>
+        </div>
+
+        <div class="assessment-monitor__cta-bar">
+          @if (showPublishCta()) {
+            <button
+              type="button"
+              data-testid="cta-publish"
+              class="cta cta--primary"
+              [disabled]="publishSubmitting()"
+              (click)="publish()">
+              {{ 'rplus.assessment_monitor.cta_publish' | translate }}
+            </button>
+          }
+          @if (showForceCloseCta()) {
+            <button
+              type="button"
+              data-testid="cta-force-close"
+              class="cta cta--warning"
+              [disabled]="forceCloseSubmitting()"
+              (click)="forceClose()">
+              {{ 'rplus.assessment_monitor.cta_force_close' | translate }}
+            </button>
+          }
+          @if (showReleaseCta()) {
+            <button
+              type="button"
+              data-testid="cta-release-results"
+              class="cta cta--success cta--release"
+              [disabled]="!releaseEnabled()"
+              (click)="openReleaseConfirm()">
+              {{ 'rplus.assessment_monitor.cta_release_results' | translate }}
+            </button>
+            @if (hasPendingReview()) {
+              <span
+                data-testid="release-blocked-review"
+                class="assessment-monitor__release-hint">
+                {{ 'rplus.assessment_monitor.release_blocked_review' | translate }}
+                <a
+                  data-testid="release-grading-queue-link"
+                  [routerLink]="['/r', 'assessments', assessmentId, 'grading-queue']">
+                  {{ 'rplus.assessment_monitor.grading_queue_link' | translate }}
+                </a>
+              </span>
+            }
+          }
+          @if (showReleasedBadge()) {
+            <span
+              data-testid="released-badge"
+              class="assessment-monitor__released-badge">
+              {{ 'rplus.assessment_monitor.released_badge' | translate }}
+            </span>
+            @if (unreleasedGradedCount() > 0) {
+              <span
+                data-testid="results-partial-warning"
+                role="status"
+                class="assessment-monitor__results-warning">
+                {{ monitor()?.total_released ?? 0 }}/{{ monitor()?.total_graded ?? 0 }}
+                {{ 'rplus.assessment_monitor.results_released_suffix' | translate }}
+                · {{ unreleasedGradedCount() }}
+                {{ 'rplus.assessment_monitor.results_awaiting_suffix' | translate }}
+                <a
+                  data-testid="results-grading-queue-link"
+                  [routerLink]="['/r', 'assessments', assessmentId, 'grading-queue']">
+                  {{ 'rplus.assessment_monitor.grading_queue_link' | translate }}
+                </a>
+              </span>
+            }
+          }
+          @if (showArchivedBadge()) {
+            <span
+              data-testid="archived-badge"
+              class="assessment-monitor__archived-badge">
+              {{ 'rplus.assessment_monitor.archived_badge' | translate }}
+            </span>
+          }
+          @if (showArchiveCta()) {
+            <button
+              type="button"
+              data-testid="cta-archive"
+              class="cta cta--neutral"
+              [disabled]="archiveSubmitting()"
+              (click)="openArchiveConfirm()">
+              {{ 'rplus.assessment_monitor.cta_archive' | translate }}
+            </button>
+          }
+        </div>
+      </header>
+
+      <!-- Release-error banner (fail loud) -->
+      @if (releaseErrorKey()) {
+        <div
+          data-testid="release-error"
+          class="assessment-monitor__release-error"
+          role="alert">
+          <p>{{ releaseErrorKey() | translate }}</p>
+        </div>
+      }
+
+      <!-- Cohort progress -->
+      <section
+        class="assessment-monitor__cohort"
+        aria-labelledby="cohort-progress-heading">
+        <h2 id="cohort-progress-heading" class="assessment-monitor__h2">
+          {{ 'rplus.assessment_monitor.cohort_heading' | translate }}
+        </h2>
+        @if (cohort(); as m) {
+          <div class="cohort-progress">
+            <chora-stat-card
+              [label]="'rplus.assessment_monitor.invited' | translate"
+              [value]="m.total_invited"
+              valueTestid="cohort-progress-invited" />
+            <chora-stat-card
+              [label]="'rplus.assessment_monitor.in_progress' | translate"
+              [value]="m.in_progress_count"
+              accent="warning"
+              valueTestid="cohort-progress-in-progress" />
+            <chora-stat-card
+              [label]="'rplus.assessment_monitor.submitted' | translate"
+              [value]="m.total_submitted"
+              accent="primary"
+              valueTestid="cohort-progress-submitted" />
+            <chora-stat-card
+              [label]="'rplus.assessment_monitor.abandoned' | translate"
+              [value]="abandonedCount()"
+              accent="danger"
+              valueTestid="cohort-progress-abandoned" />
+            <!--
+              P1 design refinement (2026-05-17 CJ#1 smoke #4): the Average
+              score card is ALWAYS rendered. Pre-RELEASED → state="pending"
+              (em-dash placeholder); RELEASED → state="value" with the BE
+              average. Avoids the misleading "0%" pre-release.
+            -->
+            <chora-stat-card
+              [label]="'rplus.assessment_monitor.average_score' | translate"
+              [value]="
+                m.average_score_percent !== null
+                  ? m.average_score_percent + '%'
+                  : '0%'
+              "
+              accent="success"
+              [state]="averageScoreCardState()"
+              valueTestid="cohort-progress-average-score" />
+          </div>
+        }
+      </section>
+
+      <!-- Test questions (assigned test-set + per-question answer key) -->
+      <section
+        class="assessment-monitor__questions"
+        aria-labelledby="questions-heading"
+        data-testid="assessment-monitor-questions">
+        <h2 id="questions-heading" class="assessment-monitor__h2">
+          {{ 'rplus.assessment_monitor.questions_heading' | translate }}
+          @if (testSet(); as ts) {
+            <span class="assessment-monitor__questions-meta">
+              {{ ts.question_count }}
+              {{ 'rplus.assessment_monitor.questions_suffix' | translate }}
+              · {{ ts.total_points }}
+              {{ 'rplus.assessment_monitor.points_suffix' | translate }}
+            </span>
+          }
+        </h2>
+
+        @if (testSetIsLoading()) {
+          <p
+            class="assessment-monitor__questions-note"
+            data-testid="questions-loading"
+            aria-busy="true">
+            {{ 'rplus.assessment_monitor.questions_loading' | translate }}
+          </p>
+        } @else if (testSetIsError()) {
+          <p
+            class="assessment-monitor__questions-note"
+            role="status"
+            data-testid="questions-error">
+            {{ 'rplus.assessment_monitor.questions_error' | translate }}
+          </p>
+        } @else if (testSetQuestions().length === 0) {
+          <chora-empty-state
+            class="assessment-monitor__empty"
+            icon="fa-solid fa-list-ol"
+            [heading]="'rplus.assessment_monitor.questions_empty' | translate"
+            testId="questions-empty" />
+        } @else {
+          <ol
+            class="assessment-monitor__questions-list"
+            data-testid="questions-list">
+            @for (
+              q of testSetQuestions();
+              track trackByQuestion($index, q);
+              let i = $index
+            ) {
+              <li
+                class="assessment-monitor__question"
+                [attr.data-testid]="'monitor-question-' + q.test_set_question_id">
+                <details class="assessment-monitor__question-details">
+                  <summary class="assessment-monitor__question-summary">
+                    <span class="assessment-monitor__question-index">
+                      {{ i + 1 }}
+                    </span>
+                    <span
+                      class="assessment-monitor__question-type"
+                      [attr.data-question-type]="questionType(q)">
+                      {{ questionType(q) }}
+                    </span>
+                    <span class="assessment-monitor__question-stem">
+                      {{ questionStem(q) }}
+                    </span>
+                    <span class="assessment-monitor__question-points">
+                      {{ q.points }}
+                      {{ 'rplus.assessment_monitor.points_suffix' | translate }}
+                    </span>
+                  </summary>
+                  @if (questionReviewFor(q); as review) {
+                    <chora-question-review
+                      class="assessment-monitor__question-review"
+                      [review]="review"
+                      [testIdPrefix]="'monitor-q-' + q.test_set_question_id" />
+                  } @else {
+                    <p class="assessment-monitor__question-detail-note">
+                      {{ 'rplus.assessment_monitor.answer_key_loading' | translate }}
+                    </p>
+                  }
+                </details>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+
+      <!-- Submissions table -->
+      <section
+        class="assessment-monitor__submissions"
+        aria-labelledby="submissions-heading">
+        <h2 id="submissions-heading" class="assessment-monitor__h2">
+          {{ 'rplus.assessment_monitor.submissions_heading' | translate }}
+        </h2>
+        @if (submissions().length === 0) {
+          <chora-empty-state
+            class="assessment-monitor__empty"
+            icon="fa-solid fa-clipboard-list"
+            [heading]="'rplus.assessment_monitor.submissions_empty' | translate"
+            testId="submissions-empty" />
+        } @else {
+          <table class="submissions-table">
+            <thead>
+              <tr>
+                <th scope="col">
+                  {{ 'rplus.assessment_monitor.col_learner' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.assessment_monitor.col_state' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.assessment_monitor.col_started_at' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.assessment_monitor.col_submitted_at' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.assessment_monitor.col_score' | translate }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of submissions(); track s.submission_id) {
+                <tr data-testid="submission-row">
+                  <td data-testid="submission-learner-name">
+                    {{ s.learner_display_name ?? s.learner_gcid }}
+                  </td>
+                  <td>
+                    <span
+                      data-testid="submission-state"
+                      [attr.data-state]="s.state"
+                      class="submissions-table__pill {{ submissionBadgeClass(s.state) }}">
+                      {{ 'rplus.submission_state.' + s.state | translate }}
+                    </span>
+                  </td>
+                  <td>{{ s.started_at }}</td>
+                  <td>{{ s.submitted_at ?? '-' }}</td>
+                  <td data-testid="submission-score">
+                    @switch (scoreCellKind(s)) {
+                      @case ('pending_review') {
+                        <span
+                          data-testid="submission-score-pending-review"
+                          class="submissions-table__pending-chip">
+                          {{ 'rplus.assessment_monitor.score_pending_review' | translate }}
+                        </span>
+                      }
+                      @case ('pending_release') {
+                        <span
+                          data-testid="submission-score-pending"
+                          class="submissions-table__pending-chip">
+                          {{ 'rplus.assessment_monitor.score_pending_release' | translate }}
+                        </span>
+                      }
+                      @default {
+                        {{ formatScore(s) }}
+                      }
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+    </article>
+  }
+</section>

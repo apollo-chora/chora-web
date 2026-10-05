@@ -1,0 +1,171 @@
+<div class="suspension-page" data-testid="suspension-page">
+
+  <!-- Branding -->
+  <header class="suspension-page__branding">
+    <div class="suspension-page__logo" aria-hidden="true">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="2" fill="none" />
+        <text x="24" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="currentColor">C</text>
+      </svg>
+    </div>
+    <span class="suspension-page__brand-name">Chora</span>
+  </header>
+
+  <!-- Main Card -->
+  <main
+    class="suspension-page__card"
+    role="main"
+    aria-labelledby="suspension-heading">
+
+    <!-- Status Icon -->
+    <div class="suspension-page__icon" aria-hidden="true">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="30" stroke="#dc2626" stroke-width="2" fill="#fef2f2" />
+        <line x1="22" y1="22" x2="42" y2="42" stroke="#dc2626" stroke-width="3" stroke-linecap="round" />
+        <line x1="42" y1="22" x2="22" y2="42" stroke="#dc2626" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <h1 id="suspension-heading" class="suspension-page__heading">
+      {{ 'identity.suspension.heading' | translate }}
+    </h1>
+
+    <p class="suspension-page__subheading">
+      {{ 'identity.suspension.subheading' | translate }}
+    </p>
+
+    <!-- Suspension Details -->
+    <dl class="suspension-page__details" data-testid="suspension-details">
+      <!-- Reason -->
+      <div class="suspension-page__detail-row">
+        <dt class="suspension-page__detail-label">
+          {{ 'identity.suspension.reason_label' | translate }}
+        </dt>
+        <dd class="suspension-page__detail-value" data-testid="suspension-reason">
+          {{ reasonLabel() | translate }}
+        </dd>
+      </div>
+
+      <!-- Suspended Date -->
+      <div class="suspension-page__detail-row">
+        <dt class="suspension-page__detail-label">
+          {{ 'identity.suspension.suspended_date_label' | translate }}
+        </dt>
+        <dd class="suspension-page__detail-value" data-testid="suspension-date">
+          {{ suspendedDate() }}
+        </dd>
+      </div>
+
+      <!-- Duration -->
+      <div class="suspension-page__detail-row">
+        <dt class="suspension-page__detail-label">
+          {{ 'identity.suspension.duration_label' | translate }}
+        </dt>
+        <dd class="suspension-page__detail-value" data-testid="suspension-duration">
+          {{ durationLabel() | translate }}
+        </dd>
+      </div>
+
+      <!-- Expiry -->
+      @if (!isPermanent() && expiryDate()) {
+        <div class="suspension-page__detail-row">
+          <dt class="suspension-page__detail-label">
+            {{ 'identity.suspension.expires_label' | translate }}
+          </dt>
+          <dd class="suspension-page__detail-value" data-testid="suspension-expiry">
+            {{ expiryDate() }}
+          </dd>
+        </div>
+      }
+    </dl>
+
+    <!-- Countdown Timer -->
+    @if (!isPermanent() && !isExpired()) {
+      <div
+        class="suspension-page__countdown"
+        data-testid="suspension-countdown"
+        role="timer"
+        [attr.aria-label]="'identity.suspension.countdown_aria' | translate">
+        <p class="suspension-page__countdown-label">
+          {{ 'identity.suspension.time_remaining' | translate }}
+        </p>
+        <div class="suspension-page__countdown-grid">
+          <div class="suspension-page__countdown-unit">
+            <span class="suspension-page__countdown-value" data-testid="countdown-days">
+              {{ padNumber(countdown().days) }}
+            </span>
+            <span class="suspension-page__countdown-name">
+              {{ 'identity.suspension.days' | translate }}
+            </span>
+          </div>
+          <span class="suspension-page__countdown-sep" aria-hidden="true">:</span>
+          <div class="suspension-page__countdown-unit">
+            <span class="suspension-page__countdown-value" data-testid="countdown-hours">
+              {{ padNumber(countdown().hours) }}
+            </span>
+            <span class="suspension-page__countdown-name">
+              {{ 'identity.suspension.hours' | translate }}
+            </span>
+          </div>
+          <span class="suspension-page__countdown-sep" aria-hidden="true">:</span>
+          <div class="suspension-page__countdown-unit">
+            <span class="suspension-page__countdown-value" data-testid="countdown-minutes">
+              {{ padNumber(countdown().minutes) }}
+            </span>
+            <span class="suspension-page__countdown-name">
+              {{ 'identity.suspension.minutes' | translate }}
+            </span>
+          </div>
+          <span class="suspension-page__countdown-sep" aria-hidden="true">:</span>
+          <div class="suspension-page__countdown-unit">
+            <span class="suspension-page__countdown-value" data-testid="countdown-seconds">
+              {{ padNumber(countdown().seconds) }}
+            </span>
+            <span class="suspension-page__countdown-name">
+              {{ 'identity.suspension.seconds' | translate }}
+            </span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Expired Banner -->
+    @if (!isPermanent() && isExpired()) {
+      <div class="suspension-page__expired" role="status" data-testid="suspension-expired">
+        {{ 'identity.suspension.expired_message' | translate }}
+      </div>
+    }
+
+    <!-- Permanent Banner -->
+    @if (isPermanent()) {
+      <div class="suspension-page__permanent" role="status" data-testid="suspension-permanent">
+        {{ 'identity.suspension.permanent_message' | translate }}
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="suspension-page__actions">
+      <a
+        class="suspension-page__btn suspension-page__btn--appeal"
+        routerLink="/settings/account/appeal"
+        data-testid="suspension-appeal-btn"
+        [attr.aria-label]="'identity.suspension.appeal_aria' | translate">
+        {{ 'identity.suspension.appeal_btn' | translate }}
+      </a>
+      <a
+        class="suspension-page__link"
+        [href]="supportMailto"
+        data-testid="suspension-support-link"
+        [attr.aria-label]="'identity.suspension.contact_support_aria' | translate">
+        {{ 'identity.suspension.contact_support' | translate }}
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="suspension-page__footer">
+    <p class="suspension-page__footer-text">
+      {{ 'identity.suspension.footer' | translate }}
+    </p>
+  </footer>
+</div>

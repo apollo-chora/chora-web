@@ -1,0 +1,164 @@
+:host {
+  display: block;
+}
+
+.my-courses {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg, 24px);
+
+  &__header {
+    padding: var(--chora-space-lg, 24px);
+  }
+
+  &__header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+
+    > i {
+      font-size: 1.75rem;
+      color: var(--chora-color-primary-strong, #0d47a1);
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  &__subtitle {
+    margin: var(--chora-space-xs, 4px) 0 0;
+    color: var(--chora-color-text-secondary, #5b6472);
+    font-size: 0.95rem;
+  }
+
+  // ── loading / error / empty ────────────────────────────────────────────
+  &__status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+    padding: var(--chora-space-xl, 32px);
+    text-align: center;
+
+    > i {
+      font-size: 1.75rem;
+      color: var(--chora-color-primary-strong, #0d47a1);
+    }
+
+    &--error > i {
+      color: var(--chora-color-danger, #d64545);
+    }
+  }
+
+  &__status-text {
+    margin: 0;
+    color: var(--chora-color-text-secondary, #5b6472);
+  }
+
+  &__empty-icon {
+    opacity: 0.7;
+  }
+
+  // ── enrolled-course list ───────────────────────────────────────────────
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-md, 16px);
+    padding: var(--chora-space-lg, 24px);
+
+    @media (min-width: 1280px) {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  &__row-main {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__row-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__chip {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: var(--chora-radius-sm, 6px);
+    background: var(--chora-color-surface-2, rgba(25, 118, 210, 0.1));
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  &__retention-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  &__row-title {
+    margin: var(--chora-space-xs, 4px) 0 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  &__row-instructor {
+    margin: var(--chora-space-xs, 4px) 0 0;
+    color: var(--chora-color-text-secondary, #5b6472);
+    font-size: 0.9rem;
+
+    > i {
+      margin-inline-end: 4px;
+    }
+  }
+
+  &__row-progress {
+    flex: 0 0 auto;
+    min-width: 220px;
+  }
+
+  &__progress-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: var(--chora-space-xs, 4px);
+  }
+
+  .progress-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--chora-color-surface-2, rgba(25, 118, 210, 0.12));
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--chora-color-primary, #1976d2);
+    transition: width 0.3s ease;
+  }
+
+  &__row-action {
+    flex: 0 0 auto;
+
+    .btn > i {
+      margin-inline-start: 6px;
+    }
+  }
+}

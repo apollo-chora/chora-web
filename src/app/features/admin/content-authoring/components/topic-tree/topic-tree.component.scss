@@ -1,0 +1,444 @@
+:host {
+  display: block;
+}
+
+.topic-tree {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--chora-space-lg);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-block-end: var(--chora-space-lg);
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--chora-space-sm);
+  }
+
+  // -------------------------------------------------------------------------
+  // Loading / Empty
+  // -------------------------------------------------------------------------
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm);
+  }
+
+  &__skeleton {
+    height: 40px;
+    background: var(--chora-color-surface-2);
+    border-radius: var(--chora-radius-sm);
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  &__empty {
+    text-align: center;
+    padding: var(--chora-space-xl);
+    color: var(--chora-color-text-secondary);
+  }
+
+  // -------------------------------------------------------------------------
+  // Create Form
+  // -------------------------------------------------------------------------
+
+  &__create-form {
+    padding: var(--chora-space-md);
+    margin-block-end: var(--chora-space-md);
+    background: var(--chora-color-surface-1);
+    border: 1px solid var(--chora-color-border, #e0e0e0);
+    border-radius: var(--chora-radius-md);
+  }
+
+  &__create-fields {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--chora-space-sm);
+    align-items: center;
+    margin-block-end: var(--chora-space-md);
+  }
+
+  &__create-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--chora-space-sm);
+  }
+
+  // -------------------------------------------------------------------------
+  // Content Layout
+  // -------------------------------------------------------------------------
+
+  &__content {
+    display: flex;
+    gap: var(--chora-space-lg);
+  }
+
+  &__tree-panel {
+    flex: 1;
+    min-width: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Tree List
+  // -------------------------------------------------------------------------
+
+  &__list,
+  &__children {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__node {
+    border-block-end: 1px solid var(--chora-color-border, #e0e0e0);
+    transition: background-color 150ms ease;
+
+    &--drop-before {
+      border-block-start: 3px solid var(--chora-color-primary);
+    }
+
+    &--drop-after {
+      border-block-end: 3px solid var(--chora-color-primary);
+    }
+
+    &--drop-inside {
+      background: rgba(0, 0, 0, 0.04);
+      outline: 2px dashed var(--chora-color-primary);
+      outline-offset: -2px;
+    }
+  }
+
+  &__node-content {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    min-height: 40px;
+  }
+
+  // -------------------------------------------------------------------------
+  // Toggle
+  // -------------------------------------------------------------------------
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: var(--chora-color-text-secondary);
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__toggle-icon {
+    display: inline-block;
+    font-size: 10px;
+    transition: transform 150ms ease;
+
+    &--expanded {
+      transform: rotate(90deg);
+    }
+  }
+
+  &__toggle-spacer {
+    width: 24px;
+    flex-shrink: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Node Name
+  // -------------------------------------------------------------------------
+
+  &__node-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--chora-color-text-primary);
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: var(--chora-radius-sm);
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__rename-input {
+    flex: 1;
+    padding: 2px var(--chora-space-xs);
+    border: 2px solid var(--chora-color-primary);
+    border-radius: var(--chora-radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--chora-color-text-primary);
+    background: var(--chora-color-surface-0);
+    outline: none;
+  }
+
+  // -------------------------------------------------------------------------
+  // Atom Count Badge
+  // -------------------------------------------------------------------------
+
+  &__atom-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: var(--chora-radius-full);
+    background: var(--chora-color-primary);
+    color: var(--chora-color-on-primary, #fff);
+    flex-shrink: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Node Actions
+  // -------------------------------------------------------------------------
+
+  &__node-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+
+  &__node-content:hover &__node-actions {
+    opacity: 1;
+  }
+
+  &__node-content:focus-within &__node-actions {
+    opacity: 1;
+  }
+
+  // -------------------------------------------------------------------------
+  // Atom Picker Panel
+  // -------------------------------------------------------------------------
+
+  &__atom-picker {
+    width: 280px;
+    flex-shrink: 0;
+    padding: var(--chora-space-md);
+    background: var(--chora-color-surface-1);
+    border: 1px solid var(--chora-color-border, #e0e0e0);
+    border-radius: var(--chora-radius-md);
+    max-height: 600px;
+    overflow-y: auto;
+  }
+
+  &__picker-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--chora-color-text-primary);
+    margin: 0 0 var(--chora-space-sm);
+  }
+
+  &__picker-loading,
+  &__picker-empty {
+    text-align: center;
+    padding: var(--chora-space-md);
+    color: var(--chora-color-text-secondary);
+    font-size: 13px;
+  }
+
+  &__atom-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--chora-space-sm) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__atom-item {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+    padding: var(--chora-space-xs) var(--chora-space-sm);
+    border-radius: var(--chora-radius-sm);
+    cursor: grab;
+    font-size: 13px;
+    color: var(--chora-color-text-primary);
+    transition: background 150ms ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__atom-icon {
+    font-size: 18px;
+    color: var(--chora-color-text-secondary);
+    flex-shrink: 0;
+  }
+
+  &__atom-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // -------------------------------------------------------------------------
+  // Shared Form Elements
+  // -------------------------------------------------------------------------
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chora-color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__input,
+  &__select {
+    padding: var(--chora-space-sm);
+    border: 1px solid var(--chora-color-border, #e0e0e0);
+    border-radius: var(--chora-radius-sm);
+    font-size: 14px;
+    color: var(--chora-color-text-primary);
+    background: var(--chora-color-surface-0);
+
+    &:focus {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 1px;
+      border-color: var(--chora-color-primary);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Buttons
+  // -------------------------------------------------------------------------
+
+  &__btn-primary,
+  &__btn-secondary,
+  &__btn-icon {
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--chora-radius-sm);
+    transition: background 150ms ease, opacity 150ms ease;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__btn-primary {
+    padding: var(--chora-space-sm) var(--chora-space-lg);
+    background: var(--chora-color-primary);
+    color: var(--chora-color-on-primary, #fff);
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+  }
+
+  &__btn-secondary {
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    background: transparent;
+    color: var(--chora-color-primary);
+    border: 1px solid var(--chora-color-primary);
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  &__btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    font-size: 16px;
+    color: var(--chora-color-text-secondary);
+    flex-shrink: 0;
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: var(--chora-radius-full);
+    }
+
+    &--danger {
+      color: var(--chora-color-error, #e53935);
+
+      &:hover:not(:disabled) {
+        background: rgba(229, 57, 53, 0.08);
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Desktop enhancement
+  // -------------------------------------------------------------------------
+
+  @media (min-width: 1280px) {
+    max-width: 1400px;
+
+    &__atom-picker {
+      width: 340px;
+    }
+  }
+}

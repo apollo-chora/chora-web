@@ -1,0 +1,263 @@
+<section class="ownership surface-hplus">
+  <header class="ownership__head">
+    <p class="ownership__eyebrow">{{ 'hplus.ownership.eyebrow' | translate }}</p>
+    <h1 class="ownership__title">{{ 'hplus.ownership.title' | translate }}</h1>
+    <p class="ownership__lede">{{ 'hplus.ownership.lede' | translate }}</p>
+  </header>
+
+  @if (isLoading()) {
+    <p class="ownership__status" role="status">
+      {{ 'hplus.ownership.loading' | translate }}
+    </p>
+  } @else if (errorKey()) {
+    <div class="ownership__panel ownership__panel--stop" role="alert">
+      <p>{{ errorKey() | translate }}</p>
+      <button type="button" class="ownership__btn" (click)="retry()">
+        {{ 'hplus.ownership.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    <!-- Right now: who holds the organisation. The chip is the fact, not a
+         decoration: ownership is a stored role and no role edit can strip it. -->
+    <section class="ownership__panel" aria-labelledby="ownership-roster-h">
+      <h2 id="ownership-roster-h" class="ownership__h2">
+        {{ 'hplus.ownership.roster_heading' | translate }}
+      </h2>
+
+      @if (rosterState() === 'loading') {
+        <p class="ownership__muted">{{ 'hplus.ownership.roster_loading' | translate }}</p>
+      } @else if (rosterState() === 'unavailable') {
+        <p class="ownership__muted" data-testid="roster-unavailable">
+          {{ 'hplus.ownership.roster_unavailable' | translate }}
+        </p>
+      } @else {
+        <div class="ownership__table-wrap">
+          <table class="ownership__table">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'hplus.ownership.col_name' | translate }}</th>
+                <th scope="col">{{ 'hplus.ownership.col_email' | translate }}</th>
+                <th scope="col">{{ 'hplus.ownership.col_roles' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of roster(); track row.gcid) {
+                <tr>
+                  <td>
+                    <b>{{ row.name }}</b>
+                    @if (row.isOwner) {
+                      <span
+                        class="ownership__chip"
+                        data-testid="owner-chip"
+                        [title]="'hplus.ownership.owner_chip_title' | translate"
+                      >{{ 'hplus.ownership.owner_chip' | translate }}</span>
+                    }
+                  </td>
+                  <td class="ownership__muted">{{ row.email }}</td>
+                  <td class="ownership__muted">{{ row.roles.join(', ') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="ownership__note">{{ 'hplus.ownership.roster_note' | translate }}</p>
+      }
+    </section>
+
+    @if (refusal(); as reason) {
+      <p class="ownership__panel ownership__panel--stop" role="alert" data-testid="refusal">
+        {{ 'hplus.ownership.refused.' + reason | translate }}
+      </p>
+    }
+    @if (failed()) {
+      <p class="ownership__panel ownership__panel--stop" role="alert" data-testid="failed">
+        {{ 'hplus.ownership.error_generic' | translate }}
+      </p>
+    }
+
+    <!-- An offer stands. Exactly one of the three parties is looking at it. -->
+    @if (offer(); as open) {
+      <section class="ownership__panel" aria-labelledby="ownership-offer-h">
+        @if (offerLapsed()) {
+          <h2 id="ownership-offer-h" class="ownership__h2" data-testid="offer-expired">
+            {{ 'hplus.ownership.expired_heading' | translate }}
+          </h2>
+          <p class="ownership__muted">{{ 'hplus.ownership.expired_body' | translate }}</p>
+          @if (viewerIsInitiator()) {
+            <button
+              type="button"
+              class="ownership__btn ownership__btn--quiet"
+              data-testid="withdraw-offer"
+              [disabled]="busy()"
+              (click)="settle('revoke')"
+            >{{ 'hplus.ownership.withdraw' | translate }}</button>
+          }
+        } @else if (viewerIsNominee()) {
+          <h2 id="ownership-offer-h" class="ownership__h2">
+            {{ 'hplus.ownership.nominee_heading' | translate }}
+          </h2>
+          <p class="ownership__muted">{{ 'hplus.ownership.nominee_body' | translate }}</p>
+          @if (open.note) {
+            <blockquote class="ownership__quote">{{ open.note }}</blockquote>
+          }
+          <p class="ownership__muted">
+            {{ 'hplus.ownership.expires_at' | translate }} {{ open.expires_at }}
+          </p>
+          <div class="ownership__actions">
+            <button
+              type="button"
+              class="ownership__btn ownership__btn--primary"
+              data-testid="accept-offer"
+              [disabled]="busy()"
+              (click)="settle('accept')"
+            >{{ 'hplus.ownership.accept' | translate }}</button>
+            <button
+              type="button"
+              class="ownership__btn"
+              data-testid="decline-offer"
+              [disabled]="busy()"
+              (click)="settle('decline')"
+            >{{ 'hplus.ownership.decline' | translate }}</button>
+          </div>
+        } @else if (viewerIsInitiator()) {
+          <h2 id="ownership-offer-h" class="ownership__h2">
+            {{ 'hplus.ownership.waiting_heading' | translate }} {{ nomineeName() }}
+          </h2>
+          <p class="ownership__muted">{{ 'hplus.ownership.waiting_body' | translate }}</p>
+          <p class="ownership__muted">
+            {{ 'hplus.ownership.expires_at' | translate }} {{ open.expires_at }}
+          </p>
+          <button
+            type="button"
+            class="ownership__btn ownership__btn--quiet"
+            data-testid="withdraw-offer"
+            [disabled]="busy()"
+            (click)="settle('revoke')"
+          >{{ 'hplus.ownership.withdraw' | translate }}</button>
+        } @else {
+          <h2 id="ownership-offer-h" class="ownership__h2" data-testid="offer-in-flight">
+            {{ 'hplus.ownership.in_flight_heading' | translate }}
+          </h2>
+          <p class="ownership__muted">{{ 'hplus.ownership.in_flight_body' | translate }}</p>
+        }
+      </section>
+    }
+
+    <!-- No offer stands. The owner can start one; an operator can override. -->
+    @if (canHandOver()) {
+      <section class="ownership__panel" aria-labelledby="ownership-handover-h">
+        <h2 id="ownership-handover-h" class="ownership__h2">
+          {{ 'hplus.ownership.handover_heading' | translate }}
+        </h2>
+        <p class="ownership__muted">{{ 'hplus.ownership.handover_body' | translate }}</p>
+
+        @if (!hasCandidates()) {
+          <div data-testid="nobody-to-hand-to">
+            <p class="ownership__muted">
+              {{ 'hplus.ownership.nobody_body' | translate }}
+            </p>
+            <a class="ownership__btn ownership__btn--primary" routerLink="/h/members">
+              {{ 'hplus.ownership.invite_cta' | translate }}
+            </a>
+          </div>
+        } @else {
+          <form class="ownership__form" data-testid="handover-form" (ngSubmit)="sendOffer()">
+            <label class="ownership__label" for="ownership-nominee">
+              {{ 'hplus.ownership.nominee_label' | translate }}
+            </label>
+            <select
+              id="ownership-nominee"
+              class="ownership__input"
+              data-testid="nominee-select"
+              [value]="nominee()"
+              (change)="setNominee($any($event.target).value)"
+            >
+              <option value="">{{ 'hplus.ownership.nominee_placeholder' | translate }}</option>
+              @for (c of candidates(); track c.gcid) {
+                <option [value]="c.gcid">{{ c.name }}, {{ c.email }}</option>
+              }
+            </select>
+            <span class="ownership__hint">{{ 'hplus.ownership.nominee_hint' | translate }}</span>
+
+            <label class="ownership__label" for="ownership-note">
+              {{ 'hplus.ownership.note_label' | translate }}
+            </label>
+            <textarea
+              id="ownership-note"
+              class="ownership__input"
+              rows="2"
+              [value]="note()"
+              (input)="setNote($any($event.target).value)"
+            ></textarea>
+
+            <div class="ownership__actions">
+              <button
+                type="submit"
+                class="ownership__btn ownership__btn--primary"
+                data-testid="send-offer"
+                [disabled]="!offerReady()"
+              >{{ 'hplus.ownership.send_offer' | translate }}</button>
+            </div>
+          </form>
+        }
+      </section>
+    }
+
+    @if (canAssign()) {
+      <section class="ownership__panel" aria-labelledby="ownership-assign-h">
+        <h2 id="ownership-assign-h" class="ownership__h2">
+          {{ 'hplus.ownership.assign_heading' | translate }}
+        </h2>
+        <p class="ownership__muted">{{ 'hplus.ownership.assign_body' | translate }}</p>
+
+        <form class="ownership__form" data-testid="assign-form" (ngSubmit)="sendAssign()">
+          <label class="ownership__label" for="ownership-assign-nominee">
+            {{ 'hplus.ownership.assign_nominee_label' | translate }}
+          </label>
+          <select
+            id="ownership-assign-nominee"
+            class="ownership__input"
+            data-testid="assign-nominee-select"
+            [value]="nominee()"
+            (change)="setNominee($any($event.target).value)"
+          >
+            <option value="">{{ 'hplus.ownership.nominee_placeholder' | translate }}</option>
+            @for (c of candidates(); track c.gcid) {
+              <option [value]="c.gcid">{{ c.name }}, {{ c.email }}</option>
+            }
+          </select>
+
+          <label class="ownership__label" for="ownership-reason">
+            {{ 'hplus.ownership.reason_label' | translate }}
+          </label>
+          <textarea
+            id="ownership-reason"
+            class="ownership__input"
+            rows="2"
+            [value]="reason()"
+            (input)="setReason($any($event.target).value)"
+          ></textarea>
+          <span class="ownership__hint">{{ 'hplus.ownership.reason_hint' | translate }}</span>
+
+          <p class="ownership__note">{{ 'hplus.ownership.assign_scope_note' | translate }}</p>
+
+          <div class="ownership__actions">
+            <button
+              type="submit"
+              class="ownership__btn ownership__btn--primary"
+              data-testid="send-assign"
+              [disabled]="!assignReady()"
+            >{{ 'hplus.ownership.send_assign' | translate }}</button>
+          </div>
+        </form>
+      </section>
+    }
+
+    @if (nothingToDo()) {
+      <section class="ownership__panel" data-testid="not-permitted">
+        <h2 class="ownership__h2">{{ 'hplus.ownership.not_permitted_heading' | translate }}</h2>
+        <p class="ownership__muted">{{ 'hplus.ownership.not_permitted_body' | translate }}</p>
+      </section>
+    }
+  }
+</section>

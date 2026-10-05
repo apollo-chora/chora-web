@@ -1,0 +1,378 @@
+<section
+  class="account-dashboard"
+  role="main"
+  [attr.aria-label]="'admin.account_lifecycle.title' | translate"
+  data-testid="account-dashboard">
+
+  <!-- Page Header -->
+  <header class="account-dashboard__header">
+    <h1 class="account-dashboard__title" data-testid="dashboard-title">
+      {{ 'admin.account_lifecycle.title' | translate }}
+    </h1>
+    <button
+      type="button"
+      class="account-dashboard__btn account-dashboard__btn--primary"
+      (click)="loadAccounts()"
+      data-testid="btn-refresh"
+      [attr.aria-label]="'admin.account_lifecycle.refresh' | translate">
+      {{ 'admin.account_lifecycle.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Summary Stats -->
+  <div class="account-dashboard__stats" data-testid="stats" role="status">
+    <div class="account-dashboard__stat account-dashboard__stat--active">
+      <span class="account-dashboard__stat-value">{{ activeCount() }}</span>
+      <span class="account-dashboard__stat-label">
+        {{ 'admin.account_lifecycle.active' | translate }}
+      </span>
+    </div>
+    <div class="account-dashboard__stat account-dashboard__stat--suspended">
+      <span class="account-dashboard__stat-value">{{ suspendedCount() }}</span>
+      <span class="account-dashboard__stat-label">
+        {{ 'admin.account_lifecycle.suspended' | translate }}
+      </span>
+    </div>
+    <div class="account-dashboard__stat account-dashboard__stat--pending">
+      <span class="account-dashboard__stat-value">{{ pendingDeletionCount() }}</span>
+      <span class="account-dashboard__stat-label">
+        {{ 'admin.account_lifecycle.pending_deletion' | translate }}
+      </span>
+    </div>
+    <div class="account-dashboard__stat">
+      <span class="account-dashboard__stat-value">{{ totalAccounts() }}</span>
+      <span class="account-dashboard__stat-label">
+        {{ 'admin.account_lifecycle.total' | translate }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Search & Filter Bar -->
+  <div class="account-dashboard__controls" data-testid="controls" role="search">
+    <div class="account-dashboard__search-group">
+      <label for="account-search" class="account-dashboard__label">
+        {{ 'admin.account_lifecycle.search' | translate }}
+      </label>
+      <input
+        id="account-search"
+        type="search"
+        class="account-dashboard__search-input"
+        data-testid="search-input"
+        [value]="searchQuery()"
+        (input)="onSearch($any($event.target).value)"
+        [attr.placeholder]="'admin.account_lifecycle.search_placeholder' | translate" />
+    </div>
+
+    <div class="account-dashboard__filter-group">
+      <label for="state-filter" class="account-dashboard__label">
+        {{ 'admin.account_lifecycle.filter_state' | translate }}
+      </label>
+      <select
+        id="state-filter"
+        class="account-dashboard__select"
+        data-testid="state-filter"
+        (change)="onStateFilter($any($event.target).value)">
+        <option value="">{{ 'admin.account_lifecycle.all_states' | translate }}</option>
+        @for (state of allStates; track state) {
+          <option [value]="state">{{ stateLabels[state] | translate }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="account-dashboard__loading" data-testid="accounts-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="account-dashboard__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="account-dashboard__empty" data-testid="accounts-empty" role="status">
+      <p class="account-dashboard__empty-text">
+        {{ 'admin.account_lifecycle.no_accounts' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Accounts List -->
+  @if (!loading() && !isEmpty()) {
+    <div class="account-dashboard__list" data-testid="account-list" role="list">
+      @for (account of accounts(); track account.gcid) {
+        <div
+          class="account-dashboard__card"
+          role="listitem"
+          [attr.data-testid]="'account-' + account.gcid">
+
+          <!-- Card Header -->
+          <div class="account-dashboard__card-header">
+            <div class="account-dashboard__card-identity">
+              <h3 class="account-dashboard__card-name">{{ account.displayName }}</h3>
+              <span class="account-dashboard__card-email">{{ account.email }}</span>
+            </div>
+            <span
+              class="account-dashboard__state-badge"
+              [class]="stateClass(account.state)"
+              [attr.data-testid]="'state-' + account.gcid">
+              {{ stateLabels[account.state] | translate }}
+            </span>
+          </div>
+
+          <!-- Card Body -->
+          <div class="account-dashboard__card-body">
+            <!-- Roles -->
+            <div class="account-dashboard__card-roles">
+              @for (role of account.roles; track role) {
+                <span class="account-dashboard__role-chip">{{ role }}</span>
+              }
+            </div>
+
+            <!-- Metadata -->
+            <div class="account-dashboard__card-meta">
+              <span>
+                {{ 'admin.account_lifecycle.created' | translate }}: {{ formatDateTime(account.createdAt) }}
+              </span>
+              @if (account.suspendedAt) {
+                <span class="account-dashboard__meta-warning">
+                  {{ 'admin.account_lifecycle.suspended_at' | translate }}: {{ formatDateTime(account.suspendedAt) }}
+                </span>
+              }
+              @if (account.suspensionReason) {
+                <span class="account-dashboard__meta-reason">
+                  {{ account.suspensionReason }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Card Actions -->
+          <div class="account-dashboard__card-actions">
+            @if (canSuspend(account)) {
+              <button
+                type="button"
+                class="account-dashboard__btn account-dashboard__btn--warning"
+                (click)="openSuspendDialog(account)"
+                [attr.data-testid]="'btn-suspend-' + account.gcid"
+                [attr.aria-label]="'admin.account_lifecycle.suspend' | translate">
+                {{ 'admin.account_lifecycle.suspend' | translate }}
+              </button>
+            }
+            @if (canReactivate(account)) {
+              <button
+                type="button"
+                class="account-dashboard__btn account-dashboard__btn--success"
+                (click)="reactivateAccount(account)"
+                [attr.data-testid]="'btn-reactivate-' + account.gcid"
+                [attr.aria-label]="'admin.account_lifecycle.reactivate' | translate">
+                {{ 'admin.account_lifecycle.reactivate' | translate }}
+              </button>
+            }
+            @if (canClose(account)) {
+              <button
+                type="button"
+                class="account-dashboard__btn account-dashboard__btn--danger"
+                (click)="openCloseDialog(account)"
+                [attr.data-testid]="'btn-close-' + account.gcid"
+                [attr.aria-label]="'admin.account_lifecycle.close_account' | translate">
+                {{ 'admin.account_lifecycle.close_account' | translate }}
+              </button>
+            }
+            <a
+              [routerLink]="[account.gcid, 'events']"
+              class="account-dashboard__btn account-dashboard__btn--info"
+              [attr.data-testid]="'btn-events-' + account.gcid"
+              [attr.aria-label]="'admin.account_lifecycle.view_events' | translate">
+              {{ 'admin.account_lifecycle.view_events' | translate }}
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <nav
+        class="account-dashboard__pagination"
+        data-testid="pagination"
+        [attr.aria-label]="'admin.account_lifecycle.pagination' | translate">
+        <button
+          type="button"
+          class="account-dashboard__btn"
+          [disabled]="currentPage() <= 1"
+          (click)="goToPage(currentPage() - 1)"
+          data-testid="btn-prev-page">
+          {{ 'admin.account_lifecycle.prev_page' | translate }}
+        </button>
+        <span class="account-dashboard__page-info">
+          {{ currentPage() }} / {{ totalPages() }}
+        </span>
+        <button
+          type="button"
+          class="account-dashboard__btn"
+          [disabled]="currentPage() >= totalPages()"
+          (click)="goToPage(currentPage() + 1)"
+          data-testid="btn-next-page">
+          {{ 'admin.account_lifecycle.next_page' | translate }}
+        </button>
+      </nav>
+    }
+  }
+
+  <!-- Suspend Account Dialog -->
+  @if (suspendDialogVisible()) {
+    <div
+      class="account-dashboard__overlay"
+      data-testid="suspend-dialog-overlay"
+      (click)="closeSuspendDialog()"
+      (keyup.escape)="closeSuspendDialog()"
+      role="presentation">
+      <div
+        class="account-dashboard__dialog"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="'admin.account_lifecycle.suspend_title' | translate"
+        data-testid="suspend-dialog"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()">
+
+        <h2 class="account-dashboard__dialog-title">
+          {{ 'admin.account_lifecycle.suspend_title' | translate }}
+        </h2>
+        <p class="account-dashboard__dialog-subtitle">
+          {{ suspendTargetAccount()?.displayName }}
+          ({{ suspendTargetAccount()?.email }})
+        </p>
+
+        <div class="account-dashboard__dialog-field">
+          <label for="suspend-reason" class="account-dashboard__dialog-label">
+            {{ 'admin.account_lifecycle.reason_label' | translate }}
+          </label>
+          <textarea
+            id="suspend-reason"
+            class="account-dashboard__textarea"
+            data-testid="suspend-reason-input"
+            rows="3"
+            [value]="suspendReason()"
+            (input)="onSuspendReasonInput($any($event.target).value)"
+            [attr.placeholder]="'admin.account_lifecycle.reason_placeholder' | translate">
+          </textarea>
+        </div>
+
+        <div class="account-dashboard__dialog-actions">
+          <button
+            type="button"
+            class="account-dashboard__btn"
+            (click)="closeSuspendDialog()"
+            data-testid="btn-cancel-suspend">
+            {{ 'admin.account_lifecycle.cancel' | translate }}
+          </button>
+          <button
+            type="button"
+            class="account-dashboard__btn account-dashboard__btn--warning"
+            [disabled]="!suspendReason().trim() || suspendLoading()"
+            (click)="confirmSuspend()"
+            data-testid="btn-confirm-suspend">
+            @if (suspendLoading()) {
+              {{ 'admin.account_lifecycle.suspending' | translate }}
+            } @else {
+              {{ 'admin.account_lifecycle.confirm_suspend' | translate }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Close Account Dialog -->
+  @if (closeDialogVisible()) {
+    <div
+      class="account-dashboard__overlay"
+      data-testid="close-dialog-overlay"
+      (click)="closeCloseDialog()"
+      (keyup.escape)="closeCloseDialog()"
+      role="presentation">
+      <div
+        class="account-dashboard__dialog"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="'admin.account_lifecycle.close_title' | translate"
+        data-testid="close-dialog"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()">
+
+        <h2 class="account-dashboard__dialog-title account-dashboard__dialog-title--danger">
+          {{ 'admin.account_lifecycle.close_title' | translate }}
+        </h2>
+        <p class="account-dashboard__dialog-subtitle">
+          {{ closeTargetAccount()?.displayName }}
+          ({{ closeTargetAccount()?.email }})
+        </p>
+        <p class="account-dashboard__dialog-warning" role="alert">
+          {{ 'admin.account_lifecycle.close_warning' | translate }}
+        </p>
+
+        <div class="account-dashboard__dialog-field">
+          <label for="close-reason" class="account-dashboard__dialog-label">
+            {{ 'admin.account_lifecycle.reason_label' | translate }}
+          </label>
+          <textarea
+            id="close-reason"
+            class="account-dashboard__textarea"
+            data-testid="close-reason-input"
+            rows="3"
+            [value]="closeReason()"
+            (input)="onCloseReasonInput($any($event.target).value)"
+            [attr.placeholder]="'admin.account_lifecycle.close_reason_placeholder' | translate">
+          </textarea>
+        </div>
+
+        <!-- S7d, the closure ownership block. Inline and persistent, because
+             the operator's next step is a handover and a toast cannot carry
+             the organisation's name or the link that unblocks it. -->
+        @if (closeOwnsTenantBlock()) {
+          <div
+            class="account-dashboard__dialog-warning"
+            role="alert"
+            data-testid="close-owns-tenant">
+            <p>{{ 'admin.account_lifecycle.close_owns_tenant' | translate }}</p>
+            @if (closeOwnedTenants().length > 0) {
+              <ul>
+                @for (t of closeOwnedTenants(); track t.tenant_id) {
+                  <li>{{ t.tenant_slug }}</li>
+                }
+              </ul>
+            }
+            <a routerLink="/h/ownership" data-testid="close-owns-tenant-link">
+              {{ 'admin.account_lifecycle.close_owns_tenant_cta' | translate }}
+            </a>
+          </div>
+        }
+
+        <div class="account-dashboard__dialog-actions">
+          <button
+            type="button"
+            class="account-dashboard__btn"
+            (click)="closeCloseDialog()"
+            data-testid="btn-cancel-close">
+            {{ 'admin.account_lifecycle.cancel' | translate }}
+          </button>
+          <button
+            type="button"
+            class="account-dashboard__btn account-dashboard__btn--danger"
+            [disabled]="!closeReason().trim() || closeLoading()"
+            (click)="confirmCloseAccount()"
+            data-testid="btn-confirm-close">
+            @if (closeLoading()) {
+              {{ 'admin.account_lifecycle.closing' | translate }}
+            } @else {
+              {{ 'admin.account_lifecycle.confirm_close' | translate }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

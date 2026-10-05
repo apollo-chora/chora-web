@@ -1,0 +1,171 @@
+// =====================================================================
+// H+ S6, the go-live check (/h/go-live). UX refactor Phase E, package E2.
+// Tablet-first (>=768px primary, >=1280px desktop enhanced).
+// Polyglassmorphism tokens; .surface-hplus accent applied on the root.
+//
+// Shares the three status treatments with the S1 sibling, for the same
+// reason the two share a service: an operator who sees a row on both
+// screens must not have to work out whether the colours mean the same
+// thing. `unknown` stays NEUTRAL here too. It is scored in neither
+// direction, so painting it as a warning would contradict the tally
+// immediately above it.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.go-live {
+  display: block;
+  padding: 1.5rem;
+  min-height: 100%;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1280px;
+    margin-inline: auto;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__crumb-active {
+    color: var(--chora-color-text-primary);
+  }
+
+  &__header h1 {
+    margin: 0;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__tagline {
+    margin: 0.25rem 0 0;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__loading,
+  &__tally,
+  &__next,
+  &__partial {
+    padding: 1rem;
+  }
+
+  &__error {
+    padding: 1rem;
+    border-left: 4px solid var(--chora-color-danger);
+  }
+
+  &__tally-line {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__tally-unknown {
+    margin: 0.3rem 0 0;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__verdict {
+    margin: 0.6rem 0 0;
+    font-weight: 600;
+
+    &.is-clear {
+      color: var(--success-strong);
+    }
+
+    // Caveated, not celebratory. Nothing is blocking, but something went
+    // unchecked and the copy says so.
+    &.is-caveated {
+      color: var(--chora-color-text-primary);
+    }
+  }
+
+  &__next h2,
+  &__group h2 {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__next-text {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__parts {
+    margin: 0.4rem 0 0;
+    padding-inline-start: 1.1rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__row {
+    padding: 0.8rem 1rem;
+    border-left: 4px solid var(--glass-border);
+
+    &.is-ok {
+      border-left-color: var(--chora-color-success);
+    }
+
+    &.is-attention {
+      border-left-color: var(--chora-color-accent-coral-fill);
+    }
+
+    // Neutral. See the header note.
+    &.is-unknown {
+      border-left-color: var(--chora-color-text-muted);
+    }
+  }
+
+  &__row-label {
+    font-weight: 600;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__row-count {
+    margin-inline-start: 0.5rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__row-detail {
+    margin: 0.3rem 0 0;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__row-reason {
+    margin: 0.3rem 0 0;
+    font-size: 0.85rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__links {
+    display: flex;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .go-live {
+    padding: 2rem;
+  }
+}

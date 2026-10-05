@@ -1,0 +1,206 @@
+<section
+  class="surface-aplus question-bank-list"
+  data-testid="aplus-question-bank-list"
+  role="region"
+  aria-labelledby="qb-list-heading">
+  <header class="question-bank-list__header">
+    <div class="question-bank-list__heading-group">
+      <h1 id="qb-list-heading" class="question-bank-list__title">
+        {{ 'aplus.question_banks.title' | translate }}
+      </h1>
+      <p class="question-bank-list__subtitle">
+        {{ 'aplus.question_banks.subtitle' | translate }}
+      </p>
+    </div>
+    @if (!showCreate()) {
+      <button
+        type="button"
+        class="btn btn-primary question-bank-list__new"
+        data-testid="qb-new"
+        (click)="openCreate()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{ 'aplus.question_banks.new_cta' | translate }}
+      </button>
+    }
+  </header>
+
+  <!-- Create dialog (inline panel; signal-driven form, no FormsModule) -->
+  @if (showCreate()) {
+    <form
+      class="question-bank-list__create glass-panel"
+      data-testid="qb-create-form"
+      (submit)="onSubmit($event)">
+      <h2 class="question-bank-list__create-title">
+        {{ 'aplus.question_banks.create.title' | translate }}
+      </h2>
+
+      @if (createError(); as msg) {
+        <div class="question-bank-list__error" data-testid="qb-create-error" role="alert">
+          <p class="question-bank-list__error-title">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ 'aplus.question_banks.create.error_title' | translate }}
+          </p>
+          <p class="question-bank-list__error-detail">{{ msg }}</p>
+        </div>
+      }
+
+      <!-- Name -->
+      <div class="question-bank-list__field">
+        <label for="qb-create-name" class="question-bank-list__label">
+          {{ 'aplus.question_banks.create.name_label' | translate }}
+        </label>
+        <input
+          id="qb-create-name"
+          type="text"
+          class="question-bank-list__input"
+          data-testid="qb-create-name"
+          maxlength="200"
+          [attr.placeholder]="'aplus.question_banks.create.name_placeholder' | translate"
+          (input)="onNameInput($event)" />
+        @if (attempted() && !nameValid()) {
+          <p class="question-bank-list__field-error" data-testid="qb-create-error-name" role="alert">
+            {{ 'aplus.question_banks.create.name_required' | translate }}
+          </p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="question-bank-list__field">
+        <label for="qb-create-description" class="question-bank-list__label">
+          {{ 'aplus.question_banks.create.description_label' | translate }}
+        </label>
+        <textarea
+          id="qb-create-description"
+          class="question-bank-list__input question-bank-list__textarea"
+          data-testid="qb-create-description"
+          rows="2"
+          maxlength="500"
+          [attr.placeholder]="'aplus.question_banks.create.description_placeholder' | translate"
+          (input)="onDescriptionInput($event)"></textarea>
+      </div>
+
+      <!-- Visibility (object attribute, picked once — no toggle) -->
+      <div class="question-bank-list__field">
+        <label for="qb-create-visibility" class="question-bank-list__label">
+          {{ 'aplus.question_banks.create.visibility_label' | translate }}
+        </label>
+        <select
+          id="qb-create-visibility"
+          class="question-bank-list__input"
+          data-testid="qb-create-visibility"
+          (change)="onVisibilityChange($event)">
+          @for (v of visibilities; track v) {
+            <option [value]="v" [selected]="visibility() === v">
+              {{ visibilityLabelKey(v) | translate }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <!-- Tags (comma-separated) -->
+      <div class="question-bank-list__field">
+        <label for="qb-create-tags" class="question-bank-list__label">
+          {{ 'aplus.question_banks.create.tags_label' | translate }}
+        </label>
+        <input
+          id="qb-create-tags"
+          type="text"
+          class="question-bank-list__input"
+          data-testid="qb-create-tags"
+          [attr.aria-describedby]="'qb-create-tags-help'"
+          [attr.placeholder]="'aplus.question_banks.create.tags_placeholder' | translate"
+          (input)="onTagsInput($event)" />
+        <small id="qb-create-tags-help" class="question-bank-list__hint">
+          {{ 'aplus.question_banks.create.tags_help' | translate }}
+        </small>
+      </div>
+
+      <div class="question-bank-list__actions">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="qb-create-cancel"
+          (click)="closeCreate()">
+          {{ 'aplus.question_banks.create.cancel' | translate }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-testid="qb-create-submit"
+          [disabled]="submitting()">
+          @if (submitting()) {
+            {{ 'aplus.question_banks.create.submitting' | translate }}
+          } @else {
+            {{ 'aplus.question_banks.create.submit' | translate }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- List body -->
+  @if (isLoading()) {
+    <p class="question-bank-list__loading glass-panel" data-testid="qb-list-loading" aria-busy="true">
+      {{ 'aplus.question_banks.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div class="question-bank-list__error glass-panel" data-testid="qb-list-error" role="alert">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <span>{{ 'aplus.question_banks.load_error' | translate }}</span>
+      <button
+        type="button"
+        class="btn btn-ghost"
+        data-testid="qb-list-retry"
+        (click)="retry()">
+        {{ 'common.retry' | translate }}
+      </button>
+    </div>
+  } @else if (isEmpty()) {
+    <div class="question-bank-list__empty glass-panel" data-testid="qb-list-empty" role="status">
+      <i class="fa-solid fa-layer-group question-bank-list__empty-icon" aria-hidden="true"></i>
+      <p class="question-bank-list__empty-title">
+        {{ 'aplus.question_banks.empty_title' | translate }}
+      </p>
+      <p class="question-bank-list__empty-body">
+        {{ 'aplus.question_banks.empty_body' | translate }}
+      </p>
+    </div>
+  } @else {
+    <ul class="question-bank-list__cards" data-testid="qb-list" role="list">
+      @for (bank of banks(); track bank.id) {
+        <li class="question-bank-list__card glass-panel" [attr.data-testid]="'qb-card-' + bank.id">
+          <div class="question-bank-list__card-main">
+            <a
+              class="question-bank-list__card-name"
+              [attr.data-testid]="'qb-card-link-' + bank.id"
+              [routerLink]="['/a/studio/question-banks', bank.id]">
+              {{ bank.name }}
+            </a>
+            @if (bank.description) {
+              <p class="question-bank-list__card-desc">{{ bank.description }}</p>
+            }
+            @if (bank.tags.length > 0) {
+              <ul class="question-bank-list__card-tags" [attr.data-testid]="'qb-card-tags-' + bank.id" role="list">
+                @for (tag of bank.tags; track tag) {
+                  <li class="question-bank-list__tag">{{ tag }}</li>
+                }
+              </ul>
+            }
+          </div>
+          <div class="question-bank-list__card-meta">
+            <span
+              class="question-bank-list__badge"
+              [attr.data-testid]="'qb-card-visibility-' + bank.id">
+              {{ visibilityLabelKey(bank.visibility) | translate }}
+            </span>
+            <span class="question-bank-list__count" [attr.data-testid]="'qb-card-count-' + bank.id">
+              <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+              <span class="question-bank-list__count-num">{{ questionCount(bank) }}</span>
+              {{ 'aplus.question_banks.questions_label' | translate }}
+            </span>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

@@ -1,0 +1,158 @@
+<section
+  class="revision-diff-viewer"
+  [attr.aria-label]="'atomic.revision-diff.title' | translate"
+  data-testid="revision-diff-viewer">
+
+  <header class="revision-diff-viewer__header">
+    <h1 class="revision-diff-viewer__title" data-testid="revision-diff-title">
+      {{ 'atomic.revision-diff.title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Loading -->
+  @if (revisionsState().status === 'loading') {
+    <div class="revision-diff-viewer__loading" data-testid="revisions-loading" role="status" aria-live="polite">
+      <div class="revision-diff-viewer__skeleton"></div>
+      <div class="revision-diff-viewer__skeleton"></div>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (revisionsState().status === 'error') {
+    <div class="revision-diff-viewer__error" data-testid="revisions-error" role="alert">
+      <p class="revision-diff-viewer__error-text">
+        {{ 'atomic.revision-diff.load-error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (revisionsState().status === 'success' && revisions().length === 0) {
+    <div class="revision-diff-viewer__empty" data-testid="revisions-empty" role="status">
+      <p>{{ 'atomic.revision-diff.no-revisions' | translate }}</p>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (revisionsState().status === 'success' && revisions().length > 0) {
+    <div class="revision-diff-viewer__layout">
+
+      <!-- Timeline sidebar -->
+      <aside class="revision-diff-viewer__timeline" aria-label="Revision timeline" data-testid="revision-timeline">
+        <h2 class="revision-diff-viewer__timeline-title">
+          {{ 'atomic.revision-diff.timeline' | translate }}
+        </h2>
+        <ol class="revision-diff-viewer__timeline-list">
+          @for (rev of revisions(); track rev.id) {
+            <li class="revision-diff-viewer__timeline-item"
+              [class.revision-diff-viewer__timeline-item--left-selected]="isLeftSelected(rev)"
+              [class.revision-diff-viewer__timeline-item--right-selected]="isRightSelected(rev)"
+              data-testid="revision-timeline-item">
+              <div class="revision-diff-viewer__timeline-meta">
+                <span class="revision-diff-viewer__timeline-version">
+                  v{{ rev.revision_number }}
+                </span>
+                <span class="revision-diff-viewer__timeline-date">
+                  {{ formatDate(rev.created_at) }}
+                </span>
+                @if (rev.published_at) {
+                  <span class="revision-diff-viewer__timeline-badge">
+                    {{ 'atomic.revision-diff.published' | translate }}
+                  </span>
+                }
+              </div>
+              <div class="revision-diff-viewer__timeline-actions">
+                <button
+                  type="button"
+                  class="revision-diff-viewer__select-btn"
+                  [class.revision-diff-viewer__select-btn--active]="isLeftSelected(rev)"
+                  (click)="selectLeftRevision(rev)"
+                  [attr.aria-label]="'Select v' + rev.revision_number + ' as left comparison'"
+                  data-testid="select-left-btn">
+                  {{ 'atomic.revision-diff.left' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="revision-diff-viewer__select-btn"
+                  [class.revision-diff-viewer__select-btn--active]="isRightSelected(rev)"
+                  (click)="selectRightRevision(rev)"
+                  [attr.aria-label]="'Select v' + rev.revision_number + ' as right comparison'"
+                  data-testid="select-right-btn">
+                  {{ 'atomic.revision-diff.right' | translate }}
+                </button>
+              </div>
+            </li>
+          }
+        </ol>
+      </aside>
+
+      <!-- Diff view -->
+      <main class="revision-diff-viewer__diff-panel" data-testid="diff-panel">
+        @if (!canCompare()) {
+          <div class="revision-diff-viewer__diff-prompt" role="status">
+            <p>{{ 'atomic.revision-diff.select-two' | translate }}</p>
+          </div>
+        } @else {
+          <div class="revision-diff-viewer__diff-header">
+            <span class="revision-diff-viewer__diff-label revision-diff-viewer__diff-label--left"
+              data-testid="diff-left-label">
+              {{ leftLabel() }}
+            </span>
+            <span class="revision-diff-viewer__diff-label revision-diff-viewer__diff-label--right"
+              data-testid="diff-right-label">
+              {{ rightLabel() }}
+            </span>
+          </div>
+
+          <div class="revision-diff-viewer__diff-body" role="region" aria-label="Diff comparison">
+            @if (diffLines().length === 0) {
+              <div class="revision-diff-viewer__no-changes" role="status">
+                <p>{{ 'atomic.revision-diff.no-changes' | translate }}</p>
+              </div>
+            } @else {
+              <table class="revision-diff-viewer__diff-table" data-testid="diff-table">
+                <thead>
+                  <tr>
+                    <th class="revision-diff-viewer__line-num-header" scope="col">
+                      {{ leftLabel() }}
+                    </th>
+                    <th class="revision-diff-viewer__line-num-header" scope="col">
+                      {{ rightLabel() }}
+                    </th>
+                    <th class="revision-diff-viewer__content-header" scope="col">
+                      {{ 'atomic.revision-diff.content' | translate }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (line of diffLines(); track $index) {
+                    <tr class="revision-diff-viewer__diff-row"
+                      [class.revision-diff-viewer__diff-row--added]="line.type === 'added'"
+                      [class.revision-diff-viewer__diff-row--removed]="line.type === 'removed'">
+                      <td class="revision-diff-viewer__line-num">
+                        {{ line.leftLineNum ?? '' }}
+                      </td>
+                      <td class="revision-diff-viewer__line-num">
+                        {{ line.rightLineNum ?? '' }}
+                      </td>
+                      <td class="revision-diff-viewer__line-content">
+                        <span class="revision-diff-viewer__diff-prefix" aria-hidden="true">
+                          @switch (line.type) {
+                            @case ('added') { + }
+                            @case ('removed') { - }
+                            @default { &nbsp; }
+                          }
+                        </span>
+                        <code>{{ line.content }}</code>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        }
+      </main>
+    </div>
+  }
+</section>

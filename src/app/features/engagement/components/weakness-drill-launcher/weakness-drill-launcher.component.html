@@ -1,0 +1,72 @@
+<section class="weakness-drill-launcher" data-testid="weakness-drill-launcher">
+  @if (drillState().status === 'loading') {
+    <div class="weakness-drill-launcher__loading" data-testid="drill-loading" role="status">
+      <p>{{ 'engagement.drill.loading' | translate }}</p>
+    </div>
+  } @else if (drillState().status === 'error') {
+    <div class="weakness-drill-launcher__error" data-testid="drill-error" role="alert">
+      <h2>{{ 'engagement.drill.error-title' | translate }}</h2>
+      <p>{{ drillError() }}</p>
+    </div>
+  } @else if (topic()) {
+    <!-- Header -->
+    <header class="weakness-drill-launcher__header" data-testid="drill-header">
+      <h1 class="weakness-drill-launcher__title">{{ 'engagement.drill.title' | translate }}</h1>
+      <p class="weakness-drill-launcher__subtitle">{{ topic()!.topic_name }}</p>
+    </header>
+
+    <!-- Topic retention summary -->
+    <div class="weakness-drill-launcher__summary" data-testid="drill-summary">
+      <div class="weakness-drill-launcher__stat">
+        <span class="weakness-drill-launcher__stat-label">{{ 'engagement.drill.retention' | translate }}</span>
+        <span class="weakness-drill-launcher__stat-value" [class]="retentionClass(topic()!.retention_pct)">
+          {{ topic()!.retention_pct }}%
+        </span>
+      </div>
+      <div class="weakness-drill-launcher__stat">
+        <span class="weakness-drill-launcher__stat-label">{{ 'engagement.drill.weak-atoms' | translate }}</span>
+        <span class="weakness-drill-launcher__stat-value">{{ atomCount() }}</span>
+      </div>
+    </div>
+
+    <!-- Struggling atoms list -->
+    <div class="weakness-drill-launcher__atoms" data-testid="drill-atoms">
+      <h2 class="weakness-drill-launcher__section-title">{{ 'engagement.drill.struggling-atoms' | translate }}</h2>
+      <ul class="weakness-drill-launcher__atom-list" role="list">
+        @for (atom of weakAtoms(); track atom.atom_id) {
+          <li class="weakness-drill-launcher__atom" [attr.data-testid]="'drill-atom-' + atom.atom_id">
+            <div class="weakness-drill-launcher__atom-info">
+              <span class="weakness-drill-launcher__atom-title">{{ atom.atom_title }}</span>
+              <span class="weakness-drill-launcher__atom-type">{{ atom.atom_type }}</span>
+            </div>
+            <div class="weakness-drill-launcher__atom-retention" [class]="retentionClass(atom.retention_pct)">
+              {{ atom.retention_pct }}%
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- Launch button -->
+    <div class="weakness-drill-launcher__action" data-testid="drill-action">
+      <button
+        class="weakness-drill-launcher__launch-btn"
+        [disabled]="isLaunching() || atomCount() === 0"
+        (click)="launchDrill()"
+        data-testid="drill-launch-btn"
+        type="button">
+        @if (isLaunching()) {
+          {{ 'engagement.drill.launching' | translate }}
+        } @else {
+          {{ 'engagement.drill.start' | translate }} ({{ atomCount() }} {{ 'engagement.drill.atoms' | translate }})
+        }
+      </button>
+
+      @if (launchState().status === 'error') {
+        <p class="weakness-drill-launcher__launch-error" role="alert" data-testid="drill-launch-error">
+          {{ 'engagement.drill.launch-failed' | translate }}
+        </p>
+      }
+    </div>
+  }
+</section>

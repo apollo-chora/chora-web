@@ -1,0 +1,237 @@
+<section
+  class="surface-rplus applications-admin-detail"
+  data-testid="rplus-applications-admin-detail"
+  role="region"
+  aria-labelledby="rplus-applications-admin-detail-heading">
+  <header class="applications-admin-detail__header glass-panel">
+    <nav
+      class="applications-admin-detail__breadcrumb"
+      [attr.aria-label]="'rplus.applicationsAdminDetail.breadcrumb_aria' | translate">
+      <a
+        class="applications-admin-detail__breadcrumb-link"
+        data-testid="applications-admin-detail-back-link"
+        routerLink="/r/applications-admin">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        {{ 'rplus.applicationsAdminDetail.breadcrumb_root' | translate }}
+      </a>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.applicationsAdminDetail.breadcrumb_leaf' | translate }}
+      </span>
+    </nav>
+
+    <div class="applications-admin-detail__title-row">
+      <h1
+        id="rplus-applications-admin-detail-heading"
+        class="applications-admin-detail__title"
+        data-testid="applications-admin-detail-title">
+        {{ 'rplus.applicationsAdminDetail.title' | translate }}
+      </h1>
+      <code
+        class="applications-admin-detail__application-id"
+        data-testid="applications-admin-detail-id">
+        {{ id() }}
+      </code>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <p
+      class="applications-admin-detail__loading glass-panel"
+      data-testid="applications-admin-detail-loading"
+      role="status"
+      aria-busy="true">
+      {{ 'rplus.applicationsAdminDetail.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div
+      class="applications-admin-detail__error glass-panel"
+      data-testid="applications-admin-detail-error"
+      role="alert">
+      <p class="applications-admin-detail__error-message">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        {{ errorKey() | translate }}
+      </p>
+      <button
+        type="button"
+        class="btn btn-ghost applications-admin-detail__retry"
+        data-testid="applications-admin-detail-retry"
+        (click)="retry()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        {{ 'rplus.applicationsAdminDetail.retry' | translate }}
+      </button>
+    </div>
+  } @else if (detail(); as d) {
+    <article
+      class="applications-admin-detail__panel glass-panel"
+      [attr.data-testid]="'applications-admin-detail-panel-' + d.id">
+      <div class="applications-admin-detail__panel-head">
+        <span
+          class="badge"
+          [class]="'badge ' + badge(d.state)"
+          [attr.data-testid]="'applications-admin-detail-state-' + d.id"
+          [attr.data-state]="d.state">
+          {{ 'rplus.applicationsAdmin.state.' + d.state | translate }}
+        </span>
+      </div>
+
+      <dl class="applications-admin-detail__fields">
+        <div class="applications-admin-detail__field">
+          <dt>{{ 'rplus.applicationsAdminDetail.field.applicant' | translate }}</dt>
+          <dd data-testid="applications-admin-detail-gcid">{{ d.gcid }}</dd>
+        </div>
+        <div class="applications-admin-detail__field">
+          <dt>{{ 'rplus.applicationsAdminDetail.field.course' | translate }}</dt>
+          <dd data-testid="applications-admin-detail-course">{{ d.courseId }}</dd>
+        </div>
+        @if (d.classId) {
+          <div class="applications-admin-detail__field">
+            <dt>{{ 'rplus.applicationsAdminDetail.field.class' | translate }}</dt>
+            <dd data-testid="applications-admin-detail-class">{{ d.classId }}</dd>
+          </div>
+        }
+        <div class="applications-admin-detail__field">
+          <dt>{{ 'rplus.applicationsAdminDetail.field.submittedAt' | translate }}</dt>
+          <dd>
+            <time
+              data-testid="applications-admin-detail-submitted"
+              [attr.datetime]="d.createdAt">{{ d.createdAt }}</time>
+          </dd>
+        </div>
+        <div class="applications-admin-detail__field">
+          <dt>{{ 'rplus.applicationsAdminDetail.field.updatedAt' | translate }}</dt>
+          <dd>
+            <time
+              data-testid="applications-admin-detail-updated"
+              [attr.datetime]="d.updatedAt">{{ d.updatedAt }}</time>
+          </dd>
+        </div>
+        @if (d.offerExpiresAt) {
+          <div class="applications-admin-detail__field">
+            <dt>{{ 'rplus.applicationsAdminDetail.field.offerExpiresAt' | translate }}</dt>
+            <dd>
+              <time [attr.datetime]="d.offerExpiresAt">{{ d.offerExpiresAt }}</time>
+            </dd>
+          </div>
+        }
+        @if (d.stripePaymentIntentId) {
+          <div class="applications-admin-detail__field">
+            <dt>{{ 'rplus.applicationsAdminDetail.field.stripePaymentIntentId' | translate }}</dt>
+            <dd>
+              <code>{{ d.stripePaymentIntentId }}</code>
+            </dd>
+          </div>
+        }
+        @if (d.invoiceId) {
+          <div class="applications-admin-detail__field">
+            <dt>{{ 'rplus.applicationsAdminDetail.field.invoiceId' | translate }}</dt>
+            <dd data-testid="applications-admin-detail-invoice">{{ d.invoiceId }}</dd>
+          </div>
+        }
+        @if (d.rejectedReason) {
+          <div class="applications-admin-detail__field applications-admin-detail__field--wide">
+            <dt>{{ 'rplus.applicationsAdminDetail.field.rejectedReason' | translate }}</dt>
+            <dd
+              class="applications-admin-detail__reason"
+              data-testid="applications-admin-detail-rejected-reason">
+              {{ d.rejectedReason }}
+            </dd>
+          </div>
+        }
+        @if (d.withdrawnReason) {
+          <div class="applications-admin-detail__field applications-admin-detail__field--wide">
+            <dt>{{ 'rplus.applicationsAdminDetail.field.withdrawnReason' | translate }}</dt>
+            <dd
+              class="applications-admin-detail__reason"
+              data-testid="applications-admin-detail-withdrawn-reason">
+              {{ d.withdrawnReason }}
+            </dd>
+          </div>
+        }
+      </dl>
+
+      @if (d.fundingLines.length > 0) {
+        <section
+          class="applications-admin-detail__funding"
+          [attr.aria-label]="'rplus.applicationsAdminDetail.funding.aria' | translate">
+          <h2 class="applications-admin-detail__section-title">
+            {{ 'rplus.applicationsAdminDetail.funding.title' | translate }}
+          </h2>
+          <ul
+            class="applications-admin-detail__funding-list"
+            role="list"
+            data-testid="applications-admin-detail-funding-list">
+            @for (line of d.fundingLines; track $index) {
+              <li
+                class="applications-admin-detail__funding-row"
+                [attr.data-testid]="'applications-admin-detail-funding-' + $index">
+                <span class="applications-admin-detail__funding-source">
+                  {{ line.source }}
+                </span>
+                <span class="applications-admin-detail__funding-amount">
+                  {{ formatSgd(line.amountSgdCents) }}
+                </span>
+                @if (line.reference) {
+                  <code class="applications-admin-detail__funding-ref">
+                    {{ line.reference }}
+                  </code>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <section
+        class="applications-admin-detail__history"
+        [attr.aria-label]="'rplus.applicationsAdminDetail.history.aria' | translate">
+        <h2 class="applications-admin-detail__section-title">
+          {{ 'rplus.applicationsAdminDetail.history.title' | translate }}
+        </h2>
+        @if (d.history.length === 0) {
+          <p
+            class="applications-admin-detail__history-empty"
+            data-testid="applications-admin-detail-history-empty">
+            {{ 'rplus.applicationsAdminDetail.history.empty' | translate }}
+          </p>
+        } @else {
+          <ol
+            class="applications-admin-detail__history-list"
+            data-testid="applications-admin-detail-history-list">
+            @for (h of d.history; track $index) {
+              <li
+                class="applications-admin-detail__history-row"
+                [attr.data-testid]="'applications-admin-detail-history-' + $index">
+                <time
+                  class="applications-admin-detail__history-at"
+                  [attr.datetime]="h.at">{{ h.at }}</time>
+                <span class="applications-admin-detail__history-transition">
+                  @if (h.from) {
+                    <code class="applications-admin-detail__history-from">{{ h.from }}</code>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                  }
+                  <code class="applications-admin-detail__history-to">{{ h.to }}</code>
+                </span>
+                @if (h.reason) {
+                  <span class="applications-admin-detail__history-reason">
+                    {{ h.reason }}
+                  </span>
+                }
+              </li>
+            }
+          </ol>
+        }
+      </section>
+
+      <footer class="applications-admin-detail__panel-foot">
+        <a
+          class="btn btn-ghost applications-admin-detail__back-cta"
+          data-testid="applications-admin-detail-back-cta"
+          routerLink="/r/applications-admin">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          {{ 'rplus.applicationsAdminDetail.back_cta' | translate }}
+        </a>
+      </footer>
+    </article>
+  }
+</section>

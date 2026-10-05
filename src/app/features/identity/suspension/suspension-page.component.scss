@@ -1,0 +1,297 @@
+:host {
+  display: block;
+}
+
+// ---------------------------------------------------------------------------
+// Page Layout — full viewport, centered card, no nav chrome
+// ---------------------------------------------------------------------------
+
+.suspension-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--chora-space-lg, 24px);
+  background: var(--chora-color-surface-1, #f9fafb);
+
+  // -------------------------------------------------------------------------
+  // Branding
+  // -------------------------------------------------------------------------
+
+  &__branding {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-end: var(--chora-space-xl, 32px);
+  }
+
+  &__logo {
+    color: var(--chora-color-primary, #2563eb);
+  }
+
+  &__brand-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text-primary, #111);
+    letter-spacing: -0.02em;
+  }
+
+  // -------------------------------------------------------------------------
+  // Card
+  // -------------------------------------------------------------------------
+
+  &__card {
+    background: var(--chora-color-surface-0, #fff);
+    border-radius: var(--chora-radius-lg, 12px);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: var(--chora-space-xl, 32px);
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+  }
+
+  // -------------------------------------------------------------------------
+  // Icon
+  // -------------------------------------------------------------------------
+
+  &__icon {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Headings
+  // -------------------------------------------------------------------------
+
+  &__heading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text-primary, #111);
+    margin: 0 0 var(--chora-space-sm, 8px) 0;
+  }
+
+  &__subheading {
+    font-size: 0.9375rem;
+    color: var(--chora-color-text-secondary, #555);
+    margin: 0 0 var(--chora-space-lg, 24px) 0;
+    line-height: 1.5;
+  }
+
+  // -------------------------------------------------------------------------
+  // Details
+  // -------------------------------------------------------------------------
+
+  &__details {
+    margin: 0 0 var(--chora-space-lg, 24px) 0;
+    text-align: start;
+  }
+
+  &__detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: var(--chora-space-sm, 8px) 0;
+    border-bottom: 1px solid var(--chora-color-border, #e5e5e5);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__detail-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--chora-color-text-secondary, #666);
+    flex-shrink: 0;
+    margin-inline-end: var(--chora-space-md, 16px);
+  }
+
+  &__detail-value {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-primary, #111);
+    margin: 0;
+    text-align: end;
+  }
+
+  // -------------------------------------------------------------------------
+  // Countdown
+  // -------------------------------------------------------------------------
+
+  &__countdown {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__countdown-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--chora-color-text-secondary, #666);
+    margin: 0 0 var(--chora-space-sm, 8px) 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__countdown-grid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 56px;
+  }
+
+  &__countdown-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--chora-color-text-primary, #111);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+
+  &__countdown-name {
+    font-size: 0.6875rem;
+    color: var(--chora-color-text-secondary, #666);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__countdown-sep {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text-secondary, #999);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Status banners
+  // -------------------------------------------------------------------------
+
+  &__expired {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: var(--chora-radius-md, 8px);
+    padding: var(--chora-space-md, 16px);
+    color: #166534;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__permanent {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--chora-radius-md, 8px);
+    padding: var(--chora-space-md, 16px);
+    color: #991b1b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Actions
+  // -------------------------------------------------------------------------
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-xl, 32px);
+    border-radius: var(--chora-radius-md, 8px);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+
+    &--appeal {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      width: 100%;
+      max-width: 320px;
+
+      &:hover {
+        filter: brightness(0.9);
+      }
+    }
+  }
+
+  &__link {
+    font-size: 0.875rem;
+    color: var(--chora-color-primary, #2563eb);
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Footer
+  // -------------------------------------------------------------------------
+
+  &__footer {
+    margin-block-start: var(--chora-space-xl, 32px);
+  }
+
+  &__footer-text {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-secondary, #999);
+    margin: 0;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Desktop enhancement
+// ---------------------------------------------------------------------------
+
+@media (min-width: 1280px) {
+  .suspension-page {
+    &__card {
+      padding: var(--chora-space-xl, 32px) 48px;
+    }
+
+    &__countdown-value {
+      font-size: 2.5rem;
+    }
+
+    &__countdown-unit {
+      min-width: 72px;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Reduced motion
+// ---------------------------------------------------------------------------
+
+@media (prefers-reduced-motion: reduce) {
+  .suspension-page {
+    &__btn,
+    &__link {
+      transition: none;
+    }
+  }
+}

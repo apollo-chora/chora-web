@@ -1,0 +1,325 @@
+<section
+  class="surface-rplus course-content-editor"
+  aria-labelledby="content-editor-heading"
+  data-testid="rplus-course-content-editor">
+
+  <header class="course-content-editor__header glass-panel">
+    <div class="course-content-editor__breadcrumb">
+      <a
+        [routerLink]="['/r/catalog', courseId()]"
+        class="course-content-editor__crumb-link"
+        data-testid="content-editor-breadcrumb-course">
+        {{ 'rplus.courseContentEditor.breadcrumb_course' | translate }}
+      </a>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.courseContentEditor.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <h1
+      id="content-editor-heading"
+      class="course-content-editor__title"
+      data-testid="content-editor-heading">
+      {{ 'rplus.courseContentEditor.heading' | translate }}
+    </h1>
+    <p class="course-content-editor__hint" id="content-editor-hint">
+      {{ 'rplus.courseContentEditor.hint' | translate }}
+    </p>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div
+        class="glass-panel course-content-editor__status"
+        role="status"
+        aria-busy="true"
+        data-testid="content-editor-loading">
+        <i
+          class="fa-solid fa-circle-notch fa-spin course-content-editor__spinner"
+          aria-hidden="true"></i>
+        <p>{{ 'rplus.courseContentEditor.loading' | translate }}</p>
+      </div>
+    }
+
+    @case ('error') {
+      <div
+        class="glass-panel course-content-editor__status course-content-editor__status--error"
+        role="alert"
+        data-testid="content-editor-error">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <p>{{ errorMessage() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-ghost"
+          (click)="load()"
+          data-testid="content-editor-retry">
+          {{ 'rplus.courseContentEditor.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    @default {
+      <!-- Add-item form ───────────────────────────────────────────── -->
+      <section
+        class="glass-panel course-content-editor__add-form"
+        aria-labelledby="add-item-heading"
+        data-testid="content-editor-add-form">
+        <h2
+          id="add-item-heading"
+          class="course-content-editor__section-title">
+          {{ 'rplus.courseContentEditor.add_section' | translate }}
+        </h2>
+
+        <div class="course-content-editor__form-row">
+          <!-- Kind dropdown -->
+          <div class="course-content-editor__form-field">
+            <label
+              for="content-kind-select"
+              class="course-content-editor__label">
+              {{ 'rplus.courseContentEditor.kind_label' | translate }}
+            </label>
+            <select
+              id="content-kind-select"
+              class="course-content-editor__select"
+              [value]="addForm().kind"
+              (change)="updateKind($any($event.target).value)"
+              data-testid="content-editor-kind-select"
+              [attr.aria-label]="'rplus.courseContentEditor.kind_label' | translate">
+              @for (kind of allKinds; track kind) {
+                <option [value]="kind">
+                  {{ kindLabelKey(kind) | translate }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <!-- Media upload (video/document) — mint signed URL + PUT to GCS. -->
+          @if (isUploadKind()) {
+            <div class="course-content-editor__form-field">
+              <label
+                for="content-file-input"
+                class="course-content-editor__label">
+                {{ 'rplus.courseContentEditor.upload_label' | translate }}
+              </label>
+              <input
+                id="content-file-input"
+                type="file"
+                class="course-content-editor__input"
+                [accept]="acceptAttr()"
+                [disabled]="uploadPending()"
+                (change)="onFileSelected($event)"
+                data-testid="content-editor-file-input"
+                [attr.aria-label]="'rplus.courseContentEditor.upload_label' | translate" />
+              @if (uploadPending()) {
+                <p class="course-content-editor__upload-status" data-testid="content-editor-upload-pending">
+                  <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+                  {{ 'rplus.courseContentEditor.upload_pending' | translate }}
+                </p>
+              }
+              @if (uploadedFileName()) {
+                <p class="course-content-editor__upload-status course-content-editor__upload-status--ok"
+                   data-testid="content-editor-upload-ok">
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  {{ 'rplus.courseContentEditor.upload_ok' | translate }} {{ uploadedFileName() }}
+                </p>
+              }
+              @if (uploadError()) {
+                <p class="course-content-editor__form-error" role="alert"
+                   data-testid="content-editor-upload-error">
+                  {{ uploadError()! | translate }}
+                </p>
+              }
+            </div>
+          }
+
+          <!-- Ref field: an opaque-id kind (atom / assessment / live
+               classroom) searches BY NAME; a URL kind keeps free text.
+               CHO-2346: the raw UUIDv7 field made the id kinds unusable. -->
+          <div class="course-content-editor__form-field">
+            <label
+              for="content-ref-input"
+              class="course-content-editor__label">
+              {{ refLabelKey(addForm().kind) | translate }}
+            </label>
+            @if (refPickerType(); as refType) {
+              <chora-entity-picker
+                data-testid="content-editor-ref-picker"
+                [entityType]="refType"
+                [searchPortOverride]="refSearchPort()"
+                [value]="refPicked()"
+                variant="single"
+                [minChars]="2"
+                [placeholder]="
+                  'rplus.courseContentEditor.ref_search_placeholder' | translate
+                "
+                (picked)="onRefPicked($event)" />
+              <span
+                class="course-content-editor__hint"
+                data-testid="content-editor-ref-hint">
+                {{ 'rplus.courseContentEditor.ref_hint_search' | translate }}
+              </span>
+            } @else {
+              <input
+                id="content-ref-input"
+                type="text"
+                class="course-content-editor__input"
+                [value]="addForm().ref"
+                (input)="updateRef($any($event.target).value)"
+                [placeholder]="refPlaceholderKey(addForm().kind) | translate"
+                autocomplete="off"
+                data-testid="content-editor-ref-input"
+                [attr.aria-label]="refLabelKey(addForm().kind) | translate" />
+            }
+          </div>
+
+          <!-- Title input -->
+          <div class="course-content-editor__form-field">
+            <label
+              for="content-title-input"
+              class="course-content-editor__label">
+              {{ 'rplus.courseContentEditor.title_label' | translate }}
+            </label>
+            <input
+              id="content-title-input"
+              type="text"
+              class="course-content-editor__input"
+              [value]="addForm().title"
+              (input)="updateTitle($any($event.target).value)"
+              [placeholder]="'rplus.courseContentEditor.title_placeholder' | translate"
+              autocomplete="off"
+              data-testid="content-editor-title-input"
+              [attr.aria-label]="'rplus.courseContentEditor.title_label' | translate" />
+          </div>
+
+          <!-- Submit -->
+          <div class="course-content-editor__form-field course-content-editor__form-field--cta">
+            <button
+              type="button"
+              class="btn btn-primary course-content-editor__add-btn"
+              [disabled]="addPending()"
+              (click)="submitAddItem()"
+              data-testid="content-editor-add-btn"
+              [attr.aria-label]="'rplus.courseContentEditor.add_btn_aria' | translate">
+              @if (addPending()) {
+                <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+              } @else {
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              }
+              {{ 'rplus.courseContentEditor.add_btn' | translate }}
+            </button>
+          </div>
+        </div>
+
+        @if (addError()) {
+          <p
+            class="course-content-editor__form-error"
+            role="alert"
+            data-testid="content-editor-add-error">
+            {{ addError()! | translate }}
+          </p>
+        }
+      </section>
+
+      <!-- Item list ───────────────────────────────────────────────── -->
+      <section
+        class="glass-panel course-content-editor__list-panel"
+        aria-labelledby="content-list-heading">
+        <h2
+          id="content-list-heading"
+          class="course-content-editor__section-title">
+          {{ 'rplus.courseContentEditor.list_section' | translate }}
+          <span
+            class="course-content-editor__item-count"
+            aria-live="polite"
+            data-testid="content-editor-item-count">
+            ({{ items().length }})
+          </span>
+        </h2>
+
+        @if (state().status === 'empty' && items().length === 0) {
+          <p
+            class="course-content-editor__empty"
+            data-testid="content-editor-empty">
+            {{ 'rplus.courseContentEditor.empty' | translate }}
+          </p>
+        } @else {
+          <ol
+            class="course-content-editor__item-list"
+            aria-describedby="content-editor-hint"
+            data-testid="content-editor-item-list">
+            @for (item of items(); track item.item_id; let i = $index) {
+              <li
+                class="course-content-editor__item"
+                tabindex="0"
+                [attr.data-testid]="'content-editor-item-' + item.item_id"
+                [attr.data-kind]="item.kind"
+                [attr.data-position]="item.position"
+                [attr.aria-label]="item.position + '. ' + item.title + ' (' + (kindLabelKey(item.kind) | translate) + ')'"
+                (keydown)="onItemKey($event, item.item_id)">
+                <span class="course-content-editor__item-pos" aria-hidden="true">
+                  {{ item.position }}
+                </span>
+                <span class="course-content-editor__item-icon" aria-hidden="true">
+                  @if (item.kind === 'youtube') {
+                    <i class="fa-brands fa-youtube"></i>
+                  } @else {
+                    <i [class]="'fa-solid fa-' + icon(item.kind)"></i>
+                  }
+                </span>
+                <span class="course-content-editor__item-title">
+                  {{ item.title }}
+                </span>
+                <span
+                  class="course-content-editor__item-kind-badge"
+                  [attr.data-testid]="'content-editor-item-kind-' + item.item_id">
+                  {{ kindLabelKey(item.kind) | translate }}
+                </span>
+                <span
+                  class="course-content-editor__item-ref"
+                  [attr.title]="item.ref">
+                  {{ item.ref }}
+                </span>
+                <div class="course-content-editor__item-controls">
+                  <!-- Reorder up -->
+                  <button
+                    type="button"
+                    class="btn btn-ghost course-content-editor__icon-btn"
+                    [disabled]="i === 0 || reorderPending()"
+                    (click)="moveItem(item.item_id, -1)"
+                    [attr.data-testid]="'content-editor-move-up-' + item.item_id"
+                    [attr.aria-label]="'rplus.courseContentEditor.move_up_aria' | translate">
+                    <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                  </button>
+                  <!-- Reorder down -->
+                  <button
+                    type="button"
+                    class="btn btn-ghost course-content-editor__icon-btn"
+                    [disabled]="i === items().length - 1 || reorderPending()"
+                    (click)="moveItem(item.item_id, 1)"
+                    [attr.data-testid]="'content-editor-move-down-' + item.item_id"
+                    [attr.aria-label]="'rplus.courseContentEditor.move_down_aria' | translate">
+                    <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                  </button>
+                  <!-- Remove -->
+                  <button
+                    type="button"
+                    class="btn btn-ghost course-content-editor__icon-btn course-content-editor__icon-btn--danger"
+                    [disabled]="isRemovingItem(item.item_id)"
+                    (click)="removeItem(item.item_id)"
+                    [attr.data-testid]="'content-editor-remove-' + item.item_id"
+                    [attr.aria-label]="('rplus.courseContentEditor.remove_aria' | translate) + ': ' + item.title">
+                    @if (isRemovingItem(item.item_id)) {
+                      <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+                    } @else {
+                      <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                    }
+                  </button>
+                </div>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+    }
+  }
+</section>

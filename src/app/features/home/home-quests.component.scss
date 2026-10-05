@@ -1,0 +1,119 @@
+/**
+ * The ranked home section. Follows the pass 4 mockup's quest row: a body that
+ * carries the sentence and its band label, and an action on the trailing edge.
+ *
+ * Colours come from the A+ token layer rather than the mockup's literals, so
+ * the section inherits the coral ramp's AA-safe stops instead of restating
+ * them. No new hex is introduced here.
+ */
+.quests {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.quests__heading {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chora-color-text-muted);
+}
+
+.quests__line {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--chora-color-border, rgba(30, 41, 59, 0.1));
+  color: var(--chora-color-text-muted);
+  font-size: 0.86rem;
+}
+
+.quests__line--unread {
+  border-style: dashed;
+}
+
+.quest {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+a.quest:hover {
+  transform: translateX(4px);
+  box-shadow: var(--glass-shadow-hover, 0 12px 40px 0 rgba(31, 38, 135, 0.12));
+}
+
+a.quest:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.quest--unread,
+.quest--dead {
+  border-style: dashed;
+  border-color: var(--chora-color-border, rgba(30, 41, 59, 0.18));
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.quest--absent {
+  opacity: 0.75;
+  border: 1px dashed var(--chora-color-border, rgba(30, 41, 59, 0.18));
+  background: transparent;
+}
+
+.quest__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.quest__title {
+  font-weight: 600;
+  font-size: 0.94rem;
+}
+
+.quest__sub {
+  font-size: 0.75rem;
+  color: var(--chora-color-text-muted);
+}
+
+/* The operator status class under an unread card (ruling D4): muted and
+   monospace, so it reads as a reference rather than as a sentence. */
+.quest__code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  color: var(--chora-color-text-muted);
+}
+
+.band {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--chora-color-text-muted);
+}
+
+.quest__go {
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  color: var(--primary-strong, var(--primary));
+}
+
+.quest__go--dead {
+  font-weight: 500;
+  color: var(--chora-color-text-muted);
+}

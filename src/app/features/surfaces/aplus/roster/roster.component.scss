@@ -1,0 +1,163 @@
+:host {
+  display: block;
+}
+
+.roster {
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--chora-space-md, 16px);
+    flex-wrap: wrap;
+    margin-bottom: var(--chora-space-lg, 24px);
+  }
+
+  &__eyebrow {
+    margin: 0 0 var(--chora-space-xs, 4px);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--chora-color-accent-coral-text, #9a3412);
+  }
+
+  &__title {
+    margin: 0 0 var(--chora-space-xs, 4px);
+    font-size: 1.5rem;
+  }
+
+  &__sub {
+    margin: 0;
+    max-width: 60ch;
+    color: var(--chora-color-text-muted, #616161);
+    font-size: 0.9rem;
+  }
+
+  &__chip {
+    flex: 0 0 auto;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(107, 114, 128, 0.15);
+    color: var(--chora-color-text-muted, #616161);
+    font-size: 0.75rem;
+  }
+
+  &__status,
+  &__empty {
+    padding: var(--chora-space-lg, 24px) 0;
+    color: var(--chora-color-text-muted, #616161);
+  }
+
+  &__error {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+    align-items: flex-start;
+    padding: var(--chora-space-md, 16px);
+    border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.12));
+    border-radius: var(--chora-radius-md, 12px);
+  }
+
+  // Tablet-first: one column at 768, three at 1280. No phone breakpoint.
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--chora-space-md, 16px);
+
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__reserved {
+    margin-top: var(--chora-space-lg, 24px);
+    padding: var(--chora-space-md, 16px);
+    border: 1px dashed var(--glass-border, rgba(0, 0, 0, 0.18));
+    border-radius: var(--chora-radius-md, 12px);
+  }
+
+  &__reserved-title {
+    margin: 0 0 var(--chora-space-xs, 4px);
+    font-weight: 600;
+  }
+
+  &__reserved-body {
+    margin: 0;
+    color: var(--chora-color-text-muted, #616161);
+    font-size: 0.85rem;
+  }
+}
+
+.roster-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs, 4px);
+  padding: var(--chora-space-md, 16px);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.4));
+  border-radius: var(--chora-radius-md, 12px);
+  background: var(--glass-bg, rgba(255, 255, 255, 0.6));
+
+  // The pod is a promise, not a holding: dashed, in the coral the re-token
+  // reserves for curiosity.
+  &--pod {
+    border: 2px dashed rgba(234, 88, 12, 0.35);
+    background: none;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+
+  &__meta,
+  &__station {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--chora-color-text-muted, #616161);
+  }
+
+  // The station the screen could not read. Muted rather than alarming: it is
+  // an absence of knowledge, not an error the learner has to act on.
+  &__station-unknown {
+    font-style: italic;
+  }
+
+  &__xp {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-top: var(--chora-space-xs, 4px);
+  }
+
+  &__bar {
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(107, 114, 128, 0.2);
+    overflow: hidden;
+  }
+
+  &__bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--chora-color-accent-coral, #ea580c);
+  }
+
+  &__xp-label {
+    font-size: 0.7rem;
+    color: var(--chora-color-text-muted, #616161);
+  }
+
+  &__teases {
+    list-style: none;
+    margin: var(--chora-space-xs, 4px) 0 0;
+    padding: 0;
+    font-size: 0.75rem;
+  }
+
+  &__tease-dormant {
+    margin-left: 4px;
+    color: var(--chora-color-text-muted, #616161);
+    font-style: italic;
+  }
+}

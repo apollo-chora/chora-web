@@ -1,0 +1,389 @@
+/* Cast wrapper — a single-row Familiar carousel. glass-panel supplies the card
+   surface; this lays out the ‹ › arrows + the horizontal scroll viewport + the
+   pinned hatch-new egg. Reveal easing per Dale's FE design language. */
+:host {
+  display: block;
+}
+
+.cast {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm, 8px);
+  padding: var(--chora-space-md, 16px) var(--chora-space-lg, 24px);
+}
+
+.cast__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cast__heading {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main, #1f2430);
+
+  i {
+    color: var(--primary, #1976d2);
+  }
+}
+
+/* The row: arrow · viewport · arrow · pinned hatch (the hatch never scrolls). */
+.cast__row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--chora-space-sm, 8px);
+  min-width: 0; // let the viewport flex-shrink so overflow is real
+}
+
+.cast__arrow {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary, #1976d2) 12%, transparent);
+  color: var(--primary, #1976d2);
+  cursor: pointer;
+  transition: background 180ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: color-mix(in srgb, var(--primary, #1976d2) 22%, transparent);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+/* The horizontal scroll window — one row, free ‹ › scroll (no wrap). */
+.cast__viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  list-style: none;
+  margin: 0;
+  padding: var(--chora-space-xs, 4px);
+  display: flex;
+  gap: var(--chora-space-sm, 8px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--text-muted, #6b7280) 30%, transparent);
+    border-radius: 999px;
+  }
+}
+
+.cast__item {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A cast member portrait: breed art + name + stage. The portrait is a link to
+   the Familiar's profile (/a/companion/{id}) at any stage. */
+.cast__member {
+  width: 104px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--chora-space-sm, 8px);
+  border: 1px solid transparent;
+  border-radius: var(--panel-radius, 14px);
+  background: var(--surface-0, rgba(255, 255, 255, 0.5));
+  color: var(--text-main, #1f2430);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 220ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)),
+    border-color 220ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--primary, #1976d2);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+}
+
+.cast__member--egg {
+  // The egg reads a touch calmer than a hatched member (a forming Familiar).
+  background: color-mix(in srgb, var(--primary, #1976d2) 6%, transparent);
+}
+
+/* Secondary "summon to a goal" trigger — shown only for a hatched, not-yet-bound
+   Familiar. A quiet accent chip beneath the portrait (the portrait link stays the
+   primary action). */
+.cast__summon {
+  max-width: 104px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--primary, #1976d2) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary, #1976d2) 8%, transparent);
+  color: var(--primary, #1976d2);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background 180ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)),
+    transform 180ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--primary, #1976d2) 16%, transparent);
+    transform: translateY(-1px);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+}
+
+/* Fail-loud roster states — a loading line + an honest error with Retry. */
+.cast__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: var(--chora-space-sm, 8px);
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b7280);
+
+  i {
+    color: var(--primary, #1976d2);
+  }
+}
+
+.cast__status--error {
+  color: var(--text-main, #1f2430);
+
+  i {
+    color: var(--danger, #dc2626);
+  }
+}
+
+.cast__retry {
+  margin-left: auto;
+  padding: 4px 12px;
+  border: 1px solid var(--primary, #1976d2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--primary, #1976d2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--primary, #1976d2) 12%, transparent);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+}
+
+.cast__art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+
+  // Fit the shared BreedArt (fixed 96px sm) into the compact carousel cell.
+  ::ng-deep .breed-art {
+    width: 72px;
+    height: 72px;
+  }
+  ::ng-deep .breed-art__image {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+  }
+}
+
+.cast__member-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.cast__member-stage {
+  font-size: 0.72rem;
+  color: var(--text-muted, #6b7280);
+  text-transform: capitalize;
+}
+
+/* Pinned hatch-new egg — always visible at the row end, never scrolls. */
+.cast__hatch {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 104px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--chora-space-sm, 8px);
+  border: 1.5px dashed color-mix(in srgb, var(--primary, #1976d2) 45%, transparent);
+  border-radius: var(--panel-radius, 14px);
+  background: transparent;
+  color: var(--primary, #1976d2);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 200ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)),
+    transform 200ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--primary, #1976d2) 10%, transparent);
+    transform: translateY(-2px);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+}
+
+.cast__hatch-egg {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+}
+
+.cast__hatch-plus {
+  position: absolute;
+  right: -8px;
+  top: -4px;
+  font-size: 0.7rem;
+  background: var(--primary, #1976d2);
+  color: #fff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cast__hatch-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Tablet-first: roomier cells + art on wide desktop. */
+@media (min-width: 1280px) {
+  .cast__member,
+  .cast__hatch {
+    width: 120px;
+  }
+  .cast__art {
+    width: 84px;
+    height: 84px;
+
+    ::ng-deep .breed-art,
+    ::ng-deep .breed-art__image {
+      width: 84px;
+      height: 84px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cast__viewport {
+    scroll-behavior: auto;
+  }
+  .cast__member,
+  .cast__hatch,
+  .cast__arrow,
+  .cast__summon {
+    transition: none;
+  }
+  .cast__member:hover,
+  .cast__member:focus-visible,
+  .cast__hatch:hover,
+  .cast__hatch:focus-visible,
+  .cast__summon:hover,
+  .cast__summon:focus-visible {
+    transform: none;
+  }
+}
+
+// ── C3: the where-line and the way out to the full roster ──────────────────
+
+.cast__member-where {
+  // The station, or the honest absence of it. Muted and small: it is context
+  // under a portrait, not a claim competing with the companion's name.
+  display: block;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: var(--chora-color-text-muted, #616161);
+  max-width: 12ch;
+  overflow-wrap: anywhere;
+}
+
+.cast__all {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+  border: 1px dashed var(--glass-border, rgba(0, 0, 0, 0.18));
+  border-radius: var(--chora-radius-md, 12px);
+  text-decoration: none;
+  color: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--chora-color-accent-coral, #ea580c);
+    outline-offset: 2px;
+  }
+}
+
+.cast__all-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.cast__all-sub {
+  font-size: 0.68rem;
+  color: var(--chora-color-text-muted, #616161);
+}

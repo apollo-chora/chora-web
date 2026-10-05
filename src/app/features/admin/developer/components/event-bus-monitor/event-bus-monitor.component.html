@@ -1,0 +1,148 @@
+<section
+  class="event-bus-monitor"
+  role="main"
+  [attr.aria-label]="'admin.developer.event_bus_title' | translate"
+  data-testid="event-bus-monitor">
+
+  <!-- Header -->
+  <header class="event-bus-monitor__header">
+    <div class="event-bus-monitor__header-left">
+      <a routerLink=".." class="event-bus-monitor__back" data-testid="btn-back">
+        {{ 'admin.developer.back_to_console' | translate }}
+      </a>
+      <h1 class="event-bus-monitor__title" data-testid="monitor-title">
+        {{ 'admin.developer.event_bus_title' | translate }}
+      </h1>
+    </div>
+    <div class="event-bus-monitor__header-actions">
+      <button
+        type="button"
+        class="event-bus-monitor__btn event-bus-monitor__btn--secondary"
+        (click)="clearMessages()"
+        data-testid="btn-clear"
+        [disabled]="messageCount() === 0">
+        {{ 'admin.developer.clear' | translate }}
+      </button>
+      <button
+        type="button"
+        class="event-bus-monitor__btn"
+        [class.event-bus-monitor__btn--primary]="!isConnected()"
+        [class.event-bus-monitor__btn--danger]="isConnected()"
+        (click)="toggleConnection()"
+        [disabled]="isConnecting()"
+        data-testid="btn-connect">
+        {{ connectionLabel() | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Connection Status Bar -->
+  <div
+    class="event-bus-monitor__status-bar"
+    [class.event-bus-monitor__status-bar--connected]="isConnected()"
+    [class.event-bus-monitor__status-bar--connecting]="isConnecting()"
+    [class.event-bus-monitor__status-bar--disconnected]="!isConnected() && !isConnecting()"
+    data-testid="connection-status"
+    role="status"
+    aria-live="polite">
+    <span class="event-bus-monitor__status-dot"></span>
+    <span class="event-bus-monitor__status-text">
+      @if (isConnected()) {
+        {{ 'admin.developer.status_connected' | translate }}
+      } @else if (isConnecting()) {
+        {{ 'admin.developer.status_connecting' | translate }}
+      } @else {
+        {{ 'admin.developer.status_disconnected' | translate }}
+      }
+    </span>
+    <span class="event-bus-monitor__message-count" data-testid="message-count">
+      {{ messageCount() }} {{ 'admin.developer.events' | translate }}
+    </span>
+  </div>
+
+  <!-- Topic Filters -->
+  @if (uniqueTopics().length > 0) {
+    <div class="event-bus-monitor__filters" data-testid="topic-filters">
+      <button
+        type="button"
+        class="event-bus-monitor__filter-btn"
+        [class.event-bus-monitor__filter-btn--active]="topicFilter() === null"
+        (click)="onTopicFilter(null)"
+        data-testid="filter-all-topics">
+        {{ 'admin.developer.all_topics' | translate }}
+      </button>
+      @for (topic of uniqueTopics(); track topic) {
+        <button
+          type="button"
+          class="event-bus-monitor__filter-btn"
+          [class.event-bus-monitor__filter-btn--active]="topicFilter() === topic"
+          (click)="onTopicFilter(topic)"
+          [attr.data-testid]="'filter-' + topic">
+          {{ topicShortName(topic) }}
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Event Stream -->
+  @if (filteredMessages().length === 0) {
+    <div class="event-bus-monitor__empty" role="status" data-testid="no-events">
+      @if (isConnected()) {
+        <p>{{ 'admin.developer.waiting_for_events' | translate }}</p>
+      } @else {
+        <p>{{ 'admin.developer.connect_to_start' | translate }}</p>
+      }
+    </div>
+  } @else {
+    <div class="event-bus-monitor__stream" role="log" aria-live="polite" data-testid="event-stream">
+      @for (event of filteredMessages(); track $index) {
+        <div
+          class="event-bus-monitor__event"
+          [attr.data-testid]="'event-' + $index">
+
+          <!-- Event Summary Row -->
+          <button
+            type="button"
+            class="event-bus-monitor__event-row"
+            (click)="toggleExpand($index)"
+            [attr.aria-expanded]="isExpanded($index)"
+            [attr.aria-label]="event.eventType + ' on ' + event.topic">
+            <span class="event-bus-monitor__event-time">{{ formatTimestamp(event.timestamp) }}</span>
+            <span class="event-bus-monitor__event-topic">{{ topicShortName(event.topic) }}</span>
+            <span class="event-bus-monitor__event-type">{{ event.eventType }}</span>
+            <span class="event-bus-monitor__event-tenant">{{ event.tenantId }}</span>
+            <span class="event-bus-monitor__event-preview">{{ payloadPreview(event.payload) }}</span>
+          </button>
+
+          <!-- Expanded Payload -->
+          @if (isExpanded($index)) {
+            <div class="event-bus-monitor__detail" data-testid="event-detail">
+              <div class="event-bus-monitor__detail-grid">
+                <div class="event-bus-monitor__detail-field">
+                  <span class="event-bus-monitor__detail-label">{{ 'admin.developer.topic' | translate }}</span>
+                  <code class="event-bus-monitor__detail-value">{{ event.topic }}</code>
+                </div>
+                <div class="event-bus-monitor__detail-field">
+                  <span class="event-bus-monitor__detail-label">{{ 'admin.developer.event_type' | translate }}</span>
+                  <code class="event-bus-monitor__detail-value">{{ event.eventType }}</code>
+                </div>
+                <div class="event-bus-monitor__detail-field">
+                  <span class="event-bus-monitor__detail-label">{{ 'admin.developer.tenant_id' | translate }}</span>
+                  <code class="event-bus-monitor__detail-value">{{ event.tenantId }}</code>
+                </div>
+                <div class="event-bus-monitor__detail-field">
+                  <span class="event-bus-monitor__detail-label">{{ 'admin.developer.aggregate_id' | translate }}</span>
+                  <code class="event-bus-monitor__detail-value">{{ event.aggregateId }}</code>
+                </div>
+              </div>
+              <div class="event-bus-monitor__payload-section">
+                <span class="event-bus-monitor__detail-label">{{ 'admin.developer.payload' | translate }}</span>
+                <pre class="event-bus-monitor__payload">{{ payloadFull(event.payload) }}</pre>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

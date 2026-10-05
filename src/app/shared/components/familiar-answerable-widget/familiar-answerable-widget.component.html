@@ -1,0 +1,106 @@
+<div class="familiar-answerable-widget" data-testid="familiar-answerable-widget">
+  <p class="familiar-answerable-widget__reply">{{ reply() }}</p>
+
+  <p
+    class="familiar-answerable-widget__notice"
+    data-testid="familiar-answerable-notice">
+    <i class="fa-solid fa-brain" aria-hidden="true"></i>
+    <span>{{ 'familiar_loadout.answerable_notice' | translate }}</span>
+  </p>
+
+  @if (items().length === 0) {
+    <p
+      class="familiar-answerable-widget__empty"
+      data-testid="familiar-answerable-empty">
+      {{ 'familiar_loadout.answerable_empty' | translate }}
+    </p>
+  } @else {
+    <ul
+      class="familiar-answerable-widget__items"
+      data-testid="familiar-answerable-items">
+      @for (item of items(); track item.atomId) {
+        <li
+          class="familiar-answerable-widget__item"
+          [attr.data-testid]="'familiar-answerable-item-' + item.atomId">
+          <div class="familiar-answerable-widget__item-main">
+            <span class="familiar-answerable-widget__item-title">{{
+              item.title
+            }}</span>
+            <span class="familiar-answerable-widget__item-meta">
+              @if (item.topic) {
+                <span
+                  class="familiar-answerable-widget__chip familiar-answerable-widget__chip--topic"
+                  >{{ item.topic }}</span
+                >
+              }
+              <span
+                class="familiar-answerable-widget__chip familiar-answerable-widget__chip--difficulty">
+                {{ 'familiar_loadout.answerable_difficulty' | translate }}
+                {{ item.difficulty }}
+              </span>
+              <span
+                class="familiar-answerable-widget__chip familiar-answerable-widget__chip--reason">
+                {{
+                  ('familiar_loadout.answerable_reason_' + item.reason)
+                    | translate
+                }}
+              </span>
+            </span>
+          </div>
+
+          <div class="familiar-answerable-widget__item-actions">
+            <div
+              class="familiar-answerable-widget__selfcheck"
+              role="group"
+              [attr.aria-label]="
+                'familiar_loadout.answerable_self_check_prompt' | translate
+              ">
+              <button
+                type="button"
+                class="familiar-answerable-widget__selfcheck-btn"
+                [class.is-active]="verdictFor(item.atomId) === 'got_it'"
+                [attr.aria-pressed]="verdictFor(item.atomId) === 'got_it'"
+                [attr.data-testid]="'familiar-answerable-gotit-' + item.atomId"
+                (click)="markSelfCheck(item.atomId, 'got_it')">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                {{ 'familiar_loadout.answerable_self_got_it' | translate }}
+              </button>
+              <button
+                type="button"
+                class="familiar-answerable-widget__selfcheck-btn"
+                [class.is-active]="
+                  verdictFor(item.atomId) === 'still_learning'
+                "
+                [attr.aria-pressed]="
+                  verdictFor(item.atomId) === 'still_learning'
+                "
+                [attr.data-testid]="
+                  'familiar-answerable-stilllearning-' + item.atomId
+                "
+                (click)="markSelfCheck(item.atomId, 'still_learning')">
+                <i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i>
+                {{
+                  'familiar_loadout.answerable_self_still_learning'
+                    | translate
+                }}
+              </button>
+            </div>
+            <a
+              class="familiar-answerable-widget__practice-link"
+              [routerLink]="practiceLink(item.atomId)"
+              [attr.data-testid]="
+                'familiar-answerable-practice-' + item.atomId
+              ">
+              <i class="fa-solid fa-play" aria-hidden="true"></i>
+              {{ 'familiar_loadout.answerable_practice_cta' | translate }}
+            </a>
+          </div>
+        </li>
+      }
+    </ul>
+    <p class="familiar-answerable-widget__selfcheck-note">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      {{ 'familiar_loadout.answerable_self_note' | translate }}
+    </p>
+  }
+</div>

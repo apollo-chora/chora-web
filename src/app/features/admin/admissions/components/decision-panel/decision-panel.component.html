@@ -1,0 +1,353 @@
+<section
+  class="decision-panel"
+  role="main"
+  [attr.aria-label]="'admin.admissions.review_title' | translate"
+  data-testid="decision-panel">
+
+  <!-- Header -->
+  <header class="decision-panel__header">
+    <h1 class="decision-panel__title" data-testid="review-title">
+      {{ 'admin.admissions.review_title' | translate }}
+    </h1>
+    <div class="decision-panel__header-actions">
+      <button
+        type="button"
+        class="decision-panel__bulk-toggle"
+        [class.decision-panel__bulk-toggle--active]="bulkMode()"
+        (click)="toggleBulkMode()"
+        data-testid="bulk-mode-toggle"
+        [attr.aria-label]="'admin.admissions.bulk_mode' | translate"
+        [attr.aria-pressed]="bulkMode()">
+        {{ 'admin.admissions.bulk_mode' | translate }}
+        @if (bulkMode() && bulkSelectedCount() > 0) {
+          ({{ bulkSelectedCount() }})
+        }
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="decision-panel__loading" aria-live="polite" data-testid="review-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="decision-panel__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading()) {
+    <div class="decision-panel__layout">
+
+      <!-- Left: Applications Queue -->
+      <div class="decision-panel__queue" data-testid="applications-queue">
+        <h2 class="decision-panel__section-title">
+          {{ 'admin.admissions.applications_queue' | translate }}
+          <span class="decision-panel__count">({{ applications().length }})</span>
+        </h2>
+
+        @if (applications().length === 0) {
+          <div class="decision-panel__empty" data-testid="empty-queue">
+            <p>{{ 'admin.admissions.no_applications' | translate }}</p>
+          </div>
+        }
+
+        <div class="decision-panel__queue-list" role="list"
+             [attr.aria-label]="'admin.admissions.applications_queue' | translate">
+          @for (app of applications(); track trackByAppId($index, app)) {
+            <div
+              class="decision-panel__queue-item"
+              [class.decision-panel__queue-item--selected]="selectedApplicationId() === app.id && !bulkMode()"
+              [class.decision-panel__queue-item--bulk-selected]="isBulkSelected(app.id)"
+              role="listitem"
+              tabindex="0"
+              (click)="bulkMode() ? toggleBulkSelect(app.id) : selectApplication(app)"
+              (keydown.enter)="bulkMode() ? toggleBulkSelect(app.id) : selectApplication(app)"
+              (keydown.space)="bulkMode() ? toggleBulkSelect(app.id) : selectApplication(app); $event.preventDefault()"
+              [attr.data-testid]="'queue-item-' + $index"
+              [attr.aria-label]="app.learner_name + ' - ' + app.pipeline_name">
+
+              @if (bulkMode()) {
+                <input
+                  type="checkbox"
+                  class="decision-panel__bulk-checkbox"
+                  [checked]="isBulkSelected(app.id)"
+                  (click)="$event.stopPropagation()"
+                  (change)="toggleBulkSelect(app.id)"
+                  [attr.aria-label]="'admin.admissions.select_application' | translate" />
+              }
+
+              <div class="decision-panel__queue-info">
+                <span class="decision-panel__queue-name">{{ app.learner_name }}</span>
+                <span class="decision-panel__queue-pipeline">{{ app.pipeline_name }}</span>
+                @if (app.programme_name) {
+                  <span class="decision-panel__queue-programme">{{ app.programme_name }}</span>
+                }
+              </div>
+
+              <div class="decision-panel__queue-meta">
+                <span class="decision-panel__queue-progress">
+                  {{ app.completed_stages }}/{{ app.total_stages }}
+                </span>
+                <span class="decision-panel__status" [class]="getStatusClass(app.status)">
+                  {{ app.status }}
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Right: Detail & Decision -->
+      <div class="decision-panel__detail" data-testid="application-detail">
+        @if (loadingDetail()) {
+          <div class="decision-panel__detail-loading" aria-live="polite">
+            @for (i of [1, 2]; track i) {
+              <div class="decision-panel__skeleton-row"></div>
+            }
+          </div>
+        } @else if (selectedApplication(); as detail) {
+
+          <!-- Learner Info -->
+          <div class="decision-panel__detail-section" data-testid="learner-info">
+            <h2 class="decision-panel__section-title">{{ detail.learner_name }}</h2>
+            <div class="decision-panel__detail-meta">
+              <span>{{ detail.pipeline_name }}</span>
+              @if (detail.programme_name) {
+                <span>{{ detail.programme_name }}</span>
+              }
+              <span>
+                {{ 'admin.admissions.submitted' | translate }}:
+                {{ detail.submitted_at | date:'mediumDate' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Completed Stages -->
+          <div class="decision-panel__detail-section" data-testid="stages-summary">
+            <h3 class="decision-panel__subsection-title">
+              {{ 'admin.admissions.completed_stages' | translate }}
+            </h3>
+            @for (stage of detail.stages; track trackByIndex($index)) {
+              <div class="decision-panel__stage-row"
+                   [attr.data-testid]="'detail-stage-' + $index">
+                <span class="decision-panel__stage-name">{{ stage.stage_name }}</span>
+                <span class="decision-panel__stage-type">
+                  {{ stageTypeLabels[stage.stage_type] | translate }}
+                </span>
+                <span class="decision-panel__stage-status"
+                      [class.decision-panel__stage-status--done]="stage.status === 'completed'">
+                  {{ stage.status }}
+                </span>
+                @if (stage.assessment_score !== null) {
+                  <span class="decision-panel__stage-score">
+                    {{ 'admin.admissions.score' | translate }}: {{ stage.assessment_score }}%
+                  </span>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Documents -->
+          @if (detail.stages.some(s => s.documents.length > 0)) {
+            <div class="decision-panel__detail-section" data-testid="documents-section">
+              <h3 class="decision-panel__subsection-title">
+                {{ 'admin.admissions.uploaded_documents' | translate }}
+              </h3>
+              @for (stage of detail.stages; track trackByIndex($index)) {
+                @for (doc of stage.documents; track doc.id) {
+                  <div class="decision-panel__doc-row">
+                    <span class="decision-panel__doc-name">{{ doc.filename }}</span>
+                    @if (doc.preview_url) {
+                      <a
+                        class="decision-panel__doc-preview"
+                        [href]="doc.preview_url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        [attr.aria-label]="'admin.admissions.preview_document' | translate">
+                        {{ 'admin.admissions.preview' | translate }}
+                      </a>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+
+          <!-- Reviewer Notes -->
+          <div class="decision-panel__detail-section" data-testid="notes-section">
+            <h3 class="decision-panel__subsection-title">
+              {{ 'admin.admissions.reviewer_notes' | translate }}
+            </h3>
+            @if (detail.reviewer_notes.length > 0) {
+              @for (note of detail.reviewer_notes; track note.id) {
+                <div class="decision-panel__note">
+                  <div class="decision-panel__note-header">
+                    <span class="decision-panel__note-author">{{ note.reviewer_name }}</span>
+                    <span class="decision-panel__note-date">{{ note.created_at | date:'short' }}</span>
+                  </div>
+                  <p class="decision-panel__note-text">{{ note.note }}</p>
+                </div>
+              }
+            }
+            <div class="decision-panel__note-input">
+              <label for="reviewer-note" class="decision-panel__label">
+                {{ 'admin.admissions.add_note' | translate }}
+              </label>
+              <textarea
+                id="reviewer-note"
+                class="decision-panel__textarea"
+                [ngModel]="reviewerNote()"
+                (ngModelChange)="reviewerNote.set($event)"
+                rows="2"
+                [placeholder]="'admin.admissions.note_placeholder' | translate"
+                data-testid="note-input"
+                [attr.aria-label]="'admin.admissions.add_note' | translate"></textarea>
+              <button
+                type="button"
+                class="decision-panel__btn decision-panel__btn--small"
+                [disabled]="!reviewerNote().trim() || addingNote()"
+                (click)="addNote()"
+                data-testid="add-note-btn"
+                [attr.aria-label]="'admin.admissions.add_note' | translate">
+                {{ 'admin.admissions.add_note' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Decision Actions -->
+          <div class="decision-panel__decision-section" data-testid="decision-actions">
+            <h3 class="decision-panel__subsection-title">
+              {{ 'admin.admissions.make_decision' | translate }}
+            </h3>
+
+            <!-- Reject Reason (shown inline) -->
+            <div class="decision-panel__reject-config" data-testid="reject-config">
+              <div class="decision-panel__field">
+                <label for="reject-reason" class="decision-panel__label">
+                  {{ 'admin.admissions.reject_reason' | translate }}
+                </label>
+                <select
+                  id="reject-reason"
+                  class="decision-panel__select"
+                  [ngModel]="rejectReasonCode()"
+                  (ngModelChange)="rejectReasonCode.set($event)"
+                  data-testid="reject-reason-select"
+                  [attr.aria-label]="'admin.admissions.reject_reason' | translate">
+                  <option [ngValue]="null">{{ 'admin.admissions.select_reason' | translate }}</option>
+                  @for (reason of allRejectReasons; track reason) {
+                    <option [ngValue]="reason">{{ rejectReasonLabels[reason] | translate }}</option>
+                  }
+                </select>
+              </div>
+              <div class="decision-panel__field">
+                <label for="reject-detail" class="decision-panel__label">
+                  {{ 'admin.admissions.reject_detail' | translate }}
+                </label>
+                <textarea
+                  id="reject-detail"
+                  class="decision-panel__textarea"
+                  [ngModel]="rejectReasonDetail()"
+                  (ngModelChange)="rejectReasonDetail.set($event)"
+                  rows="2"
+                  data-testid="reject-detail-input"
+                  [attr.aria-label]="'admin.admissions.reject_detail' | translate"></textarea>
+              </div>
+            </div>
+
+            <div class="decision-panel__decision-buttons">
+              <button
+                type="button"
+                class="decision-panel__btn decision-panel__btn--approve"
+                [disabled]="deciding()"
+                (click)="makeDecision('approved')"
+                data-testid="approve-btn"
+                [attr.aria-label]="'admin.admissions.approve' | translate">
+                {{ 'admin.admissions.approve' | translate }}
+              </button>
+              <button
+                type="button"
+                class="decision-panel__btn decision-panel__btn--reject"
+                [disabled]="deciding()"
+                (click)="makeDecision('rejected')"
+                data-testid="reject-btn"
+                [attr.aria-label]="'admin.admissions.reject' | translate">
+                {{ 'admin.admissions.reject' | translate }}
+              </button>
+              <button
+                type="button"
+                class="decision-panel__btn decision-panel__btn--defer"
+                [disabled]="deciding()"
+                (click)="makeDecision('deferred')"
+                data-testid="defer-btn"
+                [attr.aria-label]="'admin.admissions.defer' | translate">
+                {{ 'admin.admissions.defer' | translate }}
+              </button>
+            </div>
+          </div>
+
+        } @else if (bulkMode() && bulkSelectedCount() > 0) {
+          <!-- Bulk Decision Panel -->
+          <div class="decision-panel__bulk-actions" data-testid="bulk-actions">
+            <h2 class="decision-panel__section-title">
+              {{ 'admin.admissions.bulk_decision' | translate }}
+              ({{ bulkSelectedCount() }} {{ 'admin.admissions.selected' | translate }})
+            </h2>
+
+            <div class="decision-panel__reject-config">
+              <div class="decision-panel__field">
+                <label for="bulk-reject-reason" class="decision-panel__label">
+                  {{ 'admin.admissions.reject_reason' | translate }}
+                </label>
+                <select
+                  id="bulk-reject-reason"
+                  class="decision-panel__select"
+                  [ngModel]="rejectReasonCode()"
+                  (ngModelChange)="rejectReasonCode.set($event)"
+                  data-testid="bulk-reject-reason-select"
+                  [attr.aria-label]="'admin.admissions.reject_reason' | translate">
+                  <option [ngValue]="null">{{ 'admin.admissions.select_reason' | translate }}</option>
+                  @for (reason of allRejectReasons; track reason) {
+                    <option [ngValue]="reason">{{ rejectReasonLabels[reason] | translate }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="decision-panel__decision-buttons">
+              <button
+                type="button"
+                class="decision-panel__btn decision-panel__btn--approve"
+                [disabled]="deciding()"
+                (click)="makeDecision('approved')"
+                data-testid="bulk-approve-btn"
+                [attr.aria-label]="'admin.admissions.approve' | translate">
+                {{ 'admin.admissions.approve_all' | translate }}
+              </button>
+              <button
+                type="button"
+                class="decision-panel__btn decision-panel__btn--reject"
+                [disabled]="deciding()"
+                (click)="makeDecision('rejected')"
+                data-testid="bulk-reject-btn"
+                [attr.aria-label]="'admin.admissions.reject' | translate">
+                {{ 'admin.admissions.reject_all' | translate }}
+              </button>
+              <button
+                type="button"
+                class="decision-panel__btn decision-panel__btn--defer"
+                [disabled]="deciding()"
+                (click)="makeDecision('deferred')"
+                data-testid="bulk-defer-btn"
+                [attr.aria-label]="'admin.admissions.defer' | translate">
+                {{ 'admin.admissions.defer_all' | translate }}
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="decision-panel__no-selection" data-testid="no-selection">
+            <p>{{ 'admin.admissions.select_application_to_review' | translate }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>

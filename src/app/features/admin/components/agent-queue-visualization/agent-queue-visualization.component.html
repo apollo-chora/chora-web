@@ -1,0 +1,249 @@
+<section
+  class="agent-queue"
+  role="main"
+  [attr.aria-label]="'admin.support.queue_title' | translate"
+  data-testid="agent-queue-visualization">
+
+  <!-- Page Header -->
+  <header class="agent-queue__header">
+    <h1 class="agent-queue__title" data-testid="queue-title">
+      {{ 'admin.support.queue_title' | translate }}
+    </h1>
+    <button
+      type="button"
+      class="agent-queue__btn agent-queue__btn--primary"
+      (click)="refresh()"
+      data-testid="btn-refresh"
+      [attr.aria-label]="'admin.support.refresh' | translate">
+      {{ 'admin.support.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Error (fail-loud — no fabricated queue data) -->
+  @if (error()) {
+    <div class="agent-queue__error" data-testid="queue-error" role="alert">
+      <p class="agent-queue__error-text">
+        {{ error()! | translate }}
+      </p>
+      <button
+        type="button"
+        class="agent-queue__btn agent-queue__btn--primary"
+        (click)="refresh()"
+        data-testid="queue-error-retry"
+        [attr.aria-label]="'admin.support.refresh' | translate">
+        {{ 'admin.support.refresh' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Summary Bar -->
+  @if (!error()) {
+  <div class="agent-queue__summary" data-testid="queue-summary" role="status">
+    <div class="agent-queue__summary-item">
+      <span class="agent-queue__summary-value">{{ totalTickets() }}</span>
+      <span class="agent-queue__summary-label">{{ 'admin.support.total_tickets' | translate }}</span>
+    </div>
+    <div class="agent-queue__summary-item">
+      <span class="agent-queue__summary-value">{{ openTickets() }}</span>
+      <span class="agent-queue__summary-label">{{ 'admin.support.open_tickets' | translate }}</span>
+    </div>
+    <div class="agent-queue__summary-item">
+      <span class="agent-queue__summary-value">{{ unassignedTickets() }}</span>
+      <span class="agent-queue__summary-label">{{ 'admin.support.unassigned' | translate }}</span>
+    </div>
+    <div class="agent-queue__summary-item">
+      <span class="agent-queue__summary-value">{{ agents().length }}</span>
+      <span class="agent-queue__summary-label">{{ 'admin.support.agents' | translate }}</span>
+    </div>
+  </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="agent-queue__loading" data-testid="queue-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="agent-queue__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  @if (!loading() && !error()) {
+    <div class="agent-queue__layout">
+      <!-- Agent Workload Cards -->
+      <section class="agent-queue__agents-section" aria-labelledby="agents-heading">
+        <h2 id="agents-heading" class="agent-queue__section-title">
+          {{ 'admin.support.agent_workload' | translate }}
+        </h2>
+
+        <div class="agent-queue__agent-grid" data-testid="agent-grid" role="list">
+          @for (agent of agents(); track agent.id) {
+            <article
+              class="agent-queue__agent-card"
+              role="listitem"
+              [attr.data-testid]="'agent-' + agent.id">
+
+              <!-- Agent Header -->
+              <div class="agent-queue__agent-header">
+                <div class="agent-queue__agent-avatar" [attr.aria-hidden]="true">
+                  {{ agent.name.charAt(0) }}
+                </div>
+                <div class="agent-queue__agent-info">
+                  <h3 class="agent-queue__agent-name">{{ agent.name }}</h3>
+                  <span
+                    class="agent-queue__online-badge"
+                    [class.agent-queue__online-badge--online]="agent.is_online"
+                    [class.agent-queue__online-badge--offline]="!agent.is_online">
+                    @if (agent.is_online) {
+                      {{ 'admin.support.online' | translate }}
+                    } @else {
+                      {{ 'admin.support.offline' | translate }}
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <!-- Agent Metrics -->
+              <div class="agent-queue__agent-metrics">
+                <div class="agent-queue__metric">
+                  <span class="agent-queue__metric-value">{{ agent.ticket_count }}</span>
+                  <span class="agent-queue__metric-label">{{ 'admin.support.tickets' | translate }}</span>
+                </div>
+                <div class="agent-queue__metric">
+                  <span class="agent-queue__metric-value">{{ formatDuration(agent.avg_resolution_minutes) }}</span>
+                  <span class="agent-queue__metric-label">{{ 'admin.support.avg_resolution' | translate }}</span>
+                </div>
+              </div>
+
+              <!-- Capacity Bar -->
+              <div class="agent-queue__capacity">
+                <div class="agent-queue__capacity-header">
+                  <span class="agent-queue__capacity-label">
+                    {{ 'admin.support.capacity' | translate }}
+                  </span>
+                  <span class="agent-queue__capacity-value">
+                    {{ agent.current_capacity }}/{{ agent.max_capacity }}
+                  </span>
+                </div>
+                <div
+                  class="agent-queue__capacity-bar"
+                  role="progressbar"
+                  [attr.aria-valuenow]="capacityPct(agent)"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-label]="'admin.support.capacity' | translate">
+                  <div
+                    class="agent-queue__capacity-fill"
+                    [class]="capacityBarClass(agent)"
+                    [style.width]="capacityPct(agent) + '%'">
+                  </div>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+
+      <!-- Ticket Distribution -->
+      <section class="agent-queue__distribution-section" aria-labelledby="distribution-heading">
+        <h2 id="distribution-heading" class="agent-queue__section-title">
+          {{ 'admin.support.ticket_distribution' | translate }}
+        </h2>
+
+        <div class="agent-queue__distribution" data-testid="distribution-chart">
+          @for (item of categoryDistribution(); track item.category) {
+            <div class="agent-queue__distribution-row" [attr.data-testid]="'dist-' + item.category">
+              <span class="agent-queue__distribution-label">
+                {{ categoryLabels[item.category] | translate }}
+              </span>
+              <div class="agent-queue__distribution-bar-wrapper">
+                <div
+                  class="agent-queue__distribution-bar"
+                  [style.width]="distributionBarWidth(item.pct)"
+                  role="progressbar"
+                  [attr.aria-valuenow]="item.pct"
+                  aria-valuemin="0"
+                  aria-valuemax="100">
+                </div>
+              </div>
+              <span class="agent-queue__distribution-count">
+                {{ item.count }} ({{ item.pct }}%)
+              </span>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- Ticket Assignment Table -->
+    <section class="agent-queue__tickets-section" aria-labelledby="tickets-heading">
+      <h2 id="tickets-heading" class="agent-queue__section-title">
+        {{ 'admin.support.ticket_queue' | translate }}
+      </h2>
+
+      @if (tickets().length === 0) {
+        <div class="agent-queue__empty" data-testid="tickets-empty" role="status">
+          <p class="agent-queue__empty-text">
+            {{ 'admin.support.no_tickets' | translate }}
+          </p>
+        </div>
+      }
+
+      @if (tickets().length > 0) {
+        <div class="agent-queue__table-wrapper" data-testid="ticket-table">
+          <table class="agent-queue__table" role="table">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'admin.support.col_ticket' | translate }}</th>
+                <th scope="col">{{ 'admin.support.col_subject' | translate }}</th>
+                <th scope="col">{{ 'admin.support.col_category' | translate }}</th>
+                <th scope="col">{{ 'admin.support.col_priority' | translate }}</th>
+                <th scope="col">{{ 'admin.support.col_created' | translate }}</th>
+                <th scope="col">{{ 'admin.support.col_assigned_to' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ticket of tickets(); track ticket.id) {
+                <tr [attr.data-testid]="'ticket-' + ticket.id">
+                  <td>
+                    <span class="agent-queue__ticket-id">{{ ticket.id }}</span>
+                  </td>
+                  <td>{{ ticket.subject }}</td>
+                  <td>
+                    <span class="agent-queue__category-chip">
+                      {{ categoryLabels[ticket.category] | translate }}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      class="agent-queue__priority-badge"
+                      [class]="priorityClass(ticket.priority)">
+                      {{ priorityLabels[ticket.priority] | translate }}
+                    </span>
+                  </td>
+                  <td>{{ formatTimestamp(ticket.created_at) }}</td>
+                  <td>
+                    <label [for]="'assign-' + ticket.id" class="visually-hidden">
+                      {{ 'admin.support.assign_agent' | translate }}
+                    </label>
+                    <select
+                      [id]="'assign-' + ticket.id"
+                      class="agent-queue__assign-select"
+                      [attr.data-testid]="'assign-' + ticket.id"
+                      [disabled]="isReassigning(ticket.id)"
+                      [ngModel]="ticket.assigned_agent_id || ''"
+                      (ngModelChange)="reassignTicket(ticket.id, $event)">
+                      <option value="">{{ 'admin.support.unassigned' | translate }}</option>
+                      @for (agent of agents(); track agent.id) {
+                        <option [value]="agent.id">{{ agent.name }}</option>
+                      }
+                    </select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</section>

@@ -1,0 +1,316 @@
+:host {
+  display: block;
+}
+
+.instructor-revenue {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Section Headings
+  // -------------------------------------------------------------------------
+
+  &__section-heading {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-md, 16px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Summary Cards
+  // -------------------------------------------------------------------------
+
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--chora-space-md, 16px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__summary-card {
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    padding: var(--chora-space-md, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__summary-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--chora-color-text-muted, #666);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text, #111);
+  }
+
+  // -------------------------------------------------------------------------
+  // Revenue Share Breakdown (CSS bar chart)
+  // -------------------------------------------------------------------------
+
+  &__shares {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__share-row {
+    margin-block-end: var(--chora-space-sm, 8px);
+  }
+
+  &__share-info {
+    display: flex;
+    justify-content: space-between;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__share-category {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  &__share-amount {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__share-bar-track {
+    width: 100%;
+    height: 12px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  &__share-bar-fill {
+    height: 100%;
+    background: var(--chora-color-primary, #2563eb);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+  }
+
+  // -------------------------------------------------------------------------
+  // Promo Code Table
+  // -------------------------------------------------------------------------
+
+  &__promo {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__promo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+
+    th,
+    td {
+      padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+      text-align: start;
+      border-block-end: 1px solid var(--chora-color-border, #e5e5e5);
+    }
+
+    th {
+      font-weight: 600;
+      background: var(--chora-color-surface-1, #fafafa);
+    }
+
+    code {
+      font-family: monospace;
+      background: var(--chora-color-surface-1, #f0f0f0);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Promo Code Generator
+  // -------------------------------------------------------------------------
+
+  &__generator {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__generator-form {
+    max-width: 480px;
+  }
+
+  &__label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__generator-row {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__input {
+    flex: 1;
+    padding: var(--chora-space-sm, 8px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Payout History
+  // -------------------------------------------------------------------------
+
+  &__payouts {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__payout-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__payout-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-block-end: 1px solid var(--chora-color-border, #e5e5e5);
+  }
+
+  &__payout-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__payout-amount {
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  &__payout-date {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__payout-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: capitalize;
+
+    &--pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    &--processing {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    &--paid {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    &--failed {
+      background: #fecaca;
+      color: #991b1b;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Buttons
+  // -------------------------------------------------------------------------
+
+  &__btn {
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    &--primary {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Loading / Error
+  // -------------------------------------------------------------------------
+
+  &__loading {
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__skeleton-row {
+    height: 16px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-sm, 4px);
+    margin-block-end: var(--chora-space-sm, 8px);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+  }
+
+  &__error-text {
+    font-size: 0.875rem;
+    color: #991b1b;
+    margin: 0;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (min-width: 1280px) {
+  .instructor-revenue {
+    max-width: 960px;
+  }
+}

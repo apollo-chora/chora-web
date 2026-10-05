@@ -1,0 +1,229 @@
+<section
+  class="surface-rplus exams"
+  data-testid="rplus-exams">
+  <header class="exams__header glass-panel">
+    <div class="exams__title-row">
+      <h1 class="exams__title">{{ 'rplus.exams.title' | translate }}</h1>
+    </div>
+    <div class="exams__meta">
+      <span class="exams__total" data-testid="exams-total">
+        <strong>{{ totalSittings() }}</strong>
+        {{ 'rplus.exams.upcoming_sittings' | translate }}
+      </span>
+      <button
+        type="button"
+        class="btn btn-primary exams__schedule-cta"
+        data-testid="exams-schedule-cta"
+        (click)="onScheduleClicked()"
+        [attr.aria-label]="'rplus.exams.schedule_aria' | translate">
+        <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>
+        {{ 'rplus.exams.schedule_cta' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (formOpen()) {
+    <form
+      class="exams__schedule-form glass-panel"
+      data-testid="exams-schedule-form"
+      (ngSubmit)="onScheduleSubmit()">
+      <h2 class="exams__form-title">
+        {{ 'rplus.exams.form.title' | translate }}
+      </h2>
+      <div class="exams__form-grid">
+        <label class="exams__form-field exams__form-field--wide">
+          <span>{{ 'rplus.exams.form.exam_title' | translate }}</span>
+          <input
+            type="text"
+            name="examTitle"
+            class="exams__form-input"
+            data-testid="exams-form-title"
+            [ngModel]="formTitle()"
+            (ngModelChange)="formTitle.set($event)"
+            [attr.placeholder]="'rplus.exams.form.exam_title_placeholder' | translate"
+            required />
+        </label>
+        <label class="exams__form-field">
+          <span>{{ 'rplus.exams.form.course' | translate }}</span>
+          <input
+            type="text"
+            name="courseId"
+            class="exams__form-input"
+            data-testid="exams-form-course"
+            [ngModel]="formCourseId()"
+            (ngModelChange)="formCourseId.set($event)"
+            [attr.placeholder]="'rplus.exams.form.course_placeholder' | translate"
+            required />
+        </label>
+        <label class="exams__form-field">
+          <span>{{ 'rplus.exams.form.scheduled_at' | translate }}</span>
+          <input
+            type="datetime-local"
+            name="scheduledAt"
+            class="exams__form-input"
+            data-testid="exams-form-scheduled-at"
+            [ngModel]="formScheduledAt()"
+            (ngModelChange)="formScheduledAt.set($event)"
+            required />
+        </label>
+        <label class="exams__form-field">
+          <span>{{ 'rplus.exams.form.duration' | translate }}</span>
+          <input
+            type="number"
+            name="durationMinutes"
+            class="exams__form-input"
+            data-testid="exams-form-duration"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            [ngModel]="formDurationMinutes()"
+            (ngModelChange)="formDurationMinutes.set($event)"
+            [attr.placeholder]="'rplus.exams.form.duration_placeholder' | translate"
+            required />
+        </label>
+        <label class="exams__form-field">
+          <span>{{ 'rplus.exams.form.capacity' | translate }}</span>
+          <input
+            type="number"
+            name="capacity"
+            class="exams__form-input"
+            data-testid="exams-form-capacity"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            [ngModel]="formCapacity()"
+            (ngModelChange)="formCapacity.set($event)"
+            [attr.placeholder]="'rplus.exams.form.capacity_placeholder' | translate"
+            required />
+        </label>
+        <label class="exams__form-field">
+          <span>{{ 'rplus.exams.form.proctor_method' | translate }}</span>
+          <select
+            name="proctorMethod"
+            class="exams__form-input"
+            data-testid="exams-form-proctor"
+            [ngModel]="formProctorMethod()"
+            (ngModelChange)="formProctorMethod.set($event)">
+            @for (opt of proctorMethodOptions; track opt) {
+              <option [value]="opt">
+                {{ 'rplus.exams.form.proctor.' + proctorKey(opt) | translate }}
+              </option>
+            }
+          </select>
+        </label>
+      </div>
+
+      @if (scheduleError(); as err) {
+        <p
+          class="exams__form-error"
+          role="alert"
+          data-testid="exams-schedule-error">
+          {{ err }}
+        </p>
+      }
+
+      <div class="exams__form-actions">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="exams-schedule-cancel"
+          (click)="onCancelSchedule()">
+          {{ 'rplus.exams.form.cancel' | translate }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-testid="exams-schedule-submit"
+          [disabled]="!canSubmit()">
+          {{
+            submitting()
+              ? ('rplus.exams.form.submitting' | translate)
+              : ('rplus.exams.form.submit' | translate)
+          }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <div class="exams__table-wrap glass-panel">
+    <table
+      class="data-table exams__table"
+      data-testid="exams-table"
+      [attr.aria-label]="'rplus.exams.table_aria' | translate">
+      <caption class="exams__caption">
+        {{ 'rplus.exams.table_caption' | translate }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'rplus.exams.col.cert' | translate }}</th>
+          <th scope="col">{{ 'rplus.exams.col.date' | translate }}</th>
+          <th scope="col">{{ 'rplus.exams.col.venue' | translate }}</th>
+          <th scope="col">{{ 'rplus.exams.col.capacity' | translate }}</th>
+          <th scope="col">{{ 'rplus.exams.col.status' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of sittings(); track s.sittingId) {
+          <tr [attr.data-testid]="'exams-row-' + s.sittingId">
+            <td>
+              <div class="exams__cert-cell">
+                @if (s.skillsFutureAligned) {
+                  <span
+                    class="exams__sf-badge"
+                    [attr.data-testid]="'exams-sf-' + s.sittingId">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                    {{ 'rplus.exams.sf_aligned' | translate }}
+                  </span>
+                }
+                <a
+                  class="exams__cert-title"
+                  [routerLink]="['/r/exams', s.sittingId]"
+                  [attr.data-testid]="'exams-open-' + s.sittingId">
+                  {{ s.certTitle }}
+                </a>
+              </div>
+            </td>
+            <td>
+              <time>{{ s.dateLabel }}</time>
+            </td>
+            <td>{{ s.venue }}</td>
+            <td>
+              <div class="exams__capacity">
+                <div
+                  class="exams__capacity-bar"
+                  role="progressbar"
+                  [attr.aria-valuenow]="s.capacityPct"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-label]="
+                    'rplus.exams.capacity_aria' | translate
+                  ">
+                  <span
+                    class="exams__capacity-fill surface-accent-bg"
+                    [style.width.%]="s.capacityPct"></span>
+                </div>
+                <span class="exams__capacity-counts">
+                  {{ s.registered }} / {{ s.capacity }}
+                </span>
+              </div>
+            </td>
+            <td>
+              <span
+                class="badge"
+                [class]="'badge ' + badge(s.status)"
+                [attr.data-testid]="'status-' + s.sittingId">
+                {{ s.status }}
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="exams__empty">
+              {{ 'rplus.exams.empty' | translate }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

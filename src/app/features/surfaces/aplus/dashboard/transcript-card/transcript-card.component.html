@@ -1,0 +1,109 @@
+<section
+  class="transcript-card glass-panel"
+  aria-labelledby="transcript-card-heading"
+  data-testid="aplus-dashboard-transcript-card">
+
+  <header class="transcript-card__header">
+    <h2 id="transcript-card-heading" class="transcript-card__heading">
+      <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+      {{ 'aplus.dashboard.transcript_heading' | translate }}
+    </h2>
+    <a
+      routerLink="/a/me/transcript"
+      class="transcript-card__see-all"
+      data-testid="transcript-card-see-all">
+      {{ 'aplus.dashboard.transcript_see_all' | translate }}
+      <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+    </a>
+  </header>
+
+  @switch (state().status) {
+
+    @case ('loading') {
+      <p
+        class="transcript-card__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="transcript-card-loading">
+        <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        {{ 'aplus.me_transcript.list.loading' | translate }}
+      </p>
+    }
+
+    @case ('error') {
+      <!-- Fail loud. A failed fetch must never render as "no outcomes yet". -->
+      <div class="transcript-card__error" role="alert" data-testid="transcript-card-error">
+        <p class="transcript-card__error-msg">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          {{ errorKey() | translate }}
+        </p>
+        <button
+          type="button"
+          class="btn btn-secondary transcript-card__retry"
+          (click)="retryLoad()"
+          data-testid="transcript-card-retry">
+          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          {{ 'aplus.me_transcript.list.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    @case ('success') {
+      @if (isEmpty()) {
+        <div class="transcript-card__empty" data-testid="transcript-card-empty">
+          <p class="transcript-card__empty-hint">
+            {{ 'aplus.dashboard.transcript_empty_hint' | translate }}
+          </p>
+          <a routerLink="/a/me/assessments" class="btn btn-secondary">
+            {{ 'aplus.dashboard.transcript_empty_cta' | translate }}
+          </a>
+        </div>
+      } @else {
+        <ul class="transcript-card__list" data-testid="transcript-card-list">
+          @for (entry of rows(); track entry.entryId) {
+            <li
+              class="transcript-card__row"
+              [attr.data-testid]="'transcript-card-row-' + entry.entryId">
+              <i
+                class="transcript-card__kind {{ kindIcon(entry) }}"
+                [attr.aria-label]="kindLabelKey(entry) | translate"
+                role="img"></i>
+              <div class="transcript-card__row-main">
+                <p class="transcript-card__row-title">{{ entry.title }}</p>
+                <p class="transcript-card__row-meta">
+                  <!-- 🔴 em-dash for a null score (certification / ungraded) —
+                       never a fabricated 0%. -->
+                  <span class="transcript-card__score" data-testid="transcript-card-score">
+                    {{ scoreLabel(entry) }}
+                  </span>
+                  @if (entry.passed === true) {
+                    <span class="transcript-card__passed" data-testid="transcript-card-passed">
+                      <i class="fa-solid fa-check" aria-hidden="true"></i>
+                      {{ 'aplus.me_transcript.list.pass_passed' | translate }}
+                    </span>
+                  }
+                  <span class="transcript-card__when">{{ entry.occurredAt | timeAgo }}</span>
+                </p>
+              </div>
+            </li>
+          }
+        </ul>
+
+        @if (moreCount() > 0) {
+          <a
+            routerLink="/a/me/transcript"
+            class="transcript-card__more"
+            data-testid="transcript-card-more">
+            {{
+              (moreCount() === 1
+                ? 'aplus.dashboard.transcript_more_one'
+                : 'aplus.dashboard.transcript_more_other'
+              ) | translate: { count: moreCount() }
+            }}
+          </a>
+        }
+      }
+    }
+  }
+
+</section>

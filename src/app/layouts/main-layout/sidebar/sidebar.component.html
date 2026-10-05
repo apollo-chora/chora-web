@@ -1,0 +1,96 @@
+<nav
+  class="chora-sidebar"
+  [class.chora-sidebar--collapsed]="collapsed()"
+  role="navigation"
+  aria-label="Main Navigation"
+  id="sidebar"
+  data-testid="sidebar">
+  <!-- Ungrouped items (A+/C+/H+/O+) render flat, no band header. -->
+  @for (item of ungroupedItems(); track item.route) {
+    @if (isVisible(item)) {
+      @if (item.disabled) {
+        <!-- Planned-but-not-live destination: grayed, non-navigable, with a
+             coming-soon note. A span (not an anchor) so keyboard tabbing
+             skips it and no navigation can fire. -->
+        <span
+          class="chora-sidebar__item chora-sidebar__item--disabled"
+          aria-disabled="true"
+          [attr.aria-label]="(item.labelKey | translate) + ', ' + ((item.disabledNoteKey ?? 'nav.coming_soon') | translate)"
+          [attr.title]="(item.disabledNoteKey ?? 'nav.coming_soon') | translate"
+          [attr.data-testid]="'nav-' + item.route.substring(1)">
+          <i [class]="'chora-sidebar__icon ' + iconClass(item.icon)" aria-hidden="true"></i>
+          <span class="chora-sidebar__label">{{ item.labelKey | translate }}</span>
+          <span class="chora-sidebar__note">{{ (item.disabledNoteKey ?? 'nav.coming_soon') | translate }}</span>
+        </span>
+      } @else {
+        <a
+          class="chora-sidebar__item"
+          [routerLink]="item.route"
+          routerLinkActive="chora-sidebar__item--active"
+          [attr.aria-label]="item.labelKey | translate"
+          [attr.data-testid]="'nav-' + item.route.substring(1)">
+        <i [class]="'chora-sidebar__icon ' + iconClass(item.icon)" aria-hidden="true"></i>
+        <span class="chora-sidebar__label">{{ item.labelKey | translate }}</span>
+        </a>
+      }
+    }
+  }
+
+  <!-- Banded items (R+): an uppercase header per non-empty band; ADMIN folds. -->
+  @for (band of bands(); track band.key) {
+    @if (bandHasVisibleItems(band)) {
+      <div class="chora-sidebar__band" [attr.data-testid]="'band-' + band.key">
+        @if (band.collapsible) {
+          <button
+            type="button"
+            class="chora-sidebar__band-header chora-sidebar__band-header--toggle"
+            [attr.aria-expanded]="!isBandCollapsed(band.key)"
+            [attr.aria-controls]="isBandCollapsed(band.key) ? null : 'band-items-' + band.key"
+            [attr.data-testid]="'band-toggle-' + band.key"
+            (click)="toggleBand(band.key)">
+            <span class="chora-sidebar__band-label">{{ band.labelKey | translate }}</span>
+            <i
+              class="chora-sidebar__band-caret fa-solid"
+              [class.fa-chevron-down]="!isBandCollapsed(band.key)"
+              [class.fa-chevron-right]="isBandCollapsed(band.key)"
+              aria-hidden="true"></i>
+          </button>
+        } @else {
+          <div class="chora-sidebar__band-header">
+            <span class="chora-sidebar__band-label">{{ band.labelKey | translate }}</span>
+          </div>
+        }
+        @if (!band.collapsible || !isBandCollapsed(band.key)) {
+          <div class="chora-sidebar__band-items" [id]="'band-items-' + band.key">
+            @for (item of band.items; track item.route) {
+              @if (isVisible(item)) {
+                @if (item.disabled) {
+                  <span
+                    class="chora-sidebar__item chora-sidebar__item--disabled"
+                    aria-disabled="true"
+                    [attr.aria-label]="(item.labelKey | translate) + ', ' + ((item.disabledNoteKey ?? 'nav.coming_soon') | translate)"
+                    [attr.title]="(item.disabledNoteKey ?? 'nav.coming_soon') | translate"
+                    [attr.data-testid]="'nav-' + item.route.substring(1)">
+                    <i [class]="'chora-sidebar__icon ' + iconClass(item.icon)" aria-hidden="true"></i>
+                    <span class="chora-sidebar__label">{{ item.labelKey | translate }}</span>
+                    <span class="chora-sidebar__note">{{ (item.disabledNoteKey ?? 'nav.coming_soon') | translate }}</span>
+                  </span>
+                } @else {
+                  <a
+                    class="chora-sidebar__item"
+                    [routerLink]="item.route"
+                    routerLinkActive="chora-sidebar__item--active"
+                    [attr.aria-label]="item.labelKey | translate"
+                    [attr.data-testid]="'nav-' + item.route.substring(1)">
+                  <i [class]="'chora-sidebar__icon ' + iconClass(item.icon)" aria-hidden="true"></i>
+                  <span class="chora-sidebar__label">{{ item.labelKey | translate }}</span>
+                  </a>
+                }
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</nav>

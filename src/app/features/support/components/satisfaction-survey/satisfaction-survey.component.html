@@ -1,0 +1,66 @@
+<section
+  class="satisfaction-survey"
+  role="main"
+  [attr.aria-label]="'support.satisfaction_title' | translate"
+  data-testid="satisfaction-survey">
+
+  <header class="satisfaction-survey__header">
+    <h1 class="satisfaction-survey__title" data-testid="satisfaction-title">
+      {{ 'support.satisfaction_title' | translate }}
+    </h1>
+  </header>
+
+  @if (submitted()) {
+    <div class="satisfaction-survey__success" data-testid="satisfaction-success" role="status">
+      <p class="satisfaction-survey__success-text">
+        {{ 'support.satisfaction_thank_you' | translate }}
+      </p>
+    </div>
+  } @else {
+    <div class="satisfaction-survey__form" data-testid="satisfaction-form">
+      <p class="satisfaction-survey__prompt">
+        {{ 'support.satisfaction_prompt' | translate }}
+      </p>
+
+      <div class="satisfaction-survey__rating-group" role="radiogroup" aria-label="Rating">
+        @for (rating of ratingOptions; track rating) {
+          <button
+            type="button"
+            class="satisfaction-survey__rating-btn"
+            [class.satisfaction-survey__rating-btn--selected]="selectedRating() === rating"
+            [attr.aria-label]="ratingLabel(rating) | translate"
+            [attr.aria-pressed]="selectedRating() === rating"
+            data-testid="btn-rating"
+            (click)="setRating(rating)">
+            {{ rating }}
+          </button>
+        }
+      </div>
+
+      @if (selectedRating() > 0) {
+        <p class="satisfaction-survey__rating-label" data-testid="rating-label" aria-live="polite">
+          {{ ratingLabel(selectedRating()) | translate }}
+        </p>
+      }
+
+      <label class="satisfaction-survey__label">
+        {{ 'support.satisfaction_comment' | translate }}
+        <textarea
+          class="satisfaction-survey__textarea"
+          data-testid="input-comment"
+          rows="4"
+          [placeholder]="'support.satisfaction_comment_placeholder' | translate"
+          (input)="updateComment($any($event.target).value)"></textarea>
+      </label>
+
+      <button
+        type="button"
+        class="satisfaction-survey__btn satisfaction-survey__btn--primary"
+        data-testid="btn-submit"
+        [disabled]="!isValid()"
+        (click)="submitSurvey()">
+        {{ 'support.submit_feedback' | translate }}
+      </button>
+    </div>
+  }
+</section>

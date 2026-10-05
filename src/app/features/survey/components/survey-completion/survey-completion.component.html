@@ -1,0 +1,59 @@
+<section
+  class="survey-completion"
+  role="main"
+  [attr.aria-label]="'survey.completion_title' | translate"
+  data-testid="survey-completion">
+
+  <div class="survey-completion__card">
+    <!-- Success Icon -->
+    <div class="survey-completion__icon" aria-hidden="true" data-testid="completion-icon">
+      &#10003;
+    </div>
+
+    <!-- Thank You Header -->
+    <h1 class="survey-completion__title" data-testid="completion-title">
+      {{ 'survey.thank_you' | translate }}
+    </h1>
+
+    <p class="survey-completion__message" data-testid="completion-message">
+      {{ 'survey.completion_message' | translate }}
+    </p>
+
+    <!-- Survey Title (if available) -->
+    @if (surveyTitle()) {
+      <div class="survey-completion__survey-info" data-testid="completion-survey-info">
+        <span class="survey-completion__survey-label">
+          {{ 'survey.survey_completed' | translate }}:
+        </span>
+        <span class="survey-completion__survey-title" data-testid="completion-survey-title">
+          {{ surveyTitle() }}
+        </span>
+      </div>
+    }
+
+    <!-- Completed At (if available) -->
+    @if (completedAt()) {
+      <p class="survey-completion__completed-at" data-testid="completion-date">
+        {{ 'survey.completed_on' | translate }}: {{ completedAt() }}
+      </p>
+    }
+
+    <!-- Actions -->
+    <div class="survey-completion__actions">
+      <a
+        class="survey-completion__btn survey-completion__btn--primary"
+        href="/dashboard"
+        data-testid="btn-dashboard"
+        [attr.aria-label]="'survey.go_to_dashboard' | translate">
+        {{ 'survey.go_to_dashboard' | translate }}
+      </a>
+      <a
+        class="survey-completion__btn survey-completion__btn--secondary"
+        href="/survey"
+        data-testid="btn-browse-surveys"
+        [attr.aria-label]="'survey.browse_surveys' | translate">
+        {{ 'survey.browse_surveys' | translate }}
+      </a>
+    </div>
+  </div>
+</section>

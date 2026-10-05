@@ -1,0 +1,165 @@
+// CreateTenantComponent (UX Track U, E1, S2).
+//
+// POLYGLASS token family (--text-main / --text-muted / --glass-border /
+// --primary, defined in src/styles/_polyglass-tokens.scss), the same one the
+// other H+ pages resolve inside the glass-panel shell.
+//
+// Every var() carries an explicit fallback: an undefined custom property
+// yields empty, the fallback is what actually renders, and nothing in the build
+// catches the difference.
+
+.create-tenant {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg, 24px);
+  padding: var(--space-lg, 24px);
+  color: var(--text-main, #1e293b);
+}
+
+.create-tenant__head h1 {
+  margin: 0 0 var(--space-xs, 4px);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.create-tenant__lede {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--chora-color-text-muted, #616161);
+  line-height: 1.5;
+}
+
+.create-tenant__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md, 16px);
+  max-width: 42rem;
+}
+
+.create-tenant__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs, 4px);
+}
+
+.create-tenant__label {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.create-tenant__field input,
+.create-tenant__field select {
+  padding: var(--space-sm, 8px) var(--space-md, 16px);
+  border: 1px solid var(--glass-border, rgba(148, 163, 184, 0.4));
+  border-radius: var(--radius-md, 8px);
+  background: var(--glass-bg, rgba(255, 255, 255, 0.6));
+  color: var(--text-main, #1e293b);
+  font: inherit;
+}
+
+.create-tenant__field input[readonly] {
+  color: var(--chora-color-text-muted, #616161);
+  cursor: not-allowed;
+}
+
+.create-tenant__hint {
+  color: var(--chora-color-text-muted, #616161);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.create-tenant__addons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 8px);
+  margin: 0;
+  padding: var(--space-md, 16px);
+  border: 1px solid var(--glass-border, rgba(148, 163, 184, 0.4));
+  border-radius: var(--radius-md, 8px);
+}
+
+.create-tenant__addons legend {
+  padding: 0 var(--space-xs, 4px);
+  font-weight: 600;
+}
+
+.create-tenant__addon {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm, 8px);
+}
+
+.create-tenant__addon-category {
+  color: var(--chora-color-text-muted, #616161);
+  font-size: 0.8125rem;
+}
+
+.create-tenant__warning,
+.create-tenant__error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs, 4px);
+  margin: 0;
+  padding: var(--space-sm, 8px) var(--space-md, 16px);
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface-danger-soft, rgba(154, 52, 18, 0.08));
+  color: var(--text-danger, #9a3412);
+}
+
+.create-tenant__error-detail {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+}
+
+.create-tenant__submit {
+  align-self: flex-start;
+  padding: var(--space-sm, 8px) var(--space-lg, 24px);
+  border: 0;
+  border-radius: var(--radius-md, 8px);
+  background: var(--primary, #c2410c);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.create-tenant__submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.create-tenant__done {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 8px);
+  max-width: 42rem;
+}
+
+.create-tenant__done h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.create-tenant__owner-note,
+.create-tenant__roster-note {
+  margin: 0;
+  color: var(--chora-color-text-muted, #616161);
+  line-height: 1.5;
+}
+
+.create-tenant__tenant-id {
+  margin: 0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  color: var(--chora-color-text-muted, #616161);
+}
+
+.create-tenant__continue {
+  align-self: flex-start;
+  padding: var(--space-sm, 8px) var(--space-lg, 24px);
+  border-radius: var(--radius-md, 8px);
+  background: var(--primary, #c2410c);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}

@@ -1,0 +1,109 @@
+:host {
+  display: block;
+}
+
+.developer-console {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: var(--chora-space-xs, 4px) 0 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Tab Navigation
+  // -------------------------------------------------------------------------
+
+  &__tabs {
+    display: flex;
+    gap: 0;
+    border-block-end: 1px solid var(--chora-color-border, #e5e5e5);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__tab {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--chora-color-text-muted, #666);
+    text-decoration: none;
+    border-block-end: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      color: var(--chora-color-text, #111);
+    }
+
+    &--active {
+      color: var(--chora-color-primary, #2563eb);
+      border-block-end-color: var(--chora-color-primary, #2563eb);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Quick Links Cards
+  // -------------------------------------------------------------------------
+
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__card {
+    padding: var(--chora-space-lg, 24px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      border-color: var(--chora-color-primary, #2563eb);
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.06);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__card-desc {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+    line-height: 1.4;
+  }
+}
+
+// Desktop enhancement
+@media (min-width: 1280px) {
+  .developer-console {
+    &__cards {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}

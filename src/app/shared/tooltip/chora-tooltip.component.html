@@ -1,0 +1,13 @@
+<div
+  class="chora-tooltip"
+  [class.chora-tooltip--above]="position() === 'above'"
+  [class.chora-tooltip--reduced-motion]="reducedMotion()"
+  [attr.id]="tooltipId() || null"
+  role="tooltip"
+>
+  <span class="chora-tooltip__label">{{ label() }}</span>
+  @if (description()) {
+    <span class="chora-tooltip__description">{{ description() }}</span>
+  }
+  <span class="chora-tooltip__caret" aria-hidden="true"></span>
+</div>

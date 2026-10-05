@@ -1,0 +1,273 @@
+// =====================================================================
+// H+ Add-On Marketplace — Stage 3 wave 2
+// 5-tile catalog grid + Terms-of-Service modal (Phyllis MVP-spec).
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.marketplace {
+  display: block;
+  padding: 1.5rem;
+  min-height: 100%;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1280px;
+    margin-inline: auto;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  &__crumb-active {
+    color: var(--primary);
+  }
+
+  &__hero {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+  }
+
+  &__subtitle {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    max-width: 64ch;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  &__tile {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-top: 3px solid transparent;
+    transition: transform 0.2s ease;
+
+    &[data-state='installed'] {
+      border-top-color: var(--success);
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  &__tile-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  &__tile-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  &__tile-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+  }
+
+  &__tile-category {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: rgba(15, 118, 110, 0.1);
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    align-self: flex-start;
+  }
+
+  &__tile-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  &__tile-desc {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  &__tile-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  &__tile-price {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-main);
+    font-feature-settings: 'tnum' 1;
+  }
+
+  &__install {
+    background: var(--surface-accent-gradient, linear-gradient(135deg, var(--primary), var(--secondary)));
+    color: #fff;
+    border: none;
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  // ── ToS modal ────────────────────────────────────────────────────
+  &__tos {
+    max-width: 540px;
+    width: 100%;
+    padding: 1.5rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__tos-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__tos-title {
+    font-size: 1.25rem;
+    margin: 0;
+    font-weight: 800;
+  }
+
+  &__tos-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+
+    &:hover {
+      background: white;
+      color: var(--primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__tos-body {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-main);
+
+    p {
+      margin: 0 0 0.65rem;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    &:focus {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__tos-agree-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    cursor: pointer;
+
+    input[type='checkbox'] {
+      margin-top: 0.15rem;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+  }
+
+  &__tos-footer {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  &__tos-activate {
+    background: var(--surface-accent-gradient, linear-gradient(135deg, var(--primary), var(--secondary)));
+    color: #fff;
+    border: none;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketplace__tile {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}

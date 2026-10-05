@@ -1,0 +1,59 @@
+// Pill tabs identical to the Studio hub's sub-nav (studio/studio-sub-nav).
+// View-encapsulation in Angular's default mode scopes a component's classes to
+// that component, so the styles are re-declared here rather than shared (cheap,
+// ≤60 lines, ensures parity). The `.authoring-sub-nav` class name is retained
+// as a local name only — it is not imported from anywhere.
+
+:host {
+  display: block;
+}
+
+.authoring-sub-nav {
+  display: inline-flex;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  border-radius: 999px;
+}
+
+.authoring-sub-nav__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 999px;
+  // AA-safe token, NOT the legacy `var(--text-muted)` this strip's predecessor
+  // used. That file sat on both debt ratchets; copying its declaration would
+  // have re-introduced the same debt at a new path, which is exactly what
+  // `legacy-color-ban.spec.ts` and `text-token-contrast.spec.ts` exist to catch,
+  // and they did.
+  color: var(--chora-color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+  white-space: nowrap;
+
+  i { font-size: 12px; }
+
+  &:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &--active {
+    color: #fff;
+    background: var(--surface-accent-fill, var(--primary));
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.25);
+
+    &:hover {
+      color: #fff;
+      background: var(--surface-accent-fill, var(--primary));
+    }
+  }
+}

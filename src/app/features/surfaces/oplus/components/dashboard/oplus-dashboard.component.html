@@ -1,0 +1,339 @@
+<div
+  class="oplus-dashboard surface-oplus"
+  data-testid="oplus-dashboard-root"
+  [attr.data-state]="state().state"
+>
+  <!-- Header -->
+  <header class="oplus-dashboard__header glass-panel">
+    <div class="oplus-dashboard__title-row">
+      <h1
+        class="oplus-dashboard__title surface-accent-text"
+        data-testid="oplus-dashboard-title"
+      >
+        {{ 'oplus.dashboard.title' | translate }}
+      </h1>
+
+      <span
+        class="oplus-dashboard__live"
+        data-testid="oplus-dashboard-live"
+        role="status"
+        [attr.aria-label]="badgeKey() | translate"
+        [attr.data-variant]="badge()"
+      >
+        <span class="oplus-dashboard__live-dot" aria-hidden="true"></span>
+        {{ badgeKey() | translate }}
+      </span>
+
+      @if (dashboardData(); as dd) {
+        @if (dd.all_baseline_achieved) {
+          <span
+            class="oplus-dashboard__posture oplus-dashboard__posture--ok"
+            data-testid="oplus-dashboard-posture"
+          >
+            <i class="fa-solid fa-shield-check" aria-hidden="true"></i>
+            {{ 'oplus.dashboard.compliant' | translate }}
+          </span>
+        } @else {
+          <span
+            class="oplus-dashboard__posture oplus-dashboard__posture--review"
+            data-testid="oplus-dashboard-posture"
+          >
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ 'oplus.dashboard.review_needed' | translate }}
+          </span>
+        }
+      }
+    </div>
+    <p class="oplus-dashboard__subtitle">
+      {{ 'oplus.dashboard.subtitle' | translate }}
+    </p>
+  </header>
+
+  @if (isAuditorGated()) {
+    <!-- Auditor-role gate (per IMDA skill three-audience explainability) -->
+    <section
+      class="glass-panel oplus-dashboard__gate"
+      data-testid="oplus-dashboard-auditor-gate"
+      role="alert"
+    >
+      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+      <h2 class="oplus-dashboard__gate-title">
+        {{ 'oplus.errors.auditor_required_title' | translate }}
+      </h2>
+      <p class="oplus-dashboard__gate-body">
+        {{ 'oplus.errors.auditor_required' | translate }}
+      </p>
+    </section>
+  } @else if (hasErrorOnly()) {
+    <!-- Generic error block -->
+    <section
+      class="glass-panel oplus-dashboard__error"
+      data-testid="oplus-dashboard-error"
+      role="alert"
+    >
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p>{{ errorKey() | translate }}</p>
+    </section>
+  } @else {
+    <!-- Per-dimension IMDA panels: traffic-light signal + rubric drill-down -->
+    <div class="oplus-dashboard__panels">
+      @for (card of cards(); track card.dim.num) {
+        @let summary = rubricSummary(card);
+        @let expanded = isExpanded(card.dim.num);
+        <section
+          class="glass-panel dim-panel-accent oplus-dim-panel"
+          [class]="'glass-panel dim-panel-accent oplus-dim-panel ' + card.dim.accentClass"
+          [attr.data-testid]="'oplus-dimension-panel-' + card.dim.num"
+          [attr.data-imda-label]="card.dim.label"
+          [attr.aria-labelledby]="dimensionTitleId(card.dim.num)"
+        >
+          <div class="oplus-dim-panel__head">
+            <span
+              class="dim-badge"
+              [class]="'dim-badge ' + card.dim.accentClass"
+              aria-hidden="true"
+            >
+              D{{ card.dim.num }}
+            </span>
+            <h2
+              [id]="dimensionTitleId(card.dim.num)"
+              class="oplus-dim-panel__title"
+            >
+              <i class="fa-solid" [class]="'fa-solid ' + card.dim.icon" aria-hidden="true"></i>
+              {{ card.dim.title }}
+            </h2>
+            <!--
+              Traffic-light status signal (ADR-141 RAG): green (achieved) →
+              amber (partial) → red (attention); the lamp matching card.status
+              glows, the rest dim. `pending` (awaiting data) leaves all dim.
+              The lamps are decorative — role=status + aria-label carry the text.
+            -->
+            <div
+              class="oplus-dim-panel__light"
+              [attr.data-testid]="'oplus-dimension-light-' + card.dim.num"
+              [attr.data-status]="card.status"
+              role="status"
+              tabindex="0"
+              [attr.aria-label]="
+                card.dim.title + ': ' + (statusLabelKey(card.status) | translate)
+              "
+              [attr.aria-describedby]="trafficLegendId(card.dim.num)"
+            >
+              <span class="oplus-traffic" aria-hidden="true">
+                <span
+                  class="oplus-traffic__lamp oplus-traffic__lamp--green"
+                  [attr.data-active]="card.status === 'achieved'"
+                ></span>
+                <span
+                  class="oplus-traffic__lamp oplus-traffic__lamp--amber"
+                  [attr.data-active]="card.status === 'partial'"
+                ></span>
+                <span
+                  class="oplus-traffic__lamp oplus-traffic__lamp--red"
+                  [attr.data-active]="card.status === 'attention'"
+                ></span>
+              </span>
+              <span class="oplus-dim-panel__light-label">
+                {{ statusLabelKey(card.status) | translate }}
+              </span>
+              <!--
+                Hover/focus tooltip explaining how the signal is computed
+                (priority-fail rule). Glassmorphism design ported from the
+                o-plus-dashboard reference Tooltip.
+              -->
+              <span
+                class="oplus-traffic-tip"
+                role="tooltip"
+                [id]="trafficLegendId(card.dim.num)"
+                [attr.data-testid]="'oplus-dimension-traffic-tip-' + card.dim.num"
+              >
+                <strong class="oplus-traffic-tip__title">
+                  {{ 'oplus.dimensions.traffic_legend_title' | translate }}
+                </strong>
+                <span class="oplus-traffic-tip__row" data-tone="red">
+                  <span class="oplus-traffic-tip__dot" aria-hidden="true"></span>
+                  {{ 'oplus.dimensions.traffic_legend_red' | translate }}
+                </span>
+                <span class="oplus-traffic-tip__row" data-tone="amber">
+                  <span class="oplus-traffic-tip__dot" aria-hidden="true"></span>
+                  {{ 'oplus.dimensions.traffic_legend_amber' | translate }}
+                </span>
+                <span class="oplus-traffic-tip__row" data-tone="green">
+                  <span class="oplus-traffic-tip__dot" aria-hidden="true"></span>
+                  {{ 'oplus.dimensions.traffic_legend_green' | translate }}
+                </span>
+                <span class="oplus-traffic-tip__note">
+                  {{ 'oplus.dimensions.traffic_legend_p3' | translate }}
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <p class="oplus-dim-panel__description">
+            {{ card.dim.descriptionKey | translate }}
+          </p>
+
+          <ul
+            class="oplus-dim-panel__principles"
+            [attr.data-testid]="'oplus-dimension-principles-' + card.dim.num"
+            [attr.aria-label]="'oplus.dimensions.principles_label' | translate"
+          >
+            @for (pr of card.dim.principles; track pr.num) {
+              <li class="dim-chip" [class]="'dim-chip ' + card.dim.accentClass">
+                #{{ pr.num }} {{ pr.name }}
+              </li>
+            }
+          </ul>
+
+          <div class="oplus-dim-panel__rubric-bar">
+            <span class="oplus-dim-panel__rubric-summary">
+              <strong>{{ summary.pass }}</strong>
+              {{ 'oplus.dimensions.pass' | translate }}
+              &middot;
+              <strong>{{ summary.partial }}</strong>
+              {{ 'oplus.dimensions.partial' | translate }}
+              &middot;
+              <strong>{{ summary.fail }}</strong>
+              {{ 'oplus.dimensions.fail' | translate }}
+              &middot;
+              <span class="oplus-dim-panel__rubric-total">
+                {{ summary.total }} {{ 'oplus.dimensions.rubric_items' | translate }}
+              </span>
+            </span>
+            <button
+              type="button"
+              class="oplus-dim-panel__rubric-toggle"
+              [attr.data-testid]="'oplus-dimension-rubric-toggle-' + card.dim.num"
+              [attr.aria-expanded]="expanded"
+              [attr.aria-controls]="rubricRegionId(card.dim.num)"
+              [disabled]="card.rubric.length === 0"
+              (click)="toggleRubric(card.dim.num)"
+            >
+              <i
+                class="fa-solid"
+                [class]="expanded ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"
+                aria-hidden="true"
+              ></i>
+              @if (expanded) {
+                {{ 'oplus.dimensions.collapse' | translate }}
+              } @else {
+                {{ 'oplus.dimensions.expand' | translate }}
+              }
+            </button>
+          </div>
+
+          <div
+            class="oplus-dim-panel__rubric-region"
+            [id]="rubricRegionId(card.dim.num)"
+            [attr.hidden]="!expanded ? '' : null"
+            role="region"
+            [attr.aria-label]="'oplus.dimensions.rubric_region_label' | translate"
+          >
+            @if (card.rubric.length === 0) {
+              <p
+                class="oplus-dim-panel__empty"
+                [attr.data-testid]="'oplus-dimension-rubric-empty-' + card.dim.num"
+              >
+                {{ 'oplus.dimensions.rubric_empty' | translate }}
+              </p>
+            } @else {
+              <ul class="oplus-dim-panel__rubric-list">
+                @for (item of card.rubric; track item.ref) {
+                  <li
+                    class="oplus-rubric-item"
+                    [attr.data-testid]="
+                      'oplus-dimension-rubric-item-' + card.dim.num + '-' + item.ref
+                    "
+                    [attr.data-status]="item.status"
+                  >
+                    <span class="oplus-rubric-item__ref" aria-hidden="true">
+                      {{ item.ref }}
+                    </span>
+                    <span class="oplus-rubric-item__req">
+                      {{ item.requirement }}
+                    </span>
+                    <span class="oplus-rubric-item__tool">
+                      {{ item.toolCoverage }}
+                    </span>
+                    <span class="oplus-rubric-item__priority">
+                      @if (item.priority) {
+                        <span
+                          class="oplus-priority-badge"
+                          [attr.data-priority]="item.priority"
+                          [attr.data-testid]="
+                            'oplus-dimension-rubric-priority-' +
+                            card.dim.num +
+                            '-' +
+                            item.ref
+                          "
+                          [attr.aria-label]="priorityAriaKey(item.priority) | translate"
+                        >
+                          {{ item.priority }}
+                        </span>
+                      }
+                    </span>
+                    <span
+                      class="oplus-rubric-item__badge"
+                      [attr.data-status]="item.status"
+                    >
+                      @switch (item.status) {
+                        @case ('pass') {
+                          <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                          {{ 'oplus.dimensions.pass' | translate }}
+                        }
+                        @case ('partial') {
+                          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                          {{ 'oplus.dimensions.partial' | translate }}
+                        }
+                        @default {
+                          <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                          {{ 'oplus.dimensions.fail' | translate }}
+                        }
+                      }
+                    </span>
+                    @if (item.evidenceUrl !== null) {
+                      <a
+                        class="oplus-rubric-item__evidence"
+                        [href]="item.evidenceUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        [attr.data-testid]="
+                          'oplus-dimension-rubric-evidence-' + card.dim.num + '-' + item.ref
+                        "
+                        [attr.aria-label]="
+                          ('oplus.dimensions.view_evidence_aria' | translate) +
+                          ' ' +
+                          item.ref
+                        "
+                      >
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        {{ 'oplus.dimensions.view_evidence' | translate }}
+                      </a>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    @if (dashboardData(); as d) {
+      <!-- Recent decision counter — only when the rollup returns it. -->
+      @if (d.recent_decisions_24h !== undefined && d.recent_decisions_24h !== null) {
+        <section
+          class="glass-panel oplus-dashboard__recent"
+          data-testid="oplus-dashboard-recent-decisions"
+          [attr.aria-label]="'oplus.dashboard.recent_decisions_aria' | translate"
+        >
+          <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+          <span class="oplus-dashboard__recent-num">{{ d.recent_decisions_24h }}</span>
+          <span class="oplus-dashboard__recent-label">
+            {{ 'oplus.dashboard.recent_decisions_label' | translate }}
+          </span>
+        </section>
+      }
+    }
+  }
+</div>

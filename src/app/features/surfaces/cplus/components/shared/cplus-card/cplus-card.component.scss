@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+// ADR-196 — flat, unified card. Solid surface, hairline border, soft neutral
+// shadow, radius-lg corners. No blur, no stripe, no glow, no hover-lift.
+.cplus-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--cplus-surface);
+  border: 1px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-card);
+  padding: var(--cplus-space-lg);
+  min-width: 0;
+  height: 100%;
+
+  // Elevation is opt-in; default is raised so stacked cards read as layered
+  // over the muted page surface.
+  &[data-elevation='raised'] {
+    box-shadow: var(--cplus-shadow-sm);
+  }
+  &[data-elevation='flat'] {
+    box-shadow: none;
+  }
+
+  &__header {
+    margin-block-end: var(--cplus-space-md);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--cplus-text);
+  }
+
+  &__body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}

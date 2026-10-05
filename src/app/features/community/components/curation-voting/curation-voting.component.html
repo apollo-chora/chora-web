@@ -1,0 +1,155 @@
+<section
+  class="curation-voting"
+  role="main"
+  [attr.aria-label]="'community.curation_voting_title' | translate"
+  data-testid="curation-voting">
+
+  <!-- Page Header -->
+  <header class="curation-voting__header">
+    <h1 class="curation-voting__title" data-testid="curation-voting-title">
+      {{ 'community.curation_voting_title' | translate }}
+    </h1>
+    <span class="curation-voting__pending-badge" data-testid="pending-count" aria-live="polite">
+      {{ pendingCount() }} {{ 'community.pending_items' | translate }}
+    </span>
+  </header>
+
+  <!-- Filters -->
+  <div class="curation-voting__filters" data-testid="curation-filters">
+    <div class="curation-voting__filter-group">
+      <label class="curation-voting__filter-label" for="curation-status-filter">
+        {{ 'community.filter_by_status' | translate }}
+      </label>
+      <select
+        id="curation-status-filter"
+        class="curation-voting__filter-select"
+        data-testid="filter-curation-status"
+        [value]="filterStatus()"
+        (change)="onFilterStatusChange($event)">
+        <option value="all">{{ 'community.all_statuses' | translate }}</option>
+        @for (status of allStatuses; track status) {
+          <option [value]="status">{{ statusLabels[status] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <span class="curation-voting__result-count" data-testid="item-count" aria-live="polite">
+      {{ itemCount() }} {{ 'community.items_shown' | translate }}
+    </span>
+  </div>
+
+  <!-- Loading -->
+  @if (curationQueueState().status === 'loading') {
+    <div class="curation-voting__loading" data-testid="curation-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="curation-voting__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (curationQueueState().status === 'error') {
+    <div class="curation-voting__error" data-testid="curation-error" role="alert">
+      <p class="curation-voting__error-text">
+        {{ 'community.curation_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (curationQueueState().status === 'success' && filteredItems().length === 0) {
+    <div class="curation-voting__empty" data-testid="curation-empty" role="status">
+      <p class="curation-voting__empty-text">
+        {{ 'community.no_curation_items' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Item List -->
+  @if (curationQueueState().status === 'success' && filteredItems().length > 0) {
+    <div class="curation-voting__list" data-testid="curation-list">
+      @for (item of filteredItems(); track item.id) {
+        <article class="curation-voting__card" data-testid="curation-card">
+          <div class="curation-voting__card-header">
+            <div class="curation-voting__card-info">
+              <span class="curation-voting__atom-ref" data-testid="curation-atom-id">
+                {{ 'community.atom_ref' | translate }}: {{ item.community_atom_id }}
+              </span>
+              <span
+                class="curation-voting__status"
+                [class]="statusClass(item.status)"
+                data-testid="curation-status">
+                {{ statusLabels[item.status] | translate }}
+              </span>
+            </div>
+            <span class="curation-voting__date" data-testid="curation-date">
+              {{ formatDate(item.created_at) }}
+            </span>
+          </div>
+
+          <!-- Quality Score -->
+          <div class="curation-voting__quality-section" data-testid="quality-section">
+            <div class="curation-voting__quality-bar-container">
+              <div
+                class="curation-voting__quality-bar"
+                [class]="qualityClass(item)"
+                [style.width.%]="qualityScorePercent(item)"
+                role="meter"
+                [attr.aria-valuenow]="qualityScorePercent(item)"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                [attr.aria-label]="'community.quality_score' | translate">
+              </div>
+            </div>
+            <span class="curation-voting__quality-text" data-testid="quality-score">
+              {{ qualityScorePercent(item) }}% {{ 'community.quality_label' | translate }}
+            </span>
+          </div>
+
+          <!-- Review Counts -->
+          <div class="curation-voting__counts" data-testid="review-counts">
+            <span class="curation-voting__count curation-voting__count--reviews">
+              {{ item.peer_review_count }} {{ 'community.reviews' | translate }}
+            </span>
+            <span class="curation-voting__count curation-voting__count--approve">
+              {{ item.approve_count }} {{ 'community.approvals' | translate }}
+            </span>
+            <span class="curation-voting__count curation-voting__count--reject">
+              {{ item.reject_count }} {{ 'community.rejections' | translate }}
+            </span>
+          </div>
+
+          <!-- Actions (only for pending items) -->
+          @if (isPending(item)) {
+            <div class="curation-voting__actions" data-testid="curation-actions">
+              <button
+                type="button"
+                class="curation-voting__btn curation-voting__btn--approve"
+                data-testid="btn-approve"
+                [attr.aria-label]="'community.approve_curation' | translate"
+                (click)="approveItem(item)">
+                &#9650; {{ 'community.approve' | translate }}
+              </button>
+              <button
+                type="button"
+                class="curation-voting__btn curation-voting__btn--reject"
+                data-testid="btn-reject"
+                [attr.aria-label]="'community.reject_curation' | translate"
+                (click)="rejectItem(item)">
+                &#9660; {{ 'community.reject' | translate }}
+              </button>
+              <button
+                type="button"
+                class="curation-voting__btn curation-voting__btn--flag"
+                data-testid="btn-flag"
+                [attr.aria-label]="'community.flag_issue' | translate"
+                (click)="flagItem(item)">
+                &#9873; {{ 'community.flag_issue' | translate }}
+              </button>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

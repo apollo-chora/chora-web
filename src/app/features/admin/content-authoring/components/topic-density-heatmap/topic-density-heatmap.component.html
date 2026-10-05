@@ -1,0 +1,152 @@
+<section
+  class="topic-density-heatmap"
+  [attr.aria-label]="'admin.density.title' | translate"
+  data-testid="topic-density-heatmap">
+
+  <header class="topic-density-heatmap__header">
+    <h1 class="topic-density-heatmap__title" data-testid="density-title">
+      {{ 'admin.density.title' | translate }}
+    </h1>
+    <p class="topic-density-heatmap__subtitle">
+      {{ 'admin.density.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Color scale legend -->
+  <div class="topic-density-heatmap__legend" data-testid="density-legend" role="img"
+    [attr.aria-label]="'admin.density.legend-label' | translate">
+    <span class="topic-density-heatmap__legend-label">
+      {{ 'admin.density.sparse' | translate }}
+    </span>
+    @for (entry of colorScale; track entry.tier) {
+      <span
+        class="topic-density-heatmap__legend-swatch"
+        [class]="'topic-density-heatmap__legend-swatch--' + entry.tier"
+        [attr.title]="entry.label | translate">
+      </span>
+    }
+    <span class="topic-density-heatmap__legend-label">
+      {{ 'admin.density.dense' | translate }}
+    </span>
+  </div>
+
+  <!-- Loading -->
+  @if (densityState().status === 'loading') {
+    <div class="topic-density-heatmap__loading" data-testid="density-loading" role="status" aria-live="polite">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="topic-density-heatmap__skeleton"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (densityState().status === 'error') {
+    <div class="topic-density-heatmap__error" data-testid="density-error" role="alert">
+      <p class="topic-density-heatmap__error-text">
+        {{ 'admin.density.load-error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (densityState().status === 'success' && topics().length === 0) {
+    <div class="topic-density-heatmap__empty" data-testid="density-empty" role="status">
+      <p>{{ 'admin.density.no-topics' | translate }}</p>
+    </div>
+  }
+
+  <!-- Topic tree with density overlay -->
+  @if (densityState().status === 'success' && topics().length > 0) {
+    <ul class="topic-density-heatmap__tree" role="tree" data-testid="density-tree">
+      @for (node of topics(); track node.id) {
+        <li role="treeitem"
+          [attr.aria-expanded]="node.children.length > 0 ? isExpanded(node.id) : null"
+          aria-selected="false">
+          <div class="topic-density-heatmap__node" [attr.data-testid]="'density-node-' + node.id">
+            @if (node.children.length > 0) {
+              <button
+                class="topic-density-heatmap__expand-btn"
+                [class.topic-density-heatmap__expand-btn--expanded]="isExpanded(node.id)"
+                (click)="toggleExpand(node)"
+                [attr.aria-label]="isExpanded(node.id) ? 'Collapse ' + node.name : 'Expand ' + node.name"
+                data-testid="density-expand-btn">
+                <span aria-hidden="true">&#9654;</span>
+              </button>
+            } @else {
+              <span class="topic-density-heatmap__leaf-spacer" aria-hidden="true"></span>
+            }
+            <span class="topic-density-heatmap__node-name">{{ node.name }}</span>
+            <span class="topic-density-heatmap__count-label">{{ node.atom_count }}</span>
+            <div class="topic-density-heatmap__density-bar"
+              [attr.aria-label]="node.name + ': ' + node.atom_count + ' atoms'">
+              <div
+                class="topic-density-heatmap__density-fill"
+                [class]="'topic-density-heatmap__density-fill--' + getDensityTier(node.atom_count)"
+                [style.width.%]="getDensityPercent(node.atom_count)">
+              </div>
+            </div>
+          </div>
+
+          @if (node.children.length > 0 && isExpanded(node.id)) {
+            <ul class="topic-density-heatmap__subtree" role="group">
+              @for (child of node.children; track child.id) {
+                <li role="treeitem"
+                  [attr.aria-expanded]="child.children.length > 0 ? isExpanded(child.id) : null"
+                  aria-selected="false">
+                  <div class="topic-density-heatmap__node topic-density-heatmap__node--level-1"
+                    [attr.data-testid]="'density-node-' + child.id">
+                    @if (child.children.length > 0) {
+                      <button
+                        class="topic-density-heatmap__expand-btn"
+                        [class.topic-density-heatmap__expand-btn--expanded]="isExpanded(child.id)"
+                        (click)="toggleExpand(child)"
+                        [attr.aria-label]="isExpanded(child.id) ? 'Collapse ' + child.name : 'Expand ' + child.name"
+                        data-testid="density-expand-btn">
+                        <span aria-hidden="true">&#9654;</span>
+                      </button>
+                    } @else {
+                      <span class="topic-density-heatmap__leaf-spacer" aria-hidden="true"></span>
+                    }
+                    <span class="topic-density-heatmap__node-name">{{ child.name }}</span>
+                    <span class="topic-density-heatmap__count-label">{{ child.atom_count }}</span>
+                    <div class="topic-density-heatmap__density-bar"
+                      [attr.aria-label]="child.name + ': ' + child.atom_count + ' atoms'">
+                      <div
+                        class="topic-density-heatmap__density-fill"
+                        [class]="'topic-density-heatmap__density-fill--' + getDensityTier(child.atom_count)"
+                        [style.width.%]="getDensityPercent(child.atom_count)">
+                      </div>
+                    </div>
+                  </div>
+
+                  @if (child.children.length > 0 && isExpanded(child.id)) {
+                    <ul class="topic-density-heatmap__subtree" role="group">
+                      @for (grandchild of child.children; track grandchild.id) {
+                        <li role="treeitem" aria-selected="false">
+                          <div class="topic-density-heatmap__node topic-density-heatmap__node--level-2"
+                            [attr.data-testid]="'density-node-' + grandchild.id">
+                            <span class="topic-density-heatmap__leaf-spacer" aria-hidden="true"></span>
+                            <span class="topic-density-heatmap__node-name">{{ grandchild.name }}</span>
+                            <span class="topic-density-heatmap__count-label">{{ grandchild.atom_count }}</span>
+                            <div class="topic-density-heatmap__density-bar"
+                              [attr.aria-label]="grandchild.name + ': ' + grandchild.atom_count + ' atoms'">
+                              <div
+                                class="topic-density-heatmap__density-fill"
+                                [class]="'topic-density-heatmap__density-fill--' + getDensityTier(grandchild.atom_count)"
+                                [style.width.%]="getDensityPercent(grandchild.atom_count)">
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

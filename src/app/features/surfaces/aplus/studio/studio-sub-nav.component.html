@@ -1,0 +1,29 @@
+<nav
+  class="studio-sub-nav glass-panel"
+  [attr.aria-label]="'aplus.studio_sub_nav.aria_label' | translate"
+  data-testid="studio-sub-nav">
+  <a
+    routerLink="/a/studio/atoms"
+    routerLinkActive="studio-sub-nav__tab--active"
+    class="studio-sub-nav__tab"
+    data-testid="studio-sub-nav-atoms">
+    <i class="fa-solid fa-cubes" aria-hidden="true"></i>
+    {{ 'aplus.studio_sub_nav.atoms' | translate }}
+  </a>
+  <a
+    routerLink="/a/studio/test-sets"
+    routerLinkActive="studio-sub-nav__tab--active"
+    class="studio-sub-nav__tab"
+    data-testid="studio-sub-nav-test-sets">
+    <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+    {{ 'aplus.studio_sub_nav.test_sets' | translate }}
+  </a>
+  <a
+    routerLink="/a/studio/question-banks"
+    routerLinkActive="studio-sub-nav__tab--active"
+    class="studio-sub-nav__tab"
+    data-testid="studio-sub-nav-question-banks">
+    <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+    {{ 'aplus.studio_sub_nav.question_banks' | translate }}
+  </a>
+</nav>

@@ -1,0 +1,65 @@
+<div
+  class="batch-translate-queue"
+  data-testid="batch-translate-queue"
+  [attr.aria-label]="'admin.translation.batch_title' | translate">
+
+  <!-- Header -->
+  <header class="batch-translate-queue__header">
+    <h3 class="batch-translate-queue__title">
+      {{ 'admin.translation.batch_title' | translate }}
+    </h3>
+    <span class="batch-translate-queue__job-id" data-testid="batch-job-id">
+      {{ batch().job_id }}
+    </span>
+    <span class="batch-translate-queue__overall-status" data-testid="batch-status">
+      {{ batch().status | uppercase }}
+    </span>
+  </header>
+
+  <!-- Progress Bar -->
+  <div
+    class="batch-translate-queue__progress"
+    role="progressbar"
+    [attr.aria-valuenow]="progressPercent()"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    data-testid="batch-progress">
+    <div
+      class="batch-translate-queue__progress-bar"
+      [style.width.%]="progressPercent()">
+    </div>
+    <span class="batch-translate-queue__progress-label">
+      {{ completedCount() }} / {{ totalCount() }}
+      ({{ progressPercent() }}%)
+    </span>
+  </div>
+
+  <!-- Results List -->
+  @if (batch().results.length > 0) {
+    <div class="batch-translate-queue__list" role="list" data-testid="batch-results">
+      @for (result of batch().results; track result.content_id) {
+        <div
+          class="batch-translate-queue__item"
+          role="listitem"
+          [attr.data-testid]="'batch-item-' + result.content_id">
+          <span class="batch-translate-queue__item-id">{{ result.content_id }}</span>
+          <span
+            class="batch-translate-queue__item-status"
+            [class]="statusClass(result)">
+            {{ statusLabel(result.status) | translate }}
+          </span>
+          @if (result.confidence !== undefined) {
+            <span class="batch-translate-queue__item-confidence">
+              {{ (result.confidence * 100).toFixed(0) }}%
+            </span>
+          }
+          @if (result.error) {
+            <span class="batch-translate-queue__item-error" role="alert">
+              {{ result.error }}
+            </span>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

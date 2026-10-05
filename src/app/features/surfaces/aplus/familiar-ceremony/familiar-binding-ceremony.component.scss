@@ -1,0 +1,292 @@
+// R3-5 binding-ceremony — MODAL-ONLY overlay (CHO-2040). Rendered at the
+// profile ROOT by the parent Hero Card, outside its container-type /
+// backdrop-filter containing blocks, so the fixed host fills the viewport.
+// Same easing + glass tokens as the ceremony-edges panel.
+
+$ceremony-ease: cubic-bezier(0.165, 0.84, 0.44, 1);
+
+:host {
+  // Fills the viewport above other surface content when the overlay is open
+  // (mirrors FamiliarStageUpOverlayComponent's fixed host; 210 sits above its
+  // 200). When closed the @if renders nothing — pointer-events:none keeps the
+  // empty fixed host from swallowing clicks on the profile beneath it.
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  pointer-events: none;
+}
+
+.binding-ceremony__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  animation: binding-reveal 0.28s $ceremony-ease both;
+}
+
+@keyframes binding-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.binding-ceremony__loading,
+.binding-ceremony__none {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.binding-ceremony__error {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(220, 70, 70, 0.1);
+  border: 1px solid rgba(220, 70, 70, 0.35);
+  font-size: 13px;
+
+  p {
+    margin: 0;
+    flex: 1;
+  }
+}
+
+.binding-ceremony__bound {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.binding-ceremony__bound-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 13.5px;
+
+  i {
+    color: #1b873f;
+  }
+}
+
+.binding-ceremony__picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.binding-ceremony__picker-legend {
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.binding-ceremony__goals {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.binding-ceremony__goal {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.25));
+  cursor: pointer;
+  transition: background 0.18s $ceremony-ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:has(input:checked) {
+    background: rgba(25, 118, 210, 0.1);
+    border-color: rgba(21, 101, 192, 0.4);
+  }
+
+  input {
+    margin-top: 3px;
+    accent-color: var(--breed-accent, var(--accent, #9a3412));
+
+    &:focus-visible {
+      outline: 2px solid var(--breed-accent, var(--accent, #9a3412));
+      outline-offset: 2px;
+    }
+  }
+}
+
+.binding-ceremony__goal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.binding-ceremony__goal-kind {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.binding-ceremony__goal-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+// ── Modal overlay — the rich ceremony ritual, roomy + focused ───────────────
+// Absolute inside the fixed host; dims the profile; centered. pointer-events
+// re-enabled here (the host stays none) so the open overlay captures clicks
+// while the closed host lets them through. Mirrors the stage-up overlay.
+.binding-ceremony__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.binding-ceremony__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  cursor: pointer;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(25, 118, 210, 0.22) 0%,
+    rgba(15, 23, 42, 0.55) 72%
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: binding-scrim-in 0.28s $ceremony-ease both;
+  }
+}
+
+@keyframes binding-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.binding-ceremony__dialog {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  padding: 1.75rem 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  border-radius: var(--panel-radius, 20px);
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--breed-accent, var(--accent, #9a3412));
+    outline-offset: 3px;
+  }
+
+  // Origin-anchored scale + fade with Dale's signature easing.
+  @media (prefers-reduced-motion: no-preference) {
+    animation: binding-dialog-in 0.34s $ceremony-ease both;
+  }
+}
+
+@keyframes binding-dialog-in {
+  from { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.96); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.binding-ceremony__dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.binding-ceremony__dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--text-main);
+
+  i {
+    color: var(--breed-accent, var(--accent, #9a3412));
+  }
+}
+
+.binding-ceremony__dialog-sub {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.binding-ceremony__close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.35));
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  transition:
+    color 0.18s $ceremony-ease,
+    background 0.18s $ceremony-ease;
+
+  &:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--breed-accent, var(--accent, #9a3412));
+    outline-offset: 2px;
+  }
+}
+
+// Desktop enhancement (tablet-first: 768px is primary)
+@media (min-width: 1280px) {
+  .binding-ceremony__dialog {
+    padding: 2rem 2.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .binding-ceremony__body,
+  .binding-ceremony__scrim,
+  .binding-ceremony__dialog {
+    animation: none;
+  }
+}

@@ -1,0 +1,269 @@
+:host {
+  display: block;
+}
+
+.addon-detail {
+  &__main {
+    padding: var(--chora-space-lg, 24px);
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  &__breadcrumb {
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__back {
+    color: inherit;
+    text-decoration: none;
+    opacity: 0.85;
+
+    &:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+  }
+
+  &__loading,
+  &__not-found,
+  &__load-error {
+    padding: var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-sm, 4px);
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__load-error,
+  &__not-found {
+    background: rgb(176 0 32 / 12%);
+    color: var(--chora-color-danger, #b00020);
+  }
+
+  &__hero {
+    margin-bottom: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    margin: 0 0 var(--chora-space-xs, 4px);
+    font-size: 1.5rem;
+  }
+
+  &__code {
+    display: inline-block;
+    margin-left: var(--chora-space-sm, 8px);
+    font-size: 0.85rem;
+    opacity: 0.65;
+    font-family: monospace;
+  }
+
+  &__category-badge {
+    display: inline-block;
+    padding: 2px var(--chora-space-sm, 8px);
+    background: rgb(255 255 255 / 8%);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    margin-bottom: var(--chora-space-sm, 8px);
+  }
+
+  &__description {
+    margin: 0;
+    opacity: 0.85;
+  }
+
+  &__section {
+    margin-bottom: var(--chora-space-lg, 24px);
+
+    h2 {
+      margin: 0 0 var(--chora-space-sm, 8px);
+      font-size: 1.1rem;
+    }
+  }
+
+  &__subscription,
+  &__install-soon {
+    padding: var(--chora-space-md, 16px);
+    margin-bottom: var(--chora-space-lg, 24px);
+
+    h2 {
+      margin: 0 0 var(--chora-space-sm, 8px);
+      font-size: 1.1rem;
+    }
+  }
+
+  &__subscription-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    margin: 0 0 var(--chora-space-md, 16px);
+
+    > div {
+      display: contents;
+    }
+
+    dt {
+      opacity: 0.7;
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 600;
+    }
+  }
+
+  &__manage-cta {
+    margin: 0;
+
+    .btn {
+      min-height: 44px;
+    }
+  }
+
+  &__entitlements,
+  &__integrations,
+  &__compliance-pills,
+  &__tiers {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__entitlement,
+  &__integration {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-xs, 4px) 0;
+    border-bottom: 1px solid rgb(255 255 255 / 10%);
+  }
+
+  &__entitlement-code,
+  &__integration-type {
+    font-family: monospace;
+    font-size: 0.85rem;
+    opacity: 0.65;
+  }
+
+  &__entitlement-limit,
+  &__integration-status {
+    margin-left: auto;
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+
+  &__compliance-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    background: rgb(255 255 255 / 5%);
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 999px;
+    font-size: 0.85rem;
+
+    &--compliant {
+      background: rgb(46 160 67 / 18%);
+      border-color: rgb(46 160 67 / 35%);
+    }
+  }
+
+  &__pill-status {
+    opacity: 0.7;
+    font-size: 0.75rem;
+  }
+
+  &__residency-regions {
+    margin: var(--chora-space-sm, 8px) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__region-chip {
+    display: inline-block;
+    padding: 2px var(--chora-space-sm, 8px);
+    background: rgb(255 255 255 / 8%);
+    border-radius: 999px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    margin-left: var(--chora-space-xs, 4px);
+  }
+
+  &__tiers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__tier {
+    padding: var(--chora-space-md, 16px);
+
+    &--current {
+      border: 2px solid var(--chora-color-primary, #2a7);
+    }
+  }
+
+  &__tier-label {
+    margin: 0 0 var(--chora-space-xs, 4px);
+    font-size: 1rem;
+  }
+
+  &__tier-price {
+    margin: 0 0 var(--chora-space-sm, 8px);
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+
+  &__tier-meta {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--chora-space-xs, 4px);
+    margin: 0;
+
+    > div {
+      display: contents;
+    }
+
+    dt {
+      opacity: 0.7;
+      font-size: 0.85rem;
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+  }
+
+  // CHO-1780 — pending end-of-cycle tier change pill next to the
+  // current tier value in the subscription panel. Matches the
+  // addon-management tile badge (PR #91).
+  &__scheduled-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    border-radius: 999px;
+    background: rgb(91 141 239 / 18%);
+    color: var(--primary, #5b8def);
+    white-space: nowrap;
+  }
+
+  // CHO-1782 — destructive counterpart of the scheduled-tier badge.
+  &__deactivating-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    border-radius: 999px;
+    background: rgb(217 119 6 / 18%);
+    color: var(--warning, #d97706);
+    white-space: nowrap;
+  }
+}

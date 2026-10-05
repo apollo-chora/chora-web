@@ -1,0 +1,104 @@
+:host {
+  display: block;
+}
+
+// ---------------------------------------------------------------------------
+// Tenant picker — glassmorphism radiogroup. Tablet-first: single column
+// list at >=768px; rows widen at >=1280px.
+// ---------------------------------------------------------------------------
+
+.tenant-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm, 8px);
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-md, 16px);
+    padding: var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-glass-border, rgba(255, 255, 255, 0.5));
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--chora-color-glass-surface, rgba(255, 255, 255, 0.72));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: var(--chora-color-surface-2, #f3f4f6);
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--chora-color-text-primary, #111);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__default-tag {
+    flex-shrink: 0;
+    padding: 2px var(--chora-space-sm, 8px);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-primary, #2563eb);
+    color: var(--chora-color-on-primary, #fff);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-xs, 4px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__role-pill {
+    padding: 2px var(--chora-space-sm, 8px);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-2, #f3f4f6);
+    color: var(--chora-color-text-secondary, #555);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  &__empty {
+    padding: var(--chora-space-md, 16px);
+    color: var(--chora-color-text-disabled, #9ca3af);
+    text-align: center;
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .tenant-picker__row {
+    padding: var(--chora-space-md, 16px) var(--chora-space-lg, 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tenant-picker__row {
+    transition: none;
+  }
+}

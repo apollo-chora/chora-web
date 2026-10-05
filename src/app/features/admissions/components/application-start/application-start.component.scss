@@ -1,0 +1,288 @@
+:host {
+  display: block;
+}
+
+.application-start {
+  padding: var(--chora-space-lg, 24px);
+  max-width: 800px;
+  margin: 0 auto;
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Overview
+  // ---------------------------------------------------------------------------
+
+  &__overview {
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    padding: var(--chora-space-md, 16px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__pipeline-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__programme {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0 0 var(--chora-space-md, 16px);
+  }
+
+  &__meta {
+    display: flex;
+    gap: var(--chora-space-lg, 24px);
+    flex-wrap: wrap;
+  }
+
+  &__meta-item {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-secondary, #475569);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Vertical Stepper
+  // ---------------------------------------------------------------------------
+
+  &__stepper {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__step {
+    display: flex;
+    gap: var(--chora-space-md, 16px);
+    min-height: 80px;
+  }
+
+  &__step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40px;
+    flex-shrink: 0;
+  }
+
+  &__step-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 2px solid var(--chora-color-border, #ccc);
+    background: var(--chora-color-surface-0, #fff);
+    color: var(--chora-color-text-muted, #999);
+  }
+
+  &__icon {
+    &--check {
+      color: var(--chora-color-success, #059669);
+    }
+
+    &--active {
+      color: var(--chora-color-primary, #2563eb);
+    }
+
+    &--timeout {
+      color: var(--chora-color-warning, #d97706);
+    }
+
+    &--lock {
+      font-size: 0.75rem;
+    }
+  }
+
+  &__step--completed &__step-icon {
+    border-color: var(--chora-color-success, #059669);
+    background: var(--chora-color-success-surface, #ecfdf5);
+  }
+
+  &__step--active &__step-icon {
+    border-color: var(--chora-color-primary, #2563eb);
+    background: var(--chora-color-primary-surface, #eff6ff);
+  }
+
+  &__step--timed-out &__step-icon {
+    border-color: var(--chora-color-warning, #d97706);
+    background: var(--chora-color-warning-surface, #fffbeb);
+  }
+
+  &__step-connector {
+    width: 2px;
+    flex: 1;
+    background: var(--chora-color-border, #e5e5e5);
+    margin-block: var(--chora-space-xs, 4px);
+
+    &--completed {
+      background: var(--chora-color-success, #059669);
+    }
+  }
+
+  &__step-content {
+    flex: 1;
+    padding-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__step-header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__step-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__optional-badge {
+    font-size: 0.6875rem;
+    color: var(--chora-color-text-muted, #888);
+    font-style: italic;
+  }
+
+  &__step-status {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: var(--chora-space-xs, 4px) 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Countdown
+  // ---------------------------------------------------------------------------
+
+  &__countdown {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    background: var(--chora-color-warning-surface, #fffbeb);
+    border-radius: var(--chora-radius-sm, 4px);
+    margin-block: var(--chora-space-xs, 4px);
+  }
+
+  &__countdown-label {
+    font-size: 0.75rem;
+    color: var(--chora-color-warning, #d97706);
+  }
+
+  &__countdown-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--chora-color-warning, #d97706);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Stage Button
+  // ---------------------------------------------------------------------------
+
+  &__stage-btn {
+    margin-block-start: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-primary, #2563eb);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: transparent;
+    color: var(--chora-color-primary, #2563eb);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--chora-color-primary-surface, #eff6ff);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Start Section
+  // ---------------------------------------------------------------------------
+
+  &__start-section {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px) 0;
+  }
+
+  &__start-btn {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-xl, 32px);
+    background: var(--chora-color-primary, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+
+    &:hover:not(:disabled) {
+      background: var(--chora-color-primary-dark, #1d4ed8);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Loading
+  // ---------------------------------------------------------------------------
+
+  &__loading {
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__skeleton-step {
+    height: 60px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-sm, 4px);
+    margin-block-end: var(--chora-space-sm, 8px);
+    animation: start-pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes start-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}

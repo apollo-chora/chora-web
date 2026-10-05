@@ -1,0 +1,186 @@
+<section
+  class="cohort-progress"
+  role="main"
+  [attr.aria-label]="'admin.onboarding.cohort_title' | translate"
+  data-testid="cohort-progress">
+
+  <header class="cohort-progress__header">
+    <h1 class="cohort-progress__title" data-testid="cohort-title">
+      {{ 'admin.onboarding.cohort_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Toolbar -->
+  <div class="cohort-progress__toolbar" data-testid="cohort-toolbar">
+    <div class="cohort-progress__toolbar-left">
+      <!-- Search -->
+      <div class="cohort-progress__search">
+        <label for="learner-search" class="cohort-progress__sr-only">
+          {{ 'admin.onboarding.search_learners' | translate }}
+        </label>
+        <input
+          type="search"
+          id="learner-search"
+          class="cohort-progress__search-input"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          [placeholder]="'admin.onboarding.search_placeholder' | translate"
+          data-testid="search-input"
+          [attr.aria-label]="'admin.onboarding.search_learners' | translate" />
+      </div>
+
+      <!-- Cohort Filter -->
+      <div class="cohort-progress__filter">
+        <label for="cohort-filter" class="cohort-progress__sr-only">
+          {{ 'admin.onboarding.cohort_filter' | translate }}
+        </label>
+        <select
+          id="cohort-filter"
+          class="cohort-progress__select"
+          [ngModel]="cohortFilter()"
+          (ngModelChange)="onCohortFilterChange($event)"
+          data-testid="cohort-filter"
+          [attr.aria-label]="'admin.onboarding.cohort_filter' | translate">
+          <option value="">{{ 'admin.onboarding.all_cohorts' | translate }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="cohort-progress__toolbar-right">
+      <!-- Bulk Actions -->
+      @if (selectedCount() > 0) {
+        <button
+          type="button"
+          class="cohort-progress__btn cohort-progress__btn--secondary"
+          (click)="sendReminder()"
+          [disabled]="sendingReminder()"
+          data-testid="send-reminder-btn"
+          [attr.aria-label]="'admin.onboarding.send_reminder' | translate">
+          @if (sendingReminder()) {
+            {{ 'common.sending' | translate }}
+          } @else {
+            {{ 'admin.onboarding.send_reminder' | translate }} ({{ selectedCount() }})
+          }
+        </button>
+      }
+
+      <button
+        type="button"
+        class="cohort-progress__btn cohort-progress__btn--secondary"
+        (click)="exportCsv()"
+        data-testid="export-csv-btn"
+        [attr.aria-label]="'admin.onboarding.export_csv' | translate">
+        {{ 'admin.onboarding.export_csv' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (cohortState().status === 'loading') {
+    <div class="cohort-progress__loading" aria-live="polite" data-testid="cohort-loading">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="cohort-progress__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (cohortState().status === 'error') {
+    <div class="cohort-progress__error" role="alert" data-testid="cohort-error">
+      <p>{{ 'admin.onboarding.cohort_load_error' | translate }}</p>
+    </div>
+  }
+
+  <!-- Data Table -->
+  @if (cohortProgress(); as progress) {
+    <div class="cohort-progress__table-container" data-testid="cohort-table-container">
+      <table class="cohort-progress__table" role="table"
+             [attr.aria-label]="'admin.onboarding.cohort_table' | translate">
+        <thead>
+          <tr>
+            <th class="cohort-progress__th cohort-progress__th--checkbox">
+              <label class="cohort-progress__sr-only" for="select-all">
+                {{ 'admin.onboarding.select_all' | translate }}
+              </label>
+              <input
+                type="checkbox"
+                id="select-all"
+                [checked]="allSelected()"
+                (change)="toggleSelectAll()"
+                data-testid="select-all-checkbox"
+                [attr.aria-label]="'admin.onboarding.select_all' | translate" />
+            </th>
+            <th class="cohort-progress__th">{{ 'admin.onboarding.learner_name' | translate }}</th>
+            <th class="cohort-progress__th">{{ 'admin.onboarding.completion' | translate }}</th>
+            <th class="cohort-progress__th">{{ 'admin.onboarding.items_remaining' | translate }}</th>
+            <th class="cohort-progress__th">{{ 'admin.onboarding.last_activity' | translate }}</th>
+            <th class="cohort-progress__th">{{ 'admin.onboarding.status' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (learner of filteredLearners(); track trackByGcid($index, learner)) {
+            <tr
+              class="cohort-progress__row"
+              [class.cohort-progress__row--on-track]="learner.status === 'on_track'"
+              [class.cohort-progress__row--at-risk]="learner.status === 'at_risk'"
+              [class.cohort-progress__row--overdue]="learner.status === 'overdue'"
+              [attr.data-testid]="'learner-row-' + learner.gcid">
+              <td class="cohort-progress__td cohort-progress__td--checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="isSelected(learner.gcid)"
+                  (change)="toggleSelect(learner.gcid)"
+                  [attr.aria-label]="('admin.onboarding.select_learner' | translate) + ': ' + learner.display_name" />
+              </td>
+              <td class="cohort-progress__td">
+                <div class="cohort-progress__learner-info">
+                  <span class="cohort-progress__learner-name">{{ learner.display_name }}</span>
+                  <span class="cohort-progress__learner-email">{{ learner.email }}</span>
+                </div>
+              </td>
+              <td class="cohort-progress__td">
+                <div class="cohort-progress__completion">
+                  <div class="cohort-progress__mini-bar">
+                    <div
+                      class="cohort-progress__mini-fill"
+                      [style.width.%]="learner.completion_percentage">
+                    </div>
+                  </div>
+                  <span class="cohort-progress__percentage">
+                    {{ learner.completion_percentage }}%
+                  </span>
+                </div>
+              </td>
+              <td class="cohort-progress__td">
+                {{ learner.items_remaining }} / {{ learner.total_items }}
+              </td>
+              <td class="cohort-progress__td">
+                @if (learner.last_activity_at) {
+                  {{ learner.last_activity_at | date:'mediumDate' }}
+                } @else {
+                  <span class="cohort-progress__no-activity">
+                    {{ 'admin.onboarding.no_activity' | translate }}
+                  </span>
+                }
+              </td>
+              <td class="cohort-progress__td">
+                <span
+                  class="cohort-progress__status"
+                  [ngClass]="getStatusClass(learner.status)"
+                  [attr.aria-label]="statusLabels[learner.status] | translate">
+                  {{ statusLabels[learner.status] | translate }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (filteredLearners().length === 0) {
+        <div class="cohort-progress__empty" data-testid="no-learners">
+          <p>{{ 'admin.onboarding.no_learners_found' | translate }}</p>
+        </div>
+      }
+    </div>
+  }
+</section>

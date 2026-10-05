@@ -1,0 +1,133 @@
+<section class="far-sight glass-panel" aria-labelledby="far-sight-title">
+  <header class="far-sight__head">
+    <h1 id="far-sight-title" class="far-sight__title">
+      <i class="fa-solid fa-binoculars" aria-hidden="true"></i>
+      {{ 'far_sight.title' | translate }}
+    </h1>
+    <p class="far-sight__subtitle">{{ 'far_sight.subtitle' | translate }}</p>
+  </header>
+
+  <!-- Aim: which Seeker -->
+  <div class="far-sight__seekers" role="tablist" [attr.aria-label]="'far_sight.aim' | translate">
+    <button
+      type="button"
+      role="tab"
+      class="far-sight__seeker"
+      [class.far-sight__seeker--on]="seeker() === 'fact_check'"
+      [attr.aria-selected]="seeker() === 'fact_check'"
+      data-testid="far-sight-aim-fact_check"
+      (click)="aim('fact_check')">
+      <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+      {{ 'far_sight.fact_check.name' | translate }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="far-sight__seeker"
+      [class.far-sight__seeker--on]="seeker() === 'web_research'"
+      [attr.aria-selected]="seeker() === 'web_research'"
+      data-testid="far-sight-aim-web_research"
+      (click)="aim('web_research')">
+      <i class="fa-solid fa-magnifying-glass-chart" aria-hidden="true"></i>
+      {{ 'far_sight.web_research.name' | translate }}
+    </button>
+  </div>
+
+  <!-- Aim: the directive -->
+  <form class="far-sight__form" [formGroup]="form" (ngSubmit)="invoke()">
+    @if (seeker() === 'fact_check') {
+      <label class="far-sight__label" for="fs-claim">{{ 'far_sight.fact_check.prompt' | translate }}</label>
+      <textarea
+        id="fs-claim"
+        class="far-sight__input"
+        formControlName="claim"
+        rows="2"
+        [attr.maxlength]="claimMax"
+        [attr.placeholder]="'far_sight.fact_check.placeholder' | translate"
+        data-testid="far-sight-claim"></textarea>
+    } @else {
+      <label class="far-sight__label" for="fs-direction">{{ 'far_sight.web_research.prompt' | translate }}</label>
+      <textarea
+        id="fs-direction"
+        class="far-sight__input"
+        formControlName="direction"
+        rows="2"
+        [attr.maxlength]="directionMax"
+        [attr.placeholder]="'far_sight.web_research.placeholder' | translate"
+        data-testid="far-sight-direction"></textarea>
+      <div class="far-sight__depth" role="radiogroup" [attr.aria-label]="'far_sight.depth.label' | translate">
+        <label class="far-sight__depth-opt">
+          <input type="radio" formControlName="depth" value="survey" /> {{ 'far_sight.depth.survey' | translate }}
+        </label>
+        <label class="far-sight__depth-opt">
+          <input type="radio" formControlName="depth" value="deep" /> {{ 'far_sight.depth.deep' | translate }}
+        </label>
+      </div>
+    }
+
+    <button
+      type="submit"
+      class="far-sight__aim-btn"
+      [disabled]="!canAim()"
+      data-testid="far-sight-invoke">
+      <i class="fa-solid fa-satellite-dish" aria-hidden="true"></i>
+      {{ 'far_sight.invoke' | translate }}
+    </button>
+  </form>
+
+  <!-- Result — progressive/staggered reveal over the persistent canvas -->
+  <div class="far-sight__stage" aria-live="polite">
+    @if (state() === 'loading') {
+      <p class="far-sight__loading" data-testid="far-sight-loading">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        {{ 'far_sight.searching' | translate }}
+      </p>
+    }
+
+    @if (state() === 'error') {
+      <div class="far-sight__error" role="alert" data-testid="far-sight-error">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <span>{{ (errorKey() ?? 'far_sight.error.generic') | translate }}</span>
+      </div>
+    }
+
+    @if (state() === 'success' && result(); as r) {
+      <article class="far-sight__result" data-testid="far-sight-result">
+        <!-- tier 1: the verdict / research note -->
+        <p class="far-sight__reply far-sight__reveal far-sight__reveal--t1" data-testid="far-sight-reply">
+          {{ r.reply }}
+        </p>
+
+        <!--
+          Everything the grounded output is OWED, in ONE shared component
+          (CHO-2179): the sources named by their DURABLE domain (ADR-231 D4), the
+          "Searched for …" line that outlives the chip's ~30-day links, Google's
+          Search-Suggestions chip rendered verbatim (its ToS display obligation,
+          ADR-231 D5) and the ADR-225 live-web-search disclosure.
+
+          It renders nothing when the result carries no grounded channels, so the
+          no-citation hedge degrades honestly instead of showing empty husks.
+        -->
+        <chora-grounded-attribution
+          [citations]="r.citations"
+          [searchEntryPointHtml]="r.searchEntryPointHtml"
+          [webSearchQueries]="r.webSearchQueries" />
+
+        <p class="far-sight__meta">
+          @if (r.recorded) {
+            <span class="far-sight__badge">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              {{ 'far_sight.saved_note' | translate }}
+            </span>
+          }
+          @if (r.manaCharged > 0) {
+            <span class="far-sight__badge">
+              <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+              {{ r.manaCharged }} {{ 'far_sight.mana' | translate }}
+            </span>
+          }
+        </p>
+      </article>
+    }
+  </div>
+</section>

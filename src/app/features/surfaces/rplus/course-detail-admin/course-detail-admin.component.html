@@ -1,0 +1,443 @@
+<section
+  class="surface-rplus course-detail"
+  data-testid="rplus-course-detail">
+  @if (course(); as c) {
+    <header class="course-detail__header glass-panel">
+      <div class="course-detail__breadcrumb">
+        <a routerLink="/r/catalog" class="course-detail__crumb-link">
+          {{ 'rplus.courseDetail.breadcrumb_catalog' | translate }}
+        </a>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        <span
+          class="surface-accent-text"
+          data-testid="course-detail-breadcrumb-leaf">
+          {{ c.title }}
+        </span>
+      </div>
+      <div class="course-detail__title-row">
+        <div class="course-detail__title-wrap">
+          <span class="course-detail__code" data-testid="course-detail-code">
+            {{ c.code }}
+          </span>
+          <h1 class="course-detail__title" data-testid="course-detail-title">
+            {{ c.title }}
+          </h1>
+          <span class="course-detail__version">{{ c.version }}</span>
+          <span
+            class="badge"
+            [class]="'badge ' + badge()"
+            data-testid="course-detail-status">
+            {{ c.status }}
+          </span>
+        </div>
+        <div class="course-detail__cta-group">
+          <!-- CHO-1612: navigate to heterogeneous curriculum editor -->
+          <a
+            class="btn btn-secondary course-detail__cta"
+            [routerLink]="['/r/catalog', courseId(), 'content']"
+            data-testid="course-detail-manage-curriculum"
+            [attr.aria-label]="'rplus.courseDetail.manage_curriculum_aria' | translate">
+            <i class="fa-solid fa-list-ol" aria-hidden="true"></i>
+            {{ 'rplus.courseDetail.manage_curriculum' | translate }}
+          </a>
+          <!--
+            Publish New Version and Archive REMOVED (R1 slice 2, owner ruling).
+            Both bound no `(click)`, so both were dead for every viewer while
+            looking as live as Manage curriculum beside them.
+
+            Archive has no endpoint at all: the course surface dispatches
+            publish, release and reject only
+            (`course_cj2_handler.go:196-215`), and nothing transitions a course
+            into ARCHIVED.
+
+            Publish New Version is removed rather than wired because the only
+            endpoint it could reach does something else:
+            `POST /api/v1/courses/{id}/publish` is DRAFT to AWAITING_REVIEW,
+            which is submit-for-review, and that step already lives where
+            drafting happens (the authoring form's "Save + resubmit for
+            review"). After R2b this screen is where review HAPPENS, with
+            Release as the publish. A second door here, labelled with the wrong
+            verb, would say one thing and do another.
+          -->
+        </div>
+      </div>
+      <p class="course-detail__summary">{{ c.summary }}</p>
+      <div class="course-detail__author-row">
+        <span class="course-detail__author">
+          <i class="fa-solid fa-user" aria-hidden="true"></i>
+          {{ 'rplus.courseDetail.author' | translate }}:
+          <strong>{{ c.author }}</strong>
+        </span>
+      </div>
+    </header>
+
+    @if (isAwaitingReview()) {
+      <!-- Per-course review action (moved off the global sidebar queue).
+           Reuses the rplus.course_review.* i18n keys verbatim. -->
+      <section
+        class="course-detail__review glass-panel"
+        data-testid="course-detail-review"
+        aria-labelledby="course-detail-review-heading">
+        <h2
+          id="course-detail-review-heading"
+          class="course-detail__review-title">
+          {{ 'rplus.course_review.title' | translate }}
+        </h2>
+
+        <!-- Release form -->
+        <fieldset class="course-detail__release-form">
+          <legend class="course-detail__review-legend">
+            {{ 'rplus.course_review.release_legend' | translate }}
+          </legend>
+
+          <label class="course-detail__review-field">
+            <span>{{ 'rplus.course_review.field_price' | translate }}</span>
+            <input
+              type="number"
+              class="course-detail__review-input"
+              data-testid="course-detail-release-price"
+              min="0"
+              step="0.01"
+              name="price"
+              [ngModel]="releaseDraft().priceSgdDollars"
+              (ngModelChange)="updateRelease('priceSgdDollars', $event)" />
+          </label>
+
+          <label class="course-detail__review-field-inline">
+            <input
+              type="checkbox"
+              data-testid="course-detail-release-sf"
+              [checked]="releaseDraft().sfEligible"
+              (change)="updateRelease('sfEligible', !releaseDraft().sfEligible)" />
+            <span>{{ 'rplus.course_review.field_sf' | translate }}</span>
+          </label>
+
+          <label class="course-detail__review-field">
+            <span>{{ 'rplus.course_review.field_scheduled_open' | translate }}</span>
+            <input
+              type="datetime-local"
+              class="course-detail__review-input"
+              data-testid="course-detail-release-scheduled"
+              name="scheduled"
+              [ngModel]="releaseDraft().scheduledOpenAt"
+              (ngModelChange)="updateRelease('scheduledOpenAt', $event)" />
+          </label>
+
+          <div class="course-detail__review-field">
+            <span>{{ 'rplus.course_review.field_instructors' | translate }}</span>
+            @switch (instructorRoster().status) {
+              @case ('loading') {
+                <p
+                  class="course-detail__review-hint"
+                  data-testid="course-detail-instructors-loading">
+                  {{ 'rplus.course_review.instructors_loading' | translate }}
+                </p>
+              }
+              @case ('error') {
+                <p
+                  class="course-detail__review-error"
+                  data-testid="course-detail-instructors-error">
+                  {{ 'rplus.course_review.instructors_error' | translate }}
+                  <button
+                    type="button"
+                    class="btn btn-ghost course-detail__instructors-retry"
+                    data-testid="course-detail-instructors-retry"
+                    (click)="loadInstructorRoster()">
+                    {{ 'rplus.course_review.retry' | translate }}
+                  </button>
+                </p>
+              }
+              @default {
+                @if (instructorRoster().items.length === 0) {
+                  <p
+                    class="course-detail__review-hint"
+                    data-testid="course-detail-instructors-empty">
+                    {{ 'rplus.course_review.instructors_empty' | translate }}
+                  </p>
+                } @else {
+                  <ul
+                    class="course-detail__instructor-list"
+                    data-testid="course-detail-instructor-list">
+                    @for (ins of instructorRoster().items; track ins.gcid) {
+                      <li class="course-detail__instructor">
+                        <label class="course-detail__instructor-label">
+                          <input
+                            type="checkbox"
+                            [attr.data-testid]="
+                              'course-detail-instructor-' + ins.gcid
+                            "
+                            [checked]="isInstructorSelected(ins.gcid)"
+                            (change)="toggleInstructor(ins.gcid)" />
+                          <span class="course-detail__instructor-name">{{
+                            ins.display_name || ins.email || ins.gcid
+                          }}</span>
+                          @if (
+                            ins.display_name &&
+                            ins.email &&
+                            ins.email !== ins.display_name
+                          ) {
+                            <span class="course-detail__instructor-email">{{
+                              ins.email
+                            }}</span>
+                          }
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                }
+              }
+            }
+          </div>
+
+          <div class="course-detail__review-actions">
+            <button
+              type="button"
+              class="btn btn-primary course-detail__cta"
+              data-testid="course-detail-release"
+              [disabled]="!canRelease()"
+              (click)="release(courseId())">
+              <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+              @if (releaseAction().status === 'submitting') {
+                {{ 'rplus.course_review.releasing' | translate }}
+              } @else {
+                {{ 'rplus.course_review.release_cta' | translate }}
+              }
+            </button>
+          </div>
+
+          @if (releaseAction().status === 'error') {
+            <div
+              class="course-detail__review-error"
+              role="alert"
+              data-testid="course-detail-release-error">
+              {{ releaseError() | translate }}
+            </div>
+          }
+        </fieldset>
+
+        <!-- Reject form -->
+        <fieldset class="course-detail__reject-form">
+          <legend class="course-detail__review-legend">
+            {{ 'rplus.course_review.reject_legend' | translate }}
+          </legend>
+
+          <label class="course-detail__review-field">
+            <span>{{ 'rplus.course_review.field_review_notes' | translate }}</span>
+            <textarea
+              class="course-detail__review-textarea"
+              data-testid="course-detail-reject-notes"
+              name="rejectReason"
+              rows="3"
+              [ngModel]="rejectReason()"
+              (ngModelChange)="rejectReason.set($event)"></textarea>
+          </label>
+
+          <div class="course-detail__review-actions">
+            <button
+              type="button"
+              class="btn btn-ghost course-detail__cta"
+              data-testid="course-detail-reject"
+              [disabled]="!canReject()"
+              (click)="reject(courseId())">
+              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+              @if (rejectAction().status === 'submitting') {
+                {{ 'rplus.course_review.rejecting' | translate }}
+              } @else {
+                {{ 'rplus.course_review.reject_cta' | translate }}
+              }
+            </button>
+          </div>
+
+          @if (rejectAction().status === 'error') {
+            <div
+              class="course-detail__review-error"
+              role="alert"
+              data-testid="course-detail-reject-error">
+              {{ rejectError() | translate }}
+            </div>
+          }
+        </fieldset>
+      </section>
+    }
+
+    <section
+      class="course-detail__kpis glass-panel"
+      aria-labelledby="course-detail-kpis-heading"
+      data-testid="course-detail-kpis">
+      <h2
+        id="course-detail-kpis-heading"
+        class="course-detail__kpis-title">
+        {{ 'rplus.courseDetail.kpis' | translate }}
+      </h2>
+      <dl class="course-detail__kpi-grid">
+        <div class="course-detail__kpi">
+          <dt>{{ 'rplus.courseDetail.kpi.enrolled' | translate }}</dt>
+          <dd data-testid="course-detail-enrolled">{{ c.kpis.enrolled }}</dd>
+        </div>
+        <!--
+          Completed, Average score and the atoms published/draft tile REMOVED
+          (R1 slice 3a). All three were hardcoded in the mapper and nothing on
+          the wire answers them: the only completion figures are learner-scoped
+          and enrolment-gated, and NO source carries an atom publication status
+          (`test_set_ids` is bare ids; `CourseContentItem` has no status).
+
+          The atoms tile was the sharpest: this screen already fetches real
+          course content and renders it in the panel below, while the tile read
+          a hardcoded empty array and printed "0 published / 0 draft". The
+          screen disagreed with itself. It asked a question nothing on the wire
+          answers and printed a zero rather than saying so.
+        -->
+      </dl>
+    </section>
+
+    <div class="course-detail__main">
+      <section
+        class="course-detail__content glass-panel"
+        aria-labelledby="course-detail-content-heading"
+        data-testid="course-detail-content">
+        <header class="course-detail__atoms-head">
+          <h2
+            id="course-detail-content-heading"
+            class="course-detail__atoms-title">
+            {{ 'rplus.courseDetail.content_title' | translate }}
+          </h2>
+        </header>
+        @switch (contentState().status) {
+          @case ('loading') {
+            <p
+              class="course-detail__atoms-hint"
+              data-testid="course-detail-content-loading">
+              {{ 'rplus.courseDetail.content_loading' | translate }}
+            </p>
+          }
+          @case ('error') {
+            <p
+              class="course-detail__review-error"
+              data-testid="course-detail-content-error">
+              {{ 'rplus.courseDetail.content_error' | translate }}
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="course-detail-content-retry"
+                (click)="loadContent(courseId())">
+                {{ 'rplus.course_review.retry' | translate }}
+              </button>
+            </p>
+          }
+          @default {
+            @if (contentGroups().length === 0) {
+              <p
+                class="course-detail__atoms-hint"
+                data-testid="course-detail-content-empty">
+                {{ 'rplus.courseDetail.content_empty' | translate }}
+              </p>
+            } @else {
+              @for (group of contentGroups(); track group.kind) {
+                <section
+                  class="course-detail__content-group"
+                  [attr.data-testid]="
+                    'course-detail-content-group-' + group.kind
+                  ">
+                  <h3 class="course-detail__content-group-title">
+                    {{ group.labelKey | translate }}
+                    <span class="course-detail__content-count">{{
+                      group.items.length
+                    }}</span>
+                  </h3>
+                  <ol class="course-detail__content-list">
+                    @for (item of group.items; track item.item_id) {
+                      <li
+                        class="course-detail__content-item"
+                        [attr.data-testid]="
+                          'course-detail-content-item-' + item.item_id
+                        ">
+                        <span class="course-detail__content-pos">{{
+                          item.position
+                        }}</span>
+                        <span class="course-detail__content-item-title">{{
+                          item.title
+                        }}</span>
+                      </li>
+                    }
+                  </ol>
+                </section>
+              }
+            }
+          }
+        }
+      </section>
+
+      <aside
+        class="course-detail__sidebar"
+        aria-labelledby="course-detail-learners-heading">
+        <!--
+          The Cohorts panel is REMOVED (R1 slice 3a). `cohorts` was hardcoded
+          to [] in the mapper and no read can fill it: offerings are the
+          cohorts, and the offering handler exposes no course filter, so
+          nothing answers "which cohorts run this course". An always-empty
+          panel says "none scheduled", which is a different and false claim.
+        -->
+
+        <section
+          class="course-detail__learners glass-panel"
+          aria-labelledby="course-detail-learners-heading"
+          data-testid="course-detail-learners">
+          <h2
+            id="course-detail-learners-heading"
+            class="course-detail__sidebar-title">
+            {{ 'rplus.courseDetail.learners_title' | translate }}
+          </h2>
+          @if (c.enrolledLearners.length > 0) {
+            <ul class="course-detail__learner-list">
+              @for (l of c.enrolledLearners; track l.gcid) {
+                <li
+                  class="course-detail__learner-item"
+                  [attr.data-testid]="'course-detail-learner-' + l.gcid">
+                  <div class="course-detail__learner-name">
+                    {{ l.displayName }}
+                  </div>
+                  <div class="course-detail__learner-progress">
+                    <div
+                      class="course-detail__progress"
+                      role="progressbar"
+                      [attr.aria-valuenow]="l.progressPercent"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      [attr.aria-label]="
+                        l.displayName + ' progress'
+                      ">
+                      <span
+                        class="course-detail__progress-fill surface-accent-bg"
+                        [style.width.%]="l.progressPercent"></span>
+                    </div>
+                    <span
+                      [attr.data-testid]="
+                        'course-detail-learner-pct-' + l.gcid
+                      ">
+                      {{ l.progressPercent }}%
+                    </span>
+                  </div>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="course-detail__learner-empty">
+              {{ 'rplus.courseDetail.learners_empty' | translate }}
+            </p>
+          }
+        </section>
+      </aside>
+    </div>
+  } @else if (loadError()) {
+    <div class="course-detail__load-error" data-testid="course-detail-load-error">
+      <p>{{ 'rplus.courseDetail.load_error' | translate }}</p>
+      <a class="btn btn-ghost" routerLink="/r/catalog">
+        {{ 'rplus.courseDetail.back_to_catalog' | translate }}
+      </a>
+    </div>
+  } @else {
+    <p class="course-detail__loading" data-testid="course-detail-loading">
+      {{ 'rplus.courseDetail.loading' | translate }}
+    </p>
+  }
+</section>

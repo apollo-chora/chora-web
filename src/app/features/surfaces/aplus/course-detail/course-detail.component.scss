@@ -1,0 +1,394 @@
+// =====================================================================
+// A+ Course Detail — Phyllis demo Step 6
+//
+// Wired LIVE 2026-05-14 to GET /api/courses/{id} + POST /api/courses/{id}/enrol.
+// Renders only the real BE fields — no synthesized overview / objectives /
+// prerequisites / financial table / schedule slots. Tablet-first per
+// CLAUDE.md §11: ≥768px primary, ≥1280px desktop enhancement. NO mobile
+// breakpoints.
+// =====================================================================
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.aplus-course-detail {
+  padding: 1.5rem clamp(1rem, 3vw, 2rem);
+  max-width: 1024px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// ─── Breadcrumb ──────────────────────────────────────────────────────
+.course-detail__crumbs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 13px;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    &:hover {
+      color: var(--primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+  }
+}
+
+// ─── Loading / error status panel ────────────────────────────────────
+.course-detail__status {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: center;
+
+  i {
+    font-size: 1.75rem;
+    color: var(--text-muted);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted);
+  }
+
+  &--error i {
+    color: var(--danger, #dc2626);
+  }
+}
+
+// ─── Body layout ─────────────────────────────────────────────────────
+.course-detail__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// ─── Hero ────────────────────────────────────────────────────────────
+.course-detail__hero {
+  // Glassmorphism hero: gradient overlay creates a cover-image-like depth
+  // without an actual image, keeping the surface calm + premium (per
+  // chora-design-system: never flat opaque, always translucent layers).
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+
+  // Gradient overlay — upper-left accent bleeds into glass panel
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at top left, rgba(25, 118, 210, 0.12) 0%, transparent 65%),
+      radial-gradient(ellipse at bottom right, rgba(236, 72, 153, 0.08) 0%, transparent 65%);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  // All direct children sit above the gradient overlay
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.course-detail__title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.course-detail__instructor {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 13px;
+  color: var(--text-muted);
+
+  i {
+    color: var(--primary);
+  }
+
+  strong {
+    color: var(--text-main);
+    font-weight: 600;
+  }
+}
+
+.course-detail__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.course-detail__price {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.course-detail__meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.course-detail__meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 13px;
+
+  dt {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-muted);
+
+    i {
+      font-size: 0.8rem;
+      width: 16px;
+      text-align: center;
+    }
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+}
+
+.course-detail__tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.course-detail__tag {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(25, 118, 210, 0.1);
+  color: var(--primary);
+}
+
+// ─── Enrol panel ─────────────────────────────────────────────────────
+.course-detail__enrol {
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.course-detail__enrol-title {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.course-detail__enrol-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.course-detail__enrol-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.course-detail__enrol-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--danger, #dc2626);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+// ─── Stripe Checkout-cancelled banner ────────────────────────────────
+.course-detail__checkout-cancelled {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid rgba(78, 160, 232, 0.4);
+  background: rgba(78, 160, 232, 0.1);
+  border-radius: var(--chora-radius-md, 10px);
+  margin: 1rem 0;
+  font-size: 14px;
+
+  i {
+    color: var(--chora-color-info, #4ea0e8);
+    flex-shrink: 0;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+// ─── Pay-with-Stripe price-note inside the enrol card ────────────────
+.course-detail__enrol-price-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.8rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-muted, #64748b);
+
+  i {
+    color: var(--chora-color-secondary, #c2410c);
+  }
+}
+
+// ─── CJ#2 enrichment section ─────────────────────────────────────────
+.course-detail__cj2 {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1rem;
+}
+
+.course-detail__cj2-heading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.course-detail__cj2-description {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-base, inherit);
+}
+
+.course-detail__cj2-scheduled {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+
+  i {
+    color: var(--chora-color-info, #4ea0e8);
+  }
+}
+
+.course-detail__cj2-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.course-detail__cj2-subhead {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i {
+    color: var(--chora-color-primary, #1976d2);
+  }
+}
+
+.course-detail__cj2-list {
+  margin: 0;
+  padding-left: 1.5rem;
+
+  li {
+    margin-bottom: 0.25rem;
+    line-height: 1.5;
+  }
+}
+
+.course-detail__cj2-testsets {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(25, 118, 210, 0.08);
+  font-size: 14px;
+
+  i {
+    color: var(--chora-color-secondary, #c2410c);
+  }
+}

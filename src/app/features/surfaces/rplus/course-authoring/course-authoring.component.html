@@ -1,0 +1,326 @@
+<section
+  class="course-authoring surface-aplus"
+  data-testid="aplus-course-authoring"
+  role="region"
+  aria-labelledby="aplus-course-authoring-heading"
+>
+  <header class="course-authoring__header">
+    <h1 id="aplus-course-authoring-heading" class="course-authoring__title">
+      @if (isEditMode()) {
+        {{ 'aplus.course_authoring.title_edit' | translate }}
+      } @else {
+        {{ 'aplus.course_authoring.title' | translate }}
+      }
+    </h1>
+    <p class="course-authoring__subtitle">
+      @if (isEditMode()) {
+        {{ 'aplus.course_authoring.subtitle_edit' | translate }}
+      } @else {
+        {{ 'aplus.course_authoring.subtitle' | translate }}
+      }
+    </p>
+  </header>
+
+  @if (editLoad() === 'loading') {
+    <div
+      class="course-authoring__loading"
+      role="status"
+      aria-busy="true"
+      data-testid="aplus-course-edit-loading">
+      {{ 'aplus.course_authoring.loading_existing' | translate }}
+    </div>
+  }
+  @if (editLoad() === 'error') {
+    <div class="course-authoring__error" role="alert" data-testid="aplus-course-edit-load-error">
+      <p>{{ editLoadError() | translate }}</p>
+    </div>
+  }
+
+  @if (isEditMode() && reviewNotes(); as notes) {
+    <div
+      class="course-authoring__review-notes"
+      role="region"
+      aria-labelledby="aplus-course-review-notes-heading"
+      data-testid="aplus-course-review-notes">
+      <h2 id="aplus-course-review-notes-heading" class="course-authoring__review-notes-heading">
+        <i class="fa-solid fa-comment-dots" aria-hidden="true"></i>
+        {{ 'aplus.course_authoring.review_notes_heading' | translate }}
+      </h2>
+      <blockquote class="course-authoring__review-notes-body">{{ notes }}</blockquote>
+    </div>
+  }
+
+  <form class="course-authoring__form" (submit)="$event.preventDefault(); submitForReview()">
+    <!-- Title -->
+    <label class="course-authoring__field">
+      <span class="course-authoring__label">{{ 'aplus.course_authoring.field_title' | translate }}</span>
+      <input
+        type="text"
+        class="course-authoring__input"
+        data-testid="aplus-course-title"
+        [ngModel]="title()"
+        (ngModelChange)="title.set($event)"
+        name="title"
+        maxlength="256"
+        required
+        autocomplete="off"
+      />
+    </label>
+
+    <!-- Description -->
+    <label class="course-authoring__field">
+      <span class="course-authoring__label">{{ 'aplus.course_authoring.field_description' | translate }}</span>
+      <textarea
+        class="course-authoring__textarea"
+        data-testid="aplus-course-description"
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        name="description"
+        maxlength="4096"
+        rows="3"
+      ></textarea>
+    </label>
+
+    <!-- Learning objectives -->
+    <fieldset class="course-authoring__fieldset">
+      <legend class="course-authoring__legend">
+        {{ 'aplus.course_authoring.field_objectives' | translate }}
+      </legend>
+      @for (objective of objectives(); track $index) {
+        <div class="course-authoring__row">
+          <input
+            type="text"
+            class="course-authoring__input"
+            [attr.data-testid]="'aplus-course-objective-' + $index"
+            [ngModel]="objective"
+            (ngModelChange)="updateObjective($index, $event)"
+            [name]="'objective_' + $index"
+            maxlength="512"
+            placeholder="{{ 'aplus.course_authoring.objective_placeholder' | translate }}"
+          />
+          @if (objectives().length > 1) {
+            <button
+              type="button"
+              class="course-authoring__row-remove"
+              [attr.data-testid]="'aplus-course-objective-remove-' + $index"
+              (click)="removeObjective($index)"
+              [attr.aria-label]="'aplus.course_authoring.remove_objective_aria' | translate"
+            >
+              ×
+            </button>
+          }
+        </div>
+      }
+      <button
+        type="button"
+        class="course-authoring__row-add"
+        data-testid="aplus-course-objective-add"
+        (click)="addObjective()"
+      >
+        + {{ 'aplus.course_authoring.add_objective' | translate }}
+      </button>
+    </fieldset>
+
+    <!-- Prerequisites -->
+    <fieldset class="course-authoring__fieldset">
+      <legend class="course-authoring__legend">
+        {{ 'aplus.course_authoring.field_prerequisites' | translate }}
+      </legend>
+      @if (prerequisites().length === 0) {
+        <p class="course-authoring__hint">
+          {{ 'aplus.course_authoring.no_prerequisites' | translate }}
+        </p>
+      }
+      @for (prereq of prerequisites(); track $index) {
+        <div class="course-authoring__row">
+          <input
+            type="text"
+            class="course-authoring__input"
+            [attr.data-testid]="'aplus-course-prereq-' + $index"
+            [ngModel]="prereq"
+            (ngModelChange)="updatePrerequisite($index, $event)"
+            [name]="'prereq_' + $index"
+            maxlength="512"
+            placeholder="{{ 'aplus.course_authoring.prereq_placeholder' | translate }}"
+          />
+          <button
+            type="button"
+            class="course-authoring__row-remove"
+            [attr.data-testid]="'aplus-course-prereq-remove-' + $index"
+            (click)="removePrerequisite($index)"
+            [attr.aria-label]="'aplus.course_authoring.remove_prereq_aria' | translate"
+          >
+            ×
+          </button>
+        </div>
+      }
+      <button
+        type="button"
+        class="course-authoring__row-add"
+        data-testid="aplus-course-prereq-add"
+        (click)="addPrerequisite()"
+      >
+        + {{ 'aplus.course_authoring.add_prereq' | translate }}
+      </button>
+    </fieldset>
+
+    <!-- Test-set picker -->
+    <fieldset class="course-authoring__fieldset">
+      <legend class="course-authoring__legend">
+        {{ 'aplus.course_authoring.field_test_sets' | translate }}
+      </legend>
+
+      @if (testSetsLoading()) {
+        <div
+          class="course-authoring__loading"
+          data-testid="aplus-course-test-sets-loading"
+          role="status"
+          aria-busy="true"
+        >
+          {{ 'aplus.course_authoring.test_sets_loading' | translate }}
+        </div>
+      } @else if (testSetsError(); as errKey) {
+        <div class="course-authoring__error" role="alert">
+          <p>{{ errKey | translate }}</p>
+          <button
+            type="button"
+            class="course-authoring__retry"
+            data-testid="aplus-course-test-sets-retry"
+            (click)="retryTestSets()"
+          >
+            {{ 'aplus.course_authoring.retry' | translate }}
+          </button>
+        </div>
+      } @else if (publishedTestSets().length === 0) {
+        <p class="course-authoring__hint">
+          {{ 'aplus.course_authoring.no_published_test_sets' | translate }}
+        </p>
+      } @else {
+        <ul class="course-authoring__test-set-list">
+          @for (ts of publishedTestSets(); track ts.test_set_id) {
+            <li class="course-authoring__test-set-item">
+              <label class="course-authoring__test-set-row">
+                <input
+                  type="checkbox"
+                  class="course-authoring__test-set-check"
+                  [attr.data-testid]="'aplus-course-test-set-' + ts.test_set_id"
+                  [checked]="isTestSetSelected(ts.test_set_id)"
+                  (change)="toggleTestSet(ts.test_set_id)"
+                />
+                <span class="course-authoring__test-set-title">{{ ts.title }}</span>
+                <span class="course-authoring__test-set-meta">
+                  {{ ts.question_count }}q · {{ ts.total_points }}pts
+                </span>
+              </label>
+            </li>
+          }
+        </ul>
+      }
+    </fieldset>
+
+    <!-- Certification definition (CHO-1795) -->
+    <fieldset class="course-authoring__fieldset">
+      <legend class="course-authoring__legend">
+        {{ 'aplus.course_authoring.cert_legend' | translate }}
+      </legend>
+      <label class="course-authoring__field course-authoring__field--inline">
+        <input
+          type="checkbox"
+          [checked]="certEnabled()"
+          (change)="toggleCertEnabled($any($event.target).checked)"
+          data-testid="aplus-course-cert-enabled"
+        />
+        {{ 'aplus.course_authoring.cert_enabled_label' | translate }}
+      </label>
+
+      @if (certEnabled()) {
+        <label class="course-authoring__field">
+          {{ 'aplus.course_authoring.cert_type_label' | translate }}
+          <!-- Drive selection with per-option [selected] bound to the signal,
+               NOT [value] on the <select>: a native select's value binding runs
+               before the @for options register their values, so it leaves the
+               control blank on edit-page hydration (CHO-1796). [selected] is
+               applied per option and reflects certType() deterministically. -->
+          <select
+            class="course-authoring__select"
+            (change)="setCertType($any($event.target).value)"
+            data-testid="aplus-course-cert-type"
+          >
+            <option value="" [selected]="!certType()">
+              {{ 'aplus.course_authoring.cert_type_unset' | translate }}
+            </option>
+            @for (ct of certTypes; track ct) {
+              <option [value]="ct" [selected]="ct === certType()">{{ ct }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="course-authoring__field">
+          {{ 'aplus.course_authoring.cert_passing_label' | translate }}
+          <input
+            type="number"
+            min="0"
+            max="100"
+            class="course-authoring__input"
+            [value]="certPassingScore()"
+            (input)="setCertPassingScore($any($event.target).value)"
+            data-testid="aplus-course-cert-passing"
+          />
+        </label>
+
+        <label class="course-authoring__field course-authoring__field--inline">
+          <input
+            type="checkbox"
+            [checked]="certRequireAllContent()"
+            (change)="setCertRequireAllContent($any($event.target).checked)"
+            data-testid="aplus-course-cert-require-all"
+          />
+          {{ 'aplus.course_authoring.cert_require_all_label' | translate }}
+        </label>
+      }
+    </fieldset>
+
+    <!-- Action buttons -->
+    <div class="course-authoring__actions">
+      @if (isEditMode()) {
+        <button
+          type="button"
+          class="course-authoring__save-cta"
+          data-testid="aplus-course-save-draft"
+          [disabled]="!canSubmit()"
+          (click)="saveDraft()"
+        >
+          @if (action().status === 'submitting') {
+            {{ 'aplus.course_authoring.saving' | translate }}
+          } @else {
+            {{ 'aplus.course_authoring.save_draft_cta' | translate }}
+          }
+        </button>
+      }
+      <button
+        type="submit"
+        class="course-authoring__submit-cta"
+        data-testid="aplus-course-submit"
+        [disabled]="!canSubmit()"
+      >
+        @if (action().status === 'submitting') {
+          {{ 'aplus.course_authoring.submitting' | translate }}
+        } @else if (isEditMode()) {
+          {{ 'aplus.course_authoring.resubmit_cta' | translate }}
+        } @else {
+          {{ 'aplus.course_authoring.submit_cta' | translate }}
+        }
+      </button>
+    </div>
+
+    @if (action().status === 'error') {
+      <div
+        class="course-authoring__error"
+        data-testid="aplus-course-error"
+        role="alert"
+      >
+        {{ actionError() | translate }}
+      </div>
+    }
+  </form>
+</section>

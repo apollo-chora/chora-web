@@ -1,0 +1,22 @@
+<div
+  class="review-status"
+  [class.review-status--reviewed]="status() === 'reviewed'"
+  [class.review-status--pending]="status() === 'pending_review'"
+  [class.review-status--revision]="status() === 'needs_revision'"
+  [attr.aria-label]="(statusLabel() | translate) + (confidencePercent() !== null ? ', confidence ' + confidencePercent() + ' percent' : '')"
+  data-testid="review-status">
+
+  <span
+    class="review-status__icon material-icons-outlined"
+    aria-hidden="true">{{ statusIcon() }}</span>
+
+  <span class="review-status__label" data-testid="review-status-label">
+    {{ statusLabel() | translate }}
+  </span>
+
+  @if (confidencePercent() !== null) {
+    <span class="review-status__confidence" data-testid="review-status-confidence">
+      {{ confidencePercent() }}%
+    </span>
+  }
+</div>

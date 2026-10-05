@@ -1,0 +1,137 @@
+:host {
+  display: block;
+}
+
+.translation-panel {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Grid Layout
+  // -------------------------------------------------------------------------
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--chora-space-lg, 24px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Sections
+  // -------------------------------------------------------------------------
+
+  &__section {
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    padding: var(--chora-space-md, 16px);
+  }
+
+  &__section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-md, 16px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Form
+  // -------------------------------------------------------------------------
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  &__input,
+  &__select,
+  &__textarea {
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+    font-family: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 1px;
+    }
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  &__language-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Buttons
+  // -------------------------------------------------------------------------
+
+  &__btn {
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    cursor: pointer;
+    font-size: 0.875rem;
+    align-self: flex-start;
+
+    &--primary {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Error
+  // -------------------------------------------------------------------------
+
+  &__error {
+    margin-block-start: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-sm, 8px);
+    background: #fecaca;
+    color: #991b1b;
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.8125rem;
+  }
+}

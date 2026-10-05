@@ -1,0 +1,246 @@
+:host {
+  display: block;
+}
+
+.evolution-timeline {
+  padding: var(--chora-space-lg, 24px);
+
+  // ---------------------------------------------------------------------------
+  // Title
+  // ---------------------------------------------------------------------------
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-lg, 24px);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Loading / Error / Empty
+  // ---------------------------------------------------------------------------
+
+  &__loading,
+  &__empty {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+    font-size: 0.875rem;
+    color: var(--chora-color-danger, #991b1b);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Current Level
+  // ---------------------------------------------------------------------------
+
+  &__current {
+    display: flex;
+    align-items: baseline;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__current-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__current-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--chora-color-primary, #2563eb);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Progress Bar
+  // ---------------------------------------------------------------------------
+
+  &__progress {
+    margin-block-end: var(--chora-space-lg, 24px);
+    padding: var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--chora-color-surface-0, #fff);
+  }
+
+  &__progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__progress-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  &__progress-pct {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--chora-color-primary, #2563eb);
+  }
+
+  &__progress-bar {
+    height: 8px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    height: 100%;
+    background: var(--chora-color-primary, #2563eb);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Timeline List
+  // ---------------------------------------------------------------------------
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__item {
+    display: flex;
+    gap: var(--chora-space-md, 16px);
+    min-height: 80px;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Connector (vertical line + dot)
+  // ---------------------------------------------------------------------------
+
+  &__connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 24px;
+  }
+
+  &__dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--chora-color-border, #ccc);
+    background: var(--chora-color-surface-0, #fff);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  &__line {
+    flex: 1;
+    width: 2px;
+    background: var(--chora-color-border, #e5e5e5);
+  }
+
+  // Last item hides the trailing line
+  &__item:last-child &__line {
+    visibility: hidden;
+  }
+
+  // Achieved milestone dot
+  &__item--achieved &__dot {
+    background: var(--chora-color-primary, #2563eb);
+    border-color: var(--chora-color-primary, #2563eb);
+  }
+
+  &__item--achieved &__line {
+    background: var(--chora-color-primary, #2563eb);
+  }
+
+  // Current milestone dot — larger ring
+  &__item--current &__dot {
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--chora-color-primary, #2563eb);
+    background: var(--chora-color-surface-0, #fff);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Content
+  // ---------------------------------------------------------------------------
+
+  &__content {
+    flex: 1;
+    padding-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__level {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--chora-color-text, #111);
+  }
+
+  // Future milestone level text dimmed
+  &__item:not(.evolution-timeline__item--achieved):not(.evolution-timeline__item--current) &__level {
+    color: var(--chora-color-text-muted, #999);
+  }
+
+  &__date {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__locked {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--chora-color-text-muted, #999);
+    font-style: italic;
+  }
+
+  &__desc {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text, #111);
+    margin: 0 0 var(--chora-space-xs, 4px);
+    line-height: 1.5;
+  }
+
+  &__item:not(.evolution-timeline__item--achieved):not(.evolution-timeline__item--current) &__desc {
+    color: var(--chora-color-text-muted, #999);
+  }
+
+  &__reward {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #e0e7ff;
+    color: #3730a3;
+  }
+
+  &__item:not(.evolution-timeline__item--achieved):not(.evolution-timeline__item--current) &__reward {
+    background: var(--chora-color-surface-1, #f0f0f0);
+    color: var(--chora-color-text-muted, #999);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evolution-timeline__progress-fill {
+    transition: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .evolution-timeline {
+    max-width: 640px;
+  }
+}

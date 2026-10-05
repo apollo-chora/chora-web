@@ -1,0 +1,298 @@
+<div
+  class="oplus-a2a surface-oplus"
+  data-testid="oplus-a2a-console-root"
+  [attr.data-state]="state().state"
+>
+  <!-- Header -->
+  <header class="oplus-a2a__header glass-panel">
+    <div class="oplus-a2a__header-text">
+      <h1
+        class="oplus-a2a__title surface-accent-text"
+        data-testid="oplus-a2a-console-title"
+      >
+        {{ 'oplus.a2a_console.title' | translate }}
+      </h1>
+      <p class="oplus-a2a__subtitle">
+        {{ 'oplus.a2a_console.subtitle' | translate }}
+      </p>
+      <p class="oplus-a2a__agid-note" role="note">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        {{ 'oplus.a2a_console.agid_note' | translate }}
+      </p>
+    </div>
+    <div class="oplus-a2a__header-actions">
+      <span
+        class="oplus-a2a__live"
+        data-testid="oplus-a2a-console-live"
+        role="status"
+        [attr.data-variant]="badge()"
+        [attr.aria-label]="badgeKey() | translate"
+      >
+        <span class="oplus-a2a__live-dot" aria-hidden="true"></span>
+        {{ badgeKey() | translate }}
+      </span>
+      <button
+        type="button"
+        class="oplus-a2a__btn oplus-a2a__btn--primary"
+        data-testid="oplus-a2a-issue-key"
+        [attr.aria-label]="'oplus.a2a_console.issue_key_aria' | translate"
+        [attr.title]="'oplus.a2a_console.actions_deferred_title' | translate"
+        disabled
+      >
+        <i class="fa-solid fa-key" aria-hidden="true"></i>
+        {{ 'oplus.a2a_console.issue_key' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (isAuditorGated()) {
+    <section
+      class="glass-panel oplus-a2a__gate"
+      data-testid="oplus-a2a-auditor-gate"
+      role="alert"
+    >
+      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+      <h2>{{ 'oplus.errors.auditor_required_title' | translate }}</h2>
+      <p>{{ 'oplus.errors.auditor_required' | translate }}</p>
+    </section>
+  } @else if (hasErrorOnly()) {
+    <section
+      class="glass-panel oplus-a2a__error"
+      data-testid="oplus-a2a-error"
+      role="alert"
+    >
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p>{{ errorKey() | translate }}</p>
+    </section>
+  } @else {
+    @if (isPendingMode()) {
+      <!-- A2A backend deployment pending banner (plan §D6 + §B6) -->
+      <section
+        class="glass-panel oplus-a2a__pending-banner"
+        data-testid="oplus-a2a-pending-banner"
+        role="note"
+      >
+        <i class="fa-solid fa-flask" aria-hidden="true"></i>
+        <div>
+          <strong>{{ 'oplus.a2a_console.backend_pending_title' | translate }}</strong>
+          <p>{{ 'oplus.a2a_console.backend_pending_body' | translate }}</p>
+        </div>
+      </section>
+    }
+
+    <!-- Active contracts -->
+    <section
+      class="glass-panel oplus-a2a__panel"
+      aria-labelledby="oplus-a2a-contracts-heading"
+    >
+      <header class="oplus-a2a__panel-head">
+        <h2 id="oplus-a2a-contracts-heading" class="oplus-a2a__section-heading">
+          <i class="fa-solid fa-handshake" aria-hidden="true"></i>
+          {{ 'oplus.a2a_console.contracts_heading' | translate }}
+        </h2>
+        <div class="oplus-a2a__counters">
+          <span class="oplus-a2a__chip" data-variant="active">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ activeContracts() }} {{ 'oplus.a2a_console.active' | translate }}
+          </span>
+          <span class="oplus-a2a__chip" data-variant="paused">
+            <i class="fa-solid fa-circle-pause" aria-hidden="true"></i>
+            {{ pausedContracts() }} {{ 'oplus.a2a_console.paused' | translate }}
+          </span>
+        </div>
+      </header>
+
+      <div class="oplus-a2a__table-wrap">
+        <table
+          class="oplus-a2a__table"
+          data-testid="oplus-a2a-contracts-table"
+          [attr.aria-label]="'oplus.a2a_console.contracts_table_aria' | translate"
+        >
+          <caption class="oplus-a2a__caption">
+            {{ 'oplus.a2a_console.contracts_table_caption' | translate }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'oplus.a2a_console.col_partner' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_agid' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_scope' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_status' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_invocations' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_last_invocation' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_actions' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of contracts(); track c.id) {
+              <tr
+                [attr.data-testid]="'oplus-a2a-contract-row-' + c.id"
+                [attr.data-status]="c.status"
+              >
+                <td class="oplus-a2a__cell-strong">{{ c.partner }}</td>
+                <td class="oplus-a2a__cell-mono">{{ c.agid }}</td>
+                <td>
+                  @for (s of c.scope; track s) {
+                    <span class="oplus-a2a__scope-chip">{{ s }}</span>
+                  }
+                </td>
+                <td>
+                  <span
+                    class="oplus-a2a__status-pill"
+                    [attr.data-status]="c.status"
+                  >
+                    {{ 'oplus.a2a_console.status_' + c.status | translate }}
+                  </span>
+                </td>
+                <td class="oplus-a2a__cell-num">{{ c.invocations_30d }}</td>
+                <td class="oplus-a2a__cell-muted">{{ fmtTime(c.last_invocation) }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="oplus-a2a__btn oplus-a2a__btn--ghost"
+                    [attr.data-testid]="'oplus-a2a-contract-pause-' + c.id"
+                    [attr.aria-label]="
+                      (c.status === 'paused'
+                        ? ('oplus.a2a_console.resume_partner' | translate)
+                        : ('oplus.a2a_console.pause_partner' | translate)) +
+                      ' ' +
+                      c.partner
+                    "
+                    [attr.title]="'oplus.a2a_console.actions_deferred_title' | translate"
+                    disabled
+                  >
+                    @if (c.status === 'paused') {
+                      <i class="fa-solid fa-play" aria-hidden="true"></i>
+                      {{ 'oplus.a2a_console.resume_partner' | translate }}
+                    } @else {
+                      <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                      {{ 'oplus.a2a_console.pause_partner' | translate }}
+                    }
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- External agent identity browser -->
+    <section
+      class="glass-panel oplus-a2a__panel"
+      aria-labelledby="oplus-a2a-agents-heading"
+    >
+      <h2 id="oplus-a2a-agents-heading" class="oplus-a2a__section-heading">
+        <i class="fa-solid fa-id-badge" aria-hidden="true"></i>
+        {{ 'oplus.a2a_console.agents_heading' | translate }}
+      </h2>
+      <p class="oplus-a2a__panel-subtitle">
+        {{ 'oplus.a2a_console.agents_subtitle' | translate }}
+      </p>
+      <div class="oplus-a2a__table-wrap">
+        <table
+          class="oplus-a2a__table"
+          [attr.aria-label]="'oplus.a2a_console.agents_table_aria' | translate"
+        >
+          <caption class="oplus-a2a__caption">
+            {{ 'oplus.a2a_console.agents_table_caption' | translate }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'oplus.a2a_console.col_agid' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_partner' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_trust' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_key' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_rotated' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of externalAgents(); track a.agid) {
+              <tr
+                [attr.data-testid]="'oplus-a2a-agent-row-' + a.agid"
+                [attr.data-agid]="a.agid"
+              >
+                <td class="oplus-a2a__cell-mono">{{ a.agid }}</td>
+                <td>{{ a.partner }}</td>
+                <td>
+                  <span
+                    class="oplus-a2a__trust-pill"
+                    [attr.data-testid]="'oplus-a2a-agent-trust-' + a.agid"
+                    [attr.data-trust]="a.trust_level"
+                  >
+                    {{ 'oplus.a2a_console.trust_' + a.trust_level | translate }}
+                  </span>
+                </td>
+                <td class="oplus-a2a__cell-mono">{{ a.key_fingerprint }}</td>
+                <td class="oplus-a2a__cell-muted">{{ fmtTime(a.rotated_at) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Invocation audit -->
+    <section
+      class="glass-panel oplus-a2a__panel"
+      aria-labelledby="oplus-a2a-invocations-heading"
+    >
+      <header class="oplus-a2a__panel-head">
+        <h2
+          id="oplus-a2a-invocations-heading"
+          class="oplus-a2a__section-heading"
+        >
+          <i class="fa-solid fa-rss" aria-hidden="true"></i>
+          {{ 'oplus.a2a_console.invocations_heading' | translate }}
+        </h2>
+        @if (deniedRecent() > 0) {
+          <span class="oplus-a2a__chip" data-variant="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ deniedRecent() }} {{ 'oplus.a2a_console.denied' | translate }}
+          </span>
+        }
+      </header>
+      <div class="oplus-a2a__table-wrap">
+        <table
+          class="oplus-a2a__table"
+          [attr.aria-label]="'oplus.a2a_console.invocations_table_aria' | translate"
+        >
+          <caption class="oplus-a2a__caption">
+            {{ 'oplus.a2a_console.invocations_table_caption' | translate }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'oplus.a2a_console.col_invocation_id' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_partner' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_endpoint' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_status' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_latency' | translate }}</th>
+              <th scope="col">{{ 'oplus.a2a_console.col_time' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (i of invocations(); track i.id) {
+              <tr
+                [attr.data-testid]="'oplus-a2a-invocation-row-' + i.id"
+                [attr.data-status]="i.status"
+              >
+                <td class="oplus-a2a__cell-mono">{{ i.id }}</td>
+                <td>{{ i.partner }}</td>
+                <td class="oplus-a2a__cell-mono">{{ i.endpoint }}</td>
+                <td>
+                  <span
+                    class="oplus-a2a__invocation-pill"
+                    [attr.data-status]="i.status"
+                  >
+                    {{ 'oplus.a2a_console.invocation_' + i.status | translate }}
+                  </span>
+                </td>
+                <td class="oplus-a2a__cell-num">{{ i.latency_ms }} ms</td>
+                <td class="oplus-a2a__cell-muted">{{ fmtTime(i.timestamp) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</div>

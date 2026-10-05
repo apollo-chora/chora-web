@@ -1,0 +1,346 @@
+<section
+  class="campaign-practice surface-aplus"
+  data-testid="campaign-practice"
+  [attr.aria-label]="'aplus.knowledge.campaign_practice_title' | translate">
+  @if (finished()) {
+    <!-- ── End-of-set summary ─────────────────────────────────────────── -->
+    <div class="cp-panel glass-panel cp-summary" data-testid="cp-summary">
+      <i class="fa-solid fa-flag-checkered cp-panel__icon" aria-hidden="true"></i>
+      <h1 class="cp-panel__title">
+        {{ 'aplus.knowledge.campaign_practice_summary_title' | translate }}
+      </h1>
+      <p class="cp-summary__score" data-testid="cp-summary-score">
+        {{ correctCount() }} / {{ total() }}
+      </p>
+      <button type="button" class="btn btn-primary" (click)="backToMap()" data-testid="cp-back">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+      </button>
+    </div>
+  } @else if (phase() === 'playing' && activeQuestion(); as q) {
+    <!-- ── Player ──────────────────────────────────────────────────────── -->
+    @if (readyFlash()) {
+      <!-- CHO-2319: announce a composing -> ready transition, then fade. -->
+      <div
+        class="cp-ready-flash"
+        role="status"
+        aria-live="polite"
+        data-testid="cp-ready-flash">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        {{ 'aplus.knowledge.campaign_practice_ready' | translate }}
+      </div>
+    }
+    <header class="cp-header glass-panel">
+      <div class="cp-header__meta">
+        @if (conceptLabel(); as label) {
+          <h1 class="cp-header__concept" data-testid="cp-concept">{{ label }}</h1>
+        }
+        <div class="cp-chips">
+          <span class="cp-chip cp-chip--rung" data-testid="cp-rung-chip">
+            <i class="fa-solid fa-stairs" aria-hidden="true"></i>
+            {{ rungLabelKey() | translate }}
+          </span>
+          @if (isRefresher()) {
+            <span class="cp-chip cp-chip--refresher" data-testid="cp-refresher">
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+              {{ 'aplus.knowledge.campaign_practice_refresher' | translate }}
+            </span>
+          }
+        </div>
+      </div>
+      <p class="cp-progress" data-testid="cp-progress" aria-live="off">
+        {{ activeIndex() + 1 }} / {{ total() }}
+      </p>
+    </header>
+
+    <div class="cp-panel glass-panel cp-question">
+      <p class="cp-stem" data-testid="cp-stem">{{ q.stem }}</p>
+
+      <ul class="cp-options" role="list">
+        @for (opt of q.options; track opt.optionId; let i = $index) {
+          <li class="cp-options__item">
+            <button
+              type="button"
+              class="cp-option"
+              [class.is-selected]="selectedOptionId() === opt.optionId"
+              [class.is-locked]="answered()"
+              [class.is-correct-reveal]="
+                answered() && !verdict()?.correct && opt.optionId === correctOptionId()
+              "
+              [disabled]="answered()"
+              [attr.aria-pressed]="selectedOptionId() === opt.optionId"
+              (click)="selectOption(opt.optionId)"
+              [attr.data-testid]="'cp-option-' + opt.optionId">
+              <span class="cp-option__marker" aria-hidden="true">{{ optionMarker(i) }}</span>
+              <span class="cp-option__text">{{ opt.text }}</span>
+              @if (answered() && selectedOptionId() === opt.optionId) {
+                <i
+                  class="cp-option__chosen fa-solid"
+                  [class.fa-circle-check]="verdict()?.correct"
+                  [class.fa-circle-xmark]="!verdict()?.correct"
+                  aria-hidden="true"></i>
+              } @else if (answered() && !verdict()?.correct && opt.optionId === correctOptionId()) {
+                <!-- Post-grade reveal of the correct option (icon+text, never
+                     colour alone) when the learner chose wrong. -->
+                <span
+                  class="cp-option__answer-tag"
+                  [attr.data-testid]="'cp-correct-option-' + opt.optionId">
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  {{ 'aplus.knowledge.campaign_practice_correct_option' | translate }}
+                </span>
+              }
+            </button>
+          </li>
+        }
+      </ul>
+
+      @if (!answered()) {
+        <div class="cp-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!canSubmit()"
+            (click)="submit()"
+            data-testid="cp-submit">
+            @if (submitting()) {
+              <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            }
+            {{ 'aplus.knowledge.campaign_practice_submit' | translate }}
+          </button>
+        </div>
+      }
+
+      @if (submitError(); as se) {
+        <p class="cp-answer-error" role="alert" aria-live="polite" data-testid="cp-answer-error">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{ se | translate }}
+          <button type="button" class="btn btn-link" (click)="retry()" data-testid="cp-reload">
+            {{ 'aplus.knowledge.campaign_practice_reload' | translate }}
+          </button>
+        </p>
+      }
+
+      <!-- ── Verdict (server-graded) ─────────────────────────────────── -->
+      @if (verdict(); as v) {
+        <div
+          class="cp-verdict"
+          [class.cp-verdict--correct]="v.correct"
+          [class.cp-verdict--incorrect]="!v.correct"
+          role="alert"
+          aria-live="polite"
+          data-testid="cp-verdict">
+          @if (v.correct) {
+            <span class="cp-verdict__line" data-testid="cp-verdict-correct">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              {{ 'aplus.knowledge.campaign_practice_correct' | translate }}
+            </span>
+          } @else {
+            <span class="cp-verdict__line" data-testid="cp-verdict-incorrect">
+              <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+              {{ 'aplus.knowledge.campaign_practice_incorrect' | translate }}
+            </span>
+          }
+        </div>
+
+        @if (activeExplainer(); as ex) {
+          <p class="cp-explainer" data-testid="cp-explainer">
+            <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+            {{ ex }}
+          </p>
+        }
+
+        <!-- ── Ladder outcome (won > cleared > paced > counted) ──────── -->
+        @if (showWon()) {
+          <div class="cp-outcome cp-outcome--won" data-testid="cp-banner-won" role="status">
+            <i class="fa-solid fa-crown cp-outcome__icon" aria-hidden="true"></i>
+            <span class="cp-outcome__headline">
+              {{ 'aplus.knowledge.campaign_practice_won' | translate }}
+            </span>
+          </div>
+        } @else if (showCleared()) {
+          <div class="cp-outcome cp-outcome--cleared" data-testid="cp-banner-cleared" role="status">
+            <i class="fa-solid fa-arrow-up-right-dots cp-outcome__icon" aria-hidden="true"></i>
+            <!-- The i18n string embeds the next rung ("Rung cleared — {{label}}
+                 next"), so the revised-Bloom label of the UNLOCKED rung must be
+                 interpolated as the `label` param — mirrors the canonical
+                 map-canvas pattern. Passing no param rendered a raw {{label}}. -->
+            <span>{{
+              'aplus.knowledge.campaign_practice_cleared'
+                | translate: { label: nextRungLabelKey() | translate }
+            }}</span>
+          </div>
+        } @else if (showPaced()) {
+          <div class="cp-outcome cp-outcome--paced" data-testid="cp-banner-paced" role="status">
+            <i class="fa-solid fa-moon cp-outcome__icon" aria-hidden="true"></i>
+            <span>{{ 'aplus.knowledge.campaign_practice_paced' | translate }}</span>
+          </div>
+        } @else if (showCounted()) {
+          <div class="cp-outcome cp-outcome--counted" data-testid="cp-banner-counted" role="status">
+            <i class="fa-solid fa-bullseye cp-outcome__icon" aria-hidden="true"></i>
+            <span class="cp-outcome__progress">{{ v.current_rung_correct }} / {{ v.needed_correct }}</span>
+            <span>{{ 'aplus.knowledge.campaign_practice_counted' | translate }}</span>
+          </div>
+        }
+
+        <!-- ── Advance / finish / back ──────────────────────────────── -->
+        <div class="cp-actions">
+          @if (showWon()) {
+            <button type="button" class="btn btn-primary" (click)="backToMap()" data-testid="cp-back">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+            </button>
+          } @else if (isLastQuestion()) {
+            <button type="button" class="btn btn-primary" (click)="next()" data-testid="cp-finish">
+              {{ 'aplus.knowledge.campaign_practice_finish' | translate }}
+              <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+            </button>
+          } @else {
+            <button type="button" class="btn btn-primary" (click)="next()" data-testid="cp-next">
+              {{ 'aplus.knowledge.campaign_practice_next' | translate }}
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- ── Non-playing states ──────────────────────────────────────────── -->
+    @switch (phase()) {
+      @case ('loading') {
+        <p class="cp-status" role="status" aria-live="polite" data-testid="cp-loading">
+          <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+          {{ 'aplus.knowledge.campaign_practice_loading' | translate }}
+        </p>
+      }
+      @case ('preparing') {
+        <div class="cp-panel glass-panel cp-status-panel" data-testid="cp-preparing">
+          <p class="cp-status" role="status" aria-live="polite">
+            <i class="fa-solid fa-wand-magic-sparkles fa-fade" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.campaign_practice_status_requested' | translate }}
+          </p>
+        </div>
+      }
+      @case ('preparing_long') {
+        <!-- Still composing past the fast window. NOT a failure, so no retry:
+             the BE refuses a same-day re-fire, and the watch below live-updates
+             into play the moment the set lands. Leaving is safe. -->
+        <div class="cp-panel glass-panel cp-status-panel" data-testid="cp-preparing-long">
+          <i class="fa-solid fa-wand-magic-sparkles fa-fade cp-panel__icon" aria-hidden="true"></i>
+          <p role="status" aria-live="polite">
+            {{ 'aplus.knowledge.campaign_practice_preparing_long' | translate }}
+          </p>
+          <div class="cp-actions">
+            <button type="button" class="btn btn-link" (click)="backToMap()" data-testid="cp-back">
+              {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+      @case ('prep_timeout') {
+        <!-- The long watch has stopped, but the set may still land. Offer a
+             re-read ("Check again"), never a retry: retry() reads as "that
+             failed", and the BE would refuse to regenerate it today anyway. -->
+        <div class="cp-panel glass-panel cp-status-panel" data-testid="cp-prep-timeout">
+          <i class="fa-solid fa-hourglass-half cp-panel__icon" aria-hidden="true"></i>
+          <p>{{ 'aplus.knowledge.campaign_practice_preparing_timeout' | translate }}</p>
+          <div class="cp-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="recheck()"
+              data-testid="cp-recheck">
+              <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+              {{ 'aplus.knowledge.campaign_practice_recheck' | translate }}
+            </button>
+            <button type="button" class="btn btn-link" (click)="backToMap()" data-testid="cp-back">
+              {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+      @case ('empty') {
+        <div class="cp-panel glass-panel cp-status-panel" data-testid="cp-empty">
+          <i class="fa-solid fa-seedling cp-panel__icon" aria-hidden="true"></i>
+          <p>{{ 'aplus.knowledge.campaign_practice_status_none' | translate }}</p>
+          <button type="button" class="btn btn-primary" (click)="backToMap()" data-testid="cp-back">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+          </button>
+        </div>
+      }
+      @case ('tap_capped') {
+        <div class="cp-panel glass-panel cp-status-panel" data-testid="cp-tap-capped">
+          <i class="fa-solid fa-hourglass-end cp-panel__icon" aria-hidden="true"></i>
+          <p>{{ 'aplus.knowledge.campaign_practice_tap_capped' | translate }}</p>
+          <button type="button" class="btn btn-primary" (click)="backToMap()" data-testid="cp-back">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+          </button>
+        </div>
+      }
+      @case ('node_won') {
+        <div class="cp-panel glass-panel cp-status-panel" data-testid="cp-node-won">
+          <i class="fa-solid fa-crown cp-panel__icon" aria-hidden="true"></i>
+          <p>{{ 'aplus.knowledge.campaign_practice_node_won' | translate }}</p>
+          <button type="button" class="btn btn-primary" (click)="backToMap()" data-testid="cp-back">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+          </button>
+        </div>
+      }
+      @case ('not_found') {
+        <div class="cp-panel glass-panel cp-status-panel" role="alert" data-testid="cp-not-found">
+          <i class="fa-solid fa-map-location-dot cp-panel__icon" aria-hidden="true"></i>
+          <p>{{ 'aplus.knowledge.campaign_practice_not_found' | translate }}</p>
+          <button type="button" class="btn btn-primary" (click)="backToMaps()" data-testid="cp-back-maps">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.campaign_practice_back_maps' | translate }}
+          </button>
+        </div>
+      }
+      @case ('invalid') {
+        <div class="cp-panel glass-panel cp-status-panel" role="alert" data-testid="cp-invalid">
+          <i class="fa-solid fa-circle-question cp-panel__icon" aria-hidden="true"></i>
+          <p>{{ 'aplus.knowledge.campaign_practice_invalid' | translate }}</p>
+          <button type="button" class="btn btn-primary" (click)="backToMap()" data-testid="cp-back">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+          </button>
+        </div>
+      }
+      @case ('failed') {
+        <div class="cp-panel glass-panel cp-status-panel" role="alert" aria-live="assertive" data-testid="cp-failed">
+          <i class="fa-solid fa-triangle-exclamation cp-panel__icon" aria-hidden="true"></i>
+          <p>{{ 'aplus.knowledge.campaign_practice_status_failed' | translate }}</p>
+          @if (failureReason(); as reason) {
+            <p class="cp-status__detail">{{ reason }}</p>
+          }
+          <div class="cp-actions">
+            <button type="button" class="btn btn-secondary" (click)="retry()" data-testid="cp-retry">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'aplus.knowledge.campaign_practice_retry' | translate }}
+            </button>
+            <button type="button" class="btn btn-link" (click)="backToMap()" data-testid="cp-back">
+              {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+      @case ('error') {
+        <div class="cp-panel glass-panel cp-status-panel" role="alert" aria-live="assertive" data-testid="cp-error">
+          <i class="fa-solid fa-triangle-exclamation cp-panel__icon" aria-hidden="true"></i>
+          <p>{{ 'aplus.knowledge.campaign_practice_error' | translate }}</p>
+          <div class="cp-actions">
+            <button type="button" class="btn btn-secondary" (click)="retry()" data-testid="cp-retry">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'aplus.knowledge.campaign_practice_retry' | translate }}
+            </button>
+            <button type="button" class="btn btn-link" (click)="backToMap()" data-testid="cp-back">
+              {{ 'aplus.knowledge.campaign_practice_back' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+    }
+  }
+</section>

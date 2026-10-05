@@ -1,0 +1,85 @@
+<div
+  class="question-type-picker"
+  data-testid="question-type-picker"
+  role="radiogroup"
+  [attr.aria-label]="'core.question_type_picker.aria_label' | translate">
+  <!--
+    A1 design refinement — primary tiles (enabled set) rendered prominently
+    at the top of the picker. The 14 reserved tiles collapse into the
+    "Coming soon" disclosure below.
+  -->
+  <div
+    class="question-type-picker__primary"
+    data-testid="question-type-picker-primary">
+    @for (entry of primaryTypes(); track entry.code) {
+      <div
+        class="question-type-picker__tile question-type-picker__tile--primary"
+        [class.question-type-picker__tile--selected]="isSelected(entry)"
+        [class.question-type-picker__tile--disabled]="!isActive(entry)"
+        role="radio"
+        [attr.aria-checked]="isSelected(entry)"
+        [attr.aria-disabled]="!isActive(entry)"
+        [attr.aria-label]="entry.label_en"
+        [attr.tabindex]="tabIndex(entry)"
+        [attr.data-testid]="'question-type-picker-tile-' + entry.code"
+        (click)="onTileClick(entry)"
+        (keydown)="onTileKeydown($event, entry)">
+        <span class="question-type-picker__icon" aria-hidden="true">
+          <span class="question-type-picker__icon-glyph">{{ displayCode(entry) }}</span>
+        </span>
+        <span class="question-type-picker__label">{{ entry.label_en }}</span>
+      </div>
+    }
+  </div>
+
+  @if (reservedTypes().length > 0) {
+    <button
+      type="button"
+      class="question-type-picker__coming-soon-toggle"
+      data-testid="question-type-picker-coming-soon-toggle"
+      [attr.aria-expanded]="comingSoonExpanded()"
+      [attr.aria-controls]="comingSoonPanelId"
+      (click)="toggleComingSoon()">
+      <span class="question-type-picker__coming-soon-toggle-text">
+        {{ 'core.question_type_picker.coming_soon_disclosure' | translate }}
+      </span>
+      <span class="question-type-picker__coming-soon-count" aria-hidden="true">
+        {{ reservedTypes().length }}
+      </span>
+      <i
+        class="fa-solid"
+        [class.fa-chevron-down]="!comingSoonExpanded()"
+        [class.fa-chevron-up]="comingSoonExpanded()"
+        aria-hidden="true">
+      </i>
+    </button>
+
+    @if (comingSoonExpanded()) {
+      <div
+        class="question-type-picker__coming-soon-panel"
+        data-testid="question-type-picker-coming-soon-panel"
+        [id]="comingSoonPanelId">
+        @for (entry of reservedTypes(); track entry.code) {
+          <div
+            class="question-type-picker__tile question-type-picker__tile--reserved question-type-picker__tile--disabled"
+            role="radio"
+            aria-checked="false"
+            aria-disabled="true"
+            [attr.aria-label]="entry.label_en"
+            tabindex="-1"
+            [attr.data-testid]="'question-type-picker-tile-' + entry.code"
+            (click)="onTileClick(entry)"
+            (keydown)="onTileKeydown($event, entry)">
+            <span class="question-type-picker__icon" aria-hidden="true">
+              <span class="question-type-picker__icon-glyph">{{ displayCode(entry) }}</span>
+            </span>
+            <span class="question-type-picker__label">{{ entry.label_en }}</span>
+            <span class="question-type-picker__badge">
+              {{ 'core.question_type_picker.coming_soon' | translate }}
+            </span>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,245 @@
+<section
+  class="reward-store"
+  role="main"
+  [attr.aria-label]="'choraverse.reward_store.title' | translate"
+  data-testid="reward-store">
+
+  <!-- Header -->
+  <header class="reward-store__header">
+    <h1 class="reward-store__title" data-testid="reward-store-title">
+      {{ 'choraverse.reward_store.title' | translate }}
+    </h1>
+    <div
+      class="reward-store__balance"
+      data-testid="coin-balance"
+      role="status"
+      [attr.aria-label]="'choraverse.reward_store.balance_label' | translate">
+      <span class="reward-store__balance-icon" aria-hidden="true">&#9733;</span>
+      <span class="reward-store__balance-amount">{{ coinBalance() }}</span>
+      <span class="reward-store__balance-currency">{{ 'choraverse.reward_store.star_credits' | translate }}</span>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="reward-store__tabs" role="tablist" data-testid="store-tabs">
+    <button
+      type="button"
+      role="tab"
+      class="reward-store__tab"
+      [class.reward-store__tab--active]="activeTab() === 'skins'"
+      [attr.aria-selected]="activeTab() === 'skins'"
+      data-testid="tab-skins"
+      (click)="setActiveTab('skins')">
+      {{ 'choraverse.reward_store.tab_skins' | translate }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="reward-store__tab"
+      [class.reward-store__tab--active]="activeTab() === 'items'"
+      [attr.aria-selected]="activeTab() === 'items'"
+      data-testid="tab-items"
+      (click)="setActiveTab('items')">
+      {{ 'choraverse.reward_store.tab_items' | translate }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="reward-store__tab"
+      [class.reward-store__tab--active]="activeTab() === 'bounties'"
+      [attr.aria-selected]="activeTab() === 'bounties'"
+      data-testid="tab-bounties"
+      (click)="setActiveTab('bounties')">
+      {{ 'choraverse.reward_store.tab_bounties' | translate }}
+    </button>
+  </nav>
+
+  <!-- Tab Content -->
+  @switch (activeTab()) {
+    @case ('skins') {
+      <div class="reward-store__panel" role="tabpanel" data-testid="panel-skins">
+        <!-- Skin Filters -->
+        <div class="reward-store__filters" data-testid="skin-filters" role="search">
+          <div class="reward-store__filter-group">
+            <label for="rarity-filter" class="reward-store__filter-label">
+              {{ 'choraverse.reward_store.filter_rarity' | translate }}
+            </label>
+            <select
+              id="rarity-filter"
+              class="reward-store__select"
+              data-testid="rarity-filter"
+              (change)="onRarityFilter($any($event.target).value)">
+              <option value="">{{ 'choraverse.reward_store.all_rarities' | translate }}</option>
+              @for (rarity of allRarities; track rarity) {
+                <option [value]="rarity">{{ rarityLabels[rarity] | translate }}</option>
+              }
+            </select>
+          </div>
+          <div class="reward-store__filter-group">
+            <label for="theme-filter" class="reward-store__filter-label">
+              {{ 'choraverse.reward_store.filter_theme' | translate }}
+            </label>
+            <select
+              id="theme-filter"
+              class="reward-store__select"
+              data-testid="theme-filter"
+              (change)="onThemeFilter($any($event.target).value)">
+              <option value="">{{ 'choraverse.reward_store.all_themes' | translate }}</option>
+              @for (theme of allThemes; track theme) {
+                <option [value]="theme">{{ themeLabels[theme] | translate }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        @if (isSkinsLoading()) {
+          <div class="reward-store__loading" data-testid="skins-loading" aria-live="polite">
+            @for (i of [1, 2, 3, 4]; track i) {
+              <div class="reward-store__skeleton-card"></div>
+            }
+          </div>
+        }
+
+        <!-- Skins Grid -->
+        @if (!isSkinsLoading() && filteredSkins().length > 0) {
+          <div class="reward-store__grid" data-testid="skins-grid" role="list">
+            @for (skin of filteredSkins(); track skin.id) {
+              <div
+                class="reward-store__card"
+                role="listitem"
+                [style.border-color]="rarityBorderColor(skin.rarity)"
+                [attr.data-testid]="'skin-card-' + skin.id"
+                [attr.aria-label]="skin.name">
+
+                <!-- Preview -->
+                <div class="reward-store__card-preview">
+                  <div
+                    class="reward-store__card-image-placeholder"
+                    [attr.aria-label]="skin.name"
+                    role="img">
+                    {{ skin.name.charAt(0) | uppercase }}
+                  </div>
+                </div>
+
+                <!-- Info -->
+                <div class="reward-store__card-info">
+                  <h3 class="reward-store__card-name">{{ skin.name }}</h3>
+                  <div class="reward-store__card-meta">
+                    <span
+                      class="reward-store__card-rarity"
+                      [style.color]="rarityBorderColor(skin.rarity)">
+                      {{ rarityLabels[skin.rarity] | translate }}
+                    </span>
+                    <span class="reward-store__card-theme-badge">
+                      {{ themeLabels[skin.theme] | translate }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Action -->
+                <div class="reward-store__card-actions">
+                  @if (skin.is_equipped) {
+                    <button
+                      type="button"
+                      class="reward-store__btn reward-store__btn--equipped"
+                      disabled
+                      [attr.data-testid]="'btn-equipped-' + skin.id"
+                      [attr.aria-label]="'choraverse.reward_store.equipped' | translate">
+                      {{ 'choraverse.reward_store.equipped' | translate }}
+                    </button>
+                  } @else if (skin.isOwned) {
+                    <button
+                      type="button"
+                      class="reward-store__btn reward-store__btn--equip"
+                      [attr.data-testid]="'btn-equip-' + skin.id"
+                      [attr.aria-label]="'choraverse.reward_store.equip' | translate"
+                      (click)="equipSkin(skin)">
+                      {{ 'choraverse.reward_store.equip' | translate }}
+                    </button>
+                  } @else {
+                    <span
+                      class="reward-store__card-locked"
+                      data-testid="skin-locked"
+                      [attr.aria-label]="'choraverse.reward_store.locked' | translate">
+                      {{ 'choraverse.reward_store.locked' | translate }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Empty -->
+        @if (!isSkinsLoading() && filteredSkins().length === 0) {
+          <div class="reward-store__empty" data-testid="skins-empty" role="status">
+            <p class="reward-store__empty-text">
+              {{ 'choraverse.reward_store.no_skins' | translate }}
+            </p>
+          </div>
+        }
+      </div>
+    }
+    @case ('items') {
+      <div class="reward-store__panel" role="tabpanel" data-testid="panel-items">
+        <div class="reward-store__empty" role="status">
+          <p class="reward-store__empty-text">
+            {{ 'choraverse.reward_store.items_coming_soon' | translate }}
+          </p>
+        </div>
+      </div>
+    }
+    @case ('bounties') {
+      <div class="reward-store__panel" role="tabpanel" data-testid="panel-bounties">
+        <!-- Loading -->
+        @if (isBountiesLoading()) {
+          <div class="reward-store__loading" data-testid="bounties-loading" aria-live="polite">
+            @for (i of [1, 2, 3]; track i) {
+              <div class="reward-store__skeleton-row"></div>
+            }
+          </div>
+        }
+
+        <!-- Bounty List -->
+        @if (!isBountiesLoading() && bounties().length > 0) {
+          <div class="reward-store__bounty-list" data-testid="bounty-list" role="list">
+            @for (bounty of bounties(); track bounty.id) {
+              <div
+                class="reward-store__bounty-card"
+                role="listitem"
+                [attr.data-testid]="'bounty-' + bounty.id">
+                <div class="reward-store__bounty-header">
+                  <h3 class="reward-store__bounty-title">{{ bounty.title }}</h3>
+                  <span class="reward-store__bounty-reward">
+                    &#9733; {{ bounty.coin_reward }}
+                  </span>
+                </div>
+                <p class="reward-store__bounty-desc">{{ bounty.description }}</p>
+                <div class="reward-store__bounty-meta">
+                  <span
+                    class="reward-store__bounty-status"
+                    [class]="'reward-store__bounty-status--' + bounty.status">
+                    {{ bounty.status }}
+                  </span>
+                  <span class="reward-store__bounty-expires">
+                    {{ formatDateTime(bounty.expires_at) }}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Empty -->
+        @if (!isBountiesLoading() && bounties().length === 0) {
+          <div class="reward-store__empty" data-testid="bounties-empty" role="status">
+            <p class="reward-store__empty-text">
+              {{ 'choraverse.reward_store.no_bounties' | translate }}
+            </p>
+          </div>
+        }
+      </div>
+    }
+  }
+</section>

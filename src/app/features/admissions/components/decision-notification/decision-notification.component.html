@@ -1,0 +1,161 @@
+<section
+  class="decision-notification"
+  role="main"
+  [attr.aria-label]="'admissions.decision_title' | translate"
+  data-testid="decision-notification">
+
+  <!-- Header -->
+  <header class="decision-notification__header">
+    <h1 class="decision-notification__title" data-testid="decision-title">
+      {{ 'admissions.decision_title' | translate }}
+    </h1>
+  </header>
+
+  @if (loading()) {
+    <div class="decision-notification__loading" aria-live="polite" data-testid="decision-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="decision-notification__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading() && decision(); as dec) {
+    <!-- Decision Badge -->
+    <div class="decision-notification__badge-section" data-testid="decision-badge-section">
+      <div class="decision-notification__badge" [class]="badgeClass()"
+           role="status"
+           [attr.aria-label]="decisionLabels[dec.decision] | translate">
+        <span class="decision-notification__badge-icon" aria-hidden="true">
+          {{ badgeIcon() }}
+        </span>
+        <span class="decision-notification__badge-text">
+          {{ decisionLabels[dec.decision] | translate }}
+        </span>
+      </div>
+      <p class="decision-notification__decided-date">
+        {{ 'admissions.decided_on' | translate }}: {{ dec.decided_at | date:'mediumDate' }}
+      </p>
+    </div>
+
+    <!-- Decision Message -->
+    <div class="decision-notification__message-section" data-testid="decision-message">
+      <p class="decision-notification__message">{{ dec.message }}</p>
+    </div>
+
+    <!-- Approved: Next Steps -->
+    @if (isApproved()) {
+      <div class="decision-notification__next-steps" data-testid="next-steps">
+        <h2 class="decision-notification__section-title">
+          {{ 'admissions.next_steps' | translate }}
+        </h2>
+        @if (dec.next_steps.length > 0) {
+          <ol class="decision-notification__steps-list"
+              [attr.aria-label]="'admissions.next_steps' | translate">
+            @for (step of dec.next_steps; track trackByIndex($index)) {
+              <li class="decision-notification__step-item">{{ step }}</li>
+            }
+          </ol>
+        }
+        @if (dec.enrollment_action_url) {
+          <button
+            type="button"
+            class="decision-notification__enroll-btn"
+            (click)="navigateToEnrollment()"
+            data-testid="enroll-btn"
+            [attr.aria-label]="'admissions.complete_enrollment' | translate">
+            {{ 'admissions.complete_enrollment' | translate }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Rejected: Reason & Re-application -->
+    @if (isRejected()) {
+      <div class="decision-notification__rejection" data-testid="rejection-details">
+        @if (dec.reason_summary) {
+          <div class="decision-notification__reason-section">
+            <h2 class="decision-notification__section-title">
+              {{ 'admissions.rejection_reason' | translate }}
+            </h2>
+            <p class="decision-notification__reason-text">{{ dec.reason_summary }}</p>
+          </div>
+        }
+
+        <div class="decision-notification__reapply-section">
+          <h2 class="decision-notification__section-title">
+            {{ 'admissions.reapplication' | translate }}
+          </h2>
+          @if (dec.reapplication_eligible) {
+            <p class="decision-notification__reapply-info">
+              {{ 'admissions.reapplication_eligible' | translate }}
+            </p>
+            @if (dec.reapplication_earliest_date) {
+              <p class="decision-notification__reapply-date">
+                {{ 'admissions.earliest_reapply' | translate }}:
+                {{ dec.reapplication_earliest_date | date:'mediumDate' }}
+              </p>
+            }
+          } @else {
+            <p class="decision-notification__reapply-info decision-notification__reapply-info--not-eligible">
+              {{ 'admissions.reapplication_not_eligible' | translate }}
+            </p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Deferred: Next Intake -->
+    @if (isDeferred()) {
+      <div class="decision-notification__deferral" data-testid="deferral-details">
+        <h2 class="decision-notification__section-title">
+          {{ 'admissions.deferral_info' | translate }}
+        </h2>
+
+        @if (dec.next_intake_date) {
+          <div class="decision-notification__intake-info">
+            <p>
+              {{ 'admissions.next_intake' | translate }}:
+              <strong>{{ dec.next_intake_date | date:'mediumDate' }}</strong>
+            </p>
+          </div>
+        }
+
+        @if (dec.auto_carry_forward) {
+          <div class="decision-notification__carry-forward" data-testid="carry-forward">
+            <span class="decision-notification__carry-icon" aria-hidden="true">&#10003;</span>
+            <p>{{ 'admissions.auto_carry_forward' | translate }}</p>
+          </div>
+        } @else {
+          <p class="decision-notification__carry-note">
+            {{ 'admissions.manual_reapply_needed' | translate }}
+          </p>
+        }
+      </div>
+    }
+
+    <!-- Back Action -->
+    <footer class="decision-notification__footer" data-testid="decision-footer">
+      <button
+        type="button"
+        class="decision-notification__btn decision-notification__btn--secondary"
+        (click)="goToApplications()"
+        data-testid="back-to-applications"
+        [attr.aria-label]="'admissions.back_to_applications' | translate">
+        {{ 'admissions.back_to_applications' | translate }}
+      </button>
+    </footer>
+  }
+
+  @if (!loading() && !hasDecision()) {
+    <div class="decision-notification__no-decision" data-testid="no-decision">
+      <p>{{ 'admissions.no_decision_yet' | translate }}</p>
+      <button
+        type="button"
+        class="decision-notification__btn decision-notification__btn--secondary"
+        (click)="goToApplications()"
+        [attr.aria-label]="'admissions.back_to_applications' | translate">
+        {{ 'admissions.back_to_applications' | translate }}
+      </button>
+    </div>
+  }
+</section>

@@ -1,0 +1,20 @@
+<div class="cplus-tabs" role="tablist" aria-label="Sections">
+  @for (tab of tabs(); track tab.id; let i = $index) {
+    <button
+      #tabButtons
+      type="button"
+      class="cplus-tabs__tab"
+      role="tab"
+      [id]="'cplus-tab-' + tab.id"
+      [attr.tabindex]="tabindexFor(i)"
+      [attr.aria-selected]="isSelected(i)"
+      (click)="select(i)"
+      (keydown)="onKeydown($event, i)"
+    >
+      {{ tab.label | translate }}
+      @if (isSelected(i)) {
+        <span class="cplus-tabs__indicator" aria-hidden="true"></span>
+      }
+    </button>
+  }
+</div>

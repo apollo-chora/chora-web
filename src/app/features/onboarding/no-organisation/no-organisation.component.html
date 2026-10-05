@@ -1,0 +1,38 @@
+<section class="no-organisation" data-testid="no-organisation">
+  <div class="glass-panel no-organisation__card" role="alert">
+    <h1 class="no-organisation__heading">
+      {{ 'onboarding.noOrganisation.heading' | translate }}
+    </h1>
+
+    <p class="no-organisation__body">
+      {{ 'onboarding.noOrganisation.body' | translate }}
+    </p>
+
+    <!--
+      Shown verbatim when the interceptor captured one, so a user can quote it
+      and an operator can grep for it. Absent is informative too: the session
+      resolved and simply carried no organisation.
+    -->
+    @if (hasCode()) {
+      <p class="no-organisation__code" data-error-code>
+        <span class="no-organisation__code-label">
+          {{ 'onboarding.noOrganisation.codeLabel' | translate }}
+        </span>
+        <code>{{ code() }}</code>
+      </p>
+    }
+
+    <p class="no-organisation__hint">
+      {{ 'onboarding.noOrganisation.hint' | translate }}
+    </p>
+
+    <div class="no-organisation__actions">
+      <button type="button" class="btn btn-primary" data-retry (click)="retry()">
+        {{ 'onboarding.noOrganisation.retry' | translate }}
+      </button>
+      <button type="button" class="btn btn-secondary" data-sign-out (click)="signOut()">
+        {{ 'onboarding.noOrganisation.signOut' | translate }}
+      </button>
+    </div>
+  </div>
+</section>

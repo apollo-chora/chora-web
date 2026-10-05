@@ -1,0 +1,180 @@
+<div class="surface-cplus cplus-feed">
+  <aside class="glass-panel cplus-feed__sidebar" aria-label="Surface brand">
+    <div class="cplus-feed__brand">
+      <h1 class="surface-accent-text cplus-feed__brand-title">C+ Circle+</h1>
+      <p class="cplus-feed__brand-tagline">your curiosity, your circle</p>
+    </div>
+    <div
+      class="glass-panel cplus-feed__familiar"
+      data-testid="cplus-familiar-mascot"
+      aria-live="polite">
+      <span class="cplus-feed__familiar-name">Eira the Curious</span>
+      <p class="cplus-feed__familiar-quote">
+        "Eira is curious about your ChoraCircle feed today."
+      </p>
+    </div>
+  </aside>
+
+  <main class="cplus-feed__main" aria-label="Curious Now feed">
+    <header
+      class="glass-panel cplus-feed__header"
+      data-testid="cplus-feed-header">
+      <h2 class="cplus-feed__header-title">Curious Now</h2>
+      <p class="cplus-feed__header-meta">
+        Your ChoraCircle feed: curated highlights from the people you learn with.
+      </p>
+    </header>
+
+    <chora-cplus-post-composer />
+
+
+    @switch (feedState().status) {
+      @case ('loading') {
+        <p class="cplus-feed__status" role="status" aria-live="polite">
+          Loading your ChoraCircle feed...
+        </p>
+      }
+      @case ('error') {
+        <p class="cplus-feed__status cplus-feed__status--error" role="alert">
+          We couldn't load your feed. Please refresh.
+        </p>
+      }
+      @case ('success') {
+        <div class="cplus-feed__scroll">
+          @for (post of posts(); track trackPostId($index, post); let i = $index) {
+            <article
+              class="glass-panel cplus-feed__post"
+              [class.cplus-feed__post--curated]="post.curated"
+              [attr.data-testid]="i === 0 ? 'cplus-feed-post-lead' : 'cplus-feed-post-other'">
+              <header class="cplus-feed__post-header">
+                <div class="cplus-feed__author">
+                  <span class="cplus-feed__author-avatar" aria-hidden="true">
+                    {{ post.author_display_name.charAt(0) }}
+                  </span>
+                  <div>
+                    <h3 class="cplus-feed__author-name">
+                      {{ post.author_display_name }}
+                      @if (post.author_familiar_species && post.author_familiar_stage !== undefined) {
+                        <chora-familiar-byline-chip
+                          [species]="$any(post.author_familiar_species)"
+                          [stage]="$any(post.author_familiar_stage)" />
+                      }
+                      @if (post.event_type === 'course_completion') {
+                        <span class="cplus-feed__pill">Course Completed</span>
+                      }
+                      @if (post.event_type === 'stage_up') {
+                        <span class="cplus-feed__pill cplus-feed__pill--stage-up">
+                          Stage Up!
+                        </span>
+                      }
+                      @if (post.event_type === 'duel_result') {
+                        <span class="cplus-feed__pill cplus-feed__pill--duel">
+                          Duel Result
+                        </span>
+                      }
+                    </h3>
+                    <p class="cplus-feed__post-meta">
+                      Shared to ChoraCircle • {{ post.event_type }}
+                    </p>
+                  </div>
+                </div>
+                @if (post.leaderboard_bump !== null) {
+                  <span
+                    class="cplus-feed__rank-badge"
+                    data-testid="cplus-feed-rank-badge"
+                    [attr.aria-label]="
+                      'Rank #' +
+                      post.leaderboard_bump.current_rank +
+                      ' on ' +
+                      post.leaderboard_bump.dimension
+                    ">
+                    Rank #{{ post.leaderboard_bump.current_rank }}
+                    @if (post.leaderboard_bump.previous_rank !== null) {
+                      <small>
+                        (was #{{ post.leaderboard_bump.previous_rank }})
+                      </small>
+                    }
+                  </span>
+                }
+              </header>
+
+              <p class="cplus-feed__post-body">{{ post.content }}</p>
+
+              @if (post.hashtags.length > 0) {
+                <ul class="cplus-feed__hashtags" aria-label="Hashtags">
+                  @for (tag of post.hashtags; track tag) {
+                    <li class="cplus-feed__hashtag">#{{ tag }}</li>
+                  }
+                </ul>
+              }
+
+              @if (post.atom_share !== null) {
+                <section
+                  class="cplus-feed__atom-share"
+                  aria-label="Shared atom">
+                  <strong class="cplus-feed__atom-share-title">
+                    {{ post.atom_share.title || 'Shared learning atom' }}
+                  </strong>
+                  @if (post.atom_share.author_display_name || post.atom_share.meta) {
+                    <p class="cplus-feed__atom-share-meta">
+                      {{ post.atom_share.author_display_name }}
+                      @if (
+                        post.atom_share.author_display_name && post.atom_share.meta
+                      ) {
+                        •
+                      }
+                      {{ post.atom_share.meta }}
+                    </p>
+                  }
+                </section>
+              }
+
+              <footer class="cplus-feed__reactions">
+                @for (
+                  reactionKey of reactionOrder;
+                  track reactionKey
+                ) {
+                  @let tally =
+                    post.reactions.find((r) => r.reaction === reactionKey);
+                  @if (tally) {
+                    <button
+                      type="button"
+                      class="cplus-feed__reaction"
+                      [class.cplus-feed__reaction--active]="tally.self_reacted"
+                      [attr.data-testid]="'cplus-reaction-' + reactionKey"
+                      [attr.aria-label]="
+                        reactionMeta[reactionKey].label +
+                        ' reaction: ' +
+                        tally.count +
+                        (tally.self_reacted ? ' (you reacted)' : '')
+                      "
+                      [attr.aria-pressed]="tally.self_reacted"
+                      (click)="onReact(post.id, reactionKey)">
+                      <span class="cplus-feed__reaction-glyph" aria-hidden="true">
+                        {{ reactionMeta[reactionKey].glyph }}
+                      </span>
+                      <span class="cplus-feed__reaction-label">
+                        {{ reactionMeta[reactionKey].label }}
+                      </span>
+                      <span class="cplus-feed__reaction-count">
+                        {{ tally.count }}
+                      </span>
+                    </button>
+                  }
+                }
+                <span class="cplus-feed__thread-count">
+                  {{ post.thread_count }} replies
+                </span>
+              </footer>
+            </article>
+          }
+        </div>
+      }
+      @default {
+        <p class="cplus-feed__status" role="status">
+          ChoraCircle feed is waking up...
+        </p>
+      }
+    }
+  </main>
+</div>

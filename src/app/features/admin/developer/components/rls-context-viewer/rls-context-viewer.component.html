@@ -1,0 +1,252 @@
+<section
+  class="rls-context-viewer"
+  role="main"
+  [attr.aria-label]="'admin.developer.rls_context_title' | translate"
+  data-testid="rls-context-viewer">
+
+  <!-- Header -->
+  <header class="rls-context-viewer__header">
+    <div class="rls-context-viewer__header-left">
+      <a routerLink=".." class="rls-context-viewer__back" data-testid="btn-back">
+        {{ 'admin.developer.back_to_console' | translate }}
+      </a>
+      <h1 class="rls-context-viewer__title" data-testid="rls-title">
+        {{ 'admin.developer.rls_context_title' | translate }}
+      </h1>
+    </div>
+    <div class="rls-context-viewer__header-actions">
+      <button
+        type="button"
+        class="rls-context-viewer__btn rls-context-viewer__btn--secondary"
+        (click)="refresh()"
+        data-testid="btn-refresh"
+        [attr.aria-label]="'admin.developer.refresh' | translate">
+        {{ 'admin.developer.refresh' | translate }}
+      </button>
+      <button
+        type="button"
+        class="rls-context-viewer__btn rls-context-viewer__btn--primary"
+        (click)="runIsolationTest()"
+        [disabled]="testRunning()"
+        data-testid="btn-test-isolation"
+        [attr.aria-label]="'admin.developer.test_isolation' | translate">
+        @if (testRunning()) {
+          {{ 'admin.developer.testing' | translate }}
+        } @else {
+          {{ 'admin.developer.test_isolation' | translate }}
+        }
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  @if (contextState().status === 'loading') {
+    <div class="rls-context-viewer__loading" data-testid="rls-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="rls-context-viewer__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (contextState().status === 'error') {
+    <div class="rls-context-viewer__error" data-testid="rls-error" role="alert">
+      <p class="rls-context-viewer__error-text">
+        {{ 'admin.developer.rls_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Context Loaded -->
+  @if (contextState().status === 'success' && rlsContext()) {
+    <!-- Session Info Card -->
+    <div class="rls-context-viewer__session-card" data-testid="session-card">
+      <h2 class="rls-context-viewer__section-title">
+        {{ 'admin.developer.session_context' | translate }}
+      </h2>
+      <div class="rls-context-viewer__context-grid">
+        <div class="rls-context-viewer__context-field">
+          <span class="rls-context-viewer__context-label">{{ 'admin.developer.tenant_id' | translate }}</span>
+          <code class="rls-context-viewer__context-value" data-testid="ctx-tenant-id">{{ rlsContext()!.tenant_id }}</code>
+        </div>
+        <div class="rls-context-viewer__context-field">
+          <span class="rls-context-viewer__context-label">{{ 'admin.developer.tenant_name' | translate }}</span>
+          <span class="rls-context-viewer__context-value" data-testid="ctx-tenant-name">{{ rlsContext()!.tenant_name }}</span>
+        </div>
+        <div class="rls-context-viewer__context-field">
+          <span class="rls-context-viewer__context-label">{{ 'admin.developer.gcid' | translate }}</span>
+          <code class="rls-context-viewer__context-value" data-testid="ctx-gcid">{{ rlsContext()!.gcid }}</code>
+        </div>
+        <div class="rls-context-viewer__context-field">
+          <span class="rls-context-viewer__context-label">{{ 'admin.developer.role' | translate }}</span>
+          <span class="rls-context-viewer__context-value" data-testid="ctx-role">{{ rlsContext()!.role }}</span>
+        </div>
+        <div class="rls-context-viewer__context-field">
+          <span class="rls-context-viewer__context-label">{{ 'admin.developer.session_start' | translate }}</span>
+          <span class="rls-context-viewer__context-value" data-testid="ctx-session-start">{{ formatSessionStart(rlsContext()!.session_start) }}</span>
+        </div>
+        <div class="rls-context-viewer__context-field">
+          <span class="rls-context-viewer__context-label">{{ 'admin.developer.capabilities_count' | translate }}</span>
+          <span class="rls-context-viewer__context-value" data-testid="ctx-capability-count">{{ capabilityCount() }}</span>
+        </div>
+      </div>
+
+      <!-- Capabilities List -->
+      <div class="rls-context-viewer__capabilities" data-testid="capabilities-list">
+        <h3 class="rls-context-viewer__subsection-title">
+          {{ 'admin.developer.capabilities' | translate }}
+        </h3>
+        <div class="rls-context-viewer__capability-tags">
+          @for (cap of rlsContext()!.capabilities; track cap) {
+            <code class="rls-context-viewer__capability-tag" [attr.data-testid]="'cap-' + cap">{{ cap }}</code>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- RLS Policies Section -->
+    <div class="rls-context-viewer__policies-card" data-testid="policies-card">
+      <div class="rls-context-viewer__policies-header">
+        <h2 class="rls-context-viewer__section-title">
+          {{ 'admin.developer.rls_policies' | translate }}
+        </h2>
+        <div class="rls-context-viewer__policy-summary">
+          <span class="rls-context-viewer__policy-count" data-testid="policy-count">
+            {{ enabledPolicyCount() }}/{{ policyCount() }}
+          </span>
+          <span class="rls-context-viewer__policy-count-label">
+            {{ 'admin.developer.policies_active' | translate }}
+          </span>
+        </div>
+      </div>
+
+      @if (policyCount() === 0) {
+        <p class="rls-context-viewer__empty" role="status" data-testid="no-policies">
+          {{ 'admin.developer.no_policies' | translate }}
+        </p>
+      } @else {
+        <div class="rls-context-viewer__policy-list" role="list" data-testid="policy-list">
+          @for (policy of rlsContext()!.rls_policies_applied; track policy.policy_name; let i = $index) {
+            <div
+              class="rls-context-viewer__policy"
+              role="listitem"
+              [attr.data-testid]="'policy-' + policy.table_name">
+
+              <!-- Policy Summary Row -->
+              <button
+                type="button"
+                class="rls-context-viewer__policy-row"
+                (click)="togglePolicyExpand(i)"
+                [attr.aria-expanded]="isPolicyExpanded(i)"
+                [attr.aria-label]="policy.policy_name + ' on ' + policy.table_name">
+                <span class="rls-context-viewer__policy-table">{{ policy.table_name }}</span>
+                <span class="rls-context-viewer__policy-name">{{ policy.policy_name }}</span>
+                <span
+                  class="rls-context-viewer__policy-type"
+                  [class]="policyTypeClass(policy.policy_type)">
+                  {{ policyTypeLabels[policy.policy_type] | translate }}
+                </span>
+                <span
+                  class="rls-context-viewer__policy-status"
+                  [class.rls-context-viewer__policy-status--enabled]="policy.enabled"
+                  [class.rls-context-viewer__policy-status--disabled]="!policy.enabled">
+                  @if (policy.enabled) {
+                    {{ 'admin.developer.enabled_label' | translate }}
+                  } @else {
+                    {{ 'admin.developer.disabled_label' | translate }}
+                  }
+                </span>
+              </button>
+
+              <!-- Expanded Expression -->
+              @if (isPolicyExpanded(i)) {
+                <div class="rls-context-viewer__policy-detail" data-testid="policy-detail">
+                  <span class="rls-context-viewer__policy-detail-label">
+                    {{ 'admin.developer.policy_expression' | translate }}
+                  </span>
+                  <pre class="rls-context-viewer__policy-expression">{{ policy.expression }}</pre>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Isolation Test Results -->
+    @if (testState().status === 'loading') {
+      <div class="rls-context-viewer__test-loading" data-testid="test-loading" aria-live="polite">
+        <p class="rls-context-viewer__test-loading-text">
+          {{ 'admin.developer.running_isolation_test' | translate }}
+        </p>
+        @for (i of [1, 2, 3]; track i) {
+          <div class="rls-context-viewer__skeleton-row"></div>
+        }
+      </div>
+    }
+
+    @if (testState().status === 'success') {
+      <div class="rls-context-viewer__test-card" data-testid="test-results-card">
+        <div class="rls-context-viewer__test-header">
+          <h2 class="rls-context-viewer__section-title">
+            {{ 'admin.developer.isolation_test_results' | translate }}
+          </h2>
+          <div class="rls-context-viewer__test-summary">
+            <span
+              class="rls-context-viewer__test-badge"
+              [class.rls-context-viewer__test-badge--pass]="allTestsPassed()"
+              [class.rls-context-viewer__test-badge--fail]="!allTestsPassed()"
+              data-testid="test-overall-status">
+              @if (allTestsPassed()) {
+                {{ 'admin.developer.all_passed' | translate }}
+              } @else {
+                {{ 'admin.developer.some_failed' | translate }}
+              }
+            </span>
+            <span class="rls-context-viewer__test-counts" data-testid="test-counts">
+              {{ testPassCount() }} {{ 'admin.developer.passed' | translate }} /
+              {{ testFailCount() }} {{ 'admin.developer.failed' | translate }}
+            </span>
+          </div>
+        </div>
+
+        <div class="rls-context-viewer__test-list" role="table" data-testid="test-list">
+          <div class="rls-context-viewer__test-row rls-context-viewer__test-row--header" role="row">
+            <span class="rls-context-viewer__test-cell" role="columnheader">{{ 'admin.developer.table' | translate }}</span>
+            <span class="rls-context-viewer__test-cell" role="columnheader">{{ 'admin.developer.rows' | translate }}</span>
+            <span class="rls-context-viewer__test-cell" role="columnheader">{{ 'admin.developer.time_ms' | translate }}</span>
+            <span class="rls-context-viewer__test-cell" role="columnheader">{{ 'admin.developer.status' | translate }}</span>
+          </div>
+          @for (result of testResults(); track result.table_name) {
+            <div
+              class="rls-context-viewer__test-row"
+              [class]="testResultClass(result)"
+              role="row"
+              [attr.data-testid]="'test-result-' + result.table_name">
+              <span class="rls-context-viewer__test-cell rls-context-viewer__test-cell--table" role="cell">
+                {{ result.table_name }}
+              </span>
+              <span class="rls-context-viewer__test-cell rls-context-viewer__test-cell--count" role="cell">
+                {{ result.row_count }}
+              </span>
+              <span class="rls-context-viewer__test-cell rls-context-viewer__test-cell--time" role="cell">
+                {{ result.execution_time_ms }}ms
+              </span>
+              <span class="rls-context-viewer__test-cell rls-context-viewer__test-cell--status" role="cell">
+                {{ testResultLabel(result) | translate }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (testState().status === 'error') {
+      <div class="rls-context-viewer__test-error" data-testid="test-error" role="alert">
+        <p class="rls-context-viewer__error-text">
+          {{ 'admin.developer.rls_test_error' | translate }}
+        </p>
+      </div>
+    }
+  }
+</section>

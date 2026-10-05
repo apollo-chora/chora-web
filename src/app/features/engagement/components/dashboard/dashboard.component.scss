@@ -1,0 +1,200 @@
+:host {
+  display: block;
+}
+
+.dashboard {
+  padding: var(--chora-space-md, 16px);
+  max-width: 1200px;
+  margin: 0 auto;
+
+  // ---------------------------------------------------------------------------
+  // Loading / Error states
+  // ---------------------------------------------------------------------------
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: var(--chora-space-sm, 8px);
+    color: var(--chora-color-text-secondary, #757575);
+  }
+
+  &__spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--chora-color-surface-2, #e0e0e0);
+    border-top-color: var(--chora-color-primary, #1976d2);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  &__error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: var(--chora-space-sm, 8px);
+    color: var(--chora-color-text-secondary, #757575);
+
+    .material-icons-outlined {
+      font-size: 40px;
+      color: #f44336;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Widget grid — tablet 2-col, desktop 3-col
+  // ---------------------------------------------------------------------------
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__widget {
+    min-width: 0;
+
+    &--exam-summary {
+      grid-column: 1 / -1;
+    }
+
+    &--dose {
+      grid-column: 1;
+    }
+
+    &--streak {
+      grid-column: 2;
+    }
+
+    &--recommendations {
+      grid-column: 1 / -1;
+    }
+
+    &--exam-coaching {
+      grid-column: 1 / -1;
+    }
+
+    &--retention {
+      grid-column: 1;
+    }
+
+    &--nudge {
+      grid-column: 2;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // DailyDose widget (inline — not a sub-component since it's dashboard-specific)
+  // ---------------------------------------------------------------------------
+
+  &__dose {
+    padding: var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--chora-color-surface-1, #ffffff);
+    border: 1px solid var(--chora-color-border, #e0e0e0);
+  }
+
+  &__dose-header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-bottom: var(--chora-space-sm, 8px);
+
+    .material-icons-outlined {
+      font-size: 24px;
+      color: var(--chora-color-primary, #1976d2);
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+
+  &__dose-info {
+    font-size: 14px;
+    margin: 0 0 var(--chora-space-sm, 8px);
+    color: var(--chora-color-text-primary, #212121);
+  }
+
+  &__dose-goals {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #ff9800;
+    margin: 0 0 var(--chora-space-sm, 8px);
+
+    .material-icons-outlined {
+      font-size: 16px;
+    }
+  }
+
+  &__dose-done {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    font-size: 14px;
+    color: #4caf50;
+    margin: 0;
+
+    .material-icons-outlined {
+      font-size: 20px;
+    }
+  }
+
+  &__dose-empty {
+    font-size: 14px;
+    color: var(--chora-color-text-secondary, #757575);
+    margin: 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Buttons
+  // ---------------------------------------------------------------------------
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: none;
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &--primary {
+      background: var(--chora-color-primary, #1976d2);
+      color: #ffffff;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #1976d2);
+      outline-offset: 2px;
+    }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ---------------------------------------------------------------------------
+// Desktop enhancement: 3-column grid
+// ---------------------------------------------------------------------------
+
+@media (min-width: 1280px) {
+  .dashboard__grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}

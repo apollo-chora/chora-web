@@ -1,0 +1,53 @@
+<div
+  class="goal-widget"
+  role="region"
+  aria-label="Goal Challenges"
+  data-testid="goal-widget">
+
+  <h3 class="goal-widget__title">{{ 'engagement.goals.title' | translate }}</h3>
+
+  @if (activeGoals().length === 0) {
+    <p class="goal-widget__empty" data-testid="goal-empty">
+      {{ 'engagement.goals.empty' | translate }}
+    </p>
+  } @else {
+    @for (goal of activeGoals(); track goal.id) {
+      <article
+        class="goal-widget__card"
+        role="article"
+        [attr.aria-label]="goal.title + ', ' + progressPercent(goal) + '% complete, ' + goal.bounty_star_credits + ' credits'"
+        data-testid="goal-card">
+
+        <div class="goal-widget__card-header">
+          <span class="goal-widget__card-name" data-testid="goal-title">{{ goal.title }}</span>
+          <span class="goal-widget__card-bounty" data-testid="goal-bounty">
+            <span class="material-icons-outlined" aria-hidden="true">stars</span>
+            {{ goal.bounty_star_credits }}
+          </span>
+        </div>
+
+        <div class="goal-widget__card-progress">
+          <div class="goal-widget__progress-bar">
+            <div
+              class="goal-widget__progress-fill"
+              [style.width.%]="progressPercent(goal)"
+              role="progressbar"
+              [attr.aria-valuenow]="progressPercent(goal)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              data-testid="goal-progress">
+            </div>
+          </div>
+          <span class="goal-widget__card-count">
+            {{ progressPercent(goal) }}%
+          </span>
+        </div>
+
+        <div class="goal-widget__card-deadline" data-testid="goal-deadline">
+          <span class="material-icons-outlined" aria-hidden="true">schedule</span>
+          {{ goal.deadline | translate }}
+        </div>
+      </article>
+    }
+  }
+</div>

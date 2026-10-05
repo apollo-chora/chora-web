@@ -1,0 +1,409 @@
+<section
+  class="aplus-dashboard aplus-hub-page surface-aplus"
+  aria-labelledby="aplus-dashboard-heading"
+  data-testid="aplus-dashboard">
+    @switch (state().status) {
+    @case ('loading') {
+      <div
+        class="glass-panel dashboard__status"
+        role="status"
+        aria-busy="true"
+        aria-live="polite"
+        data-testid="aplus-dashboard-loading">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        <p>{{ 'aplus.dashboard.loading' | translate }}</p>
+      </div>
+    }
+    @case ('error') {
+      <div
+        class="glass-panel dashboard__status dashboard__status--error"
+        role="alert"
+        data-testid="aplus-dashboard-error">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <p>{{ errorKey() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="retry()"
+          data-testid="aplus-dashboard-retry">
+          {{ 'aplus.dashboard.retry' | translate }}
+        </button>
+      </div>
+    }
+    @case ('success') {
+      @if (summary(); as s) {
+        @if (banner(); as bannerKey) {
+          <div
+            class="dashboard__banner"
+            role="status"
+            aria-live="polite"
+            data-testid="aplus-dashboard-banner">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <p class="dashboard__banner-text">{{ bannerKey | translate }}</p>
+            <button
+              type="button"
+              class="dashboard__banner-dismiss"
+              (click)="dismissBanner()"
+              [attr.aria-label]="'aplus.dashboard.banner_dismiss_aria' | translate"
+              data-testid="aplus-dashboard-banner-dismiss">
+              ×
+            </button>
+          </div>
+        }
+
+        <!-- ── TIER 1: Unified header — identity band + one "today" strip ──
+             Folds the retired mana + streak slabs into a single glass surface:
+             an identity band (name + role badges + GCID), a hairline seam, then
+             a "today" strip where goal · streak · mana · dose read as one
+             instrument (cells joined by hairline rules, not sibling chips). -->
+        <header class="dashboard__header glass-panel" data-testid="aplus-dashboard-header">
+          <!-- Identity band — the person + their roles + the one-identity mark. -->
+          <div class="dashboard__id-band" data-testid="aplus-dashboard-identity">
+            <div class="dashboard__id-who">
+              <h1 id="aplus-dashboard-heading" class="dashboard__title">
+                {{ 'aplus.dashboard.heading' | translate }}
+              </h1>
+              <div class="dashboard__person">
+                @if (s.userDisplayName) {
+                  <span class="dashboard__name">{{ s.userDisplayName }}</span>
+                } @else {
+                  <span class="dashboard__name dashboard__name--neutral">
+                    {{ 'aplus.dashboard.learner_neutral' | translate }}
+                  </span>
+                }
+                @if (roleBadges().length) {
+                  <span class="dashboard__roles" [attr.aria-label]="'aplus.dashboard.roles_aria' | translate">
+                    @for (r of roleBadges(); track r.key) {
+                      <span
+                        class="dashboard__role-pill"
+                        [class.dashboard__role-pill--elevated]="r.elevated"
+                        [attr.data-testid]="'aplus-dashboard-role-' + r.key">
+                        @if (r.elevated) {
+                          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                        }
+                        {{ r.labelKey | translate }}
+                      </span>
+                    }
+                  </span>
+                }
+              </div>
+            </div>
+            <span class="dashboard__gcid-pill">{{ s.gcidPillLabel }}</span>
+          </div>
+
+          <div class="dashboard__hair" aria-hidden="true"></div>
+
+          <!-- The "today" strip. Mana is role-agnostic (funds consumption AND
+               authoring) so it always shows; goal · streak · dose are the
+               learner's daily loop, role-gated. -->
+          <div class="dashboard__today" data-testid="aplus-dashboard-today">
+            @if (isLearnerRole()) {
+              <!-- Goal — the surfaced goal + ring; tap → switch / ＋ new / propose. -->
+              <div class="dashboard__cell dashboard__cell--goal">
+                <chora-aplus-header-goal-control />
+              </div>
+
+              <!-- Streak — moved here from the ticker (kills the double-render). -->
+              <div class="dashboard__cell" data-testid="aplus-dashboard-streak">
+                <span class="dashboard__cell-ic dashboard__cell-ic--amber">
+                  <i class="fa-solid fa-fire" aria-hidden="true"></i>
+                </span>
+                <span class="dashboard__cell-text">
+                  <span class="dashboard__cell-lab">{{ 'aplus.dashboard.streak_label' | translate }}</span>
+                  @if (streakDays() > 0) {
+                    <span class="dashboard__cell-val">
+                      <span class="dashboard__figure">{{ streakDays() }}</span>&nbsp;{{ (streakDays() === 1 ? 'aplus.dashboard.streak_day_suffix_one' : 'aplus.dashboard.streak_day_suffix') | translate }}
+                    </span>
+                  } @else {
+                    <span class="dashboard__cell-val dashboard__cell-val--muted">
+                      {{ 'aplus.dashboard.streak_none' | translate }}
+                    </span>
+                  }
+                </span>
+              </div>
+            }
+
+            <!-- Mana (CHO-1989) — balance + interactive ＋ top-up. Role-agnostic. -->
+            <div class="dashboard__cell dashboard__cell--mana" data-testid="aplus-dashboard-mana">
+              <span class="dashboard__cell-ic">
+                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+              </span>
+              <span class="dashboard__cell-text">
+                <span class="dashboard__cell-lab">{{ 'aplus.dashboard.mana_balance' | translate }}</span>
+                @switch (manaDisplay()) {
+                  @case ('loading') {
+                    <span
+                      class="dashboard__cell-val dashboard__cell-val--muted"
+                      role="status"
+                      aria-live="polite"
+                      data-testid="aplus-dashboard-mana-loading">
+                      {{ 'aplus.dashboard.mana_loading' | translate }}
+                    </span>
+                  }
+                  @case ('error') {
+                    <span
+                      class="dashboard__cell-val dashboard__cell-val--muted"
+                      role="alert"
+                      data-testid="aplus-dashboard-mana-error">
+                      {{ 'aplus.dashboard.mana_error' | translate }}
+                    </span>
+                  }
+                  @default {
+                    <span class="dashboard__cell-val">
+                      <span class="dashboard__figure" data-testid="aplus-dashboard-mana-units">{{ manaUnits() }}</span>
+                    </span>
+                  }
+                }
+              </span>
+              <a
+                routerLink="/a/wallet"
+                class="dashboard__topup"
+                [attr.aria-label]="'aplus.dashboard.mana_topup_cta' | translate"
+                [attr.title]="'aplus.dashboard.mana_topup_cta' | translate"
+                data-testid="aplus-dashboard-mana-topup">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              </a>
+            </div>
+
+            @if (isLearnerRole()) {
+              <!-- Today's Dose — the terminal primary action. -->
+              <a
+                routerLink="/a/daily-dose"
+                class="dashboard__cell dashboard__dose"
+                data-testid="aplus-dashboard-daily-dose-cta">
+                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                <span>{{ 'aplus.dashboard.daily_dose_cta' | translate }}</span>
+                <i class="fa-solid fa-arrow-right dashboard__dose-arrow" aria-hidden="true"></i>
+              </a>
+            }
+          </div>
+        </header>
+
+        <!-- Partial / graceful-degradation notice — non-blocking, a 200. -->
+        @if (isPartial()) {
+          <p
+            class="dashboard__partial-notice"
+            role="status"
+            aria-live="polite"
+            data-testid="aplus-dashboard-partial-notice">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            {{ 'aplus.dashboard.partial_notice' | translate }}
+          </p>
+        }
+
+        <!-- ── LEARNER hub: TIER 2 ticker + TIER 3 draggable wrappers ── -->
+        @if (isLearnerRole()) {
+          <section
+            class="dashboard__hub"
+            [attr.aria-label]="'aplus.dashboard.hub_aria' | translate"
+            data-testid="aplus-dashboard-learner-panel">
+            <!-- TIER 2: conditional ticker — always mounted; renders nothing
+                 (host collapses) when it has zero items. It is the SOLE
+                 celebration detector on this route. -->
+            <chora-aplus-notifications-ticker />
+
+            <!-- TIER 3: reorderable wrapper column. Handle-FREE by default (clean
+                 top-down layout); press-and-hold a card to drag it, or use the ⋯
+                 control to enter an explicit reorder pass with visible handles. -->
+            <div class="dashboard__hub-toolbar">
+              @if (reorderMode()) {
+                <span class="dashboard__reorder-hint">
+                  <i class="fa-solid fa-up-down-left-right" aria-hidden="true"></i>
+                  {{ 'aplus.dashboard.reorder_hint' | translate }}
+                </span>
+                <button
+                  type="button"
+                  class="btn btn-primary dashboard__reorder-done"
+                  (click)="exitReorderMode()"
+                  data-testid="aplus-dashboard-reorder-done">
+                  {{ 'aplus.dashboard.reorder_done' | translate }}
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="dashboard__reorder-toggle"
+                  (click)="enterReorderMode()"
+                  [attr.aria-label]="'aplus.dashboard.reorder_cards' | translate"
+                  [attr.title]="'aplus.dashboard.reorder_cards' | translate"
+                  data-testid="aplus-dashboard-reorder-toggle">
+                  <i class="fa-solid fa-arrows-up-down" aria-hidden="true"></i>
+                </button>
+              }
+            </div>
+
+            <!--
+              role="list" is load-bearing, not decoration: a bare <div> is
+              generic and cannot carry an accessible name, so the aria-label
+              here was silently illegal (aria-prohibited-attr). aria-hidden
+              would be wrong (this names a real region the learner reorders)
+              and role="img" would be a lie (it is not an image). These
+              wrappers ARE an ordered, reorderable collection, so a list is the
+              honest fit: it legalises the name AND announces position
+              ("2 of 5"), which a drag-and-drop surface actually needs.
+            -->
+            <div
+              class="dashboard__wrappers"
+              cdkDropList
+              role="list"
+              (cdkDropListDropped)="onDrop($event)"
+              [class.is-reordering]="reorderMode()"
+              [attr.aria-label]="'aplus.dashboard.wrappers_aria' | translate"
+              data-testid="aplus-dashboard-wrappers">
+              @for (key of layoutOrder(); track key) {
+                <div
+                  class="dashboard__wrapper"
+                  cdkDrag
+                  role="listitem"
+                  [cdkDragStartDelay]="reorderMode() ? 0 : longPressDelay"
+                  [class.is-reordering]="reorderMode()"
+                  [attr.data-wrapper-key]="key"
+                  data-testid="aplus-dashboard-wrapper">
+                  @if (reorderMode()) {
+                    <button
+                      type="button"
+                      class="dashboard__drag-grip"
+                      cdkDragHandle
+                      [attr.aria-label]="'aplus.dashboard.reorder_aria' | translate"
+                      data-testid="aplus-dashboard-drag-grip">
+                      <i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>
+                    </button>
+                  }
+                  @switch (key) {
+                    @case ('map') {
+                      <chora-aplus-map-preview-card class="dashboard__wrapper-body" />
+                    }
+                    @case ('cast') {
+                      <chora-aplus-cast-card class="dashboard__wrapper-body" />
+                    }
+                    @case ('courses') {
+                      <chora-aplus-continue-learning-card class="dashboard__wrapper-body" />
+                    }
+                    @case ('study') {
+                      <!-- CHO-2217: study lists are part of Learning, not a
+                           sidebar silo. Sibling of `courses` — same aggregate,
+                           split by provenance (ADR-233 source_type). -->
+                      <chora-aplus-study-lists-card class="dashboard__wrapper-body" />
+                    }
+                    @case ('transcript') {
+                      <!-- CHO-2237: the transcript is the OUTCOME of Learn's
+                           assessments, so it lives INSIDE Learn — this glance
+                           replaces the retired top-level sidebar entry; the
+                           Learn sub-nav tab (CHO-2218) stays the full hub. -->
+                      <chora-aplus-transcript-card class="dashboard__wrapper-body" />
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- ── AUTHOR card: where an author's work lives ───────────────────
+             The instructor panel that used to sit here is GONE (courses belong
+             to R+). It hosted TWO lists of the same thing under one heading:
+             the CJ#2 "Your authored courses" panel (GET /api/v1/courses?state=*,
+             filtered client-side by author_gcid) and the CJ#1 `instructorCourses`
+             tiles (GET /api/me/dashboard). Two backends, disjoint facts, no way
+             to tell they were the same course. Its "Open course" CTA also
+             hardcoded /a/atoms/new, so every course opened a blank atom
+             generator.
+             In its place, each role gets a signpost to its own home. Authoring
+             is A+'s own concern (chora_creation owns LearningAtom), so this one
+             stays on-surface. -->
+        @if (isAuthorRole() || isInstructorRole()) {
+          <!--
+            These are SIGNPOSTS, not data panels: one line each, pointing at a
+            workspace that lives elsewhere. They used to be two full-width
+            glass slabs stacked under the hub — each ~870px wide to hold a
+            sentence and one small button, given the same visual weight as
+            Continue learning, which carries real progress. So they read as the
+            loudest thing on the page while saying the least.
+
+            Now: one compact 2-up row, visually subordinate to the hub, sized to
+            their content. Role-driven visibility (no toggles) is unchanged —
+            each tile still appears only for the role that owns it.
+          -->
+          <nav
+            class="dashboard__signposts"
+            [attr.aria-label]="'aplus.dashboard.signposts_aria' | translate"
+            data-testid="aplus-dashboard-signposts">
+            @if (isAuthorRole()) {
+              <!-- Authoring is A+'s own concern (chora_creation owns
+                   LearningAtom), so this one stays on-surface.
+                   → /a/studio, NOT /a/studio/atoms/new: Studio is the
+                   inventory, and the inventory is step 1. Pointing "Your
+                   authoring" at a blank compose form was the precise inversion
+                   CHO-2211 existed to fix — this card was its last instance. -->
+              <!-- The tile IS the CTA now, so it carries both testids' duty:
+                   `-card` (role visibility) and `-card-cta` (the href target). -->
+              <a
+                routerLink="/a/studio"
+                class="dashboard__signpost"
+                data-testid="aplus-dashboard-author-card">
+                <i class="fa-solid fa-pen-nib dashboard__signpost-icon" aria-hidden="true"></i>
+                <span class="dashboard__signpost-text">
+                  <span class="dashboard__signpost-title">
+                    {{ 'aplus.dashboard.author_card_heading' | translate }}
+                  </span>
+                  <span class="dashboard__signpost-body">
+                    {{ 'aplus.dashboard.author_card_body' | translate }}
+                  </span>
+                </span>
+                <i class="fa-solid fa-arrow-right dashboard__signpost-go" aria-hidden="true"></i>
+              </a>
+            }
+            @if (isInstructorRole()) {
+              <!-- A+ is the learner's surface; course create/maintain is R+'s
+                   (chora_delivery owns Course; ADR-232 rejected teaching roles
+                   here). Signposts rather than renders. Named "Teaching", not
+                   "Your courses": "Continue learning" above IS the learner's
+                   courses, and two things called courses on one page is a lie
+                   about which one is yours. -->
+              <a
+                routerLink="/r/catalog"
+                class="dashboard__signpost"
+                data-testid="aplus-dashboard-instructor-card">
+                <i class="fa-solid fa-chalkboard-user dashboard__signpost-icon" aria-hidden="true"></i>
+                <span class="dashboard__signpost-text">
+                  <span class="dashboard__signpost-title">
+                    {{ 'aplus.dashboard.instructor_card_heading' | translate }}
+                  </span>
+                  <span class="dashboard__signpost-body">
+                    {{ 'aplus.dashboard.instructor_card_body' | translate }}
+                  </span>
+                </span>
+                <i class="fa-solid fa-arrow-right dashboard__signpost-go" aria-hidden="true"></i>
+              </a>
+            }
+          </nav>
+        }
+
+        <!-- ── Fallback: no role resolved (edge case — show minimal help) ── -->
+        @if (!isLearnerRole() && !isAuthorRole() && !isInstructorRole()) {
+          <div
+            class="glass-panel dashboard__no-role"
+            role="status"
+            data-testid="aplus-dashboard-no-role">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <p>{{ 'aplus.dashboard.no_role_notice' | translate }}</p>
+          </div>
+        }
+
+        <!-- Browse catalog — quiet footer link. -->
+        <div class="dashboard__browse">
+          <a
+            routerLink="/a/catalog"
+            class="dashboard__browse-link"
+            data-testid="aplus-dashboard-browse-catalog">
+            <span class="icon-circle" aria-hidden="true">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <span>{{ 'aplus.dashboard.browse_banner' | translate }}</span>
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </a>
+        </div>
+
+      }
+    }
+  }
+</section>

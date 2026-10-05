@@ -1,0 +1,579 @@
+// =====================================================================
+// H+ Members — Stage 3 wave 3
+// Tablet-first; TenantMembership roster + invite modal flow.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.members {
+  display: block;
+  padding: 1.5rem;
+  min-height: 100%;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1280px;
+    margin-inline: auto;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  &__crumb-active {
+    color: var(--primary);
+  }
+
+  &__hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+  }
+
+  &__subtitle {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    max-width: 60ch;
+  }
+
+  &__invite-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      font-size: 0.85rem;
+    }
+  }
+
+  &__panel {
+    padding: 1rem 1.25rem 1.5rem;
+    overflow-x: auto;
+  }
+
+  &__table {
+    min-width: 960px;
+    table-layout: fixed;
+
+    // Top-align every cell so the short columns (GCID / email / updated)
+    // line up with the top of the taller multi-role ROLE editor instead of
+    // floating in the vertical middle of the row.
+    th,
+    td {
+      vertical-align: top;
+    }
+
+    // Explicit column proportions — auto-layout starved the ROLE column so
+    // the chips wrapped and the Save/Cancel pair crowded into UPDATED. Give
+    // ROLE the widest share; the rest get just what they need. (6 cols now:
+    // the WS4 member-remove Actions column trims the others proportionally.)
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 17%;
+    } // GCID
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 13%;
+    } // Display name
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 18%;
+    } // Email
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 28%;
+    } // Role (multi-role editor — widest)
+    th:nth-child(5),
+    td:nth-child(5) {
+      width: 12%;
+    } // Updated
+    th:nth-child(6),
+    td:nth-child(6) {
+      width: 12%;
+    } // Actions (member remove)
+  }
+
+  &__caption {
+    text-align: left;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-style: italic;
+  }
+
+  &__gcid {
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.4);
+    padding: 0.2rem 0.45rem;
+    border-radius: 6px;
+    // Wrap the opaque UUID cleanly inside its fixed-width column.
+    overflow-wrap: anywhere;
+  }
+
+  &__name {
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__email {
+    color: var(--primary);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__role {
+    text-transform: capitalize;
+    font-size: 0.85rem;
+    color: var(--text-main);
+  }
+
+  &__last-seen {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  &__row-actions {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: flex-end;
+  }
+
+  &__remove:hover {
+    color: var(--danger, #ef4444);
+  }
+
+  &__actions-col {
+    text-align: right;
+  }
+
+  // ── Invite modal ────────────────────────────────────────────────
+  &__invite {
+    max-width: 460px;
+    width: 100%;
+    padding: 1.5rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__invite-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__invite-title {
+    font-size: 1.2rem;
+    margin: 0;
+    font-weight: 800;
+  }
+
+  &__invite-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+
+    &:hover {
+      background: white;
+      color: var(--primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__invite-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  &__field-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__invite-footer {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 0.25rem;
+  }
+}
+
+.badge-muted {
+  background: rgba(148, 163, 184, 0.18);
+  color: #475569;
+}
+
+// CHO-1809 multi-role display — chip list per member + below it the
+// single-role "Set role to…" select. The select keeps the existing PATCH
+// `/role` contract (single role, replace semantics); chips render the
+// full row set so multi-role memberships (e.g. learner + instructor) are
+// visible at a glance.
+.members__roles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.members__role-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  // Mild per-role accent so admin/auditor stand out from learner.
+  &[data-role='admin'] {
+    background: rgba(99, 102, 241, 0.18);
+    color: #4338ca;
+  }
+  &[data-role='auditor'] {
+    background: rgba(245, 158, 11, 0.18);
+    color: #b45309;
+  }
+  &[data-role='instructor'] {
+    background: rgba(16, 185, 129, 0.18);
+    color: #047857;
+  }
+}
+
+.members__role-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.7rem;
+}
+
+.members__role-edit-label {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+// CHO-1809 multi-role editor — checkbox chips per role, Save/Cancel
+// buttons appear only when the row's draft set differs from the
+// server set. The chip turns into a toggleable "pill checkbox" so the
+// admin sees the same per-role colour cues as the read-only chip
+// list above retained for compactness.
+.members__roles-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+
+  &[disabled] {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+.members__role-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+.members__role-check {
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.members__role-chip--selected {
+  outline: 1px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.members__role-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  // Left-align under the chips with a hairline separator so the Save/Cancel
+  // pair reads as the row's action footer instead of crowding the adjacent
+  // UPDATED column (the reported "poorly spaced" collision).
+  justify-content: flex-start;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.members__role-cancel,
+.members__role-save {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+}
+
+// CHO-1817 follow-up — inline display-name editor. The display state is
+// a flat button (edit-pencil hint on hover) so the cell reads like a
+// label until clicked. Edit state swaps in an input + Cancel/Save pair.
+.members__name-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 0;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  border-radius: var(--chora-radius-sm);
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--chora-color-surface-2, rgba(148, 163, 184, 0.18));
+  }
+
+  .members__name-edit-icon {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  &:hover .members__name-edit-icon,
+  &:focus-visible .members__name-edit-icon {
+    opacity: 1;
+  }
+}
+
+.members__name-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.members__name-input {
+  flex: 1;
+  min-width: 140px;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+.members__name-cancel,
+.members__name-save {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+}
+
+// WS4 — operator target-tenant select hint (sits under the field's <select>).
+.members__field-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+// ADR-217 — managed-sub-tenant hierarchy fetch: loading + fail-loud states
+// framing the operator target-tenant <select>.
+.members__field-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.members__field-error {
+  font-size: 0.7rem;
+  color: var(--chora-color-danger, #f44336);
+  line-height: 1.4;
+}
+
+// WS4 / WS2b — member-remove + pending-invite revoke buttons. Compact,
+// danger-tinted on hover/focus to read as a destructive (soft-delete) action.
+.members__actions-col {
+  text-align: right;
+}
+
+.members__remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  white-space: nowrap;
+
+  i {
+    font-size: 0.7rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--danger, #ef4444);
+    border-color: var(--danger, #ef4444);
+  }
+}
+
+// WS4 — cold-invite pending list panel (its own glass-panel section under
+// the roster). Mirrors the roster table's top-aligned, fixed layout.
+.members__pending {
+  &-head {
+    margin-bottom: 0.75rem;
+  }
+
+  &-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+  }
+
+  &-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    max-width: 70ch;
+  }
+
+  &-table {
+    width: 100%;
+    table-layout: fixed;
+
+    th,
+    td {
+      vertical-align: top;
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 30%;
+    } // Email
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 26%;
+    } // Roles
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 14%;
+    } // Status
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 18%;
+    } // Expires
+    th:nth-child(5),
+    td:nth-child(5) {
+      width: 12%;
+    } // Actions
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .members__invite-cta,
+  .members__remove,
+  .btn-icon {
+    transition: none;
+  }
+}
+
+// ── Ownership (S7-B8 / UX refactor R21) ──────────────────────────────
+// The owner of the organisation used to render as an ordinary admin, and
+// after identity migration 0041 would have rendered as a learner if the
+// roster's role allowlist had not been widened. The badge is how ownership
+// finally becomes visible on the one screen where it matters.
+//
+// Amber rather than the surface accent: this is a standing fact about the
+// member, not an action or a selection, and it must not read as either. The
+// pair is amber-800 on a soft amber wash, which clears 4.5:1 on the glass
+// panel with room to spare. No violet, per the U4 visual reset.
+.members__owner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  color: #92400e;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+// The reason the role editor above it is inert. Rendered inside the disabled
+// fieldset so it sits with the control it explains, rather than appearing
+// only once the admin has tried and failed.
+.members__owner-note {
+  margin: 0 0 8px;
+  color: #475569;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}

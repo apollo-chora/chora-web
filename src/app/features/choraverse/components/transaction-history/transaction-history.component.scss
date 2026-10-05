@@ -1,0 +1,182 @@
+:host {
+  display: block;
+}
+
+.transaction-history {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-block-end: var(--chora-space-lg, 24px);
+    flex-wrap: wrap;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__balance {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    background: var(--chora-color-surface-1, #fafafa);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+  }
+
+  &__balance-icon {
+    color: #eab308;
+    font-size: 1.25rem;
+  }
+
+  &__balance-amount {
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+
+  &__balance-currency {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  // -------------------------------------------------------------------------
+  // Transaction List
+  // -------------------------------------------------------------------------
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  &__entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--chora-space-md, 16px) 0;
+    border-block-end: 1px solid var(--chora-color-border, #e5e5e5);
+
+    &:last-child {
+      border-block-end: none;
+    }
+  }
+
+  &__entry-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__entry-right {
+    flex-shrink: 0;
+    margin-inline-start: var(--chora-space-md, 16px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Type badges
+  // -------------------------------------------------------------------------
+
+  &__type {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+    width: fit-content;
+    text-transform: capitalize;
+
+    &--earned {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    &--spent {
+      background: #fecaca;
+      color: #991b1b;
+    }
+
+    &--refunded {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Amount
+  // -------------------------------------------------------------------------
+
+  &__amount {
+    font-size: 1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+
+    &--positive {
+      color: #166534;
+    }
+
+    &--negative {
+      color: #991b1b;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Reason / Date
+  // -------------------------------------------------------------------------
+
+  &__reason {
+    font-size: 0.875rem;
+    color: var(--chora-color-text, #111);
+  }
+
+  &__date {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  // -------------------------------------------------------------------------
+  // Loading / Empty
+  // -------------------------------------------------------------------------
+
+  &__loading {
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__skeleton-row {
+    height: 48px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-sm, 4px);
+    margin-block-end: var(--chora-space-sm, 8px);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+  }
+
+  &__empty-text {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}

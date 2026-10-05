@@ -1,0 +1,35 @@
+<div
+  class="policy-reference"
+  data-testid="policy-reference"
+  [attr.aria-label]="'admin.explainability.policies_title' | translate">
+
+  <h4 class="policy-reference__title">
+    {{ 'admin.explainability.policies_title' | translate }}
+  </h4>
+
+  @if (policies().length === 0) {
+    <p class="policy-reference__empty" role="status">
+      {{ 'admin.explainability.no_policies' | translate }}
+    </p>
+  } @else {
+    <div class="policy-reference__list" role="list" data-testid="policy-list">
+      @for (policy of policies(); track policy.name) {
+        <div
+          class="policy-reference__item"
+          role="listitem"
+          [attr.data-testid]="'policy-' + policy.name">
+          <div class="policy-reference__item-header">
+            <span class="policy-reference__item-name">{{ policy.name }}</span>
+          </div>
+          <p class="policy-reference__item-description">{{ policy.description }}</p>
+          <div class="policy-reference__trigger">
+            <span class="policy-reference__trigger-label">
+              {{ 'admin.explainability.trigger_reason' | translate }}:
+            </span>
+            <span class="policy-reference__trigger-text">{{ policy.trigger_reason }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

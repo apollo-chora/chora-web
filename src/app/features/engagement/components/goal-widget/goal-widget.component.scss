@@ -1,0 +1,97 @@
+:host {
+  display: block;
+}
+
+.goal-widget {
+  padding: var(--chora-space-md, 16px);
+  border-radius: var(--chora-radius-md, 8px);
+  background: var(--chora-color-surface-1, #ffffff);
+  border: 1px solid var(--chora-color-border, #e0e0e0);
+
+  &__title {
+    margin: 0 0 var(--chora-space-sm, 8px);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  &__empty {
+    font-size: 14px;
+    color: var(--chora-color-text-secondary, #757575);
+  }
+
+  &__card {
+    padding: var(--chora-space-sm, 8px);
+    margin-bottom: var(--chora-space-sm, 8px);
+    border-radius: var(--chora-radius-sm, 4px);
+    background: var(--chora-color-surface-0, #fafafa);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--chora-space-xs, 4px);
+  }
+
+  &__card-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  &__card-bounty {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 13px;
+    color: #ff9800;
+    font-weight: 600;
+
+    .material-icons-outlined {
+      font-size: 16px;
+    }
+  }
+
+  &__card-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-bottom: var(--chora-space-xs, 4px);
+  }
+
+  &__progress-bar {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--chora-color-surface-2, #e0e0e0);
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--chora-color-primary, #1976d2);
+    transition: width 300ms ease;
+  }
+
+  &__card-count {
+    font-size: 12px;
+    color: var(--chora-color-text-secondary, #757575);
+    white-space: nowrap;
+  }
+
+  &__card-deadline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--chora-color-text-secondary, #757575);
+
+    .material-icons-outlined {
+      font-size: 14px;
+    }
+  }
+}

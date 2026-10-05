@@ -1,0 +1,372 @@
+<section
+  class="content-transfer"
+  role="main"
+  [attr.aria-label]="'content_transfer.title' | translate"
+  data-testid="content-transfer">
+
+  <!-- Page Header -->
+  <header class="content-transfer__header">
+    <h1 class="content-transfer__title" data-testid="content-transfer-title">
+      {{ 'content_transfer.title' | translate }}
+    </h1>
+    <p class="content-transfer__subtitle">
+      {{ 'content_transfer.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Step Indicator -->
+  <nav
+    class="content-transfer__steps"
+    [attr.aria-label]="'content_transfer.step_indicator' | translate"
+    data-testid="step-indicator">
+    @for (s of allSteps; track s) {
+      <div
+        class="content-transfer__step-item"
+        [class.content-transfer__step-item--active]="s === step()"
+        [class.content-transfer__step-item--completed]="s < step()"
+        [attr.data-testid]="'step-' + s"
+        [attr.aria-current]="s === step() ? 'step' : null">
+        <span class="content-transfer__step-number">{{ s }}</span>
+        <span class="content-transfer__step-label">
+          {{ stepLabels[s] | translate }}
+        </span>
+      </div>
+    }
+  </nav>
+
+  <!-- ===================================================================== -->
+  <!-- Step 1: Select Content                                                 -->
+  <!-- ===================================================================== -->
+  @if (step() === 1) {
+    <div class="content-transfer__panel" data-testid="step-1-panel" role="region"
+      [attr.aria-label]="'content_transfer.step_select' | translate">
+
+      <h2 class="content-transfer__panel-title">
+        {{ 'content_transfer.select_content_title' | translate }}
+      </h2>
+
+      <!-- Search & Filter Bar -->
+      <div class="content-transfer__toolbar">
+        <div class="content-transfer__search-group">
+          <label for="content-search" class="content-transfer__sr-only">
+            {{ 'content_transfer.search_content' | translate }}
+          </label>
+          <input
+            id="content-search"
+            type="search"
+            class="content-transfer__search-input"
+            [value]="contentSearchQuery()"
+            (input)="onContentSearch($any($event.target).value)"
+            [placeholder]="'content_transfer.search_placeholder' | translate"
+            data-testid="content-search-input" />
+        </div>
+
+        <div class="content-transfer__filter-group">
+          <label for="content-type-filter" class="content-transfer__sr-only">
+            {{ 'content_transfer.filter_type' | translate }}
+          </label>
+          <select
+            id="content-type-filter"
+            class="content-transfer__select"
+            (change)="onContentTypeFilter($any($event.target).value)"
+            data-testid="content-type-filter">
+            <option value="">{{ 'content_transfer.all_types' | translate }}</option>
+            <option value="atom">{{ 'content_transfer.type_atom' | translate }}</option>
+            <option value="topic">{{ 'content_transfer.type_topic' | translate }}</option>
+            <option value="path">{{ 'content_transfer.type_path' | translate }}</option>
+          </select>
+        </div>
+
+        <div class="content-transfer__bulk-actions">
+          <button
+            type="button"
+            class="content-transfer__link-btn"
+            (click)="selectAll()"
+            data-testid="btn-select-all">
+            {{ 'content_transfer.select_all' | translate }}
+          </button>
+          <button
+            type="button"
+            class="content-transfer__link-btn"
+            (click)="deselectAll()"
+            data-testid="btn-deselect-all">
+            {{ 'content_transfer.deselect_all' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Selected Count Badge -->
+      @if (hasSelection()) {
+        <div class="content-transfer__selection-badge" data-testid="selection-count" aria-live="polite">
+          <span class="content-transfer__badge">{{ selectedCount() }}</span>
+          {{ 'content_transfer.items_selected' | translate }}
+        </div>
+      }
+
+      <!-- Loading -->
+      @if (loadingContent()) {
+        <div class="content-transfer__loading" data-testid="content-loading" aria-live="polite">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="content-transfer__skeleton-row"></div>
+          }
+        </div>
+      }
+
+      <!-- Content List -->
+      @if (!loadingContent()) {
+        @if (filteredContent().length === 0) {
+          <div class="content-transfer__empty" data-testid="content-empty" role="status">
+            <p class="content-transfer__empty-text">
+              {{ 'content_transfer.no_content' | translate }}
+            </p>
+          </div>
+        } @else {
+          <div class="content-transfer__content-list" data-testid="content-list" role="listbox"
+            [attr.aria-label]="'content_transfer.content_list' | translate"
+            aria-multiselectable="true">
+            @for (item of filteredContent(); track item.id) {
+              <label
+                class="content-transfer__content-item"
+                [class.content-transfer__content-item--selected]="isSelected(item.id)"
+                [attr.data-testid]="'content-item-' + item.id"
+                role="option"
+                [attr.aria-selected]="isSelected(item.id)">
+                <input
+                  type="checkbox"
+                  class="content-transfer__checkbox"
+                  [checked]="isSelected(item.id)"
+                  (change)="toggleItem(item.id)"
+                  [attr.data-testid]="'checkbox-' + item.id"
+                  [attr.aria-label]="item.title" />
+                <span class="material-icons-outlined content-transfer__content-icon" aria-hidden="true">
+                  {{ contentTypeIcon(item.content_type) }}
+                </span>
+                <div class="content-transfer__content-info">
+                  <span class="content-transfer__content-title">{{ item.title }}</span>
+                  <span class="content-transfer__content-type">
+                    {{ contentTypeLabel(item.content_type) | translate }}
+                  </span>
+                </div>
+              </label>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- ===================================================================== -->
+  <!-- Step 2: Choose Recipient                                               -->
+  <!-- ===================================================================== -->
+  @if (step() === 2) {
+    <div class="content-transfer__panel" data-testid="step-2-panel" role="region"
+      [attr.aria-label]="'content_transfer.step_recipient' | translate">
+
+      <h2 class="content-transfer__panel-title">
+        {{ 'content_transfer.choose_recipient_title' | translate }}
+      </h2>
+      <p class="content-transfer__description">
+        {{ 'content_transfer.recipient_description' | translate }}
+      </p>
+
+      <!-- Recipient Search -->
+      @if (!hasRecipient()) {
+        <div class="content-transfer__search-group">
+          <label for="recipient-search" class="content-transfer__label">
+            {{ 'content_transfer.search_user' | translate }}
+          </label>
+          <input
+            id="recipient-search"
+            type="search"
+            class="content-transfer__search-input"
+            [value]="recipientSearchQuery()"
+            (input)="onRecipientSearch($any($event.target).value)"
+            [placeholder]="'content_transfer.search_user_placeholder' | translate"
+            data-testid="recipient-search-input"
+            autocomplete="off" />
+        </div>
+
+        <!-- Search Results -->
+        @if (searchingUsers()) {
+          <div class="content-transfer__searching" data-testid="searching-users" aria-live="polite">
+            {{ 'content_transfer.searching' | translate }}
+          </div>
+        }
+
+        @if (!searchingUsers() && searchResults().length > 0) {
+          <div class="content-transfer__search-results" data-testid="search-results" role="listbox"
+            [attr.aria-label]="'content_transfer.search_results' | translate">
+            @for (user of searchResults(); track user.gcid) {
+              <button
+                type="button"
+                class="content-transfer__user-result"
+                (click)="selectRecipient(user)"
+                [attr.data-testid]="'user-result-' + user.gcid"
+                role="option"
+                aria-selected="false">
+                <div class="content-transfer__user-avatar" aria-hidden="true">
+                  {{ user.display_name.charAt(0).toUpperCase() }}
+                </div>
+                <div class="content-transfer__user-info">
+                  <span class="content-transfer__user-name">{{ user.display_name }}</span>
+                  <span class="content-transfer__user-email">{{ user.email }}</span>
+                </div>
+                <span class="content-transfer__user-role">{{ user.role }}</span>
+              </button>
+            }
+          </div>
+        }
+
+        @if (!searchingUsers() && recipientSearchQuery().length >= 2 && searchResults().length === 0) {
+          <div class="content-transfer__no-results" data-testid="no-results" role="status">
+            {{ 'content_transfer.no_users_found' | translate }}
+          </div>
+        }
+      }
+
+      <!-- Selected Recipient Card -->
+      @if (hasRecipient()) {
+        <div class="content-transfer__recipient-card" data-testid="recipient-card">
+          <div class="content-transfer__recipient-header">
+            <span class="content-transfer__recipient-label">
+              {{ 'content_transfer.selected_recipient' | translate }}
+            </span>
+            <button
+              type="button"
+              class="content-transfer__link-btn content-transfer__link-btn--danger"
+              (click)="clearRecipient()"
+              data-testid="btn-clear-recipient">
+              {{ 'content_transfer.change' | translate }}
+            </button>
+          </div>
+          <div class="content-transfer__recipient-body">
+            <div class="content-transfer__user-avatar content-transfer__user-avatar--lg" aria-hidden="true">
+              {{ selectedRecipient()!.display_name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="content-transfer__user-info">
+              <span class="content-transfer__user-name content-transfer__user-name--lg"
+                data-testid="recipient-name">
+                {{ selectedRecipient()!.display_name }}
+              </span>
+              <span class="content-transfer__user-email" data-testid="recipient-email">
+                {{ selectedRecipient()!.email }}
+              </span>
+              <span class="content-transfer__user-role-badge" data-testid="recipient-role">
+                {{ selectedRecipient()!.role }}
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ===================================================================== -->
+  <!-- Step 3: Confirm Transfer                                               -->
+  <!-- ===================================================================== -->
+  @if (step() === 3) {
+    <div class="content-transfer__panel" data-testid="step-3-panel" role="region"
+      [attr.aria-label]="'content_transfer.step_confirm' | translate">
+
+      <h2 class="content-transfer__panel-title">
+        {{ 'content_transfer.confirm_title' | translate }}
+      </h2>
+
+      <!-- Transfer Summary -->
+      <div class="content-transfer__summary" data-testid="transfer-summary">
+
+        <!-- Content Items -->
+        <div class="content-transfer__summary-section">
+          <h3 class="content-transfer__summary-label">
+            {{ 'content_transfer.content_to_transfer' | translate }}
+            <span class="content-transfer__badge">{{ selectedCount() }}</span>
+          </h3>
+          <ul class="content-transfer__summary-list" role="list" data-testid="summary-content-list">
+            @for (item of selectedItems(); track item.id) {
+              <li class="content-transfer__summary-item">
+                <span class="material-icons-outlined content-transfer__content-icon" aria-hidden="true">
+                  {{ contentTypeIcon(item.content_type) }}
+                </span>
+                <span class="content-transfer__content-title">{{ item.title }}</span>
+                <span class="content-transfer__content-type">
+                  {{ contentTypeLabel(item.content_type) | translate }}
+                </span>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <!-- Recipient -->
+        <div class="content-transfer__summary-section">
+          <h3 class="content-transfer__summary-label">
+            {{ 'content_transfer.transfer_to' | translate }}
+          </h3>
+          <div class="content-transfer__recipient-body" data-testid="summary-recipient">
+            <div class="content-transfer__user-avatar" aria-hidden="true">
+              {{ selectedRecipient()!.display_name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="content-transfer__user-info">
+              <span class="content-transfer__user-name">
+                {{ selectedRecipient()!.display_name }}
+              </span>
+              <span class="content-transfer__user-email">
+                {{ selectedRecipient()!.email }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Warning -->
+      <div class="content-transfer__warning" data-testid="transfer-warning" role="alert">
+        <span class="material-icons-outlined content-transfer__warning-icon" aria-hidden="true">
+          warning
+        </span>
+        <p class="content-transfer__warning-text">
+          {{ 'content_transfer.consent_warning' | translate }}
+        </p>
+      </div>
+    </div>
+  }
+
+  <!-- ===================================================================== -->
+  <!-- Navigation Footer                                                      -->
+  <!-- ===================================================================== -->
+  <div class="content-transfer__nav" data-testid="wizard-nav">
+    @if (canGoBack()) {
+      <button
+        type="button"
+        class="content-transfer__btn content-transfer__btn--secondary"
+        (click)="previousStep()"
+        data-testid="btn-previous">
+        {{ 'content_transfer.previous' | translate }}
+      </button>
+    } @else {
+      <div></div>
+    }
+
+    @if (!isLastStep()) {
+      <button
+        type="button"
+        class="content-transfer__btn content-transfer__btn--primary"
+        [disabled]="!canGoNext()"
+        (click)="nextStep()"
+        data-testid="btn-next">
+        {{ 'content_transfer.next' | translate }}
+      </button>
+    } @else {
+      <button
+        type="button"
+        class="content-transfer__btn content-transfer__btn--primary"
+        [disabled]="submitting()"
+        (click)="confirmTransfer()"
+        data-testid="btn-confirm-transfer">
+        @if (submitting()) {
+          {{ 'content_transfer.transferring' | translate }}
+        } @else {
+          {{ 'content_transfer.confirm_transfer' | translate }}
+        }
+      </button>
+    }
+  </div>
+</section>

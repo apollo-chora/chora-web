@@ -1,0 +1,277 @@
+<section class="partner-registration" data-testid="partner-registration"
+  aria-labelledby="partner-registration-title">
+
+  <!-- Header -->
+  <header class="partner-registration__header">
+    <div class="partner-registration__header-left">
+      @if (viewMode() === 'register') {
+        <button
+          type="button"
+          class="partner-registration__back-btn"
+          [attr.aria-label]="'a2a.partners.back_to_registry' | translate"
+          (click)="showRegistry()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+      }
+      <h2 id="partner-registration-title" class="partner-registration__title">
+        @if (viewMode() === 'registry') {
+          {{ 'a2a.partners.registry_title' | translate }}
+        } @else {
+          {{ 'a2a.partners.register_title' | translate }}
+        }
+      </h2>
+    </div>
+
+    @if (viewMode() === 'registry') {
+      <button
+        type="button"
+        class="partner-registration__add-btn"
+        [attr.aria-label]="'a2a.partners.register_new_aria' | translate"
+        (click)="showRegistrationForm()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        {{ 'a2a.partners.register_new' | translate }}
+      </button>
+    }
+  </header>
+
+  @switch (viewMode()) {
+    <!-- ================================================================= -->
+    <!-- REGISTRY VIEW -->
+    <!-- ================================================================= -->
+    @case ('registry') {
+      @if (partnersState().status === 'loading') {
+        <div class="partner-registration__loading" role="status" aria-live="polite">
+          {{ 'a2a.partners.loading' | translate }}
+        </div>
+      } @else if (partners().length === 0) {
+        <div class="partner-registration__empty" role="status">
+          <p>{{ 'a2a.partners.no_partners' | translate }}</p>
+        </div>
+      } @else {
+        <div class="partner-registration__table-wrap" role="region"
+          [attr.aria-label]="'a2a.partners.table_aria' | translate" tabindex="0">
+          <table class="partner-registration__table" aria-describedby="partner-registration-title">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'a2a.partners.col_org' | translate }}</th>
+                <th scope="col">{{ 'a2a.partners.col_domain' | translate }}</th>
+                <th scope="col">{{ 'a2a.partners.col_status' | translate }}</th>
+                <th scope="col">{{ 'a2a.partners.col_skills' | translate }}</th>
+                <th scope="col">{{ 'a2a.partners.col_agents' | translate }}</th>
+                <th scope="col">{{ 'a2a.partners.col_registered' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (partner of partners(); track partner.id) {
+                <tr class="partner-registration__row">
+                  <td class="partner-registration__cell-org">
+                    <span class="partner-registration__org-name">{{ partner.orgName }}</span>
+                    <span class="partner-registration__contact">{{ partner.contactEmail }}</span>
+                  </td>
+                  <td>{{ partner.orgDomain }}</td>
+                  <td>
+                    <span class="partner-registration__badge"
+                      [class]="statusBadgeClass(partner.status)">
+                      {{ statusLabels[partner.status] | translate }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="partner-registration__skills">
+                      @for (skill of partner.allowedSkills; track skill) {
+                        <span class="partner-registration__skill-tag">
+                          {{ skillLabels[skill] | translate }}
+                        </span>
+                      }
+                    </div>
+                  </td>
+                  <td>{{ partner.maxAgents }}</td>
+                  <td>{{ formatDate(partner.createdAt) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- ================================================================= -->
+    <!-- REGISTRATION FORM VIEW -->
+    <!-- ================================================================= -->
+    @case ('register') {
+      <!-- DNS challenge display (after submit) -->
+      @if (dnsChallenge()) {
+        <div class="partner-registration__dns-section" role="region"
+          aria-labelledby="dns-challenge-heading">
+          <h3 id="dns-challenge-heading" class="partner-registration__section-title">
+            {{ 'a2a.partners.dns_challenge_title' | translate }}
+          </h3>
+          <p class="partner-registration__dns-desc">
+            {{ 'a2a.partners.dns_challenge_desc' | translate }}
+          </p>
+
+          <div class="partner-registration__dns-record">
+            <span class="partner-registration__dns-label">{{ 'a2a.partners.dns_txt_record' | translate }}</span>
+            <code class="partner-registration__dns-value">{{ dnsChallenge() }}</code>
+          </div>
+
+          <!-- Verification status -->
+          <div class="partner-registration__verification" role="status" aria-live="polite">
+            @if (dnsVerified()) {
+              <span class="partner-registration__verified">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {{ 'a2a.partners.dns_verified' | translate }}
+              </span>
+            } @else if (isVerifying()) {
+              <span class="partner-registration__verifying">
+                <span class="partner-registration__spinner" aria-hidden="true"></span>
+                {{ 'a2a.partners.dns_verifying' | translate }}
+              </span>
+            } @else {
+              <button
+                type="button"
+                class="partner-registration__verify-btn"
+                (click)="startDnsVerification()">
+                {{ 'a2a.partners.start_verification' | translate }}
+              </button>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="partner-registration__done-btn"
+            (click)="showRegistry()">
+            {{ 'a2a.partners.back_to_registry' | translate }}
+          </button>
+        </div>
+      } @else {
+        <!-- Registration form -->
+        <form class="partner-registration__form" (submit)="$event.preventDefault(); submitRegistration()">
+          <!-- Organization name -->
+          <div class="partner-registration__field">
+            <label for="reg-org-name" class="partner-registration__label">
+              {{ 'a2a.partners.org_name' | translate }}
+            </label>
+            <input
+              id="reg-org-name"
+              type="text"
+              class="partner-registration__input"
+              [value]="orgName()"
+              (input)="updateOrgName($event)"
+              required />
+          </div>
+
+          <!-- Organization domain -->
+          <div class="partner-registration__field">
+            <label for="reg-org-domain" class="partner-registration__label">
+              {{ 'a2a.partners.org_domain' | translate }}
+            </label>
+            <input
+              id="reg-org-domain"
+              type="text"
+              class="partner-registration__input"
+              placeholder="example.edu"
+              [value]="orgDomain()"
+              (input)="updateOrgDomain($event)"
+              required />
+          </div>
+
+          <!-- Contact email -->
+          <div class="partner-registration__field">
+            <label for="reg-contact-email" class="partner-registration__label">
+              {{ 'a2a.partners.contact_email' | translate }}
+            </label>
+            <input
+              id="reg-contact-email"
+              type="email"
+              class="partner-registration__input"
+              [value]="contactEmail()"
+              (input)="updateContactEmail($event)"
+              required />
+          </div>
+
+          <!-- Allowed skills (multi-select) -->
+          <fieldset class="partner-registration__skills-fieldset">
+            <legend class="partner-registration__skills-legend">
+              {{ 'a2a.partners.allowed_skills' | translate }}
+            </legend>
+            @for (skill of allSkills; track skill) {
+              <label class="partner-registration__skill-option">
+                <input
+                  type="checkbox"
+                  class="partner-registration__skill-checkbox"
+                  [checked]="isSkillSelected(skill)"
+                  [attr.aria-label]="skillLabels[skill] | translate"
+                  (change)="toggleSkill(skill)" />
+                <span class="partner-registration__skill-text">
+                  {{ skillLabels[skill] | translate }}
+                </span>
+              </label>
+            }
+          </fieldset>
+
+          <!-- Max agents -->
+          <div class="partner-registration__field partner-registration__field--inline">
+            <label for="reg-max-agents" class="partner-registration__label">
+              {{ 'a2a.partners.max_agents' | translate }}
+            </label>
+            <input
+              id="reg-max-agents"
+              type="number"
+              class="partner-registration__input partner-registration__input--small"
+              min="1"
+              max="100"
+              [value]="maxAgents()"
+              (input)="updateMaxAgents($event)" />
+          </div>
+
+          <!-- Rate limit -->
+          <div class="partner-registration__field partner-registration__field--inline">
+            <label for="reg-rate-limit" class="partner-registration__label">
+              {{ 'a2a.partners.rate_limit' | translate }}
+            </label>
+            <input
+              id="reg-rate-limit"
+              type="number"
+              class="partner-registration__input partner-registration__input--small"
+              min="1"
+              max="10000"
+              [value]="rateLimitPerHour()"
+              (input)="updateRateLimitPerHour($event)" />
+          </div>
+
+          <!-- Submit -->
+          <div class="partner-registration__form-actions">
+            <button
+              type="button"
+              class="partner-registration__cancel-btn"
+              (click)="showRegistry()">
+              {{ 'a2a.partners.cancel' | translate }}
+            </button>
+            <button
+              type="submit"
+              class="partner-registration__submit-btn"
+              [disabled]="!isFormValid() || isSubmitting()">
+              @if (isSubmitting()) {
+                <span class="partner-registration__spinner" aria-hidden="true"></span>
+              }
+              {{ 'a2a.partners.register' | translate }}
+            </button>
+          </div>
+        </form>
+      }
+    }
+  }
+</section>

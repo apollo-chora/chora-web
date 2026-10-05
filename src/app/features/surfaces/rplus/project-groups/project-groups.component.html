@@ -1,0 +1,333 @@
+<section
+  class="surface-rplus project-groups"
+  data-testid="rplus-project-groups">
+  <header class="project-groups__header glass-panel">
+    <div class="project-groups__breadcrumb">
+      <span>{{ 'rplus.projectGroups.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.projectGroups.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <div class="project-groups__title-row">
+      <h1 class="project-groups__title">
+        {{ 'rplus.projectGroups.title' | translate }}
+      </h1>
+      <span
+        class="project-groups__count-pill"
+        data-testid="project-groups-count">
+        <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+        <strong>{{ groupCount() }}</strong>
+        {{ 'rplus.projectGroups.count_suffix' | translate }}
+      </span>
+    </div>
+    <div class="project-groups__meta">
+      <button
+        type="button"
+        class="btn btn-primary project-groups__create-cta"
+        data-testid="project-groups-create-cta"
+        (click)="onCreateClicked()"
+        [attr.aria-label]="'rplus.projectGroups.create_aria' | translate">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{ 'rplus.projectGroups.create_cta' | translate }}
+      </button>
+    </div>
+    @if (errorMessage(); as msg) {
+      <div
+        role="alert"
+        class="project-groups__error"
+        data-testid="project-groups-error">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <span class="project-groups__error-text">{{ msg }}</span>
+        @if (listError()) {
+          <!-- Retry only for a *list*-load failure (re-fetching is meaningless
+               for a submit/grade action error) — mirrors catalog J2 (CHO-1830). -->
+          <button
+            type="button"
+            class="btn btn-ghost project-groups__retry"
+            data-testid="project-groups-retry"
+            (click)="onRetry()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            {{ 'rplus.common.retry' | translate }}
+          </button>
+        }
+      </div>
+    }
+  </header>
+
+  @if (createFormOpen()) {
+    <form
+      class="project-groups__create-form glass-panel"
+      data-testid="project-groups-create-form"
+      (ngSubmit)="onCreateSubmit()">
+      <h2 class="project-groups__form-title">
+        {{ 'rplus.projectGroups.form.title' | translate }}
+      </h2>
+      <div class="project-groups__form-grid">
+        <label class="project-groups__form-field">
+          <span>{{ 'rplus.projectGroups.form.name_label' | translate }}</span>
+          <input
+            type="text"
+            name="name"
+            class="project-groups__form-input"
+            data-testid="project-groups-form-name"
+            [ngModel]="formName()"
+            (ngModelChange)="formName.set($event)"
+            [attr.placeholder]="
+              'rplus.projectGroups.form.name_placeholder' | translate
+            "
+            required />
+        </label>
+        <label class="project-groups__form-field">
+          <span>{{ 'rplus.projectGroups.form.course_label' | translate }}</span>
+          <input
+            type="text"
+            name="courseId"
+            class="project-groups__form-input"
+            data-testid="project-groups-form-course"
+            [ngModel]="formCourseId()"
+            (ngModelChange)="formCourseId.set($event)"
+            [attr.placeholder]="
+              'rplus.projectGroups.form.course_placeholder' | translate
+            "
+            required />
+        </label>
+        <label
+          class="project-groups__form-field project-groups__form-field--wide">
+          <span>{{ 'rplus.projectGroups.form.members_label' | translate }}</span>
+          <textarea
+            name="members"
+            class="project-groups__form-input"
+            data-testid="project-groups-form-members"
+            rows="3"
+            [ngModel]="formMembers()"
+            (ngModelChange)="formMembers.set($event)"
+            [attr.placeholder]="
+              'rplus.projectGroups.form.members_placeholder' | translate
+            "></textarea>
+        </label>
+      </div>
+
+      @if (createError(); as err) {
+        <p
+          class="project-groups__form-error"
+          role="alert"
+          data-testid="project-groups-create-error">
+          {{ err }}
+        </p>
+      }
+
+      <div class="project-groups__form-actions">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="project-groups-create-cancel"
+          (click)="onCancelCreate()">
+          {{ 'rplus.projectGroups.form.cancel' | translate }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-testid="project-groups-create-submit"
+          [disabled]="!canCreate()">
+          {{
+            creating()
+              ? ('rplus.projectGroups.form.submitting' | translate)
+              : ('rplus.projectGroups.form.submit' | translate)
+          }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (isLoading()) {
+    <!-- J2 (CHO-1830) — skeleton placeholders while the initial list GET is in
+         flight, so a still-loading list is visually distinct from a genuinely-
+         empty one (no empty-flash). Decorative cards are aria-hidden; the
+         container is an aria-busy live region for screen-reader users. -->
+    <div
+      class="project-groups__loading"
+      data-testid="project-groups-loading"
+      aria-live="polite"
+      aria-busy="true">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="project-groups__skeleton-card" aria-hidden="true"></div>
+      }
+    </div>
+  } @else {
+    @if (hasGroups()) {
+      <div class="project-groups__search">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input
+          type="search"
+          class="project-groups__search-input"
+          data-testid="project-groups-search"
+          [value]="searchQuery()"
+          (input)="onSearchInput($any($event.target).value)"
+          [attr.placeholder]="'rplus.projectGroups.search_placeholder' | translate"
+          [attr.aria-label]="'rplus.projectGroups.search_label' | translate" />
+      </div>
+    }
+    <ul
+      class="project-groups__grid"
+      role="list"
+      [attr.aria-label]="'rplus.projectGroups.grid_aria' | translate">
+      @for (g of visibleGroups(); track g.id) {
+        <li class="project-groups__card-wrap">
+          <article
+            class="project-groups__card glass-panel"
+            tabindex="0"
+            [attr.data-testid]="'project-group-card-' + g.id"
+            [attr.aria-label]="
+              g.name + ', ' + ('rplus.projectGroups.state.' + g.state | translate)
+            ">
+            <header class="project-groups__card-head">
+              <h2
+                class="project-groups__group-name"
+                [attr.data-testid]="'project-group-name-' + g.id">
+                {{ g.name }}
+              </h2>
+              <span
+                class="badge"
+                [class]="'badge project-groups__badge ' + badgeClass(g)"
+                [attr.data-testid]="'project-group-state-' + g.id"
+                [attr.aria-label]="
+                  ('rplus.projectGroups.state.' + g.state | translate) +
+                  ' state'
+                ">
+                <i
+                  class="fa-solid"
+                  [class]="'fa-solid ' + stateIcon(g)"
+                  aria-hidden="true"></i>
+                {{ 'rplus.projectGroups.state.' + g.state | translate }}
+              </span>
+            </header>
+
+            <dl class="project-groups__meta">
+              <div class="project-groups__meta-item">
+                <dt>{{ 'rplus.projectGroups.meta.members' | translate }}</dt>
+                <dd
+                  [attr.data-testid]="'project-group-members-' + g.id">
+                  {{ g.members.length }}
+                </dd>
+              </div>
+              @if (g.scorePct !== undefined) {
+                <div class="project-groups__meta-item">
+                  <dt>{{ 'rplus.projectGroups.meta.score' | translate }}</dt>
+                  <dd
+                    [attr.data-testid]="'project-group-score-' + g.id">
+                    {{ g.scorePct }}%
+                  </dd>
+                </div>
+              }
+              @if (g.submittedAt) {
+                <div class="project-groups__meta-item">
+                  <dt>
+                    {{ 'rplus.projectGroups.meta.submitted_at' | translate }}
+                  </dt>
+                  <dd
+                    [attr.data-testid]="'project-group-submitted-' + g.id">
+                    {{ g.submittedAt | date: 'shortDate' }}
+                  </dd>
+                </div>
+              }
+            </dl>
+
+            <ul class="project-groups__members" role="list">
+              @for (m of g.members; track m.gcid) {
+                <li
+                  class="project-groups__member"
+                  [class.project-groups__member--leader]="m.role === 'leader'"
+                  [attr.data-testid]="
+                    'project-group-member-' + g.id + '-' + m.gcid
+                  ">
+                  <i
+                    class="fa-solid"
+                    [class.fa-crown]="m.role === 'leader'"
+                    [class.fa-user]="m.role !== 'leader'"
+                    aria-hidden="true"></i>
+                  <span class="project-groups__member-id">
+                    {{ shortGcid(m.gcid) }}
+                  </span>
+                  <span class="project-groups__member-role">
+                    {{ 'rplus.projectGroups.role.' + m.role | translate }}
+                  </span>
+                </li>
+              }
+            </ul>
+
+            @if (g.feedback) {
+              <p
+                class="project-groups__feedback"
+                [attr.data-testid]="'project-group-feedback-' + g.id">
+                <i class="fa-solid fa-quote-left" aria-hidden="true"></i>
+                {{ g.feedback }}
+              </p>
+            }
+
+            <footer class="project-groups__card-foot">
+              @if (canSubmitGroup(g)) {
+                <button
+                  type="button"
+                  class="btn btn-primary project-groups__action"
+                  [disabled]="isPending(g.id)"
+                  (click)="submit(g)"
+                  [attr.data-testid]="'project-group-submit-' + g.id"
+                  [attr.aria-label]="
+                    'rplus.projectGroups.submit_aria' | translate
+                  ">
+                  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                  {{ 'rplus.projectGroups.submit_cta' | translate }}
+                </button>
+              }
+              @if (canGradeGroup(g)) {
+                <button
+                  type="button"
+                  class="btn btn-primary project-groups__action"
+                  [disabled]="isPending(g.id)"
+                  (click)="grade(g)"
+                  [attr.data-testid]="'project-group-grade-' + g.id"
+                  [attr.aria-label]="
+                    'rplus.projectGroups.grade_aria' | translate
+                  ">
+                  <i class="fa-solid fa-square-check" aria-hidden="true"></i>
+                  {{ 'rplus.projectGroups.grade_cta' | translate }}
+                </button>
+              }
+              @if (!canSubmitGroup(g) && !canGradeGroup(g)) {
+                <span
+                  class="project-groups__action-placeholder"
+                  [attr.data-testid]="'project-group-no-action-' + g.id">
+                  {{ 'rplus.projectGroups.no_action' | translate }}
+                </span>
+              }
+            </footer>
+          </article>
+        </li>
+      } @empty {
+        @if (noMatch()) {
+          <li
+            class="project-groups__empty"
+            data-testid="project-groups-no-match">
+            {{ 'rplus.projectGroups.no_match' | translate }}
+          </li>
+        } @else {
+          <li
+            class="project-groups__empty"
+            data-testid="project-groups-empty">
+            {{ 'rplus.projectGroups.empty' | translate }}
+          </li>
+        }
+      }
+    </ul>
+    @if (hasMore()) {
+      <button
+        type="button"
+        class="project-groups__load-more"
+        data-testid="project-groups-load-more"
+        (click)="loadMore()">
+        {{ 'rplus.projectGroups.load_more' | translate }}
+      </button>
+    }
+  }
+</section>

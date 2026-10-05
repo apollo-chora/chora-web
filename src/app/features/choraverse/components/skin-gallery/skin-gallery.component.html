@@ -1,0 +1,249 @@
+<section
+  class="skin-gallery"
+  role="main"
+  [attr.aria-label]="'choraverse.skin_gallery.title' | translate"
+  data-testid="skin-gallery">
+
+  <!-- Header with balance -->
+  <header class="skin-gallery__header">
+    <div class="skin-gallery__header-row">
+      <h1 class="skin-gallery__title" data-testid="skin-gallery-title">
+        {{ 'choraverse.skin_gallery.title' | translate }}
+      </h1>
+      <div class="skin-gallery__balance" data-testid="star-credit-balance">
+        <span class="skin-gallery__balance-icon">⭐</span>
+        <span class="skin-gallery__balance-value">{{ coinBalance() }}</span>
+      </div>
+    </div>
+    <p class="skin-gallery__count" role="status">
+      {{ filteredCount() }} / {{ totalCount() }}
+    </p>
+  </header>
+
+  <!-- Filters bar -->
+  <div class="skin-gallery__filters" data-testid="skin-gallery-filters" role="search">
+    <!-- Search -->
+    <div class="skin-gallery__filter-group skin-gallery__filter-group--search">
+      <label for="gallery-search" class="skin-gallery__filter-label">
+        {{ 'choraverse.skin_gallery.search' | translate }}
+      </label>
+      <input
+        type="search"
+        id="gallery-search"
+        class="skin-gallery__search-input"
+        data-testid="gallery-search"
+        [placeholder]="'choraverse.skin_gallery.search_placeholder' | translate"
+        (input)="onSearch($event)" />
+    </div>
+
+    <!-- Rarity -->
+    <div class="skin-gallery__filter-group">
+      <label for="gallery-rarity-filter" class="skin-gallery__filter-label">
+        {{ 'choraverse.skin_gallery.filter_rarity' | translate }}
+      </label>
+      <select
+        id="gallery-rarity-filter"
+        class="skin-gallery__select"
+        data-testid="gallery-rarity-filter"
+        (change)="onRarityFilter($any($event.target).value)">
+        <option value="">{{ 'choraverse.skin_gallery.all_rarities' | translate }}</option>
+        @for (rarity of allRarities; track rarity) {
+          <option [value]="rarity">{{ rarityLabels[rarity] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Theme -->
+    <div class="skin-gallery__filter-group">
+      <label for="gallery-theme-filter" class="skin-gallery__filter-label">
+        {{ 'choraverse.skin_gallery.filter_theme' | translate }}
+      </label>
+      <select
+        id="gallery-theme-filter"
+        class="skin-gallery__select"
+        data-testid="gallery-theme-filter"
+        (change)="onThemeFilter($any($event.target).value)">
+        <option value="">{{ 'choraverse.skin_gallery.all_themes' | translate }}</option>
+        @for (theme of allThemes; track theme) {
+          <option [value]="theme">{{ themeLabels[theme] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Owned / Locked -->
+    <div class="skin-gallery__filter-group">
+      <label for="gallery-ownership-filter" class="skin-gallery__filter-label">
+        {{ 'choraverse.skin_gallery.filter_status' | translate }}
+      </label>
+      <select
+        id="gallery-ownership-filter"
+        class="skin-gallery__select"
+        data-testid="gallery-ownership-filter"
+        (change)="onOwnershipFilter($any($event.target).value)">
+        <option value="all">{{ 'choraverse.skin_gallery.status_all' | translate }}</option>
+        <option value="owned">{{ 'choraverse.skin_gallery.status_owned' | translate }}</option>
+        <option value="locked">{{ 'choraverse.skin_gallery.status_locked' | translate }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="skin-gallery__loading" data-testid="skin-gallery-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="skin-gallery__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (isEmpty()) {
+    <div class="skin-gallery__empty" data-testid="skin-gallery-empty" role="status">
+      <p class="skin-gallery__empty-text">
+        {{ 'choraverse.skin_gallery.no_skins' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Theme-grouped grid -->
+  @if (!isLoading() && !isEmpty()) {
+    @for (group of skinsByTheme(); track group.theme) {
+      <div class="skin-gallery__theme-section" [attr.data-testid]="'theme-section-' + group.theme">
+        <h2 class="skin-gallery__theme-title">
+          {{ themeLabels[group.theme] | translate }}
+        </h2>
+        <div class="skin-gallery__grid" role="list">
+          @for (skin of group.skins; track skin.id) {
+            <div
+              class="skin-gallery__card"
+              role="button"
+              tabindex="0"
+              [class.skin-gallery__card--selected]="isSelected(skin.id)"
+              [style.border-color]="rarityBorderColor(skin.rarity)"
+              [style.box-shadow]="isSelected(skin.id) ? rarityGlowStyle(skin.rarity) : 'none'"
+              [attr.data-testid]="'gallery-skin-' + skin.id"
+              [attr.aria-label]="skin.name"
+              (click)="selectSkin(skin)"
+              (keydown.enter)="selectSkin(skin)"
+              (keydown.space)="selectSkin(skin); $event.preventDefault()">
+
+              <!-- Preview with 360 rotate on hover -->
+              <div class="skin-gallery__card-preview">
+                <div
+                  class="skin-gallery__card-image"
+                  [class.skin-gallery__card-image--rotate]="isSelected(skin.id)"
+                  [attr.aria-label]="skin.name"
+                  role="img">
+                  {{ skin.name.charAt(0) | uppercase }}
+                </div>
+                <!-- Rarity badge -->
+                <span
+                  class="skin-gallery__card-rarity-badge"
+                  [style.background]="rarityBorderColor(skin.rarity)">
+                  {{ rarityLabels[skin.rarity] | translate }}
+                </span>
+              </div>
+
+              <!-- Info -->
+              <div class="skin-gallery__card-body">
+                <h3 class="skin-gallery__card-name">{{ skin.name }}</h3>
+                <div class="skin-gallery__card-meta">
+                  <span class="skin-gallery__card-theme-tag">
+                    {{ themeLabels[skin.theme] | translate }}
+                  </span>
+                  @if (skin.starCreditCost > 0) {
+                    <span class="skin-gallery__card-cost">
+                      ⭐ {{ skin.starCreditCost }}
+                    </span>
+                  }
+                </div>
+
+                <!-- Earn criteria tooltip (for locked skins) -->
+                @if (!skin.isOwned) {
+                  <p class="skin-gallery__card-earn" [attr.title]="earnViaLabel(skin.earned_via) | translate">
+                    {{ earnViaLabel(skin.earned_via) | translate }}
+                  </p>
+                }
+              </div>
+
+              <!-- Actions -->
+              <div class="skin-gallery__card-actions">
+                <!-- Wishlist toggle -->
+                <button
+                  type="button"
+                  class="skin-gallery__wishlist-btn"
+                  [class.skin-gallery__wishlist-btn--active]="isWishlisted(skin.id)"
+                  [attr.data-testid]="'wishlist-' + skin.id"
+                  [attr.aria-label]="'choraverse.skin_gallery.save_for_later' | translate"
+                  (click)="toggleWishlist(skin.id); $event.stopPropagation()">
+                  @if (isWishlisted(skin.id)) { ★ } @else { ☆ }
+                </button>
+
+                @if (skin.is_equipped) {
+                  <button
+                    type="button"
+                    class="skin-gallery__btn skin-gallery__btn--equipped"
+                    disabled
+                    [attr.data-testid]="'gallery-btn-equipped-' + skin.id"
+                    [attr.aria-label]="'choraverse.skin_gallery.equipped' | translate">
+                    {{ 'choraverse.skin_gallery.equipped' | translate }}
+                  </button>
+                } @else if (skin.isOwned) {
+                  <button
+                    type="button"
+                    class="skin-gallery__btn skin-gallery__btn--equip"
+                    [attr.data-testid]="'gallery-btn-equip-' + skin.id"
+                    [attr.aria-label]="'choraverse.skin_gallery.equip' | translate"
+                    (click)="openEquipDialog(skin); $event.stopPropagation()">
+                    {{ 'choraverse.skin_gallery.equip' | translate }}
+                  </button>
+                } @else {
+                  <span
+                    class="skin-gallery__card-locked"
+                    [attr.aria-label]="'choraverse.skin_gallery.locked' | translate">
+                    {{ 'choraverse.skin_gallery.locked' | translate }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</section>
+
+<!-- Equip slot dialog -->
+@if (showEquipDialog() && selectedSkin()) {
+  <div
+    class="skin-gallery__overlay"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'choraverse.skin_gallery.equip_to_slot' | translate"
+    data-testid="equip-dialog">
+    <div class="skin-gallery__equip-dialog">
+      <h2 class="skin-gallery__equip-dialog-title">
+        {{ 'choraverse.skin_gallery.equip_to_slot' | translate }}
+      </h2>
+      <p class="skin-gallery__equip-dialog-skin">{{ selectedSkin()?.name }}</p>
+      <div class="skin-gallery__equip-slots">
+        <button type="button" class="skin-gallery__slot-btn" data-testid="slot-profile_photo" (click)="confirmEquip('profile_photo')">
+          {{ 'choraverse.skin_gallery.slot_profile_photo' | translate }}
+        </button>
+        <button type="button" class="skin-gallery__slot-btn" data-testid="slot-name_badge" (click)="confirmEquip('name_badge')">
+          {{ 'choraverse.skin_gallery.slot_name_badge' | translate }}
+        </button>
+        <button type="button" class="skin-gallery__slot-btn" data-testid="slot-class_profile" (click)="confirmEquip('class_profile')">
+          {{ 'choraverse.skin_gallery.slot_class_profile' | translate }}
+        </button>
+      </div>
+      <button
+        type="button"
+        class="skin-gallery__equip-cancel"
+        data-testid="equip-cancel"
+        (click)="cancelEquip()">
+        {{ 'choraverse.skin_gallery.cancel' | translate }}
+      </button>
+    </div>
+  </div>
+}

@@ -1,0 +1,45 @@
+<section
+  class="surface-aplus studio-home"
+  data-testid="aplus-studio-home"
+  role="region"
+  aria-labelledby="studio-home-heading">
+  <header class="studio-home__header">
+    <div class="studio-home__heading-group">
+      <h1 id="studio-home-heading" class="studio-home__title">
+        {{ 'aplus.studio.title' | translate }}
+      </h1>
+      <p class="studio-home__subtitle" data-testid="studio-home-subtitle">
+        {{ 'aplus.studio.subtitle' | translate }}
+      </p>
+    </div>
+    <a
+      class="btn btn-primary studio-home__new"
+      data-testid="studio-home-new-atom"
+      routerLink="/a/studio/atoms/new">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      {{ 'aplus.studio.new_atom_cta' | translate }}
+    </a>
+  </header>
+
+  <chora-studio-sub-nav />
+
+  <ul class="studio-home__cards" role="list">
+    @for (section of sections; track section.testid) {
+      <li class="studio-home__card-item">
+        <a
+          class="studio-home__card glass-panel"
+          [attr.data-testid]="section.testid"
+          [routerLink]="section.route">
+          <span class="studio-home__card-icon" aria-hidden="true">
+            <i class="fa-solid" [class]="section.icon"></i>
+          </span>
+          <span class="studio-home__card-body">
+            <span class="studio-home__card-title">{{ section.titleKey | translate }}</span>
+            <span class="studio-home__card-desc">{{ section.bodyKey | translate }}</span>
+          </span>
+          <i class="fa-solid fa-chevron-right studio-home__card-chevron" aria-hidden="true"></i>
+        </a>
+      </li>
+    }
+  </ul>
+</section>

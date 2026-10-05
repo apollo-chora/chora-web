@@ -1,0 +1,240 @@
+<section
+  class="surface-rplus certifications"
+  data-testid="rplus-certifications">
+  <header class="certifications__header glass-panel">
+    <div class="certifications__breadcrumb">
+      <span>{{ 'rplus.certifications.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.certifications.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <div class="certifications__title-row">
+      <h1 class="certifications__title">
+        {{ 'rplus.certifications.title' | translate }}
+      </h1>
+      <span
+        class="certifications__tenant-pill"
+        data-testid="certifications-tenant">
+        <i class="fa-solid fa-building" aria-hidden="true"></i>
+        {{ 'rplus.certifications.tenant_label' | translate }}:
+        <strong>{{ tenantName() }}</strong>
+      </span>
+    </div>
+    <div class="certifications__meta">
+      <span
+        class="certifications__total"
+        data-testid="certifications-total">
+        <strong>{{ totalCertifications() }}</strong>
+        {{ 'rplus.certifications.total_label' | translate }}
+      </span>
+      <button
+        type="button"
+        class="btn btn-primary certifications__issue-cta"
+        data-testid="certifications-issue-cta"
+        (click)="onIssueClicked()"
+        [attr.aria-label]="'rplus.certifications.issue_aria' | translate">
+        <i class="fa-solid fa-award" aria-hidden="true"></i>
+        {{ 'rplus.certifications.issue_cta' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (issueFormOpen()) {
+    <form
+      class="certifications__issue-form glass-panel"
+      data-testid="certifications-issue-form"
+      (ngSubmit)="onIssueSubmit()">
+      <h2 class="certifications__form-title">
+        {{ 'rplus.certifications.form.title' | translate }}
+      </h2>
+      <div class="certifications__form-grid">
+        <label class="certifications__form-field">
+          <span>{{ 'rplus.certifications.col.learner' | translate }}</span>
+          <input
+            type="text"
+            name="learnerGcid"
+            class="certifications__form-input"
+            data-testid="certifications-form-learner"
+            [ngModel]="formLearnerGcid()"
+            (ngModelChange)="formLearnerGcid.set($event)"
+            [attr.placeholder]="'rplus.certifications.form.learner_placeholder' | translate"
+            required />
+        </label>
+        <label class="certifications__form-field">
+          <span>{{ 'rplus.certifications.col.course' | translate }}</span>
+          <input
+            type="text"
+            name="courseId"
+            class="certifications__form-input"
+            data-testid="certifications-form-course"
+            [ngModel]="formCourseId()"
+            (ngModelChange)="formCourseId.set($event)"
+            [attr.placeholder]="'rplus.certifications.form.course_placeholder' | translate"
+            required />
+        </label>
+        <label class="certifications__form-field certifications__form-field--wide">
+          <span>{{ 'rplus.certifications.col.accomplishments' | translate }}</span>
+          <textarea
+            name="accomplishments"
+            class="certifications__form-input"
+            data-testid="certifications-form-accomplishments"
+            rows="3"
+            [ngModel]="formAccomplishments()"
+            (ngModelChange)="formAccomplishments.set($event)"
+            [attr.placeholder]="'rplus.certifications.form.accomplishments_placeholder' | translate"></textarea>
+        </label>
+      </div>
+
+      @if (issueError(); as err) {
+        <p
+          class="certifications__form-error"
+          role="alert"
+          data-testid="certifications-issue-error">
+          {{ err }}
+        </p>
+      }
+
+      <div class="certifications__form-actions">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="certifications-issue-cancel"
+          (click)="onCancelIssue()">
+          {{ 'rplus.certifications.form.cancel' | translate }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-testid="certifications-issue-submit"
+          [disabled]="!canSubmit()">
+          {{
+            submitting()
+              ? ('rplus.certifications.form.submitting' | translate)
+              : ('rplus.certifications.form.submit' | translate)
+          }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (revokeError(); as err) {
+    <p
+      class="certifications__form-error"
+      role="alert"
+      data-testid="certifications-revoke-error">
+      {{ err }}
+    </p>
+  }
+
+  @if (loadState() === 'loading') {
+    <!-- J2 (CHO-1830) — skeleton placeholders while the certifications GET is
+         in flight, so a genuinely-empty list and a still-loading list are
+         visually distinct. -->
+    <div
+      class="certifications__loading"
+      data-testid="certifications-loading"
+      aria-live="polite"
+      aria-busy="true">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="certifications__skeleton-card" aria-hidden="true"></div>
+      }
+    </div>
+  } @else if (loadState() === 'error') {
+    <!-- J1 (CHO-1830) — fail-loud error banner (never a silent empty list on
+         failure). -->
+    <div
+      class="certifications__error"
+      role="alert"
+      data-testid="certifications-error">
+      <i
+        class="fa-solid fa-triangle-exclamation certifications__error-icon"
+        aria-hidden="true"></i>
+      <p class="certifications__error-text">
+        {{ 'rplus.common.load_error' | translate }}
+        @if (loadError(); as err) {
+          <span class="certifications__error-detail">{{ err }}</span>
+        }
+      </p>
+      <button
+        type="button"
+        class="btn btn-ghost"
+        data-testid="certifications-retry"
+        (click)="onRetry()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        {{ 'rplus.common.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    <div class="certifications__list">
+      @for (cert of items(); track cert.id) {
+        <article
+          class="certifications__row glass-panel"
+          [attr.data-testid]="'certifications-row-' + cert.id">
+          <div class="certifications__row-head">
+            <span
+              class="badge"
+              [class]="'badge ' + badge(cert.status)"
+              [attr.data-testid]="'certifications-status-' + cert.id">
+              {{ cert.status }}
+            </span>
+            <code class="certifications__cert-id">{{ cert.id }}</code>
+          </div>
+
+          <dl class="certifications__details">
+            <div class="certifications__detail">
+              <dt>{{ 'rplus.certifications.col.course' | translate }}</dt>
+              <dd>{{ cert.courseId }}</dd>
+            </div>
+            <div class="certifications__detail">
+              <dt>{{ 'rplus.certifications.col.learner' | translate }}</dt>
+              <dd>{{ cert.learnerGcid }}</dd>
+            </div>
+            <div class="certifications__detail">
+              <dt>{{ 'rplus.certifications.col.issued_at' | translate }}</dt>
+              <dd>{{ cert.issuedAt }}</dd>
+            </div>
+            <div class="certifications__detail certifications__detail--wide">
+              <dt>{{ 'rplus.certifications.col.accomplishments' | translate }}</dt>
+              <dd>
+                @if (cert.accomplishments.length > 0) {
+                  <ul class="certifications__accomplishments">
+                    @for (a of cert.accomplishments; track a) {
+                      <li>{{ a }}</li>
+                    }
+                  </ul>
+                } @else {
+                  <span class="certifications__muted">–</span>
+                }
+              </dd>
+            </div>
+            <div class="certifications__detail certifications__detail--wide">
+              <dt>{{ 'rplus.certifications.col.hash' | translate }}</dt>
+              <dd><code class="certifications__hash">{{ cert.hash }}</code></dd>
+            </div>
+          </dl>
+
+          <footer class="certifications__row-foot">
+            <div class="certifications__actions">
+              <button
+                type="button"
+                class="btn btn-ghost certifications__action"
+                [attr.data-testid]="'certifications-revoke-' + cert.id"
+                (click)="onRevokeClicked(cert.id)"
+                [attr.aria-label]="'rplus.certifications.revoke_aria' | translate">
+                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                {{ 'rplus.certifications.revoke_cta' | translate }}
+              </button>
+            </div>
+          </footer>
+        </article>
+      } @empty {
+        <p
+          class="certifications__empty"
+          data-testid="certifications-empty">
+          {{ 'rplus.certifications.empty' | translate }}
+        </p>
+      }
+    </div>
+  }
+</section>

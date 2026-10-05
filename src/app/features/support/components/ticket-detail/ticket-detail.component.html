@@ -1,0 +1,219 @@
+<section
+  class="ticket-detail"
+  role="main"
+  [attr.aria-label]="'support.ticket_detail_title' | translate"
+  data-testid="ticket-detail">
+
+  <!-- Back Button -->
+  <nav class="ticket-detail__nav">
+    <button
+      type="button"
+      class="ticket-detail__btn ticket-detail__btn--text"
+      data-testid="btn-back-to-list"
+      [attr.aria-label]="'support.back_to_tickets' | translate"
+      (click)="navigateBack()">
+      &larr; {{ 'support.back_to_tickets' | translate }}
+    </button>
+  </nav>
+
+  <!-- Loading -->
+  @if (ticketDetailState().status === 'loading') {
+    <div class="ticket-detail__loading" data-testid="ticket-detail-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="ticket-detail__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (ticketDetailState().status === 'error') {
+    <div class="ticket-detail__error" data-testid="ticket-detail-error" role="alert">
+      <p class="ticket-detail__error-text">
+        {{ 'support.ticket_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Ticket Content -->
+  @if (ticketDetailState().status === 'success' && ticket()) {
+    <article class="ticket-detail__card" data-testid="ticket-card">
+      <!-- Header -->
+      <header class="ticket-detail__header">
+        <h1 class="ticket-detail__subject" data-testid="ticket-subject">
+          {{ ticket()!.subject }}
+        </h1>
+        <div class="ticket-detail__meta">
+          <span
+            class="ticket-detail__status"
+            [class]="statusClass(ticket()!.status)"
+            data-testid="ticket-status">
+            {{ statusLabels[ticket()!.status] | translate }}
+          </span>
+          <span
+            class="ticket-detail__priority"
+            [class]="priorityClass(ticket()!.priority)"
+            data-testid="ticket-priority">
+            {{ priorityLabels[ticket()!.priority] | translate }}
+          </span>
+          <span class="ticket-detail__category" data-testid="ticket-category">
+            {{ ticket()!.category }}
+          </span>
+        </div>
+      </header>
+
+      <!-- Description -->
+      @if (ticket()!.description) {
+        <div class="ticket-detail__description" data-testid="ticket-description">
+          <p class="ticket-detail__description-text">
+            {{ ticket()!.description }}
+          </p>
+          <span class="ticket-detail__date">
+            {{ formatDate(ticket()!.created_at) }}
+          </span>
+        </div>
+      }
+
+      <!-- Actions -->
+      <div class="ticket-detail__actions" data-testid="ticket-actions">
+        @if (canResolve()) {
+          <button
+            type="button"
+            class="ticket-detail__btn ticket-detail__btn--success"
+            data-testid="btn-resolve-ticket"
+            (click)="resolveTicket()">
+            {{ 'support.resolve_ticket' | translate }}
+          </button>
+        }
+        @if (canClose()) {
+          <button
+            type="button"
+            class="ticket-detail__btn ticket-detail__btn--secondary"
+            data-testid="btn-close-ticket"
+            (click)="closeTicket()">
+            {{ 'support.close_ticket' | translate }}
+          </button>
+        }
+        @if (canReopen()) {
+          <button
+            type="button"
+            class="ticket-detail__btn ticket-detail__btn--secondary"
+            data-testid="btn-reopen-ticket"
+            (click)="reopenTicket()">
+            {{ 'support.reopen_ticket' | translate }}
+          </button>
+        }
+        @if (showSatisfactionLink()) {
+          <button
+            type="button"
+            class="ticket-detail__btn ticket-detail__btn--primary"
+            data-testid="btn-satisfaction-survey"
+            (click)="navigateToSurvey()">
+            {{ 'support.give_feedback' | translate }}
+          </button>
+        }
+      </div>
+
+      <!-- Response Thread -->
+      <div class="ticket-detail__thread" data-testid="response-thread" role="log" [attr.aria-label]="'support.response_thread' | translate">
+        <h2 class="ticket-detail__thread-heading">
+          {{ 'support.responses' | translate }}
+        </h2>
+
+        @if (responses().length === 0) {
+          <p class="ticket-detail__thread-empty" data-testid="no-responses">
+            {{ 'support.no_responses_yet' | translate }}
+          </p>
+        }
+
+        @for (response of responses(); track response.id) {
+          <div
+            class="ticket-detail__response"
+            [class.ticket-detail__response--internal]="response.is_internal"
+            [attr.data-testid]="'response-' + response.id">
+            <div class="ticket-detail__response-header">
+              <span class="ticket-detail__response-author" data-testid="response-author">
+                {{ response.author_gcid }}
+              </span>
+              @if (response.is_internal) {
+                <span class="ticket-detail__response-badge" data-testid="internal-badge">
+                  {{ 'support.internal_note' | translate }}
+                </span>
+              }
+              <span class="ticket-detail__response-date">
+                {{ formatDate(response.created_at) }}
+              </span>
+            </div>
+            <div class="ticket-detail__response-body">
+              {{ response.body }}
+            </div>
+            @if (response.attachments && response.attachments.length > 0) {
+              <div class="ticket-detail__attachments">
+                @for (attachment of response.attachments; track attachment.id) {
+                  <a
+                    class="ticket-detail__attachment"
+                    [href]="attachment.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    [attr.data-testid]="'attachment-' + attachment.id">
+                    {{ attachment.filename }}
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Reply Form -->
+      @if (canReply()) {
+        <form class="ticket-detail__reply-form" data-testid="reply-form" (submit)="$event.preventDefault(); submitReply()">
+          <label class="ticket-detail__reply-label" for="reply-body">
+            {{ 'support.reply_label' | translate }}
+          </label>
+          <textarea
+            id="reply-body"
+            class="ticket-detail__reply-input"
+            data-testid="reply-input"
+            [attr.placeholder]="'support.reply_placeholder' | translate"
+            [value]="replyBody()"
+            (input)="onReplyInput($event)"
+            rows="4"
+            [attr.aria-label]="'support.reply_label' | translate"
+            required></textarea>
+          <div class="ticket-detail__reply-actions">
+            <button
+              type="submit"
+              class="ticket-detail__btn ticket-detail__btn--primary"
+              data-testid="btn-submit-reply"
+              [disabled]="isSubmittingReply() || replyBody().trim().length === 0">
+              {{ 'support.send_reply' | translate }}
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- Satisfaction Survey Already Submitted -->
+      @if (ticket()!.satisfaction) {
+        <div class="ticket-detail__satisfaction-summary" data-testid="satisfaction-summary">
+          <h3 class="ticket-detail__satisfaction-heading">
+            {{ 'support.your_feedback' | translate }}
+          </h3>
+          <div class="ticket-detail__satisfaction-rating" data-testid="satisfaction-rating">
+            @for (star of [1, 2, 3, 4, 5]; track star) {
+              <span
+                class="ticket-detail__star"
+                [class.ticket-detail__star--filled]="star <= ticket()!.satisfaction!.rating">
+                &#9733;
+              </span>
+            }
+          </div>
+          @if (ticket()!.satisfaction!.comment) {
+            <p class="ticket-detail__satisfaction-comment" data-testid="satisfaction-comment">
+              {{ ticket()!.satisfaction!.comment }}
+            </p>
+          }
+        </div>
+      }
+    </article>
+  }
+</section>

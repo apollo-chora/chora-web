@@ -1,0 +1,397 @@
+<section
+  class="portable-data"
+  role="main"
+  [attr.aria-label]="'identity.portability.data_title' | translate"
+  data-testid="portable-data-dashboard">
+
+  <!-- Header -->
+  <header class="portable-data__header">
+    <h1 class="portable-data__title" data-testid="data-title">
+      {{ 'identity.portability.data_title' | translate }}
+    </h1>
+    <p class="portable-data__subtitle">
+      {{ 'identity.portability.data_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="portable-data__loading" aria-live="polite" data-testid="data-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="portable-data__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (dataState().status === 'error') {
+    <div class="portable-data__error" role="alert" aria-live="assertive" data-testid="data-error">
+      <p>{{ 'identity.portability.data_load_error' | translate }}</p>
+      <button
+        type="button"
+        class="portable-data__btn portable-data__btn--primary"
+        data-testid="btn-retry"
+        (click)="loadData()">
+        {{ 'identity.portability.retry' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (dataState().status === 'success') {
+
+    <!-- Summary Bar -->
+    <div class="portable-data__summary-bar" data-testid="summary-bar" role="status">
+      <div class="portable-data__summary-item portable-data__summary-item--gcid">
+        <span class="portable-data__summary-icon" aria-hidden="true">public</span>
+        <span class="portable-data__summary-count" data-testid="gcid-count">{{ gcidScopedCount() }}</span>
+        <span class="portable-data__summary-label">
+          {{ 'identity.portability.items_follow_everywhere' | translate }}
+        </span>
+      </div>
+      <div class="portable-data__summary-divider" aria-hidden="true"></div>
+      <div class="portable-data__summary-item portable-data__summary-item--tenant">
+        <span class="portable-data__summary-icon" aria-hidden="true">apartment</span>
+        <span class="portable-data__summary-count" data-testid="tenant-count">{{ tenantScopedCount() }}</span>
+        <span class="portable-data__summary-label">
+          {{ 'identity.portability.items_tenant_specific' | translate }}
+        </span>
+      </div>
+    </div>
+
+    <div class="portable-data__layout">
+
+      <!-- Left Panel: GCID-Scoped Data -->
+      <div class="portable-data__gcid-panel" data-testid="gcid-panel">
+        <h2 class="portable-data__panel-title">
+          {{ 'identity.portability.gcid_scoped_title' | translate }}
+        </h2>
+        <p class="portable-data__panel-desc">
+          {{ 'identity.portability.gcid_scoped_desc' | translate }}
+        </p>
+
+        @if (gcidScoped(); as gcid) {
+          <div class="portable-data__stat-list" role="list">
+            <div class="portable-data__stat portable-data__stat--portable" role="listitem" data-testid="stat-knowledge">
+              <div class="portable-data__stat-left">
+                <span class="portable-data__stat-icon" aria-hidden="true">public</span>
+                <span class="portable-data__stat-label">
+                  {{ 'identity.portability.knowledge_graph_nodes' | translate }}
+                </span>
+              </div>
+              <div class="portable-data__stat-right">
+                <span class="portable-data__portable-badge" data-testid="badge-portable">
+                  {{ 'identity.portability.follows_everywhere' | translate }}
+                </span>
+                <span class="portable-data__stat-value">{{ gcid.knowledge_graph_nodes }}</span>
+              </div>
+            </div>
+            <div class="portable-data__stat portable-data__stat--portable" role="listitem" data-testid="stat-familiar">
+              <div class="portable-data__stat-left">
+                <span class="portable-data__stat-icon" aria-hidden="true">public</span>
+                <span class="portable-data__stat-label">
+                  {{ 'identity.portability.familiar_observations' | translate }}
+                </span>
+              </div>
+              <div class="portable-data__stat-right">
+                <span class="portable-data__portable-badge">
+                  {{ 'identity.portability.follows_everywhere' | translate }}
+                </span>
+                <span class="portable-data__stat-value">{{ gcid.familiar_observations }}</span>
+              </div>
+            </div>
+            <div class="portable-data__stat portable-data__stat--portable" role="listitem" data-testid="stat-skins">
+              <div class="portable-data__stat-left">
+                <span class="portable-data__stat-icon" aria-hidden="true">public</span>
+                <span class="portable-data__stat-label">
+                  {{ 'identity.portability.digital_skins' | translate }}
+                </span>
+              </div>
+              <div class="portable-data__stat-right">
+                <span class="portable-data__portable-badge">
+                  {{ 'identity.portability.follows_everywhere' | translate }}
+                </span>
+                <span class="portable-data__stat-value">{{ gcid.digital_skins }}</span>
+              </div>
+            </div>
+            <div class="portable-data__stat portable-data__stat--portable" role="listitem" data-testid="stat-persona">
+              <div class="portable-data__stat-left">
+                <span class="portable-data__stat-icon" aria-hidden="true">public</span>
+                <span class="portable-data__stat-label">
+                  {{ 'identity.portability.rag_persona_entries' | translate }}
+                </span>
+              </div>
+              <div class="portable-data__stat-right">
+                <span class="portable-data__portable-badge">
+                  {{ 'identity.portability.follows_everywhere' | translate }}
+                </span>
+                <span class="portable-data__stat-value">{{ gcid.rag_persona_entries }}</span>
+              </div>
+            </div>
+            <div class="portable-data__stat portable-data__stat--portable" role="listitem" data-testid="stat-consent">
+              <div class="portable-data__stat-left">
+                <span class="portable-data__stat-icon" aria-hidden="true">public</span>
+                <span class="portable-data__stat-label">
+                  {{ 'identity.portability.consent_preferences' | translate }}
+                </span>
+              </div>
+              <div class="portable-data__stat-right">
+                <span class="portable-data__portable-badge">
+                  {{ 'identity.portability.follows_everywhere' | translate }}
+                </span>
+                <span class="portable-data__stat-value">{{ gcid.consent_preferences }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Right Panel: Tenant-Scoped Data -->
+      <div class="portable-data__tenant-panel" data-testid="tenant-panel">
+        <h2 class="portable-data__panel-title">
+          {{ 'identity.portability.tenant_scoped_title' | translate }}
+        </h2>
+
+        @if (isEmpty()) {
+          <div class="portable-data__empty" role="status" data-testid="tenant-empty">
+            <p>{{ 'identity.portability.no_tenants' | translate }}</p>
+          </div>
+        }
+
+        @if (tenantScoped().length > 0) {
+          <!-- Tenant Tabs -->
+          <div class="portable-data__tabs" role="tablist" data-testid="tenant-tabs">
+            @for (tenant of tenantScoped(); track tenant.tenant_id) {
+              <button
+                type="button"
+                role="tab"
+                class="portable-data__tab"
+                [class.portable-data__tab--active]="isSelectedTenant(tenant.tenant_id)"
+                [class.portable-data__tab--inactive]="!tenant.is_active"
+                [attr.aria-selected]="isSelectedTenant(tenant.tenant_id)"
+                [attr.data-testid]="'tab-' + tenant.tenant_id"
+                (click)="selectTenant(tenant.tenant_id)">
+                {{ tenant.tenant_name }}
+                @if (!tenant.is_active) {
+                  <span class="portable-data__tab-badge">
+                    {{ 'identity.portability.historical' | translate }}
+                  </span>
+                }
+              </button>
+            }
+          </div>
+
+          <!-- Tenant Detail -->
+          @if (selectedTenant(); as tenant) {
+            <div
+              class="portable-data__tenant-detail"
+              role="tabpanel"
+              [attr.data-testid]="'detail-' + tenant.tenant_id"
+              [attr.aria-label]="tenant.tenant_name">
+
+              <div class="portable-data__tenant-meta">
+                @if (!tenant.is_active) {
+                  <span class="portable-data__tenant-badge portable-data__tenant-badge--inactive">
+                    {{ 'identity.portability.inactive_membership' | translate }}
+                  </span>
+                } @else {
+                  <span class="portable-data__tenant-badge portable-data__tenant-badge--active">
+                    {{ 'identity.portability.active_membership' | translate }}
+                  </span>
+                }
+                <span class="portable-data__tenant-roles">
+                  @for (role of tenant.roles; track role) {
+                    <span class="portable-data__role-chip">{{ role }}</span>
+                  }
+                </span>
+              </div>
+
+              <div class="portable-data__stat-list" role="list">
+                <div class="portable-data__stat portable-data__stat--tenant-scoped" role="listitem">
+                  <div class="portable-data__stat-left">
+                    <span class="portable-data__stat-icon portable-data__stat-icon--tenant" aria-hidden="true">apartment</span>
+                    <span class="portable-data__stat-label">
+                      {{ 'identity.portability.enrollment_count' | translate }}
+                    </span>
+                  </div>
+                  <div class="portable-data__stat-right">
+                    <span class="portable-data__tenant-scope-badge">{{ tenant.tenant_name }}</span>
+                    <span class="portable-data__stat-value" data-testid="tenant-enrollments">
+                      {{ tenant.enrollment_count }}
+                    </span>
+                  </div>
+                </div>
+                <div class="portable-data__stat portable-data__stat--tenant-scoped" role="listitem">
+                  <div class="portable-data__stat-left">
+                    <span class="portable-data__stat-icon portable-data__stat-icon--tenant" aria-hidden="true">apartment</span>
+                    <span class="portable-data__stat-label">
+                      {{ 'identity.portability.assessment_count' | translate }}
+                    </span>
+                  </div>
+                  <div class="portable-data__stat-right">
+                    <span class="portable-data__tenant-scope-badge">{{ tenant.tenant_name }}</span>
+                    <span class="portable-data__stat-value" data-testid="tenant-assessments">
+                      {{ tenant.assessment_count }}
+                    </span>
+                  </div>
+                </div>
+                <div class="portable-data__stat portable-data__stat--tenant-scoped" role="listitem">
+                  <div class="portable-data__stat-left">
+                    <span class="portable-data__stat-icon portable-data__stat-icon--tenant" aria-hidden="true">apartment</span>
+                    <span class="portable-data__stat-label">
+                      {{ 'identity.portability.authored_content_count' | translate }}
+                    </span>
+                  </div>
+                  <div class="portable-data__stat-right">
+                    <span class="portable-data__tenant-scope-badge">{{ tenant.tenant_name }}</span>
+                    <span class="portable-data__stat-value" data-testid="tenant-authored">
+                      {{ tenant.authored_content_count }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Per-Tenant Export Button -->
+              <div class="portable-data__export-section">
+                <button
+                  type="button"
+                  class="portable-data__btn portable-data__btn--secondary"
+                  data-testid="btn-export-tenant"
+                  [attr.aria-label]="('identity.portability.export_tenant_data' | translate) + ' ' + tenant.tenant_name"
+                  (click)="openExportDialog(tenant.tenant_id)">
+                  <span class="portable-data__btn-icon" aria-hidden="true">download</span>
+                  {{ 'identity.portability.export_tenant_data' | translate }}
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Export Dialog Overlay -->
+  @if (exportDialogOpen()) {
+    <div
+      class="portable-data__overlay"
+      data-testid="export-dialog-overlay"
+      role="presentation"
+      tabindex="-1"
+      (click)="closeExportDialog()"
+      (keydown.escape)="closeExportDialog()">
+      <div
+        class="portable-data__dialog"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="'identity.portability.export_dialog_title' | translate"
+        data-testid="export-dialog"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()">
+
+        <div class="portable-data__dialog-header">
+          <h3 class="portable-data__dialog-title">
+            {{ 'identity.portability.export_dialog_title' | translate }}
+          </h3>
+          <button
+            type="button"
+            class="portable-data__dialog-close"
+            data-testid="btn-export-close"
+            [attr.aria-label]="'identity.portability.close' | translate"
+            (click)="closeExportDialog()">
+            <span aria-hidden="true">close</span>
+          </button>
+        </div>
+
+        <div class="portable-data__dialog-body">
+          @if (!isExportComplete()) {
+            <p class="portable-data__dialog-scope">
+              {{ 'identity.portability.export_scope_confirm' | translate }}
+              <strong>{{ exportingTenantName() }}</strong>
+            </p>
+
+            <!-- Format selector -->
+            <fieldset class="portable-data__format-fieldset">
+              <legend class="portable-data__format-legend">
+                {{ 'identity.portability.export_format' | translate }}
+              </legend>
+              <div class="portable-data__format-options">
+                <label class="portable-data__format-option">
+                  <input
+                    type="radio"
+                    name="exportFormat"
+                    value="json"
+                    [checked]="exportFormat() === 'json'"
+                    data-testid="radio-json"
+                    (change)="onExportFormatChange('json')" />
+                  <span class="portable-data__format-label">JSON</span>
+                </label>
+                <label class="portable-data__format-option">
+                  <input
+                    type="radio"
+                    name="exportFormat"
+                    value="csv"
+                    [checked]="exportFormat() === 'csv'"
+                    data-testid="radio-csv"
+                    (change)="onExportFormatChange('csv')" />
+                  <span class="portable-data__format-label">CSV</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <!-- Export progress -->
+            @if (isExporting()) {
+              <div class="portable-data__export-progress" role="status" aria-live="polite" data-testid="export-progress">
+                <div class="portable-data__progress-bar">
+                  <div class="portable-data__progress-bar-fill"></div>
+                </div>
+                <p class="portable-data__progress-text">
+                  {{ 'identity.portability.export_processing' | translate }}
+                </p>
+              </div>
+            }
+
+            <div class="portable-data__dialog-actions">
+              <button
+                type="button"
+                class="portable-data__btn portable-data__btn--ghost"
+                data-testid="btn-export-cancel"
+                (click)="closeExportDialog()">
+                {{ 'identity.portability.cancel' | translate }}
+              </button>
+              <button
+                type="button"
+                class="portable-data__btn portable-data__btn--primary"
+                data-testid="btn-export-start"
+                [disabled]="isExporting()"
+                (click)="startExport()">
+                {{ 'identity.portability.export_start' | translate }}
+              </button>
+            </div>
+          }
+
+          @if (isExportComplete()) {
+            <div class="portable-data__export-complete" data-testid="export-complete">
+              <span class="portable-data__export-complete-icon" aria-hidden="true">check_circle</span>
+              <p>{{ 'identity.portability.export_ready' | translate }}</p>
+              <button
+                type="button"
+                class="portable-data__btn portable-data__btn--primary"
+                data-testid="btn-export-download"
+                (click)="downloadExport()">
+                <span class="portable-data__btn-icon" aria-hidden="true">download</span>
+                {{ 'identity.portability.export_download' | translate }}
+              </button>
+              <button
+                type="button"
+                class="portable-data__btn portable-data__btn--ghost"
+                data-testid="btn-export-done"
+                (click)="closeExportDialog()">
+                {{ 'identity.portability.done' | translate }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</section>

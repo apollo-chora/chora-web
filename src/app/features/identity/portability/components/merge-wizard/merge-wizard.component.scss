@@ -1,0 +1,343 @@
+:host {
+  display: block;
+}
+
+.merge-wizard {
+  padding: var(--chora-space-lg, 24px);
+  max-width: 720px;
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Step Indicator
+  // -------------------------------------------------------------------------
+
+  &__steps {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-end: var(--chora-space-xl, 32px);
+    flex-wrap: wrap;
+  }
+
+  &__step {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #888);
+
+    &--active {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+    }
+
+    &--completed {
+      background: #dcfce7;
+      color: #166534;
+    }
+  }
+
+  &__step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    border: 1px solid currentColor;
+  }
+
+  &__step-label {
+    font-weight: 500;
+  }
+
+  // -------------------------------------------------------------------------
+  // Content
+  // -------------------------------------------------------------------------
+
+  &__content {
+    min-height: 200px;
+  }
+
+  &__step-panel {
+    animation: fadeIn 0.2s ease-in;
+  }
+
+  &__panel-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-sm, 8px);
+  }
+
+  &__panel-description {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0 0 var(--chora-space-lg, 24px);
+    line-height: 1.5;
+
+    &--warning {
+      color: #991b1b;
+      font-weight: 500;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Form
+  // -------------------------------------------------------------------------
+
+  &__form-group {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__input {
+    width: 100%;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+    box-sizing: border-box;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Auth Section (Step 2)
+  // -------------------------------------------------------------------------
+
+  &__auth-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+    padding: var(--chora-space-xl, 32px);
+    border: 1px dashed var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-md, 8px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__auth-email {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--chora-color-text, #111);
+    margin: 0;
+  }
+
+  &__auth-confirmed {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-md, 16px);
+    background: #dcfce7;
+    color: #166534;
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__auth-icon {
+    font-size: 1.125rem;
+  }
+
+  // -------------------------------------------------------------------------
+  // Preview (Step 3)
+  // -------------------------------------------------------------------------
+
+  &__preview {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__preview-heading {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-sm, 8px);
+  }
+
+  &__preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: var(--chora-color-surface-1, #fafafa);
+    border-radius: var(--chora-radius-sm, 4px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+  }
+
+  &__preview-label {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__preview-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--chora-color-text, #111);
+  }
+
+  // -------------------------------------------------------------------------
+  // Conflicts
+  // -------------------------------------------------------------------------
+
+  &__conflicts {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__conflict-item {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: var(--chora-radius-sm, 4px);
+    margin-block-end: var(--chora-space-sm, 8px);
+  }
+
+  &__conflict-type {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #92400e;
+  }
+
+  &__conflict-desc {
+    font-size: 0.8125rem;
+    margin: var(--chora-space-xs, 4px) 0;
+    color: var(--chora-color-text, #333);
+  }
+
+  &__conflict-resolution {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+    font-style: italic;
+  }
+
+  // -------------------------------------------------------------------------
+  // Buttons
+  // -------------------------------------------------------------------------
+
+  &__actions {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+    flex-wrap: wrap;
+  }
+
+  &__btn {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-lg, 24px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: var(--chora-color-surface-1, #f5f5f5);
+    color: var(--chora-color-text, #111);
+
+    &--primary {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &--secondary {
+      background: var(--chora-color-surface-1, #f5f5f5);
+      color: var(--chora-color-text, #333);
+    }
+
+    &--danger {
+      background: #fecaca;
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Loading / Error
+  // -------------------------------------------------------------------------
+
+  &__loading {
+    padding: var(--chora-space-xl, 32px);
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__error {
+    margin-block-start: var(--chora-space-md, 16px);
+    padding: var(--chora-space-md, 16px);
+    background: #fecaca;
+    color: #991b1b;
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 1280px) {
+  .merge-wizard {
+    max-width: 800px;
+
+    &__preview-grid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+}

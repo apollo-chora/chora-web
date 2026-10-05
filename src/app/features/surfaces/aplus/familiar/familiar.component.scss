@@ -1,0 +1,509 @@
+// =====================================================================
+// A+ Familiar profile (ADR-149 growth-state view)
+// =====================================================================
+
+@use '../../../../../styles/breed-accents';
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.aplus-familiar {
+  padding: 1.5rem clamp(1rem, 3vw, 2rem);
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.familiar__header {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.familiar__title {
+  margin: 0 0 0.35rem;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.familiar__archetype {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+// Container-query (not a viewport @media): the 3-column layout only engages
+// when the content area itself is wide enough for the two fixed 360/340 side
+// columns PLUS a usable middle. Below the threshold it stays single-column
+// (stacked) rather than crushing the middle "skills" column. Fixes the squish
+// where the old `@media (min-width: 1024px)` forced 3 columns at 1024–1440px
+// (and worse with the sidebar expanded, which the viewport query can't see),
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--breed-accent), var(--secondary));
+  border-radius: 999px;
+  transition: width 0.4s ease;
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+// The Grimoire loadout (skills) panel — was missing an explicit padding rule
+
+// =====================================================================
+// PROFILE MODE — Hero Card redesign. One glass card, centred. Banner +
+// runes + XP + bond take the per-breed accent (var(--breed-accent),
+// scoped by [data-breed] on .aplus-familiar, ADR-149). Chrome is identical
+// for every Familiar; only the accent changes.
+// =====================================================================
+$fcard-ease: cubic-bezier(0.165, 0.84, 0.44, 1);
+
+.fcard {
+  --fc-accent: var(--breed-accent, var(--primary));
+  --fc-deep: color-mix(in oklab, var(--fc-accent), var(--text-main) 26%);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  animation: fcard-rise 0.5s $fcard-ease both;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border-radius: 15px;
+    border: 1px solid color-mix(in oklab, var(--fc-accent) 42%, transparent);
+    pointer-events: none;
+    z-index: 3;
+  }
+}
+@keyframes fcard-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .fcard { animation: none; } }
+
+.fcard__banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 1.4rem 1.5rem;
+  color: #fff;
+  background:
+    radial-gradient(130% 190% at 100% 0%, color-mix(in oklab, var(--fc-accent) 42%, transparent), transparent 60%),
+    linear-gradient(135deg, var(--fc-deep), var(--fc-accent));
+}
+.fcard__back {
+  position: absolute; top: 12px; left: 12px;
+  width: 2rem; height: 2rem; display: grid; place-items: center;
+  border-radius: 9px; color: #fff; text-decoration: none;
+  background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: background 0.18s $fcard-ease;
+  &:hover { background: rgba(255, 255, 255, 0.28); }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+}
+.fcard__portrait {
+  width: 96px; height: 96px; flex: none; border-radius: 16px;
+  display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(130% 130% at 50% 22%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.5));
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.4);
+  margin-left: 2.1rem;
+}
+.fcard__id { min-width: 0; }
+.fcard__name { margin: 0; font-size: clamp(1.6rem, 5vw, 2.2rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+.fcard__epithet { margin: 0.35rem 0 0; display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; font-size: 0.85rem; font-weight: 600; opacity: 0.95; }
+.fcard__dot { opacity: 0.6; }
+.fcard__badges { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }
+.fcard__rarity {
+  font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 800;
+  padding: 0.26rem 0.58rem; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.4); color: #fff;
+}
+.fcard__shiny {
+  font-size: 0.58rem; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.22rem 0.5rem; border-radius: 999px;
+  background: linear-gradient(135deg, #fff7c2, #f4d03f); color: #7a5300;
+}
+
+.fcard__body { padding: 1.3rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 1.3rem; }
+
+.fcard__scores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+.fcard__score {
+  text-align: center; padding: 0.7rem 0.35rem; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5); border: 1px solid var(--glass-border);
+}
+.fcard__score-lab { display: block; font-size: 0.57rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+.fcard__score-val { display: block; font-size: 1.3rem; font-weight: 800; margin-top: 0.2rem; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--text-main); }
+.fcard__score-val.sm { font-size: 0.9rem; line-height: 1.15; margin-top: 0.35rem; }
+.fcard__score-val.accent { color: var(--fc-deep); }
+
+.fcard__xp { display: flex; flex-direction: column; gap: 0.35rem; }
+.fcard__xp-top { display: flex; justify-content: space-between; align-items: baseline; }
+.fcard__xp-num { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--text-main); }
+.fcard__xp-bar {
+  height: 9px; border-radius: 6px; overflow: hidden;
+  background: var(--breed-accent-soft, rgba(25, 118, 210, 0.1));
+  border: 1px solid var(--breed-accent-border, rgba(25, 118, 210, 0.3));
+  .progress-fill { background: linear-gradient(90deg, var(--fc-deep), var(--fc-accent)); }
+}
+.fcard__hint { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
+.fcard__matured {
+  padding: 0.8rem 1rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  background: linear-gradient(135deg, #fde68a, #f472b6); color: #7c2d12;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.82rem;
+}
+
+// The on-demand Future-form preview (owner R47, D7). These rules came back
+// with the control, restored from what D5 deleted, with the differences a
+// BUTTON needs that the old ANCHOR did not: `font: inherit` (a button does not
+// inherit the page font), `text-align: left` (it centres by default),
+// `cursor: pointer`, and `width: 100%` so it fills the card column the way the
+// anchor did. Reusing the class without these would have rendered a default
+// grey button with unstyled children, which is exactly the trap of reusing a
+// class you have only seen in a screenshot.
+.fcard__aha {
+  display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 12px;
+  width: 100%; text-align: left; font: inherit; cursor: pointer;
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.12), rgba(234, 88, 12, 0.12));
+  border: 1px solid rgba(154, 52, 18, 0.35); color: inherit;
+  i { font-size: 18px; color: #9a3412; }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+.fcard__aha-body { display: flex; flex-direction: column; }
+.fcard__aha-title { font-size: 13px; font-weight: 700; color: #9a3412; }
+.fcard__aha-sub { font-size: 11px; color: #9a3412; }
+
+.fcard__section { display: flex; flex-direction: column; gap: 0.6rem; }
+.fcard__sec {
+  display: flex; align-items: center; gap: 0.5rem; margin: 0;
+  font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; color: var(--fc-deep);
+  i { font-size: 0.8em; }
+  &::after { content: ""; flex: 1; height: 1px; background: var(--glass-border); }
+}
+
+.fcard__abils { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.fcard__pill {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: "Courier New", ui-monospace, monospace; font-size: 0.78rem;
+  padding: 0.3rem 0.65rem; border-radius: 999px;
+  background: var(--breed-accent-soft, rgba(25, 118, 210, 0.1));
+  color: var(--fc-deep); border: 1px solid var(--breed-accent-border, rgba(21, 101, 192, 0.3));
+  i { font-size: 0.8em; color: var(--fc-accent); }
+}
+.fcard__empty { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+
+.fcard__grid2 { display: grid; grid-template-columns: 1fr; gap: 0.8rem; }
+@media (min-width: 560px) { .fcard__grid2 { grid-template-columns: 1fr 1fr; } }
+.fcard__mini {
+  padding: 0.9rem 1rem; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5); border: 1px solid var(--glass-border);
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+.fcard__mini-h {
+  margin: 0; display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 800; color: var(--fc-deep);
+}
+.fcard__mini-p { margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--text-muted); }
+.fcard__mini-link {
+  display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;
+  font-size: 0.82rem; font-weight: 650; color: var(--fc-deep);
+  &:focus-visible { outline: 2px solid var(--fc-deep); outline-offset: 2px; }
+}
+.fcard__mini-error p { margin: 0 0 0.4rem; font-size: 0.85rem; }
+
+.fcard__ledger {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.4rem;
+  padding: 0.9rem 1rem; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.4); border: 1px solid var(--glass-border);
+}
+.fcard__ledger-item { display: flex; flex-direction: column; gap: 0.1rem; font-size: 0.9rem; }
+.fcard__ledger-item time { font-weight: 600; color: var(--text-main); }
+.fcard__ledger-link { margin-left: auto; }
+
+.fcard__bond {
+  display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap;
+  padding: 0.95rem 1.1rem; border-radius: 14px;
+  background: linear-gradient(135deg, var(--breed-accent-soft, rgba(25, 118, 210, 0.1)), transparent);
+  border: 1px solid var(--breed-accent-border, rgba(25, 118, 210, 0.3));
+}
+.fcard__bond-txt {
+  display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.92rem; color: var(--text-main);
+  i { color: var(--fc-accent); }
+}
+.fcard__bond-cta {
+  margin-left: auto; font: inherit; font-weight: 700; font-size: 0.85rem;
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.62rem 1.15rem; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--fc-deep);
+  background: linear-gradient(180deg, var(--fc-accent), var(--fc-deep)); color: #fff;
+  &:focus-visible { outline: 2px solid var(--fc-deep); outline-offset: 2px; }
+}
+
+.familiar__loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 3rem 1rem;
+  font-size: 14px;
+}
+
+// ─── List mode — roster picker ────────────────────────────────────────
+// 3-column grid (avatar | body | chat-CTA) so the card fills the row
+// instead of stacking everything left-aligned with empty right gutter.
+
+.familiar__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.familiar__list-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.1rem 1.4rem;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: var(--glass-shadow-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.familiar__list-card-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.familiar__list-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.familiar__list-card-name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  line-height: 1.25;
+}
+
+.familiar__list-card-active {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: var(--surface-accent-fill, var(--primary));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.familiar__list-card-stage {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.familiar__list-card-exp {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-feature-settings: 'tnum';
+  margin-top: 0.15rem;
+  line-height: 1.3;
+}
+
+.familiar__list-card .progress-track {
+  margin-top: 0.35rem;
+  height: 6px;
+}
+
+.familiar__list-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.15rem;
+  border-radius: 12px;
+  background: var(--surface-accent-fill, var(--primary));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.25);
+  flex-shrink: 0;
+
+  i {
+    font-size: 12px;
+  }
+}
+
+// CHO-2033: retire (release) affordance — deliberately quieter than the
+// primary chat/hatch CTA (amber "warning" tone, not the danger red used
+// for true data loss — the Familiar's history + growth ledger persist).
+.familiar__list-card-retire {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: var(--warning-bg, rgba(245, 158, 11, 0.1));
+  color: var(--warning, #f59e0b);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+
+  i {
+    font-size: 12px;
+  }
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    background: rgba(245, 158, 11, 0.2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--warning, #f59e0b);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// ── CHO-2095: front-door resolution states (bare /a/companion) ─────────
+.familiar__front-door {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 4rem auto 0;
+  max-width: 28rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+
+  i {
+    font-size: 1.5rem;
+    color: var(--primary);
+  }
+
+  &[role='alert'] i {
+    color: var(--danger);
+  }
+}
+
+// ── CHO-2095: hero chat CTA (chat's front door lives on the profile) ──
+.fcard__chat-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--button-radius);
+  background: var(--breed-accent, var(--primary));
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: filter 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+// ── CHO-2095: retire (relocated from the roster list; quiet danger) ───
+.fcard__retire {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--button-radius);
+  background: rgba(239, 68, 68, 0.06);
+  color: var(--danger);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.12);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--danger);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fcard__chat-cta {
+    transition: none;
+  }
+}

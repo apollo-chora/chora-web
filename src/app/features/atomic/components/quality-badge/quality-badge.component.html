@@ -1,0 +1,54 @@
+@if (hasAnyData()) {
+  <div
+    class="quality-badge"
+    [class.quality-badge--compact]="compact()"
+    data-testid="quality-badge">
+
+    @if (hasDifficulty()) {
+      <div
+        class="quality-badge__difficulty"
+        [class.quality-badge__difficulty--easy]="difficultyColor() === 'easy'"
+        [class.quality-badge__difficulty--medium]="difficultyColor() === 'medium'"
+        [class.quality-badge__difficulty--hard]="difficultyColor() === 'hard'"
+        role="img"
+        [attr.aria-label]="'AI difficulty ' + difficultyScore() + ' of 5'"
+        data-testid="quality-difficulty">
+        @if (!compact()) {
+          <span class="quality-badge__label">{{ 'atomic.quality.difficulty' | translate }}</span>
+        }
+        <span class="quality-badge__dots">
+          @for (filled of difficultyDots(); track $index) {
+            <span
+              class="quality-badge__dot"
+              [class.quality-badge__dot--filled]="filled"
+              aria-hidden="true"></span>
+          }
+        </span>
+      </div>
+    }
+
+    @if (hasQuality()) {
+      <div
+        class="quality-badge__quality"
+        [class.quality-badge__quality--high]="qualityLevel() === 'high'"
+        [class.quality-badge__quality--medium]="qualityLevel() === 'medium'"
+        [class.quality-badge__quality--low]="qualityLevel() === 'low'"
+        [attr.aria-label]="'Quality score ' + qualityPercent() + ' percent'"
+        data-testid="quality-score">
+        @if (!compact()) {
+          <span class="quality-badge__label">{{ 'atomic.quality.score' | translate }}</span>
+        }
+        <span class="quality-badge__percent">{{ qualityPercent() }}%</span>
+      </div>
+    }
+
+    @if (hasBlooms()) {
+      <span
+        class="quality-badge__blooms"
+        [attr.aria-label]="'Bloom\'s level: ' + bloomsLabel()"
+        data-testid="quality-blooms">
+        {{ bloomsLabel() }}
+      </span>
+    }
+  </div>
+}

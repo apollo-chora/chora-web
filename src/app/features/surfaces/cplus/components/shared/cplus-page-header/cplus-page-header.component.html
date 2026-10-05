@@ -1,0 +1,14 @@
+<header class="cplus-page-header" role="banner">
+  @if (breadcrumb(); as crumbs) {
+    <chora-cplus-breadcrumb [items]="crumbs" />
+  }
+  <div class="cplus-page-header__heading">
+    <h1 class="cplus-page-header__title">{{ title() }}</h1>
+    <div class="cplus-page-header__actions">
+      <ng-content />
+    </div>
+  </div>
+  @if (description(); as d) {
+    <p class="cplus-page-header__description">{{ d }}</p>
+  }
+</header>

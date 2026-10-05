@@ -1,0 +1,251 @@
+<section
+  class="collections-edit surface-aplus"
+  aria-labelledby="collections-edit-heading"
+  data-testid="collections-edit">
+
+  <header class="collections-edit__header glass-panel">
+    <div class="collections-edit__header-content">
+      <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+      <h1
+        id="collections-edit-heading"
+        class="collections-edit__title"
+        data-testid="collections-edit-heading">
+        @if (isEditMode()) {
+          Edit Collection
+        } @else {
+          New Collection
+        }
+      </h1>
+    </div>
+  </header>
+
+  <!-- Edit-mode load states (prefill detail GET) -->
+  @if (isLoadingDetail()) {
+    <div
+      class="glass-panel collections-edit__loading"
+      role="status"
+      aria-busy="true"
+      data-testid="collections-edit-loading">
+      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+      <span>Loading collection…</span>
+    </div>
+  } @else if (detailLoadError()) {
+    <div
+      class="glass-panel collections-edit__load-error"
+      role="alert"
+      data-testid="collections-edit-load-error">
+      <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+      <div>
+        <p class="collections-edit__load-error-message">
+          {{ detailLoadError() }}
+        </p>
+        <a routerLink="/a/study/collections" class="btn btn-secondary collections-edit__back-link">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          Back to Collections
+        </a>
+      </div>
+    </div>
+  } @else {
+
+    <form
+      class="glass-panel collections-edit__form"
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      novalidate>
+
+      <!-- Title -->
+      <div class="collections-edit__field">
+        <label class="collections-edit__label" for="collections-edit-title">
+          Title
+          <span class="collections-edit__required" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="collections-edit-title"
+          class="collections-edit__input"
+          type="text"
+          formControlName="title"
+          maxlength="200"
+          autocomplete="off"
+          placeholder="e.g. OSI Model Study Guide"
+          aria-required="true"
+          [attr.aria-invalid]="titleError() ? 'true' : null"
+          data-testid="collections-edit-title">
+        @if (titleError()) {
+          <p
+            class="collections-edit__error"
+            role="alert"
+            aria-live="polite"
+            data-testid="collections-edit-title-error">
+            {{ titleError() }}
+          </p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="collections-edit__field">
+        <label class="collections-edit__label" for="collections-edit-description">
+          Description
+          <span class="collections-edit__optional">(optional)</span>
+        </label>
+        <textarea
+          id="collections-edit-description"
+          class="collections-edit__input collections-edit__textarea"
+          formControlName="description"
+          rows="4"
+          maxlength="2000"
+          placeholder="What ties these LearningAtoms together?"
+          data-testid="collections-edit-description"></textarea>
+      </div>
+
+      <!--
+        Audience — ADR-233 D7. ONE vocabulary across the platform: private |
+        friends | tenant, the same three values an atom carries in
+        `reuse_visibility`, so `friends` resolves against the SAME friend set the
+        reuse gate uses (ADR-230).
+
+        `PUBLIC` is RETIRED and deliberately absent: RLS caps a collection at its
+        tenant, so "public" never crossed a tenant boundary — it only lied about
+        it. Cross-tenant distribution is a syndication concern (ADR-229 fork (a)),
+        never a visibility level.
+      -->
+      <fieldset class="collections-edit__field collections-edit__fieldset">
+        <legend class="collections-edit__label">
+          {{ 'aplus.collections.visibility_legend' | translate }}
+        </legend>
+        <div
+          class="collections-edit__radiogroup"
+          role="radiogroup"
+          [attr.aria-label]="'aplus.collections.visibility_legend' | translate">
+
+          <label
+            class="collections-edit__radio"
+            data-testid="collections-edit-visibility-private">
+            <input
+              type="radio"
+              formControlName="visibility"
+              value="private"
+              (change)="onVisibilityChange('private')">
+            <span class="collections-edit__radio-content">
+              <i class="fa-solid fa-lock" aria-hidden="true"></i>
+              <span class="collections-edit__radio-text">
+                <span class="collections-edit__radio-title">
+                  {{ 'aplus.collections.visibility_private' | translate }}
+                </span>
+                <span class="collections-edit__radio-hint">
+                  {{ 'aplus.collections.visibility_private_hint' | translate }}
+                </span>
+              </span>
+            </span>
+          </label>
+
+          <label
+            class="collections-edit__radio"
+            data-testid="collections-edit-visibility-friends">
+            <input
+              type="radio"
+              formControlName="visibility"
+              value="friends"
+              (change)="onVisibilityChange('friends')">
+            <span class="collections-edit__radio-content">
+              <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+              <span class="collections-edit__radio-text">
+                <span class="collections-edit__radio-title">
+                  {{ 'aplus.collections.visibility_friends' | translate }}
+                </span>
+                <span class="collections-edit__radio-hint">
+                  {{ 'aplus.collections.visibility_friends_hint' | translate }}
+                </span>
+              </span>
+            </span>
+          </label>
+
+          <label
+            class="collections-edit__radio"
+            data-testid="collections-edit-visibility-tenant">
+            <input
+              type="radio"
+              formControlName="visibility"
+              value="tenant"
+              (change)="onVisibilityChange('tenant')">
+            <span class="collections-edit__radio-content">
+              <i class="fa-solid fa-building" aria-hidden="true"></i>
+              <span class="collections-edit__radio-text">
+                <span class="collections-edit__radio-title">
+                  {{ 'aplus.collections.visibility_tenant' | translate }}
+                </span>
+                <span class="collections-edit__radio-hint">
+                  {{ 'aplus.collections.visibility_tenant_hint' | translate }}
+                </span>
+              </span>
+            </span>
+          </label>
+
+        </div>
+      </fieldset>
+
+      <!-- Actions -->
+      <div class="collections-edit__actions">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isSubmitting()"
+          data-testid="collections-edit-submit">
+          @if (isSubmitting()) {
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            Saving…
+          } @else if (isEditMode()) {
+            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+            Save changes
+          } @else {
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            Create collection
+          }
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onCancel()"
+          data-testid="collections-edit-cancel">
+          Cancel
+        </button>
+      </div>
+
+      <!-- Submit error -->
+      @if (submitError()) {
+        @if (isContractGap()) {
+          <!--
+            WS-6b-BE-A1: Collection create/update endpoints not yet proxied
+            in chora-gateway. Known contract gap — not a transient failure.
+          -->
+          <div
+            class="collections-edit__contract-gap"
+            role="alert"
+            data-testid="collections-edit-contract-gap">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <div>
+              <strong>Collection write endpoint not yet wired</strong>
+              <p>
+                <code>POST /api/v1/collections</code> /
+                <code>PATCH /api/v1/collections/&#123;id&#125;</code>
+                are contracted in <code>creation-admin.yaml</code>
+                but not yet proxied in chora-gateway.
+                Follow-up BE ask: <strong>WS-6b-BE-A1</strong>.
+              </p>
+            </div>
+          </div>
+        } @else {
+          <div
+            class="collections-edit__submit-error"
+            role="alert"
+            data-testid="collections-edit-error">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            <p class="collections-edit__submit-error-message">{{ submitError() }}</p>
+          </div>
+        }
+      }
+
+    </form>
+
+  }
+
+</section>

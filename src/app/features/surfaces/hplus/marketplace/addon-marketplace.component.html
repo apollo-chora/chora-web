@@ -1,0 +1,126 @@
+<section class="surface-hplus marketplace" data-testid="hplus-marketplace">
+  <main class="marketplace__main">
+    <nav
+      class="marketplace__breadcrumb"
+      [attr.aria-label]="'hplus.marketplace.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.marketplace.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="marketplace__crumb-active">
+        {{ 'hplus.marketplace.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    <!-- Hero -->
+    <header class="marketplace__hero">
+      <h1 class="marketplace__title">
+        {{ 'hplus.marketplace.title' | translate }}
+      </h1>
+      <p class="marketplace__subtitle">
+        {{ 'hplus.marketplace.subtitle' | translate }}
+      </p>
+    </header>
+
+    <!-- Loading banner -->
+    @if (loading()) {
+      <div
+        class="marketplace__banner marketplace__banner--loading"
+        data-testid="marketplace-loading"
+        role="status"
+        [attr.aria-label]="'hplus.marketplace.loading' | translate">
+        {{ 'hplus.marketplace.loading' | translate }}
+      </div>
+    }
+
+    <!-- Error banner -->
+    @if (loadError(); as err) {
+      <div
+        class="marketplace__banner marketplace__banner--error"
+        data-testid="marketplace-error"
+        role="alert">
+        <span>{{ err | translate }}</span>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-testid="marketplace-retry"
+          (click)="reload()">
+          {{ 'hplus.marketplace.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (isEmpty()) {
+      <div
+        class="marketplace__banner marketplace__banner--empty"
+        data-testid="marketplace-empty"
+        role="status">
+        {{ 'hplus.marketplace.empty' | translate }}
+      </div>
+    }
+
+    <!-- Grid -->
+    <section
+      class="marketplace__grid"
+      [attr.aria-label]="'hplus.marketplace.gridLabel' | translate">
+      @for (tile of tiles(); track trackByPlanId($index, tile)) {
+        <article
+          class="glass-panel marketplace__tile"
+          [attr.data-testid]="'marketplace-tile-' + tile.code"
+          [attr.data-category]="tile.category"
+          [attr.aria-label]="tile.displayName"
+          role="button"
+          tabindex="0"
+          (click)="openDetail(tile)"
+          (keydown.enter)="openDetail(tile)"
+          (keydown.space)="openDetail(tile); $event.preventDefault()">
+          <div class="marketplace__tile-head">
+            @if (tile.system) {
+              <span
+                class="badge badge-info marketplace__system-badge"
+                [attr.data-testid]="'marketplace-tile-' + tile.code + '-system-badge'">
+                {{ 'hplus.marketplace.systemBadge' | translate }}
+              </span>
+            } @else if (tile.installed) {
+              <span
+                class="badge badge-success marketplace__installed-badge"
+                [attr.data-testid]="'marketplace-tile-' + tile.code + '-installed-badge'">
+                {{ 'hplus.marketplace.installedBadge' | translate }}
+              </span>
+            } @else {
+              <span class="badge badge-muted">
+                {{ 'hplus.marketplace.stateAvailable' | translate }}
+              </span>
+            }
+          </div>
+          <div class="marketplace__tile-body">
+            <span class="marketplace__tile-category">{{ tile.category }}</span>
+            <h2 class="marketplace__tile-name">{{ tile.displayName }}</h2>
+            <p class="marketplace__tile-desc">{{ tile.description }}</p>
+          </div>
+          <footer class="marketplace__tile-footer">
+            <span class="marketplace__tile-price">{{ tile.priceLabel }}</span>
+            @if (tile.system || tile.installed) {
+              <button
+                type="button"
+                class="btn btn-secondary marketplace__manage"
+                [attr.data-testid]="'marketplace-manage-' + tile.code"
+                (click)="openManage(); $event.stopPropagation()">
+                <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                {{ 'hplus.marketplace.manageCta' | translate }}
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-primary marketplace__view-detail"
+                [attr.data-testid]="'marketplace-view-' + tile.code"
+                (click)="openDetail(tile); $event.stopPropagation()">
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                {{ 'hplus.marketplace.viewCta' | translate }}
+              </button>
+            }
+          </footer>
+        </article>
+      }
+    </section>
+  </main>
+</section>

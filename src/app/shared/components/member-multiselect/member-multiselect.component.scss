@@ -1,0 +1,138 @@
+:host {
+  display: block;
+}
+
+.member-multiselect {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__status {
+    margin: 0;
+    padding: 0.75rem 0;
+    color: var(--text-main);
+    font-size: 0.9rem;
+
+    &--error {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      color: var(--danger-strong);
+    }
+  }
+
+  &__retry {
+    flex: none;
+  }
+
+  &__controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__search {
+    // Inherits the glass `.form-control` sizing; full width for the picker.
+    width: 100%;
+  }
+
+  &__controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  &__count {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // Scrollable so ~100 rows never blow out the page; wide labels scroll
+  // inside, never the page body.
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-height: 22rem;
+    overflow-y: auto;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    background: var(--glass-bg);
+  }
+
+  &__row {
+    margin: 0;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-main);
+    font-size: 0.9rem;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    // A row at the cap (disabled checkbox) reads as inert.
+    &:has(.member-multiselect__checkbox:disabled) {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+  }
+
+  &__checkbox {
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: var(--primary);
+    cursor: inherit;
+
+    // Never remove the focus ring - keyboard a11y (chora-web/CLAUDE.md §10).
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__option-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+// Desktop enhancement - a touch more breathing room for the roster panel.
+@media (min-width: 1280px) {
+  .member-multiselect__list {
+    max-height: 26rem;
+  }
+}

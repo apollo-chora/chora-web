@@ -1,0 +1,426 @@
+:host {
+  display: block;
+}
+
+.assessment-monitor {
+  padding: var(--chora-space-lg, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg, 24px);
+
+  &__breadcrumbs {
+    font-size: 0.875rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-md, 16px);
+    > a {
+      color: var(--chora-color-primary, #5b7fff);
+      text-decoration: none;
+    }
+  }
+
+  // The grading queue is the gated step to complete — render it as a prominent
+  // button (not a plain breadcrumb link), and emphasise it when reviews wait.
+  &__grading-queue-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    margin-left: auto;
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    background: var(--chora-color-primary-surface, rgba(91, 127, 255, 0.12));
+    color: var(--chora-color-primary, #5b7fff);
+    border: 1px solid var(--chora-color-primary, #5b7fff);
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--chora-color-primary, #5b7fff);
+      color: #fff;
+    }
+
+    // Pending review waiting → warning emphasis (the obvious next action).
+    &--pending {
+      background: var(--chora-color-warning-surface, rgba(245, 158, 11, 0.15));
+      color: var(--chora-color-warning, #b45309);
+      border-color: var(--chora-color-warning, #b45309);
+
+      &:hover,
+      &:focus-visible {
+        background: var(--chora-color-warning, #b45309);
+        color: #fff;
+      }
+    }
+  }
+
+  &__grading-queue-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--chora-space-xs, 4px);
+    border-radius: 999px;
+    background: var(--chora-color-warning, #b45309);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  &__loading,
+  &__error,
+  &__empty {
+    padding: var(--chora-space-lg, 24px);
+    border-radius: var(--chora-radius-md, 8px);
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+    text-align: center;
+  }
+
+  &__error {
+    background: var(--chora-color-danger-surface, rgba(220, 38, 38, 0.08));
+    color: var(--chora-color-danger, #dc2626);
+  }
+
+  &__release-error {
+    background: var(--chora-color-danger-surface, rgba(220, 38, 38, 0.08));
+    color: var(--chora-color-danger, #dc2626);
+    padding: var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-md, 8px);
+  }
+
+  &__retry {
+    margin-top: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-sm, 4px);
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-lg, 24px);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__pill {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 2px var(--chora-space-sm, 8px);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__cta-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__released-badge,
+  &__archived-badge {
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  &__released-badge {
+    background: var(--chora-color-success-surface, rgba(34, 197, 94, 0.12));
+    color: var(--chora-color-success, #16a34a);
+  }
+
+  &__archived-badge {
+    background: var(--chora-color-surface-2, rgba(255, 255, 255, 0.08));
+    color: var(--chora-color-text-muted, #6b7280);
+  }
+
+  // Release gating hint + results-release disambiguation indicator.
+  &__release-hint,
+  &__results-warning {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border-radius: 999px;
+    background: var(--chora-color-warning-surface, rgba(245, 158, 11, 0.12));
+    color: var(--chora-color-warning, #b45309);
+    font-size: 0.8125rem;
+    font-weight: 600;
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+    }
+  }
+
+  &__h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-md, 16px);
+  }
+
+  &__cohort {
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+    padding: var(--chora-space-lg, 24px);
+    border-radius: var(--chora-radius-md, 8px);
+  }
+
+  &__submissions {
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+    padding: var(--chora-space-lg, 24px);
+    border-radius: var(--chora-radius-md, 8px);
+  }
+
+  // ── Questions panel ──────────────────────────────────────────────
+  &__questions {
+    background: var(--chora-color-surface-1, rgba(255, 255, 255, 0.04));
+    padding: var(--chora-space-lg, 24px);
+    border-radius: var(--chora-radius-md, 8px);
+  }
+
+  &__questions-meta {
+    margin-left: var(--chora-space-sm, 8px);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--chora-color-text-secondary, #64748b);
+  }
+
+  &__questions-note {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--chora-color-text-secondary, #64748b);
+  }
+
+  &__questions-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__question-details {
+    border: 1px solid var(--chora-color-border, rgba(15, 23, 42, 0.12));
+    border-radius: var(--chora-radius-sm, 8px);
+    background: var(--chora-color-surface-0, #ffffff);
+    overflow: hidden;
+  }
+
+  &__question-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::after {
+      content: '\25B8'; // ▸
+      margin-left: auto;
+      color: var(--chora-color-text-secondary, #64748b);
+      transition: transform 140ms ease;
+    }
+  }
+
+  &__question-details[open] &__question-summary::after {
+    transform: rotate(90deg);
+  }
+
+  &__question-index {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--chora-color-surface-2, rgba(15, 23, 42, 0.06));
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__question-type {
+    flex: 0 0 auto;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--chora-color-accent-rplus-soft, rgba(139, 92, 246, 0.12));
+    color: var(--chora-color-accent-rplus, #8b5cf6);
+  }
+
+  &__question-stem {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  &__question-points {
+    flex: 0 0 auto;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--chora-color-text-secondary, #64748b);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__question-review,
+  &__question-detail-note {
+    display: block;
+    padding: var(--chora-space-md, 16px);
+    border-top: 1px solid var(--chora-color-border, rgba(15, 23, 42, 0.1));
+  }
+
+  &__question-detail-note {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--chora-color-text-secondary, #64748b);
+  }
+}
+
+.cohort-progress {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--chora-space-md, 16px);
+  margin: 0;
+}
+
+.cta {
+  padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+  border-radius: var(--chora-radius-md, 8px);
+  border: 1px solid transparent;
+  font: inherit;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 160ms ease-out,
+              box-shadow 160ms ease-out,
+              transform 160ms ease-out;
+
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+
+  // ─── Primary-style CTAs ────────────────────────────────────────────
+  // Force-close + Release-results + Publish all use the A+ btn-primary
+  // gradient (matches `Start` / `Author another` / etc. across A+
+  // surface). Same hierarchy of importance — destructive variant has
+  // been deemed acceptable in favour of cross-surface visual coherence
+  // per user directive 2026-05-17.
+  &--primary,
+  &--success,
+  &--warning {
+    background: linear-gradient(135deg, var(--primary, #1976d2), #6366f1);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+
+    &:hover:not([disabled]) {
+      background: linear-gradient(135deg, var(--primary-hover, #1565c0), var(--primary, #1976d2));
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+      transform: translateY(-1px);
+    }
+  }
+
+  &--neutral {
+    background: transparent;
+    border-color: var(--chora-color-border, rgba(0, 0, 0, 0.12));
+    color: inherit;
+
+    &:hover:not([disabled]) {
+      background: rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  &--release {
+    padding: var(--chora-space-sm, 8px) var(--chora-space-lg, 24px);
+  }
+}
+
+.submissions-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border-bottom: 1px solid
+      var(--chora-color-border, rgba(255, 255, 255, 0.08));
+  }
+
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-muted, #6b7280);
+    font-weight: 600;
+  }
+
+  &__pill {
+    display: inline-block;
+    padding: 2px var(--chora-space-sm, 8px);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /**
+   * P1 design refinement chip (2026-05-17 CJ#1 smoke #4).
+   * Pre-RELEASED score column. Warning-tinted background, neutral text —
+   * signals "data not ready yet, not a zero" without raising alarm.
+   * Uses glassmorphism warning tokens.
+   */
+  &__pending-chip {
+    display: inline-block;
+    padding: 2px var(--chora-space-sm, 8px);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--chora-color-warning-surface, rgba(245, 158, 11, 0.12));
+    color: var(--chora-color-text-muted, #6b7280);
+    border: 1px solid
+      var(--chora-color-warning-border, rgba(245, 158, 11, 0.32));
+    letter-spacing: 0.01em;
+  }
+}

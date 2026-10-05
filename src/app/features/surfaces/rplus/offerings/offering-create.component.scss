@@ -1,0 +1,332 @@
+// /r/offerings/new create flow. Tablet-first (≥768px primary; ≥1280px enhanced).
+
+:host {
+  display: block;
+}
+
+.offering-create {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+  padding: var(--chora-space-lg);
+}
+
+.offering-create__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offering-create__breadcrumb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  color: var(--chora-color-text-secondary);
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover {
+    color: var(--primary);
+  }
+}
+
+.offering-create__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-create__subtitle {
+  margin: 0;
+  color: var(--chora-color-text-secondary);
+}
+
+// ── Access denied ──────────────────────────────────────────────────────────
+.offering-create__denied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-xl);
+}
+
+.offering-create__denied-icon {
+  font-size: 2rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.offering-create__denied-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-create__denied-body {
+  margin: 0;
+  color: var(--chora-color-text-secondary);
+}
+
+// ── No-courses empty-state (leads the admin to the catalog) ────────────────
+.offering-create__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-lg);
+  border: 1px dashed var(--chora-color-border, rgba(0, 0, 0, 0.18));
+  border-radius: var(--chora-radius-md);
+}
+
+.offering-create__empty-icon {
+  font-size: 1.75rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.offering-create__empty-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-create__empty-body {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--chora-color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.offering-create__empty-cta {
+  margin-top: var(--chora-space-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+}
+
+// ── Form ────────────────────────────────────────────────────────────────────
+.offering-create__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+  padding: var(--chora-space-lg);
+  max-width: 720px;
+}
+
+.offering-create__error {
+  padding: var(--chora-space-md);
+  border-radius: var(--chora-radius-md);
+  background: var(--danger-bg);
+}
+
+.offering-create__error-title {
+  margin: 0 0 var(--chora-space-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.offering-create__error-detail {
+  margin: 0;
+  color: var(--danger);
+}
+
+.offering-create__fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+}
+
+.offering-create__legend {
+  padding: 0;
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-create__radios {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--chora-space-sm);
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.offering-create__radio {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--chora-space-xs) var(--chora-space-sm);
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+  cursor: pointer;
+
+  input {
+    grid-row: 1;
+    margin-top: 0.2rem;
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &--active {
+    border-color: var(--primary);
+    background: rgba(25, 118, 210, 0.06);
+  }
+}
+
+.offering-create__radio-label {
+  grid-column: 2;
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-create__radio-help {
+  grid-column: 2;
+  font-size: 0.85rem;
+  color: var(--chora-color-text-secondary);
+}
+
+// ── Course multi-select (1:N checkbox list) ────────────────────────────────
+.offering-create__courses-field {
+  gap: var(--chora-space-sm);
+}
+
+.offering-create__courses {
+  list-style: none;
+  margin: 0;
+  // Scrollable when the catalog is long (tablet-first; no mobile breakpoints).
+  // 2px padding keeps inner focus rings from being clipped by the scrollport.
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.offering-create__course-item {
+  margin: 0;
+}
+
+.offering-create__course {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+  background: var(--chora-color-surface-0, #fff);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--primary);
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &--selected {
+    border-color: var(--primary);
+    background: rgba(25, 118, 210, 0.06);
+  }
+}
+
+.offering-create__course-checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.offering-create__course-title {
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-create__count {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.offering-create__count-num {
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-create__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offering-create__label {
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-create__input {
+  padding: var(--chora-space-sm) var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+  font: inherit;
+  color: var(--chora-color-text-primary);
+  background: var(--chora-color-surface-0, #fff);
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+}
+
+.offering-create__hint {
+  color: var(--chora-color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.offering-create__inline-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  color: var(--danger);
+}
+
+.offering-create__field-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+.offering-create__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-sm);
+  justify-content: flex-end;
+}
+
+// ── Local ghost button (not in the global polyglass set) ───────────────────
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  color: var(--chora-color-text-primary);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+}

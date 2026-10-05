@@ -1,0 +1,398 @@
+<section
+  class="surface-rplus surveys"
+  data-testid="rplus-surveys">
+  <header class="surveys__header glass-panel">
+    <div class="surveys__breadcrumb">
+      <span>{{ 'rplus.surveys.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.surveys.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <div class="surveys__title-row">
+      <h1 class="surveys__title">
+        {{ 'rplus.surveys.title' | translate }}
+      </h1>
+      <button
+        type="button"
+        class="btn btn-primary surveys__compose-cta"
+        data-testid="rplus-surveys-toggle-composer"
+        (click)="onToggleComposer()"
+        [attr.aria-expanded]="composerOpen()"
+        [attr.aria-label]="'rplus.surveys.compose_aria' | translate">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{ 'rplus.surveys.compose_cta' | translate }}
+      </button>
+    </div>
+    <p class="surveys__subtitle">
+      {{ 'rplus.surveys.subtitle' | translate }}
+    </p>
+    <div class="surveys__meta">
+      <span
+        class="surveys__tenant-pill"
+        data-testid="rplus-surveys-tenant">
+        <i class="fa-solid fa-building" aria-hidden="true"></i>
+        {{ 'rplus.surveys.tenant_label' | translate }}:
+        <strong>{{ tenantName() }}</strong>
+      </span>
+      <span
+        class="surveys__total"
+        data-testid="rplus-surveys-total">
+        <strong>{{ totalSurveys() }}</strong>
+        {{ 'rplus.surveys.total_label' | translate }}
+      </span>
+    </div>
+
+    <div class="surveys__filter">
+      <label
+        for="rplus-surveys-state-filter"
+        class="surveys__filter-label">
+        {{ 'rplus.surveys.filter_label' | translate }}
+      </label>
+      <select
+        id="rplus-surveys-state-filter"
+        class="surveys__filter-select"
+        data-testid="rplus-surveys-state-filter"
+        [attr.aria-label]="'rplus.surveys.filter_aria' | translate"
+        (change)="onStateFilterChanged($any($event.target).value)">
+        <option value="">
+          {{ 'rplus.surveys.filter_all' | translate }}
+        </option>
+        @for (s of stateOptions; track s) {
+          <option [value]="s" [selected]="stateFilter() === s">
+            {{ labelKey(s) | translate }}
+          </option>
+        }
+      </select>
+    </div>
+  </header>
+
+  @if (composerOpen()) {
+    <section
+      class="surveys__composer glass-panel"
+      data-testid="rplus-surveys-composer">
+      <h2 class="surveys__composer-title">
+        {{ 'rplus.surveys.composer.title' | translate }}
+      </h2>
+      <div class="surveys__composer-field">
+        <label for="rplus-surveys-composer-course">
+          {{ 'rplus.surveys.composer.course_label' | translate }}
+        </label>
+        <input
+          id="rplus-surveys-composer-course"
+          type="text"
+          data-testid="rplus-surveys-composer-course"
+          [value]="draft().courseId"
+          (input)="onDraftCourseIdChanged($any($event.target).value)" />
+      </div>
+      <div class="surveys__composer-field">
+        <label for="rplus-surveys-composer-title">
+          {{ 'rplus.surveys.composer.title_label' | translate }}
+        </label>
+        <input
+          id="rplus-surveys-composer-title"
+          type="text"
+          data-testid="rplus-surveys-composer-title"
+          [value]="draft().title"
+          (input)="onDraftTitleChanged($any($event.target).value)" />
+      </div>
+
+      <fieldset class="surveys__composer-questions">
+        <legend>
+          {{ 'rplus.surveys.composer.questions_legend' | translate }}
+        </legend>
+        @for (q of draft().questions; track $index) {
+          <div
+            class="surveys__composer-question"
+            [attr.data-testid]="'rplus-surveys-composer-q-' + $index">
+            <div class="surveys__composer-question-row">
+              <label [attr.for]="'rplus-surveys-q-prompt-' + $index">
+                {{ 'rplus.surveys.composer.q_prompt_label' | translate }}
+              </label>
+              <input
+                [attr.id]="'rplus-surveys-q-prompt-' + $index"
+                type="text"
+                [attr.data-testid]="'rplus-surveys-q-prompt-' + $index"
+                [value]="q.prompt"
+                (input)="onDraftQuestionPromptChanged($index, $any($event.target).value)" />
+            </div>
+            <div class="surveys__composer-question-row">
+              <label [attr.for]="'rplus-surveys-q-type-' + $index">
+                {{ 'rplus.surveys.composer.q_type_label' | translate }}
+              </label>
+              <select
+                [attr.id]="'rplus-surveys-q-type-' + $index"
+                [attr.data-testid]="'rplus-surveys-q-type-' + $index"
+                (change)="onDraftQuestionTypeChanged($index, $any($event.target).value)">
+                @for (t of questionTypeOptions; track t) {
+                  <option [value]="t" [selected]="q.type === t">
+                    {{ 'rplus.surveys.composer.q_type.' + t | translate }}
+                  </option>
+                }
+              </select>
+            </div>
+            @if (q.type === 'MULTIPLE_CHOICE') {
+              <div class="surveys__composer-question-row">
+                <label [attr.for]="'rplus-surveys-q-options-' + $index">
+                  {{ 'rplus.surveys.composer.q_options_label' | translate }}
+                </label>
+                <textarea
+                  [attr.id]="'rplus-surveys-q-options-' + $index"
+                  rows="3"
+                  [attr.data-testid]="'rplus-surveys-q-options-' + $index"
+                  [value]="q.options"
+                  (input)="onDraftQuestionOptionsChanged($index, $any($event.target).value)"
+                  [attr.aria-describedby]="'rplus-surveys-q-options-help-' + $index"></textarea>
+                <small [attr.id]="'rplus-surveys-q-options-help-' + $index">
+                  {{ 'rplus.surveys.composer.q_options_help' | translate }}
+                </small>
+              </div>
+            }
+            <button
+              type="button"
+              class="btn btn-ghost surveys__composer-q-remove"
+              [attr.data-testid]="'rplus-surveys-q-remove-' + $index"
+              (click)="onRemoveQuestionRow($index)">
+              <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+              {{ 'rplus.surveys.composer.q_remove' | translate }}
+            </button>
+          </div>
+        }
+        <button
+          type="button"
+          class="btn btn-ghost surveys__composer-q-add"
+          data-testid="rplus-surveys-q-add"
+          (click)="onAddQuestionRow()">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{ 'rplus.surveys.composer.q_add' | translate }}
+        </button>
+      </fieldset>
+
+      <div class="surveys__composer-actions">
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-testid="rplus-surveys-composer-submit"
+          (click)="onCreateSurvey()">
+          <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+          {{ 'rplus.surveys.composer.submit_cta' | translate }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="rplus-surveys-composer-cancel"
+          (click)="onToggleComposer()">
+          {{ 'rplus.surveys.composer.cancel_cta' | translate }}
+        </button>
+      </div>
+    </section>
+  }
+
+  <div class="surveys__list">
+    @for (survey of surveys(); track survey.id) {
+      <article
+        class="surveys__row glass-panel"
+        [attr.data-testid]="'rplus-surveys-row-' + survey.id">
+        <div class="surveys__row-head">
+          <span
+            class="badge"
+            [class]="'badge ' + badge(survey.state)"
+            [attr.data-testid]="'rplus-surveys-state-' + survey.id">
+            {{ labelKey(survey.state) | translate }}
+          </span>
+          <code class="surveys__survey-id">{{ survey.id }}</code>
+        </div>
+        <h3 class="surveys__row-title">{{ survey.title }}</h3>
+
+        <dl class="surveys__details">
+          <div class="surveys__detail">
+            <dt>{{ 'rplus.surveys.col.course' | translate }}</dt>
+            <dd>{{ survey.courseId }}</dd>
+          </div>
+          <div class="surveys__detail">
+            <dt>{{ 'rplus.surveys.col.questions' | translate }}</dt>
+            <dd>{{ survey.questions.length }}</dd>
+          </div>
+          <div class="surveys__detail">
+            <dt>{{ 'rplus.surveys.col.recipients' | translate }}</dt>
+            <dd>{{ survey.distributedTo.length }}</dd>
+          </div>
+          <div class="surveys__detail">
+            <dt>{{ 'rplus.surveys.col.responses' | translate }}</dt>
+            <dd
+              [attr.data-testid]="'rplus-surveys-responses-count-' + survey.id">
+              <strong>{{ survey.responseCount }}</strong>
+            </dd>
+          </div>
+          <div class="surveys__detail">
+            <dt>{{ 'rplus.surveys.col.created_at' | translate }}</dt>
+            <dd>
+              <time [attr.datetime]="survey.createdAt">
+                {{ survey.createdAt }}
+              </time>
+            </dd>
+          </div>
+          @if (survey.distributedAt) {
+            <div class="surveys__detail">
+              <dt>{{ 'rplus.surveys.col.distributed_at' | translate }}</dt>
+              <dd>
+                <time [attr.datetime]="survey.distributedAt">
+                  {{ survey.distributedAt }}
+                </time>
+              </dd>
+            </div>
+          }
+          @if (survey.closedAt) {
+            <div class="surveys__detail">
+              <dt>{{ 'rplus.surveys.col.closed_at' | translate }}</dt>
+              <dd>
+                <time [attr.datetime]="survey.closedAt">
+                  {{ survey.closedAt }}
+                </time>
+              </dd>
+            </div>
+          }
+        </dl>
+
+        @if (publishingFor() === survey.id) {
+          <div
+            class="surveys__publish-composer"
+            [attr.data-testid]="'rplus-surveys-publish-composer-' + survey.id">
+            <label [attr.for]="'rplus-surveys-publish-recipients-' + survey.id">
+              {{ 'rplus.surveys.publish.recipients_label' | translate }}
+            </label>
+            <textarea
+              [attr.id]="'rplus-surveys-publish-recipients-' + survey.id"
+              rows="3"
+              [attr.data-testid]="'rplus-surveys-publish-recipients-' + survey.id"
+              [value]="publishRecipients()"
+              (input)="onPublishRecipientsChanged($any($event.target).value)"
+              [attr.aria-describedby]="'rplus-surveys-publish-help-' + survey.id"></textarea>
+            <small [attr.id]="'rplus-surveys-publish-help-' + survey.id">
+              {{ 'rplus.surveys.publish.recipients_help' | translate }}
+            </small>
+            <div class="surveys__publish-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                [attr.data-testid]="'rplus-surveys-publish-confirm-' + survey.id"
+                (click)="onPublishConfirm(survey.id)">
+                {{ 'rplus.surveys.publish.confirm_cta' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost"
+                [attr.data-testid]="'rplus-surveys-publish-cancel-' + survey.id"
+                (click)="onCancelPublishComposer()">
+                {{ 'rplus.surveys.publish.cancel_cta' | translate }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <footer class="surveys__row-foot">
+          <div class="surveys__actions">
+            @if (canPublishState(survey.state)) {
+              <button
+                type="button"
+                class="btn btn-primary surveys__action"
+                [attr.data-testid]="'rplus-surveys-publish-' + survey.id"
+                (click)="onOpenPublishComposer(survey.id)"
+                [attr.aria-label]="'rplus.surveys.publish_aria' | translate">
+                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                {{ 'rplus.surveys.publish_cta' | translate }}
+              </button>
+            }
+            @if (canCloseState(survey.state)) {
+              <button
+                type="button"
+                class="btn btn-ghost surveys__action"
+                [attr.data-testid]="'rplus-surveys-close-' + survey.id"
+                (click)="onCloseSurvey(survey.id)"
+                [attr.aria-label]="'rplus.surveys.close_aria' | translate">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                {{ 'rplus.surveys.close_cta' | translate }}
+              </button>
+            }
+            <button
+              type="button"
+              class="btn btn-ghost surveys__action"
+              [attr.data-testid]="'rplus-surveys-view-responses-' + survey.id"
+              (click)="onViewResponses(survey.id)"
+              [attr.aria-label]="'rplus.surveys.view_responses_aria' | translate">
+              <i class="fa-solid fa-rectangle-list" aria-hidden="true"></i>
+              {{ 'rplus.surveys.view_responses_cta' | translate }}
+            </button>
+          </div>
+        </footer>
+      </article>
+    } @empty {
+      <p
+        class="surveys__empty"
+        data-testid="rplus-surveys-empty">
+        {{ 'rplus.surveys.empty' | translate }}
+      </p>
+    }
+  </div>
+
+  @if (viewingResponsesFor(); as openId) {
+    <section
+      class="surveys__responses glass-panel"
+      data-testid="rplus-surveys-responses-panel">
+      <header class="surveys__responses-header">
+        <h2 class="surveys__responses-title">
+          {{ 'rplus.surveys.responses.title' | translate }}
+        </h2>
+        <span
+          class="surveys__responses-total"
+          data-testid="rplus-surveys-responses-total">
+          <strong>{{ totalResponses() }}</strong>
+          {{ 'rplus.surveys.responses.total_label' | translate }}
+        </span>
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="rplus-surveys-responses-close"
+          (click)="onCloseResponses()"
+          [attr.aria-label]="'rplus.surveys.responses.close_aria' | translate">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          {{ 'rplus.surveys.responses.close_cta' | translate }}
+        </button>
+      </header>
+      <p class="surveys__responses-meta">
+        <span>{{ 'rplus.surveys.responses.survey_id_label' | translate }}:</span>
+        <code>{{ openId }}</code>
+      </p>
+      <div class="surveys__responses-list">
+        @for (resp of responses(); track resp.id) {
+          <article
+            class="surveys__response"
+            [attr.data-testid]="'rplus-surveys-response-' + resp.id">
+            <div class="surveys__response-head">
+              <span class="surveys__response-gcid">
+                <strong>{{ resp.gcid }}</strong>
+              </span>
+              <time [attr.datetime]="resp.submittedAt">
+                {{ resp.submittedAt }}
+              </time>
+            </div>
+            <ul class="surveys__response-answers">
+              @for (a of resp.answers; track a.questionId) {
+                <li>
+                  <code class="surveys__answer-qid">{{ a.questionId }}</code>
+                  <span class="surveys__answer-value">{{ a.value }}</span>
+                </li>
+              }
+            </ul>
+          </article>
+        } @empty {
+          <p
+            class="surveys__responses-empty"
+            data-testid="rplus-surveys-responses-empty">
+            {{ 'rplus.surveys.responses.empty' | translate }}
+          </p>
+        }
+      </div>
+    </section>
+  }
+</section>

@@ -1,0 +1,218 @@
+<div class="api-keys" data-testid="api-keys-page">
+
+  <!-- Header -->
+  <div class="api-keys__header">
+    <div>
+      <h1 class="api-keys__title">{{ 'settings.api_keys.title' | translate }}</h1>
+      <p class="api-keys__subtitle">{{ 'settings.api_keys.subtitle' | translate }}</p>
+    </div>
+    <button
+      type="button"
+      class="api-keys__btn api-keys__btn--primary"
+      data-testid="btn-create-key"
+      (click)="toggleCreateForm()"
+      [attr.aria-label]="'settings.api_keys.create' | translate">
+      @if (showCreateForm()) {
+        {{ 'settings.api_keys.cancel' | translate }}
+      } @else {
+        {{ 'settings.api_keys.create' | translate }}
+      }
+    </button>
+  </div>
+
+  <!-- Created Key Banner (shown once) -->
+  @if (createdKeyValue()) {
+    <div
+      class="api-keys__created-banner"
+      data-testid="created-key-banner"
+      role="alert"
+      aria-live="assertive">
+      <div class="api-keys__created-header">
+        <span class="material-icons-outlined api-keys__created-icon" aria-hidden="true">vpn_key</span>
+        <strong>{{ 'settings.api_keys.key_created' | translate }}</strong>
+      </div>
+      <p class="api-keys__created-warning">{{ 'settings.api_keys.key_warning' | translate }}</p>
+      <div class="api-keys__created-key-row">
+        <code class="api-keys__created-key-value" data-testid="created-key-value">{{ createdKeyValue() }}</code>
+        <button
+          type="button"
+          class="api-keys__btn api-keys__btn--copy"
+          data-testid="btn-copy-key"
+          (click)="copyKey()"
+          [attr.aria-label]="'settings.api_keys.copy' | translate">
+          <span class="material-icons-outlined" aria-hidden="true">
+            @if (copied()) {
+              check
+            } @else {
+              content_copy
+            }
+          </span>
+          @if (copied()) {
+            {{ 'settings.api_keys.copied' | translate }}
+          } @else {
+            {{ 'settings.api_keys.copy' | translate }}
+          }
+        </button>
+      </div>
+      <button
+        type="button"
+        class="api-keys__btn api-keys__btn--text"
+        data-testid="btn-dismiss-key"
+        (click)="dismissCreatedKey()">
+        {{ 'settings.api_keys.dismiss' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Create Key Form -->
+  @if (showCreateForm()) {
+    <div
+      class="api-keys__create-form"
+      data-testid="create-key-form"
+      role="form"
+      [attr.aria-label]="'settings.api_keys.create_form_label' | translate">
+      <div class="api-keys__form-row">
+        <div class="api-keys__field api-keys__field--grow">
+          <label for="key-name-input" class="api-keys__label">
+            {{ 'settings.api_keys.key_name' | translate }}
+          </label>
+          <input
+            id="key-name-input"
+            type="text"
+            class="api-keys__input"
+            data-testid="key-name-input"
+            [attr.placeholder]="'settings.api_keys.key_name_placeholder' | translate"
+            [ngModel]="newKeyName()"
+            (ngModelChange)="onNameInput($event)"
+            maxlength="100" />
+        </div>
+
+        <div class="api-keys__field">
+          <label for="key-env-select" class="api-keys__label">
+            {{ 'settings.api_keys.environment' | translate }}
+          </label>
+          <select
+            id="key-env-select"
+            class="api-keys__select"
+            data-testid="key-env-select"
+            [ngModel]="newKeyEnv()"
+            (ngModelChange)="onEnvChange($event)">
+            <option value="test">{{ 'settings.api_keys.env_test' | translate }}</option>
+            <option value="live">{{ 'settings.api_keys.env_live' | translate }}</option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          class="api-keys__btn api-keys__btn--primary api-keys__btn--submit"
+          data-testid="btn-submit-create"
+          [disabled]="!canCreate()"
+          (click)="createKey()"
+          [attr.aria-label]="'settings.api_keys.create_submit' | translate">
+          @if (isCreating()) {
+            <span class="api-keys__spinner" aria-hidden="true"></span>
+          }
+          {{ 'settings.api_keys.create_submit' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="api-keys__loading" data-testid="keys-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="api-keys__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="api-keys__empty" data-testid="keys-empty" role="status">
+      <span class="material-icons-outlined api-keys__empty-icon" aria-hidden="true">vpn_key</span>
+      <p class="api-keys__empty-text">{{ 'settings.api_keys.empty' | translate }}</p>
+    </div>
+  }
+
+  <!-- Key Table -->
+  @if (!isLoading() && !isEmpty()) {
+    <div class="api-keys__table-wrapper" data-testid="keys-table">
+      <table class="api-keys__table" role="table" [attr.aria-label]="'settings.api_keys.table_label' | translate">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'settings.api_keys.col_name' | translate }}</th>
+            <th scope="col">{{ 'settings.api_keys.col_key' | translate }}</th>
+            <th scope="col">{{ 'settings.api_keys.col_env' | translate }}</th>
+            <th scope="col">{{ 'settings.api_keys.col_created' | translate }}</th>
+            <th scope="col">{{ 'settings.api_keys.col_last_used' | translate }}</th>
+            <th scope="col">{{ 'settings.api_keys.col_status' | translate }}</th>
+            <th scope="col">
+              <span class="sr-only">{{ 'settings.api_keys.col_actions' | translate }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (apiKey of keys(); track apiKey.id) {
+            <tr
+              [class.api-keys__row--revoked]="apiKey.status === 'revoked'"
+              [attr.data-testid]="'key-row-' + apiKey.id">
+
+              <!-- Name -->
+              <td class="api-keys__cell-name">
+                <span [class.api-keys__text--revoked]="apiKey.status === 'revoked'">
+                  {{ apiKey.name }}
+                </span>
+              </td>
+
+              <!-- Key Prefix -->
+              <td>
+                <code class="api-keys__key-prefix" [class.api-keys__text--revoked]="apiKey.status === 'revoked'">
+                  {{ apiKey.prefix }}
+                </code>
+              </td>
+
+              <!-- Environment Badge -->
+              <td>
+                <span class="api-keys__env-badge" [class]="envClass(apiKey.environment)">
+                  {{ apiKey.environment }}
+                </span>
+              </td>
+
+              <!-- Created -->
+              <td class="api-keys__cell-date">{{ formatDate(apiKey.created_at) }}</td>
+
+              <!-- Last Used -->
+              <td class="api-keys__cell-date">{{ formatDate(apiKey.last_used_at) }}</td>
+
+              <!-- Status -->
+              <td>
+                <span class="api-keys__status-badge" [class]="statusClass(apiKey.status)">
+                  {{ apiKey.status }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td class="api-keys__cell-actions">
+                @if (apiKey.status === 'active') {
+                  <button
+                    type="button"
+                    class="api-keys__btn api-keys__btn--danger-text"
+                    [attr.data-testid]="'btn-revoke-' + apiKey.id"
+                    [disabled]="revokingId() === apiKey.id"
+                    (click)="revokeKey(apiKey)"
+                    [attr.aria-label]="'settings.api_keys.revoke' | translate">
+                    @if (revokingId() === apiKey.id) {
+                      <span class="api-keys__spinner api-keys__spinner--sm" aria-hidden="true"></span>
+                    }
+                    {{ 'settings.api_keys.revoke' | translate }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

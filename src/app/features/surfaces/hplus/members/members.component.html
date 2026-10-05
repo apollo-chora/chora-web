@@ -1,0 +1,478 @@
+<section class="surface-hplus members" data-testid="hplus-members">
+  <main class="members__main">
+    <nav
+      class="members__breadcrumb"
+      [attr.aria-label]="'hplus.members.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.members.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="members__crumb-active">
+        {{ 'hplus.members.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    <header class="members__hero">
+      <div>
+        <h1 class="members__title">
+          {{ 'hplus.members.title' | translate }}
+        </h1>
+        <p class="members__subtitle">
+          {{ 'hplus.members.subtitle' | translate }}
+        </p>
+      </div>
+      <button
+        type="button"
+        class="btn btn-primary members__invite-cta"
+        data-testid="invite-cta"
+        (click)="openInvite()">
+        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+        {{ 'hplus.members.inviteCta' | translate }}
+      </button>
+      <!-- Ownership is not editable on this roster: the owner's role fieldset
+           and Remove are both disabled, because a role edit that touched the
+           owner row would destroy ownership rather than move it. The one way
+           it moves is a two-party handover, and this is the way to it. -->
+      <a
+        class="btn btn-secondary members__ownership-cta"
+        data-testid="ownership-cta"
+        routerLink="/h/ownership">
+        <i class="fa-solid fa-key" aria-hidden="true"></i>
+        {{ 'hplus.members.ownershipCta' | translate }}
+      </a>
+    </header>
+
+    @if (state() === 'loading') {
+      <div
+        class="glass-panel members__panel members__loading"
+        data-testid="members-loading"
+        role="status"
+        aria-live="polite">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        {{ 'hplus.members.loading' | translate }}
+      </div>
+    } @else if (state() === 'error') {
+      <div
+        class="glass-panel members__panel members__error"
+        data-testid="members-error"
+        role="alert">
+        <p>{{ 'hplus.members.loadError' | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-testid="members-retry"
+          (click)="load()">
+          {{ 'hplus.members.retry' | translate }}
+        </button>
+      </div>
+    } @else if (isEmpty()) {
+      <div
+        class="glass-panel members__panel members__empty"
+        data-testid="members-empty">
+        <p>{{ 'hplus.members.empty' | translate }}</p>
+        <p class="members__empty-hint">
+          {{ 'hplus.members.emptyHint' | translate }}
+        </p>
+      </div>
+    } @else {
+      <div class="glass-panel members__panel">
+        <table
+          class="data-table members__table"
+          data-testid="members-table"
+          [attr.aria-describedby]="'members-table-caption'">
+          <caption id="members-table-caption" class="members__caption">
+            {{ 'hplus.members.tableCaption' | translate }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'hplus.members.col.gcid' | translate }}</th>
+              <th scope="col">{{ 'hplus.members.col.name' | translate }}</th>
+              <th scope="col">{{ 'hplus.members.col.email' | translate }}</th>
+              <th scope="col">{{ 'hplus.members.col.role' | translate }}</th>
+              <th scope="col">{{ 'hplus.members.col.lastSeen' | translate }}</th>
+              <th scope="col" class="members__actions-col">
+                {{ 'hplus.members.col.actions' | translate }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of members(); track m.id) {
+              <tr
+                [attr.data-testid]="'member-row-' + m.id"
+                [attr.data-roles]="m.roles.join(' ')">
+                <td>
+                  <code
+                    class="members__gcid"
+                    [attr.data-testid]="'member-gcid-' + m.id">
+                    {{ m.gcid }}
+                  </code>
+                </td>
+                <td class="members__name">
+                  @if (isEditingName(m)) {
+                    <div class="members__name-edit" role="group">
+                      <input
+                        type="text"
+                        class="form-control members__name-input"
+                        [attr.data-testid]="'member-name-input-' + m.id"
+                        [attr.aria-label]="
+                          ('hplus.members.editNameAriaPrefix' | translate) + ' ' + m.email
+                        "
+                        [value]="editingName()?.draft ?? ''"
+                        maxlength="128"
+                        autocomplete="off"
+                        autofocus
+                        (input)="onEditNameInput($event)"
+                        (keydown.enter)="saveEditName(m); $event.preventDefault()"
+                        (keydown.escape)="cancelEditName(); $event.preventDefault()" />
+                      <button
+                        type="button"
+                        class="btn btn-secondary members__name-cancel"
+                        [attr.data-testid]="'member-name-cancel-' + m.id"
+                        (click)="cancelEditName()">
+                        {{ 'hplus.members.cancelNameEdit' | translate }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-primary members__name-save"
+                        [attr.data-testid]="'member-name-save-' + m.id"
+                        (click)="saveEditName(m)">
+                        {{ 'hplus.members.saveName' | translate }}
+                      </button>
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="members__name-button"
+                      [attr.data-testid]="'member-name-' + m.id"
+                      [attr.aria-label]="
+                        ('hplus.members.editNameAriaPrefix' | translate) + ' ' + m.email
+                      "
+                      (click)="beginEditName(m)">
+                      <span>{{ m.displayName }}</span>
+                      <i class="fa-solid fa-pen-to-square members__name-edit-icon" aria-hidden="true"></i>
+                    </button>
+                    @if (m.isOwner) {
+                      <span
+                        class="members__owner-badge"
+                        [attr.data-testid]="'member-owner-badge-' + m.id"
+                        [attr.title]="'hplus.members.owner.explainer' | translate">
+                        <i class="fa-solid fa-key" aria-hidden="true"></i>
+                        {{ 'hplus.members.owner.badge' | translate }}
+                      </span>
+                    }
+                  }
+                </td>
+                <td>
+                  <a
+                    class="members__email"
+                    [attr.href]="'mailto:' + m.email">
+                    {{ m.email }}
+                  </a>
+                </td>
+                <td>
+                  <fieldset
+                    class="members__roles-fieldset"
+                    [attr.data-testid]="'member-roles-' + m.id"
+                    [attr.aria-label]="
+                      ('hplus.members.rolesAriaPrefix' | translate) + ' ' + m.displayName
+                    "
+                    [disabled]="roleBusyGcid() === m.gcid || m.isOwner">
+                    <legend class="sr-only">
+                      {{ ('hplus.members.rolesAriaPrefix' | translate) + ' ' + m.displayName }}
+                    </legend>
+                    @if (m.isOwner) {
+                      <p
+                        class="members__owner-note"
+                        [attr.data-testid]="'member-owner-note-' + m.id">
+                        {{ 'hplus.members.owner.cannotChangeRoles' | translate }}
+                      </p>
+                    }
+                    <ul class="members__roles">
+                      @for (role of editableRoles; track role) {
+                        @let selected = effectiveRoles(m).includes(role);
+                        <li
+                          class="members__role-chip"
+                          [class.members__role-chip--selected]="selected"
+                          [attr.data-role]="role">
+                          <label class="members__role-check-label">
+                            <input
+                              type="checkbox"
+                              class="members__role-check"
+                              [attr.data-testid]="'member-role-' + m.id + '-' + role"
+                              [checked]="selected"
+                              (change)="toggleRole(m, role, $any($event.target).checked)" />
+                            {{ roleLabelKey(role) | translate }}
+                          </label>
+                        </li>
+                      }
+                    </ul>
+                    @if (isRowDirty(m)) {
+                      <div class="members__role-actions" role="group">
+                        <button
+                          type="button"
+                          class="btn btn-secondary members__role-cancel"
+                          [attr.data-testid]="'member-roles-cancel-' + m.id"
+                          (click)="cancelRoleEdit(m)">
+                          {{ 'hplus.members.cancelRolesEdit' | translate }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-primary members__role-save"
+                          [attr.data-testid]="'member-roles-save-' + m.id"
+                          (click)="saveRoleEdit(m)">
+                          {{ 'hplus.members.saveRoles' | translate }}
+                        </button>
+                      </div>
+                    }
+                  </fieldset>
+                </td>
+                <td class="members__last-seen">{{ m.lastSeen | date: 'medium' }}</td>
+                <td class="members__actions-col">
+                  <button
+                    type="button"
+                    class="btn btn-secondary members__remove"
+                    [attr.data-testid]="'member-remove-' + m.id"
+                    [disabled]="roleBusyGcid() === m.gcid || m.isOwner"
+                    [attr.title]="
+                      m.isOwner ? ('hplus.members.owner.cannotRemove' | translate) : null
+                    "
+                    [attr.aria-label]="
+                      (m.isOwner
+                        ? ('hplus.members.owner.cannotRemove' | translate)
+                        : ('hplus.members.removeAriaPrefix' | translate) + ' ' + m.displayName)
+                    "
+                    (click)="removeMember(m)">
+                    <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
+                    {{ 'hplus.members.removeMember' | translate }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (hasPendingInvites()) {
+      <section
+        class="glass-panel members__panel members__pending"
+        data-testid="pending-invites"
+        aria-labelledby="pending-invites-title">
+        <header class="members__pending-head">
+          <h2 id="pending-invites-title" class="members__pending-title">
+            {{ 'hplus.members.pending.title' | translate }}
+          </h2>
+          <p class="members__pending-subtitle">
+            {{ 'hplus.members.pending.subtitle' | translate }}
+          </p>
+        </header>
+        <table class="data-table members__pending-table" data-testid="pending-invites-table">
+          <caption class="sr-only">
+            {{ 'hplus.members.pending.subtitle' | translate }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'hplus.members.pending.colEmail' | translate }}</th>
+              <th scope="col">{{ 'hplus.members.pending.colRoles' | translate }}</th>
+              <th scope="col">{{ 'hplus.members.pending.colStatus' | translate }}</th>
+              <th scope="col">{{ 'hplus.members.pending.colExpires' | translate }}</th>
+              <th scope="col" class="members__actions-col">
+                {{ 'hplus.members.col.actions' | translate }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (inv of invites(); track inv.invite_id) {
+              <tr [attr.data-testid]="'pending-row-' + inv.invite_id">
+                <td>
+                  <a class="members__email" [attr.href]="'mailto:' + inv.email">{{ inv.email }}</a>
+                </td>
+                <td>
+                  <ul class="members__roles">
+                    @for (r of inv.roles; track r) {
+                      <li class="members__role-chip" [attr.data-role]="r.toLowerCase()">
+                        {{ ('hplus.members.role.' + r.toLowerCase()) | translate }}
+                      </li>
+                    }
+                  </ul>
+                </td>
+                <td><span class="badge badge-muted">{{ inv.status }}</span></td>
+                <td class="members__last-seen">{{ inv.expires_at | date: 'medium' }}</td>
+                <td class="members__actions-col">
+                  <button
+                    type="button"
+                    class="btn btn-secondary members__remove"
+                    [attr.data-testid]="'pending-revoke-' + inv.invite_id"
+                    [disabled]="revokeBusyId() === inv.invite_id"
+                    [attr.aria-label]="
+                      ('hplus.members.pending.revokeAriaPrefix' | translate) + ' ' + inv.email
+                    "
+                    (click)="revokePendingInvite(inv)">
+                    {{ 'hplus.members.pending.revoke' | translate }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+
+    @if (showInvite()) {
+      <div
+        class="modal-overlay"
+        data-testid="invite-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="invite-modal-title"
+        tabindex="-1"
+        (click)="handleBackdropClick($event)"
+        (keydown.escape)="handleBackdropClick($event)">
+        <div class="modal-content glass-panel members__invite">
+          <header class="members__invite-head">
+            <h2
+              id="invite-modal-title"
+              class="members__invite-title surface-accent-text">
+              {{ 'hplus.members.inviteTitle' | translate }}
+            </h2>
+            <button
+              type="button"
+              class="members__invite-close"
+              data-testid="invite-close"
+              [attr.aria-label]="'hplus.members.inviteClose' | translate"
+              (click)="cancelInvite()">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </header>
+
+          <div class="members__invite-body">
+            @if (isOperator()) {
+              <label class="members__field" for="invite-target-tenant">
+                <span class="members__field-label">
+                  {{ 'hplus.members.operatorTenantLabel' | translate }}
+                </span>
+                @if (hierarchyState() === 'loading') {
+                  <span
+                    class="members__field-status"
+                    data-testid="managed-tenants-loading"
+                    role="status"
+                    aria-live="polite">
+                    <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+                    {{ 'hplus.members.managedTenantsLoading' | translate }}
+                  </span>
+                }
+                <select
+                  id="invite-target-tenant"
+                  class="form-control"
+                  data-testid="invite-target-tenant"
+                  [value]="targetTenantId()"
+                  (change)="onTargetTenantChange($event)">
+                  @for (t of targetTenants(); track t.id) {
+                    <option [value]="t.id">
+                      @if (t.id === choraMasterId) {
+                        {{ 'hplus.members.choraMain' | translate }}
+                      } @else {
+                        {{ t.name }}
+                      }
+                    </option>
+                  }
+                </select>
+                @if (hierarchyState() === 'error') {
+                  <span
+                    class="members__field-error"
+                    data-testid="managed-tenants-error"
+                    role="alert">
+                    {{ 'hplus.members.managedTenantsError' | translate }}
+                  </span>
+                } @else if (hasNoManagedTenants()) {
+                  <span
+                    class="members__field-hint"
+                    data-testid="no-managed-tenants">
+                    {{ 'hplus.members.noManagedTenants' | translate }}
+                  </span>
+                }
+                <span class="members__field-hint">
+                  {{ 'hplus.members.operatorTenantHint' | translate }}
+                </span>
+              </label>
+            }
+
+            <label class="members__field" for="invite-email-input">
+              <span class="members__field-label">
+                {{ 'hplus.members.inviteEmailLabel' | translate }}
+              </span>
+              <input
+                id="invite-email-input"
+                type="email"
+                class="form-control"
+                data-testid="invite-email"
+                autocomplete="off"
+                [value]="inviteEmail()"
+                (input)="onInviteEmailInput($event)" />
+            </label>
+
+            <fieldset class="members__field members__invite-roles" data-testid="invite-roles">
+              <legend class="members__field-label">
+                {{ 'hplus.members.inviteRoleLabel' | translate }}
+              </legend>
+              <ul class="members__roles">
+                @for (role of editableRoles; track role) {
+                  @let selected = isInviteRoleSelected(role);
+                  <li
+                    class="members__role-chip"
+                    [class.members__role-chip--selected]="selected"
+                    [attr.data-role]="role">
+                    <label class="members__role-check-label">
+                      <input
+                        type="checkbox"
+                        class="members__role-check"
+                        [attr.data-testid]="'invite-role-' + role"
+                        [checked]="selected"
+                        (change)="toggleInviteRole(role, $any($event.target).checked)" />
+                      {{ roleLabelKey(role) | translate }}
+                    </label>
+                  </li>
+                }
+              </ul>
+            </fieldset>
+
+            <p class="members__invite-hint">
+              {{ 'hplus.members.inviteExistingHint' | translate }}
+            </p>
+
+            @if (inviteError()) {
+              <p
+                class="members__invite-error"
+                data-testid="invite-error"
+                role="alert"
+                aria-live="polite">
+                {{ inviteErrorKey() | translate }}
+              </p>
+            }
+          </div>
+
+          <footer class="members__invite-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-testid="invite-cancel"
+              (click)="cancelInvite()">
+              {{ 'hplus.members.inviteCancel' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-testid="invite-submit"
+              [disabled]="!canSubmitInvite()"
+              (click)="submitInvite()">
+              @if (inviteBusy()) {
+                <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+              } @else {
+                <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+              }
+              {{ 'hplus.members.inviteSubmit' | translate }}
+            </button>
+          </footer>
+        </div>
+      </div>
+    }
+  </main>
+</section>

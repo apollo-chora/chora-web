@@ -1,0 +1,27 @@
+:host {
+  display: inline-flex;
+}
+
+.ai-companion-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs, 4px);
+  padding: 2px var(--chora-space-sm, 8px);
+  border-radius: var(--chora-radius-pill, 999px);
+  background: var(--chora-color-primary-surface, rgba(25, 118, 210, 0.12));
+  color: var(--chora-color-primary, #1976d2);
+  border: 1px solid var(--chora-color-primary-subtle, rgba(25, 118, 210, 0.28));
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: default;
+
+  &__icon {
+    font-size: 11px;
+  }
+
+  &__label {
+    letter-spacing: 0.01em;
+  }
+}

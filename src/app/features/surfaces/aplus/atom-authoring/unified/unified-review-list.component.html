@@ -1,0 +1,446 @@
+<div class="unified-review" data-testid="unified-review-list">
+  <!-- ── Interleaved review rows (AI drafts + manual, submission order) ── -->
+  @if (items().length === 0) {
+    <p class="unified-review__empty" data-testid="unified-review-empty">
+      {{ 'aplus.unified_review.empty_hint' | translate }}
+    </p>
+  } @else {
+    <!-- Review bar: generated / selected counts + select-all toggle (GAP #10).
+         Hidden in manual-only mode — the "N in review" framing is AI-specific. -->
+    @if (!manualOnly()) {
+      <div class="unified-review__review-bar" data-testid="unified-review-bar">
+        <p class="unified-review__review-summary">
+          {{ items().length }}
+          {{ 'aplus.unified_review.review_generated_suffix' | translate }}
+          <span class="unified-review__review-selected">
+            ({{ selectedCount() }}
+            {{ 'aplus.unified_review.review_selected_suffix' | translate }})
+          </span>
+        </p>
+        <button
+          type="button"
+          class="btn btn-ghost unified-review__select-all"
+          (click)="toggleAll.emit()"
+          data-testid="unified-review-select-all">
+          {{
+            (allSelected()
+              ? 'aplus.unified_review.deselect_all'
+              : 'aplus.unified_review.select_all'
+            ) | translate
+          }}
+        </button>
+      </div>
+    }
+
+    <ul
+      class="unified-review__rows"
+      data-testid="unified-review-rows"
+      cdkDropList
+      [cdkDropListData]="items()"
+      (cdkDropListDropped)="
+        reorder.emit({ from: $event.previousIndex, to: $event.currentIndex })
+      ">
+      @for (item of items(); track keyOf(item)) {
+        <li
+          class="unified-review__row"
+          cdkDrag
+          [cdkDragDisabled]="!item.selected"
+          [class.unified-review__row--selected]="item.selected"
+          [attr.data-testid]="'unified-review-row-' + keyOf(item)">
+          <!-- Toolbar: drag handle (selected only) + select + badge + (remove) -->
+          <div class="unified-review__row-toolbar">
+            @if (item.selected) {
+              <button
+                type="button"
+                class="unified-review__drag-handle"
+                cdkDragHandle
+                (keydown)="onHandleKeydown($event, $index)"
+                [attr.data-testid]="'unified-review-drag-' + keyOf(item)"
+                [attr.aria-label]="'aplus.unified_review.drag_to_reorder' | translate">
+                <span aria-hidden="true">&#9776;</span>
+              </button>
+            }
+            <label class="unified-review__select">
+              <input
+                type="checkbox"
+                [checked]="item.selected"
+                (change)="toggleSelect.emit(keyOf(item))"
+                [attr.data-testid]="'unified-review-select-' + keyOf(item)"
+                [attr.aria-label]="'aplus.unified_review.select_aria' | translate" />
+            </label>
+
+            <span
+              class="unified-review__badge unified-review__badge--{{ item.kind }}"
+              [attr.data-testid]="'unified-review-badge-' + keyOf(item)">
+              @switch (item.kind) {
+                @case ('ai') {
+                  <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                  {{ 'aplus.unified_review.badge_ai' | translate }}
+                }
+                @case ('manual') {
+                  <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                  {{ 'aplus.unified_review.badge_manual' | translate }}
+                }
+              }
+            </span>
+
+            @if (item.kind === 'manual') {
+              <button
+                type="button"
+                class="btn btn-ghost unified-review__remove"
+                (click)="removeManual.emit(item.tempId)"
+                [attr.data-testid]="'unified-review-remove-' + item.tempId"
+                [attr.aria-label]="'aplus.unified_review.remove_aria' | translate">
+                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                {{ 'aplus.unified_review.remove' | translate }}
+              </button>
+            }
+          </div>
+
+          <!-- Test-set points (GAP #12) — AI rows only (manual rows have no
+               draft_id so they are never placed in a test set), gated on the
+               test-set toggle + the row being kept. -->
+          @if (item.kind === 'ai' && testSet().enabled && item.selected) {
+            <div class="unified-review__points">
+              <label
+                class="unified-review__field-label"
+                [attr.for]="'unified-review-points-' + keyOf(item)">
+                {{ 'aplus.unified_review.points_label' | translate }}
+              </label>
+              <input
+                type="number"
+                inputmode="numeric"
+                class="unified-review__points-input"
+                [id]="'unified-review-points-' + keyOf(item)"
+                [attr.data-testid]="'unified-review-points-' + keyOf(item)"
+                min="1"
+                max="100"
+                step="1"
+                [value]="pointsFor(keyOf(item))"
+                (change)="onPointsInput(keyOf(item), $any($event.target).value)" />
+            </div>
+          }
+
+          <!-- Inline question editor (two-way model: bind in, capture changes
+               out). The AI stem illustration + its regenerate control are
+               projected into the editor's stemMedia slot so they render below
+               the stem and above the options/answer (batch parity). -->
+          <chora-question-editor
+            class="unified-review__editor"
+            [question]="item.edit"
+            (questionChange)="editItem.emit({ key: keyOf(item), edit: $event })"
+            [testIdPrefix]="'unified-review-' + keyOf(item)">
+            <div stemMedia class="unified-review__stem-media">
+              @if (item.kind === 'ai') {
+                @if (item.candidate.image_url; as stemUrl) {
+                  <chora-question-image
+                    [src]="stemUrl"
+                    [alt]="'aplus.unified_review.stem_image_alt' | translate"
+                    [testIdPrefix]="'unified-review-image-' + item.draftId" />
+                  @if (allowRegen()) {
+                    <chora-image-regen-control
+                      placement="stem"
+                      [testIdPrefix]="'unified-review-' + item.draftId + '-stem-'"
+                      [regenerating]="regenInfo(item.draftId, 'stem').regenerating"
+                      [error]="regenInfo(item.draftId, 'stem').error"
+                      (regenerate)="
+                        regenImage.emit({
+                          draftId: item.draftId,
+                          placement: 'stem',
+                          prompt: $event
+                        })
+                      " />
+                  }
+                }
+              }
+            </div>
+          </chora-question-editor>
+
+          <!-- AI-only: model-answer illustration + regen, then citation chips. -->
+          @if (item.kind === 'ai') {
+            @if (item.candidate.answer_image_url; as answerUrl) {
+              <chora-question-image
+                [src]="answerUrl"
+                [alt]="'aplus.unified_review.answer_image_alt' | translate"
+                [caption]="'aplus.unified_review.answer_image_caption' | translate"
+                [testIdPrefix]="'unified-review-answer-image-' + item.draftId" />
+              @if (allowRegen()) {
+                <chora-image-regen-control
+                  placement="answer"
+                  [testIdPrefix]="'unified-review-' + item.draftId + '-answer-'"
+                  [regenerating]="regenInfo(item.draftId, 'answer').regenerating"
+                  [error]="regenInfo(item.draftId, 'answer').error"
+                  (regenerate)="
+                    regenImage.emit({
+                      draftId: item.draftId,
+                      placement: 'answer',
+                      prompt: $event
+                    })
+                  " />
+              }
+            }
+
+            <!-- OE rubric preview (read-only mark-scheme; GAP #8). -->
+            @if (item.candidate.oe_payload?.rubric; as rubric) {
+              @if (rubric.length) {
+                <div
+                  class="unified-review__rubric"
+                  [attr.data-testid]="'unified-review-oe-rubric-' + item.draftId">
+                  <p class="unified-review__field-label">
+                    {{ 'aplus.atom_authoring.ai_assist.rubric_preview_heading' | translate }}
+                  </p>
+                  <ul class="unified-review__rubric-rows">
+                    @for (crit of rubric; track crit.criterion_id) {
+                      <li class="unified-review__rubric-row-item">
+                        <span>{{ crit.title }}</span>
+                        <span class="unified-review__rubric-weight">{{ crit.weight }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            }
+
+            <!-- Quality warning — critic residual concern (GAP #7). -->
+            @if (hasQualityWarning(item.candidate)) {
+              <aside
+                class="unified-review__quality-warning"
+                role="status"
+                [attr.data-testid]="'unified-review-quality-warning-' + item.draftId">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                <span>
+                  {{ 'aplus.atom_authoring.ai_assist.quality_warning_prefix' | translate }}
+                  @if (item.candidate.critic_notes; as note) {
+                    : {{ note }}
+                  }
+                </span>
+              </aside>
+            }
+
+            <!-- Citations: collapse/expand + per-citation verification (GAP #9). -->
+            @if (citationCount(item.candidate); as count) {
+              <div class="unified-review__citations-block">
+                <button
+                  type="button"
+                  class="btn btn-ghost unified-review__citations-badge"
+                  [class.unified-review__citations-badge--active]="isCitationsExpanded(keyOf(item))"
+                  (click)="toggleCitations(keyOf(item))"
+                  [attr.aria-expanded]="isCitationsExpanded(keyOf(item))"
+                  [attr.data-testid]="'unified-review-citations-toggle-' + item.draftId">
+                  <i class="fa-solid fa-quote-left" aria-hidden="true"></i>
+                  {{ 'aplus.unified_review.citations_badge_label' | translate }}
+                  ({{ count }})
+                  <i
+                    class="fa-solid"
+                    [class.fa-chevron-down]="!isCitationsExpanded(keyOf(item))"
+                    [class.fa-chevron-up]="isCitationsExpanded(keyOf(item))"
+                    aria-hidden="true"></i>
+                </button>
+                @if (isCitationsExpanded(keyOf(item))) {
+                  <ul
+                    class="unified-review__citations"
+                    [attr.data-testid]="'unified-review-citations-' + item.draftId">
+                    @for (c of item.candidate.citations; track $index) {
+                      <li
+                        class="unified-review__citation-chip unified-review__citation-chip--{{ citationState(c) }}"
+                        [attr.data-testid]="
+                          'unified-review-citation-chip-' + item.draftId + '-' + $index
+                        ">
+                        <span class="unified-review__citation-state">
+                          @switch (citationState(c)) {
+                            @case ('verified') {
+                              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                              {{ 'aplus.unified_review.citation_verified' | translate }}
+                            }
+                            @case ('unverified') {
+                              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                              {{ 'aplus.unified_review.citation_unverified' | translate }}
+                            }
+                            @default {
+                              <i class="fa-solid fa-robot" aria-hidden="true"></i>
+                              {{ 'aplus.unified_review.citation_ai_reported' | translate }}
+                            }
+                          }
+                        </span>
+                        <span class="unified-review__citation-source">
+                          {{ citationSourceName(c) }}
+                          @if (c.page; as page) {
+                            · {{ 'aplus.unified_review.citation_page_prefix' | translate }} {{ page }}
+                          }
+                        </span>
+                        <blockquote class="unified-review__citation-excerpt">
+                          {{ c.excerpt }}
+                        </blockquote>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+            }
+          }
+
+          <!-- Per-row atom title override (optional catalog label, not the stem). -->
+          <div class="unified-review__title-field">
+            <label
+              class="unified-review__field-label"
+              [attr.for]="'unified-review-title-' + keyOf(item)">
+              {{ 'aplus.unified_review.title_label' | translate }}
+            </label>
+            <input
+              type="text"
+              class="unified-review__text-input"
+              [id]="'unified-review-title-' + keyOf(item)"
+              [value]="item.titleOverride ?? ''"
+              (input)="
+                titleChange.emit({ key: keyOf(item), title: $any($event.target).value })
+              "
+              [placeholder]="'aplus.unified_review.title_placeholder' | translate"
+              [attr.data-testid]="'unified-review-title-' + keyOf(item)" />
+          </div>
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- ── Add a hand-authored question ──────────────────────────────── -->
+  <div class="unified-review__add-row">
+    <button
+      type="button"
+      class="btn btn-secondary unified-review__add"
+      (click)="addManual.emit('mcq')"
+      data-testid="unified-review-add-mcq">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      {{ 'aplus.unified_review.add_mcq' | translate }}
+    </button>
+    <button
+      type="button"
+      class="btn btn-secondary unified-review__add"
+      (click)="addManual.emit('oe')"
+      data-testid="unified-review-add-oe">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      {{ 'aplus.unified_review.add_oe' | translate }}
+    </button>
+  </div>
+
+  <!-- ── Mana-cost preview chip (indicative — backend price-plan wins).
+       Hidden in manual-only mode: hand-authoring never consumes mana, so the
+       AI-pricing tally is noise there (CHO-1826 review). ── -->
+  @if (!manualOnly()) {
+    <div
+      class="unified-review__mana-chip"
+      role="status"
+      aria-live="polite"
+      data-testid="unified-review-mana-chip">
+      <i class="fa-solid fa-coins" aria-hidden="true"></i>
+      <span class="unified-review__mana-total" data-testid="unified-review-mana-total">
+        {{ 'aplus.unified_review.mana_approx_prefix' | translate }}
+        {{ manaPreview().total }}
+        {{ 'aplus.unified_review.mana_unit' | translate }}
+      </span>
+      <span class="unified-review__mana-breakdown" data-testid="unified-review-mana-breakdown">
+        · {{ manaPreview().textCount }}×{{ manaPerText }}
+        + {{ manaPreview().imageCount }}×{{ manaPerImage }}
+        + {{ manaPreview().manualCount }} {{ 'aplus.unified_review.mana_free' | translate }}
+      </span>
+    </div>
+  }
+
+  <!-- ── Test-set section (master toggle + title). Hidden in manual-only mode:
+       manual rows have no draft_id, so they can never populate a test set. ── -->
+  @if (!manualOnly()) {
+  <section
+    class="unified-review__test-set"
+    data-testid="unified-review-test-set"
+    aria-labelledby="unified-review-test-set-heading">
+    <div class="unified-review__test-set-head">
+      <h3
+        id="unified-review-test-set-heading"
+        class="unified-review__test-set-heading">
+        {{ 'aplus.unified_review.test_set_heading' | translate }}
+      </h3>
+      <label class="unified-review__test-set-toggle">
+        <input
+          type="checkbox"
+          role="switch"
+          [checked]="testSet().enabled"
+          [attr.aria-checked]="testSet().enabled"
+          [disabled]="!canAssembleTestSet() && !testSet().enabled"
+          (change)="setTestSetEnabled.emit($any($event.target).checked)"
+          data-testid="unified-review-test-set-toggle"
+          [attr.aria-label]="'aplus.unified_review.test_set_toggle_label' | translate" />
+        {{ 'aplus.unified_review.test_set_toggle_label' | translate }}
+      </label>
+    </div>
+    <!-- FE-2 (#2): a topic test set needs ≥2 questions (ADR-195 D4). -->
+    @if (!canAssembleTestSet()) {
+      <p
+        class="unified-review__test-set-hint"
+        data-testid="unified-review-test-set-needs-two">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        {{ 'aplus.unified_review.test_set_needs_two' | translate }}
+      </p>
+    }
+    @if (testSet().enabled) {
+      <label
+        class="unified-review__field-label"
+        for="unified-review-test-set-title">
+        {{ 'aplus.unified_review.test_set_title_label' | translate }}
+      </label>
+      <input
+        id="unified-review-test-set-title"
+        type="text"
+        class="unified-review__text-input"
+        [value]="testSet().title"
+        (input)="setTestSetTitle.emit($any($event.target).value)"
+        [placeholder]="'aplus.unified_review.test_set_title_placeholder' | translate"
+        data-testid="unified-review-test-set-title" />
+
+      <!-- Test-set description (GAP #13) — optional, learner-visible later. -->
+      <label
+        class="unified-review__field-label"
+        for="unified-review-test-set-description">
+        {{ 'aplus.unified_review.test_set_description_label' | translate }}
+      </label>
+      <textarea
+        id="unified-review-test-set-description"
+        class="unified-review__textarea"
+        rows="2"
+        [value]="testSet().description ?? ''"
+        (input)="setTestSetDescription.emit($any($event.target).value)"
+        [placeholder]="'aplus.unified_review.test_set_description_placeholder' | translate"
+        data-testid="unified-review-test-set-description"></textarea>
+    }
+  </section>
+  }
+
+  <!-- ── Accept ────────────────────────────────────────────────────── -->
+  <!-- FE-1 (#3): an accept failure PRESERVES the review (parent restores the
+       'review' state) — surface it inline here so the author can fix + retry
+       without losing every generated candidate or re-paying accept-time mana. -->
+  @if (acceptError(); as err) {
+    <p
+      class="unified-review__accept-error"
+      role="alert"
+      aria-live="polite"
+      data-testid="unified-review-accept-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      {{ err | translate }}
+    </p>
+  }
+  <div class="unified-review__cta-row">
+    <button
+      type="button"
+      class="btn btn-primary unified-review__accept"
+      [disabled]="busy() || !canAccept()"
+      (click)="accept.emit()"
+      data-testid="unified-review-accept">
+      <i class="fa-solid fa-check" aria-hidden="true"></i>
+      {{
+        (manualOnly()
+          ? 'aplus.unified_review.accept_cta_manual'
+          : 'aplus.unified_review.accept_cta'
+        ) | translate
+      }}
+    </button>
+  </div>
+</div>

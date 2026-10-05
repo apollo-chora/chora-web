@@ -1,0 +1,442 @@
+// O+ A2A Console — wave-3 admin console for the Agent-to-Agent domain.
+// Tablet-first: ≥768px primary, ≥1280px desktop enhancement.
+
+:host {
+  display: block;
+}
+
+.oplus-a2a {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  &__header-text {
+    flex: 1 1 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  &__header-actions {
+    display: inline-flex;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  &__title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__agid-note {
+    margin: 0.1rem 0 0;
+    padding: 0.45rem 0.75rem;
+    background: rgba(123, 45, 142, 0.07);
+    border-radius: 8px;
+    border-inline-start: 3px solid var(--primary);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+
+    i {
+      color: var(--primary);
+    }
+  }
+
+  &__deferred-note {
+    margin: 0;
+    padding: 0.55rem 0.85rem;
+    background: rgba(59, 130, 246, 0.08);
+    border-inline-start: 3px solid #3b82f6;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      color: #3b82f6;
+    }
+  }
+
+  &__panel {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  &__panel-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  &__section-heading {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      color: var(--primary);
+    }
+  }
+
+  &__panel-subtitle {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  &__counters {
+    display: inline-flex;
+    gap: 0.45rem;
+    margin-inline-start: auto;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
+
+    &[data-variant='active'] {
+      background: rgba(16, 185, 129, 0.15);
+      color: #059669;
+    }
+
+    &[data-variant='paused'] {
+      background: rgba(245, 158, 11, 0.15);
+      color: #b45309;
+    }
+
+    &[data-variant='alert'] {
+      background: rgba(239, 68, 68, 0.15);
+      color: #dc2626;
+    }
+  }
+
+  // ── Tables ────────────────────────────────────────────────────────
+  &__table-wrap {
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.82rem;
+  }
+
+  &__caption {
+    caption-side: top;
+    text-align: start;
+    padding-bottom: 0.55rem;
+    color: var(--text-muted);
+    font-size: 0.74rem;
+  }
+
+  thead th {
+    text-align: start;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    font-weight: 700;
+  }
+
+  tbody tr {
+    background: rgba(255, 255, 255, 0.4);
+
+    &:nth-child(even) {
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    td {
+      padding: 0.55rem 0.7rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+      vertical-align: middle;
+    }
+  }
+
+  &__cell-mono {
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    font-size: 0.74rem;
+  }
+
+  &__cell-num {
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    font-weight: 700;
+  }
+
+  &__cell-muted {
+    color: var(--text-muted);
+    font-size: 0.74rem;
+  }
+
+  &__cell-strong {
+    font-weight: 600;
+  }
+
+  // ── Status pills ───────────────────────────────────────────────────
+  &__status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: capitalize;
+
+    &[data-status='active'] {
+      color: #059669;
+      background: rgba(16, 185, 129, 0.15);
+    }
+
+    &[data-status='paused'] {
+      color: #b45309;
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    &[data-status='pending'] {
+      color: #2563eb;
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    &[data-status='revoked'] {
+      color: #dc2626;
+      background: rgba(239, 68, 68, 0.15);
+    }
+  }
+
+  &__invocation-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: capitalize;
+
+    &[data-status='success'] {
+      color: #059669;
+      background: rgba(16, 185, 129, 0.15);
+    }
+
+    &[data-status='denied'] {
+      color: #b45309;
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    &[data-status='error'] {
+      color: #dc2626;
+      background: rgba(239, 68, 68, 0.15);
+    }
+  }
+
+  &__trust-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: capitalize;
+
+    &[data-trust='verified'] {
+      color: #7b2d8e;
+      background: rgba(123, 45, 142, 0.12);
+    }
+
+    &[data-trust='pilot'] {
+      color: #2563eb;
+      background: rgba(59, 130, 246, 0.12);
+    }
+
+    &[data-trust='experimental'] {
+      color: #b45309;
+      background: rgba(245, 158, 11, 0.15);
+    }
+  }
+
+  &__scope-chip {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    margin: 0.05rem 0.18rem 0.05rem 0;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    background: rgba(196, 16, 123, 0.08);
+    color: #c4107b;
+  }
+
+  // ── Buttons ────────────────────────────────────────────────────────
+  &__btn {
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    &--primary {
+      background: linear-gradient(135deg, #7b2d8e, #c4107b);
+      color: white;
+
+      &:hover:not(:disabled) {
+        filter: brightness(1.07);
+      }
+    }
+
+    &--ghost {
+      background: rgba(255, 255, 255, 0.55);
+      border-color: rgba(0, 0, 0, 0.08);
+      color: var(--text-main);
+      font-size: 0.7rem;
+      padding: 0.3rem 0.7rem;
+
+      &:hover:not(:disabled) {
+        background: rgba(123, 45, 142, 0.07);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Phase-D additions — header LIVE badge variants + auditor gate + pending banner.
+.oplus-a2a__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--success, #10b981);
+  background: rgba(16, 185, 129, 0.1);
+
+  &[data-variant='stale'] {
+    color: #d97706;
+    background: rgba(245, 158, 11, 0.15);
+  }
+
+  &[data-variant='offline'] {
+    color: #dc2626;
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  &[data-variant='loading'] {
+    color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.05);
+  }
+}
+
+.oplus-a2a__live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: oplusPulse 2s infinite;
+}
+
+.oplus-a2a__gate,
+.oplus-a2a__error {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+
+  i {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+}
+
+.oplus-a2a__pending-banner {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.18);
+
+  i {
+    color: #d97706;
+    font-size: 1.4rem;
+  }
+
+  strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 0.95rem;
+  }
+
+  p {
+    margin: 0.2rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+}
+
+@keyframes oplusPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oplus-a2a__live-dot {
+    animation: none;
+  }
+}

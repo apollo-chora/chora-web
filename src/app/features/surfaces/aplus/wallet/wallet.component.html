@@ -1,0 +1,110 @@
+<section class="wallet" aria-labelledby="wallet-title">
+  <header class="wallet__header">
+    <h1 id="wallet-title">{{ 'aplus.wallet.title' | translate }}</h1>
+    <p class="wallet__subtitle">{{ 'aplus.wallet.subtitle' | translate }}</p>
+  </header>
+
+  <!-- Post-Stripe confirmation banner -->
+  @if (confirm().status === 'confirming') {
+    <div class="wallet__banner wallet__banner--pending" role="status" data-testid="wallet-confirming">
+      <span class="wallet__spinner" aria-hidden="true"></span>
+      {{ 'aplus.wallet.confirming' | translate }}
+    </div>
+  } @else if (confirm().status === 'credited') {
+    <div class="wallet__banner wallet__banner--success" role="status" data-testid="wallet-credited">
+      ✓ {{ 'aplus.wallet.credited' | translate }}
+    </div>
+  } @else if (confirm().status === 'processing') {
+    <div class="wallet__banner wallet__banner--info" role="status" data-testid="wallet-processing">
+      {{ 'aplus.wallet.processing' | translate }}
+    </div>
+  }
+
+  <!-- ① Balance (hero) — the big number, with the breakdown as a contextual
+       disclosure that explains where it comes from (collapsed by default). -->
+  <section class="wallet__card wallet__balance glass-panel" data-testid="wallet-balance">
+    @if (loadState().status === 'loading') {
+      <span class="wallet__balance-loading">{{ 'common.loading' | translate }}</span>
+    } @else if (loadState().status === 'error') {
+      <span class="wallet__balance-error" role="alert">{{ 'aplus.wallet.balance_error' | translate }}</span>
+    } @else {
+      <span class="wallet__balance-units">{{ balanceUnits() }}</span>
+      <span class="wallet__balance-label">{{ 'aplus.wallet.mana_balance' | translate }}</span>
+
+      @if (subsidies().length > 0) {
+        <button
+          type="button"
+          class="wallet__breakdown-toggle"
+          (click)="toggleBreakdown()"
+          [attr.aria-expanded]="breakdownOpen()"
+          aria-controls="wallet-breakdown"
+          data-testid="wallet-breakdown-toggle"
+        >
+          {{ (breakdownOpen() ? 'aplus.wallet.breakdown_hide' : 'aplus.wallet.breakdown_show') | translate }}
+          <i
+            class="fa-solid fa-chevron-down wallet__breakdown-caret"
+            [class.is-open]="breakdownOpen()"
+            aria-hidden="true"
+          ></i>
+        </button>
+
+        @if (breakdownOpen()) {
+          <div id="wallet-breakdown" class="wallet__breakdown" data-testid="wallet-subsidies">
+            <ul>
+              @for (s of subsidies(); track s.source + (s.tenant_id ?? '')) {
+                <li>
+                  <span class="wallet__subsidy-source">{{ sourceLabelKey(s.source) | translate }}</span>
+                  <span class="wallet__subsidy-units">{{ s.units }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      }
+    }
+  </section>
+
+  <!-- ② Top up — buy more mana (Stripe checkout). -->
+  <section class="wallet__card wallet__topup glass-panel" aria-labelledby="wallet-topup-title">
+    <h2 id="wallet-topup-title" class="wallet__card-title">{{ 'aplus.wallet.topup_heading' | translate }}</h2>
+    <p class="wallet__topup-hint">{{ 'aplus.wallet.topup_hint' | translate }}</p>
+
+    @if (checkoutError(); as err) {
+      <p class="wallet__topup-error" role="alert" data-testid="wallet-checkout-error">
+        {{ err | translate }}
+      </p>
+    }
+
+    <div class="wallet__packs">
+      @for (pack of packs; track pack.sku) {
+        <button
+          type="button"
+          class="wallet__pack glass-panel"
+          [attr.data-testid]="'wallet-pack-' + pack.sku"
+          [disabled]="isCheckingOut()"
+          (click)="topUp(pack.sku)"
+        >
+          <span class="wallet__pack-units">{{ pack.mana_units }} {{ 'aplus.wallet.mana' | translate }}</span>
+          <span class="wallet__pack-price">{{ priceLabel(pack) }}</span>
+        </button>
+      }
+    </div>
+
+    @if (isCheckingOut()) {
+      <p class="wallet__redirecting" role="status">{{ 'aplus.wallet.redirecting' | translate }}</p>
+    }
+  </section>
+
+  <!-- ③ Transaction history — the unified timeline INLINE (CHO-2238 one
+       wallet). ADR-205/CHO-1948 folded the mana ledger (CHO-1883) into the
+       unified timeline; the one-wallet ruling (2026-07-17) brings that
+       timeline home. The shared component owns per-day rollup + drill-down;
+       this surface owns the scope decision (ADR-205 D1) and hard-codes
+       'learner' because A+ is a single-learner surface. -->
+  <section class="wallet__card wallet__history glass-panel" data-testid="wallet-history" aria-labelledby="wallet-history-title">
+    <h2 id="wallet-history-title" class="wallet__card-title">{{ 'aplus.wallet.history_heading' | translate }}</h2>
+    <p class="wallet__history-hint">{{ 'aplus.wallet.history_hint' | translate }}</p>
+    <chora-transaction-history [scope]="'learner'" />
+  </section>
+
+</section>

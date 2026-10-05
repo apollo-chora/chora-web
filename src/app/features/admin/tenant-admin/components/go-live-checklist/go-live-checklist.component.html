@@ -1,0 +1,104 @@
+<section
+  class="go-live-checklist"
+  role="main"
+  [attr.aria-label]="'admin.go_live.title' | translate"
+  data-testid="go-live-checklist">
+
+  <header class="go-live-checklist__header">
+    <h1 class="go-live-checklist__title" data-testid="go-live-title">
+      {{ 'admin.go_live.title' | translate }}
+    </h1>
+    <p class="go-live-checklist__subtitle">
+      {{ 'admin.go_live.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Readiness Score -->
+  <div class="go-live-checklist__score" data-testid="readiness-score">
+    <div class="go-live-checklist__score-ring"
+         [class.go-live-checklist__score-ring--all-passed]="allPassed()">
+      <span class="go-live-checklist__score-value">{{ readinessScore() }}%</span>
+    </div>
+    <div class="go-live-checklist__score-details">
+      <span class="go-live-checklist__score-label">
+        {{ 'admin.go_live.readiness_score' | translate }}
+      </span>
+      <span class="go-live-checklist__score-count" data-testid="score-count">
+        {{ passedCount() }} / {{ totalCount() }} {{ 'admin.go_live.tests_passed' | translate }}
+      </span>
+    </div>
+
+    <button
+      type="button"
+      class="go-live-checklist__btn go-live-checklist__btn--primary"
+      (click)="runAllTests()"
+      [disabled]="runningAll() || hasRunningTest()"
+      data-testid="run-all-btn"
+      [attr.aria-label]="'admin.go_live.run_all' | translate">
+      @if (runningAll()) {
+        {{ 'admin.go_live.running' | translate }}
+      } @else {
+        {{ 'admin.go_live.run_all' | translate }}
+      }
+    </button>
+  </div>
+
+  <!-- Test List -->
+  <div class="go-live-checklist__tests" role="list"
+       [attr.aria-label]="'admin.go_live.test_list' | translate"
+       data-testid="test-list">
+    @for (test of tests(); track trackByTestId($index, test)) {
+      <div
+        class="go-live-checklist__test"
+        [class.go-live-checklist__test--passed]="test.status === 'passed'"
+        [class.go-live-checklist__test--failed]="test.status === 'failed'"
+        [class.go-live-checklist__test--running]="test.status === 'running'"
+        role="listitem"
+        [attr.data-testid]="'test-item-' + test.id">
+
+        <!-- Status Icon -->
+        <span
+          class="go-live-checklist__status-icon"
+          [ngClass]="getStatusClass(test.status)"
+          [attr.aria-label]="test.status"
+          aria-hidden="true">
+          {{ getStatusIcon(test.status) }}
+        </span>
+
+        <!-- Test Info -->
+        <div class="go-live-checklist__test-info">
+          <span class="go-live-checklist__test-name">
+            {{ test.name | translate }}
+          </span>
+          <span class="go-live-checklist__test-desc">
+            {{ test.description | translate }}
+          </span>
+
+          @if (test.status === 'failed' && test.error_detail) {
+            <div class="go-live-checklist__test-error" role="alert" data-testid="test-error">
+              <span class="go-live-checklist__error-label">
+                {{ 'admin.go_live.error_detail' | translate }}:
+              </span>
+              {{ test.error_detail }}
+            </div>
+          }
+        </div>
+
+        <!-- Run Button -->
+        <button
+          type="button"
+          class="go-live-checklist__btn go-live-checklist__btn--small"
+          (click)="runTest(test.id)"
+          [disabled]="test.status === 'running' || runningAll()"
+          [attr.data-testid]="'run-test-' + test.id"
+          [attr.aria-label]="('admin.go_live.run_test' | translate) + ': ' + (test.name | translate)">
+          @if (test.status === 'running') {
+            {{ 'admin.go_live.running' | translate }}
+          } @else {
+            {{ 'admin.go_live.run' | translate }}
+          }
+        </button>
+      </div>
+    }
+  </div>
+</section>

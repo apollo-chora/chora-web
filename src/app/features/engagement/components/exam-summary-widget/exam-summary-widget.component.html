@@ -1,0 +1,147 @@
+<div
+  class="exam-summary-widget"
+  [class.exam-summary-widget--high]="readinessLevel() === 'high'"
+  [class.exam-summary-widget--medium]="readinessLevel() === 'medium'"
+  [class.exam-summary-widget--low]="readinessLevel() === 'low'"
+  role="region"
+  aria-label="Exam Day Summary"
+  data-testid="exam-summary-widget">
+
+  <!-- Header: exam title, date, Familiar icon -->
+  <div class="exam-summary-widget__header" data-testid="exam-summary-header">
+    <div class="exam-summary-widget__title-row">
+      <span class="material-icons-outlined exam-summary-widget__familiar-icon" aria-hidden="true">auto_awesome</span>
+      <h3 class="exam-summary-widget__title" data-testid="exam-summary-title">
+        {{ readiness().exam_title }}
+      </h3>
+    </div>
+    <span class="exam-summary-widget__date" data-testid="exam-summary-date">
+      {{ formattedDate() }}
+    </span>
+  </div>
+
+  <!-- Readiness gauge: overall percentage, color-coded -->
+  <div class="exam-summary-widget__gauge" data-testid="exam-summary-gauge">
+    <div class="exam-summary-widget__gauge-label">
+      {{ 'engagement.exam-summary.overall-readiness' | translate }}
+    </div>
+    <div class="exam-summary-widget__gauge-bar">
+      <div
+        class="exam-summary-widget__gauge-fill exam-summary-widget__gauge-fill--{{ readinessLevel() }}"
+        [style.width.%]="readiness().overall_readiness"
+        role="progressbar"
+        [attr.aria-valuenow]="readiness().overall_readiness"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-label]="'Overall readiness: ' + readiness().overall_readiness + '%'"
+        data-testid="exam-summary-gauge-fill">
+      </div>
+    </div>
+    <span class="exam-summary-widget__gauge-value" data-testid="exam-summary-gauge-value">
+      {{ readiness().overall_readiness }}%
+    </span>
+  </div>
+
+  <!-- Predicted score with confidence interval and threshold -->
+  <div class="exam-summary-widget__prediction" data-testid="exam-summary-prediction">
+    <div class="exam-summary-widget__prediction-row">
+      <span class="exam-summary-widget__prediction-label">
+        {{ 'engagement.exam-summary.predicted-score' | translate }}
+      </span>
+      <span
+        class="exam-summary-widget__prediction-value"
+        [class.exam-summary-widget__prediction-value--above]="aboveThreshold()"
+        [class.exam-summary-widget__prediction-value--below]="!aboveThreshold()"
+        data-testid="exam-summary-predicted-score">
+        {{ readiness().predicted_score }}%
+      </span>
+    </div>
+    <div class="exam-summary-widget__confidence" data-testid="exam-summary-confidence">
+      {{ 'engagement.exam-summary.confidence-range' | translate }}:
+      {{ readiness().confidence_interval.low }}% &ndash; {{ readiness().confidence_interval.high }}%
+    </div>
+    <div class="exam-summary-widget__threshold" data-testid="exam-summary-threshold">
+      {{ 'engagement.exam-summary.pass-threshold' | translate }}: {{ readiness().pass_threshold }}%
+      @if (aboveThreshold()) {
+        <span class="material-icons-outlined exam-summary-widget__threshold-icon exam-summary-widget__threshold-icon--pass" aria-hidden="true">check_circle</span>
+      } @else {
+        <span class="material-icons-outlined exam-summary-widget__threshold-icon exam-summary-widget__threshold-icon--fail" aria-hidden="true">warning</span>
+      }
+    </div>
+  </div>
+
+  <!-- Topic readiness bars: sorted weakest-first -->
+  <div class="exam-summary-widget__topics" data-testid="exam-summary-topics">
+    <h4 class="exam-summary-widget__section-title">
+      {{ 'engagement.exam-summary.topic-readiness' | translate }}
+    </h4>
+    @for (topic of topTopics(); track topic.topic_id) {
+      <div class="exam-summary-widget__topic" data-testid="exam-summary-topic">
+        <div class="exam-summary-widget__topic-header">
+          <span class="exam-summary-widget__topic-name" data-testid="exam-summary-topic-name">
+            {{ topic.topic_name }}
+          </span>
+          <span class="exam-summary-widget__topic-pct" data-testid="exam-summary-topic-pct">
+            {{ topic.readiness }}%
+          </span>
+        </div>
+        <div class="exam-summary-widget__topic-bar">
+          <div
+            class="exam-summary-widget__topic-fill"
+            [class.exam-summary-widget__topic-fill--high]="topic.readiness >= 75"
+            [class.exam-summary-widget__topic-fill--medium]="topic.readiness >= 50 && topic.readiness < 75"
+            [class.exam-summary-widget__topic-fill--low]="topic.readiness < 50"
+            [style.width.%]="topic.readiness"
+            role="progressbar"
+            [attr.aria-valuenow]="topic.readiness"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="topic.topic_name + ' readiness: ' + topic.readiness + '%'"
+            data-testid="exam-summary-topic-fill">
+          </div>
+        </div>
+        <div class="exam-summary-widget__topic-atoms" data-testid="exam-summary-topic-atoms">
+          {{ topic.atoms_reviewed }}/{{ topic.atoms_total }}
+          {{ 'engagement.exam-summary.atoms-reviewed' | translate }}
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Revision stats: atoms reviewed, time spent, streak -->
+  <div class="exam-summary-widget__stats" data-testid="exam-summary-stats">
+    <h4 class="exam-summary-widget__section-title">
+      {{ 'engagement.exam-summary.revision-stats' | translate }}
+    </h4>
+    <div class="exam-summary-widget__stats-grid">
+      <div class="exam-summary-widget__stat" data-testid="exam-summary-stat-atoms-today">
+        <span class="exam-summary-widget__stat-value">{{ readiness().revision_stats.atoms_reviewed_today }}</span>
+        <span class="exam-summary-widget__stat-label">{{ 'engagement.exam-summary.atoms-today' | translate }}</span>
+      </div>
+      <div class="exam-summary-widget__stat" data-testid="exam-summary-stat-atoms-week">
+        <span class="exam-summary-widget__stat-value">{{ readiness().revision_stats.atoms_reviewed_week }}</span>
+        <span class="exam-summary-widget__stat-label">{{ 'engagement.exam-summary.atoms-week' | translate }}</span>
+      </div>
+      <div class="exam-summary-widget__stat" data-testid="exam-summary-stat-time-today">
+        <span class="exam-summary-widget__stat-value">{{ formattedTimeToday() }}</span>
+        <span class="exam-summary-widget__stat-label">{{ 'engagement.exam-summary.time-today' | translate }}</span>
+      </div>
+      <div class="exam-summary-widget__stat" data-testid="exam-summary-stat-streak">
+        <span class="exam-summary-widget__stat-value">{{ readiness().revision_stats.streak_days }}</span>
+        <span class="exam-summary-widget__stat-label">{{ 'engagement.exam-summary.streak-days' | translate }}</span>
+      </div>
+      <div class="exam-summary-widget__stat" data-testid="exam-summary-stat-sessions">
+        <span class="exam-summary-widget__stat-value">{{ readiness().revision_stats.sessions_completed }}</span>
+        <span class="exam-summary-widget__stat-label">{{ 'engagement.exam-summary.sessions' | translate }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Familiar encouragement message -->
+  <div class="exam-summary-widget__familiar" data-testid="exam-summary-familiar">
+    <span class="material-icons-outlined exam-summary-widget__familiar-icon" aria-hidden="true">auto_awesome</span>
+    <p class="exam-summary-widget__familiar-message" data-testid="exam-summary-familiar-message">
+      {{ readiness().familiar_message }}
+    </p>
+  </div>
+</div>

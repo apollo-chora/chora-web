@@ -1,0 +1,585 @@
+// C+ Interests — flat surface (ADR-196). Category-grouped interest
+// pills + taxonomy toggle picker. No glass blur, no gradients as fill.
+
+// Per-category accent variables applied via data-category.
+@mixin cat-accents {
+  &[data-category='programming'] {
+    --pill-tint: rgba(0, 188, 212, 0.12);
+    --pill-strong: #0097a7;
+    --pill-border: rgba(0, 188, 212, 0.28);
+  }
+  &[data-category='mathematics'] {
+    --pill-tint: rgba(25, 118, 210, 0.1);
+    --pill-strong: #1565c0;
+    --pill-border: rgba(25, 118, 210, 0.24);
+  }
+  &[data-category='science'] {
+    --pill-tint: rgba(46, 125, 50, 0.1);
+    --pill-strong: #2e7d32;
+    --pill-border: rgba(46, 125, 50, 0.24);
+  }
+  &[data-category='humanities'] {
+    --pill-tint: rgba(123, 31, 162, 0.1);
+    --pill-strong: #6a1b9a;
+    --pill-border: rgba(123, 31, 162, 0.24);
+  }
+  &[data-category='arts'] {
+    --pill-tint: rgba(230, 81, 0, 0.1);
+    --pill-strong: #e65100;
+    --pill-border: rgba(230, 81, 0, 0.24);
+  }
+  &[data-category='languages'] {
+    --pill-tint: rgba(194, 24, 91, 0.1);
+    --pill-strong: #ad1457;
+    --pill-border: rgba(194, 24, 91, 0.24);
+  }
+}
+
+.cplus-interests {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-lg);
+}
+
+// ── Form ──────────────────────────────────────────────────────────────────
+
+.cplus-interests-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-md);
+}
+
+.cplus-interests-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-sm);
+}
+
+.cplus-interests-form__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cplus-text);
+}
+
+.cplus-interests-form__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--cplus-radius-control);
+  border: 1px solid var(--cplus-border);
+  background: var(--cplus-surface);
+  color: var(--cplus-text);
+  resize: vertical;
+  min-height: 6rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  transition:
+    border-color var(--cplus-transition-fast),
+    box-shadow var(--cplus-transition-fast);
+
+  &::placeholder {
+    color: var(--cplus-text-disabled);
+  }
+
+  &:hover {
+    border-color: var(--cplus-border-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cplus-focus-ring);
+    outline-offset: var(--cplus-focus-ring-offset);
+    border-color: var(--cplus-focus-ring);
+  }
+}
+
+.cplus-interests-form__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-sm);
+}
+
+.cplus-interests-form__error {
+  margin: 0;
+  color: var(--cplus-danger);
+  font-size: 0.875rem;
+}
+
+.cplus-interests-form__generating-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--cplus-text-secondary);
+  line-height: 1.45;
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-sm);
+}
+
+.cplus-interests-btn__spinner {
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: cplus-interests-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes cplus-interests-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cplus-interests-form__courses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cplus-space-sm);
+}
+
+.cplus-interests-form__course-chip {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--cplus-radius-pill);
+  background: var(--cplus-surface-muted);
+  border: 1px solid var(--cplus-border);
+  color: var(--cplus-text-secondary);
+}
+
+.cplus-interests-form__courses-empty {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--cplus-text-secondary);
+}
+
+// ── Buttons ───────────────────────────────────────────────────────────────
+
+.cplus-interests-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cplus-space-sm);
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--cplus-radius-control);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background-color var(--cplus-transition-fast),
+    border-color var(--cplus-transition-fast),
+    color var(--cplus-transition-fast),
+    opacity var(--cplus-transition-fast);
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cplus-focus-ring);
+    outline-offset: var(--cplus-focus-ring-offset);
+  }
+}
+
+.cplus-interests-btn--primary {
+  background: var(--cplus-accent);
+  color: #fff;
+  border-color: var(--cplus-accent);
+
+  &:hover:not(:disabled) {
+    background: var(--cplus-accent-strong);
+    border-color: var(--cplus-accent-strong);
+  }
+}
+
+// ── Tags panel ────────────────────────────────────────────────────────────
+
+.cplus-interests-tags {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-lg);
+}
+
+.cplus-interests-tags__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--cplus-space-md);
+  flex-wrap: wrap;
+}
+
+.cplus-interests-tags__hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--cplus-text-secondary);
+  line-height: 1.45;
+  max-width: 40rem;
+}
+
+.cplus-interests-tags__count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cplus-text-secondary);
+  white-space: nowrap;
+  background: var(--cplus-surface-muted);
+  border: 1px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-pill);
+  padding: 0.25rem 0.625rem;
+}
+
+.cplus-interests-tags__empty {
+  padding: var(--cplus-space-lg);
+  border-radius: var(--cplus-radius-card);
+  background: var(--cplus-surface-muted);
+  border: 1px dashed var(--cplus-border-strong);
+  text-align: center;
+}
+
+.cplus-interests-tags__empty-title {
+  margin: 0 0 var(--cplus-space-xs);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--cplus-text);
+}
+
+.cplus-interests-tags__empty-body {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--cplus-text-secondary);
+}
+
+.cplus-interests-tags__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-md);
+}
+
+.cplus-interests-tags__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-sm);
+  padding: var(--cplus-space-md);
+  border-radius: var(--cplus-radius-card);
+  background: var(--cplus-surface-muted);
+  border: 1px solid var(--cplus-border);
+  @include cat-accents;
+}
+
+.cplus-interests-tags__group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-sm);
+}
+
+.cplus-interests-tags__group-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--pill-strong, var(--cplus-accent-strong));
+  flex-shrink: 0;
+}
+
+.cplus-interests-tags__group-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--cplus-text);
+}
+
+.cplus-interests-tags__group-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cplus-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cplus-interests-tags__pills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cplus-space-sm);
+}
+
+// ── Pills ─────────────────────────────────────────────────────────────────
+
+.cplus-interests-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: 100%;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  font-family: inherit;
+  border: 1px solid transparent;
+  transition:
+    background-color var(--cplus-transition-fast),
+    border-color var(--cplus-transition-fast),
+    color var(--cplus-transition-fast);
+}
+
+.cplus-interests-pill__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Selected chips in category groups — full pill.
+.cplus-interests-pill--selected {
+  padding: 0.375rem 0.25rem 0.375rem 0.75rem;
+  border-radius: var(--cplus-radius-pill);
+  background: var(--pill-tint, var(--cplus-accent-tint));
+  border-color: var(--pill-border, rgba(0, 188, 212, 0.28));
+  color: var(--pill-strong, var(--cplus-accent-strong));
+}
+
+.cplus-interests-pill__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  transition:
+    background-color var(--cplus-transition-fast),
+    opacity var(--cplus-transition-fast);
+
+  &:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cplus-focus-ring);
+    outline-offset: 1px;
+    opacity: 1;
+  }
+}
+
+// Taxonomy options — standalone control chips (NOT .cplus-interests-pill).
+// Unselected is plain text with even padding. Selected adds a ::before check.
+.cplus-interests-option {
+  box-sizing: border-box;
+  display: inline-block;
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-control);
+  background: var(--cplus-surface);
+  color: var(--cplus-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: normal;
+  text-align: left;
+  text-indent: 0;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+
+  &:hover {
+    border-color: var(--cplus-border-strong);
+    background: var(--cplus-surface-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cplus-focus-ring);
+    outline-offset: var(--cplus-focus-ring-offset);
+  }
+
+  @include cat-accents;
+}
+
+.cplus-interests-option--on {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem 0.5rem 0.625rem;
+  background: var(--pill-tint, var(--cplus-accent-tint));
+  border-color: var(--pill-border, rgba(0, 188, 212, 0.28));
+  color: var(--pill-strong, var(--cplus-accent-strong));
+  font-weight: 600;
+
+  &::before {
+    content: '✓';
+    display: inline-block;
+    width: 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    flex-shrink: 0;
+  }
+}
+
+// ── Taxonomy picker ───────────────────────────────────────────────────────
+
+.cplus-interests-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-md);
+  padding-top: var(--cplus-space-md);
+  border-top: 1px solid var(--cplus-border);
+}
+
+.cplus-interests-picker__label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--cplus-text-secondary);
+}
+
+.cplus-interests-picker__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cplus-space-xs);
+}
+
+.cplus-interests-picker__tab {
+  appearance: none;
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--cplus-radius-pill);
+  border: 1px solid var(--cplus-border);
+  background: var(--cplus-surface);
+  color: var(--cplus-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--cplus-transition-fast),
+    border-color var(--cplus-transition-fast),
+    color var(--cplus-transition-fast);
+
+  @include cat-accents;
+
+  &:hover {
+    border-color: var(--cplus-border-strong);
+    color: var(--cplus-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cplus-focus-ring);
+    outline-offset: var(--cplus-focus-ring-offset);
+  }
+
+  &--active {
+    background: var(--pill-tint, var(--cplus-accent-tint));
+    border-color: var(--pill-border, rgba(0, 188, 212, 0.28));
+    color: var(--pill-strong, var(--cplus-accent-strong));
+  }
+}
+
+.cplus-interests-picker__input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cplus-space-sm);
+  padding: var(--cplus-space-md);
+  border-radius: var(--cplus-radius-card);
+  background: var(--cplus-surface-muted);
+  border: 1px solid var(--cplus-border);
+}
+
+.cplus-interests-picker__input {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+  box-sizing: border-box;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--cplus-radius-control);
+  border: 1px solid var(--cplus-border);
+  background: var(--cplus-surface);
+  color: var(--cplus-text);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  transition:
+    border-color var(--cplus-transition-fast),
+    box-shadow var(--cplus-transition-fast);
+
+  &::placeholder {
+    color: var(--cplus-text-disabled);
+  }
+
+  &:hover {
+    border-color: var(--cplus-border-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cplus-focus-ring);
+    outline-offset: var(--cplus-focus-ring-offset);
+    border-color: var(--cplus-focus-ring);
+  }
+}
+
+.cplus-interests-picker__hint {
+  margin: var(--cplus-space-xs) 0 0;
+  font-size: 0.8125rem;
+  color: var(--cplus-text-secondary);
+  line-height: 1.4;
+}
+
+.cplus-interests-btn--secondary {
+  background: var(--cplus-surface);
+  color: var(--cplus-text);
+  border-color: var(--cplus-border-strong);
+
+  &:hover:not(:disabled) {
+    background: var(--cplus-surface-muted);
+    border-color: var(--cplus-accent);
+    color: var(--cplus-accent);
+  }
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────
+
+.cplus-interests-tags__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cplus-space-md);
+  padding-top: var(--cplus-space-sm);
+}
+
+.cplus-interests-tags__saved {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cplus-success);
+}
+
+.cplus-interests-tags__dirty {
+  font-size: 0.8125rem;
+  color: var(--cplus-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cplus-interests-pill,
+  .cplus-interests-btn,
+  .cplus-interests-picker__tab,
+  .cplus-interests-form__textarea {
+    transition: none;
+  }
+}

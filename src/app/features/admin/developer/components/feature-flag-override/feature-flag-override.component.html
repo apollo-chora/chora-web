@@ -1,0 +1,137 @@
+<section
+  class="feature-flag-override"
+  role="main"
+  [attr.aria-label]="'admin.developer.feature_flags_title' | translate"
+  data-testid="feature-flag-override">
+
+  <!-- Header -->
+  <header class="feature-flag-override__header">
+    <div class="feature-flag-override__header-left">
+      <a routerLink=".." class="feature-flag-override__back" data-testid="btn-back">
+        {{ 'admin.developer.back_to_console' | translate }}
+      </a>
+      <h1 class="feature-flag-override__title" data-testid="flags-title">
+        {{ 'admin.developer.feature_flags_title' | translate }}
+      </h1>
+    </div>
+    <div class="feature-flag-override__header-actions">
+      @if (overrideCount() > 0) {
+        <button
+          type="button"
+          class="feature-flag-override__btn feature-flag-override__btn--danger"
+          (click)="clearAllOverrides()"
+          data-testid="btn-clear-all">
+          {{ 'admin.developer.clear_all_overrides' | translate }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- Summary -->
+  <div class="feature-flag-override__summary" data-testid="flags-summary">
+    <div class="feature-flag-override__summary-item">
+      <span class="feature-flag-override__summary-value" data-testid="total-flags">{{ totalFlags() }}</span>
+      <span class="feature-flag-override__summary-label">{{ 'admin.developer.total_flags' | translate }}</span>
+    </div>
+    <div class="feature-flag-override__summary-item">
+      <span class="feature-flag-override__summary-value" data-testid="enabled-count">{{ enabledCount() }}</span>
+      <span class="feature-flag-override__summary-label">{{ 'admin.developer.enabled' | translate }}</span>
+    </div>
+    <div class="feature-flag-override__summary-item">
+      <span class="feature-flag-override__summary-value" data-testid="override-count">{{ overrideCount() }}</span>
+      <span class="feature-flag-override__summary-label">{{ 'admin.developer.overrides_active' | translate }}</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="feature-flag-override__loading" data-testid="flags-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="feature-flag-override__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading()) {
+    <!-- Flag List -->
+    @if (flags().length === 0) {
+      <p class="feature-flag-override__empty" role="status" data-testid="no-flags">
+        {{ 'admin.developer.no_flags' | translate }}
+      </p>
+    } @else {
+      <div class="feature-flag-override__list" role="list" data-testid="flag-list">
+        @for (flag of flags(); track flag.addOnCode) {
+          <div
+            class="feature-flag-override__flag"
+            [class.feature-flag-override__flag--overridden]="flag.overrideActive"
+            role="listitem"
+            [attr.data-testid]="'flag-' + flag.addOnCode">
+
+            <div class="feature-flag-override__flag-info">
+              <span class="feature-flag-override__flag-name">{{ flag.displayName }}</span>
+              <code class="feature-flag-override__flag-code">{{ flag.addOnCode }}</code>
+            </div>
+
+            <div class="feature-flag-override__flag-state">
+              <!-- Production State -->
+              <span class="feature-flag-override__production-label">
+                {{ 'admin.developer.production' | translate }}:
+              </span>
+              <span
+                class="feature-flag-override__state-badge"
+                [class.feature-flag-override__state-badge--on]="flag.enabled"
+                [class.feature-flag-override__state-badge--off]="!flag.enabled">
+                @if (flag.enabled) {
+                  {{ 'admin.developer.on' | translate }}
+                } @else {
+                  {{ 'admin.developer.off' | translate }}
+                }
+              </span>
+
+              <!-- Override Toggle -->
+              <button
+                type="button"
+                class="feature-flag-override__override-btn"
+                [class.feature-flag-override__override-btn--active]="flag.overrideActive"
+                (click)="toggleOverride(flag)"
+                [attr.aria-label]="'admin.developer.toggle_override' | translate"
+                [attr.data-testid]="'override-toggle-' + flag.addOnCode">
+                @if (flag.overrideActive) {
+                  {{ 'admin.developer.override_on' | translate }}
+                } @else {
+                  {{ 'admin.developer.override' | translate }}
+                }
+              </button>
+
+              <!-- Override Value (when active) -->
+              @if (flag.overrideActive) {
+                <button
+                  type="button"
+                  class="feature-flag-override__value-toggle"
+                  (click)="toggleOverrideValue(flag)"
+                  [attr.aria-label]="'admin.developer.toggle_value' | translate"
+                  [attr.data-testid]="'value-toggle-' + flag.addOnCode">
+                  <span
+                    class="feature-flag-override__state-badge"
+                    [class.feature-flag-override__state-badge--on]="flag.overrideValue"
+                    [class.feature-flag-override__state-badge--off]="!flag.overrideValue">
+                    @if (flag.overrideValue) {
+                      {{ 'admin.developer.on' | translate }}
+                    } @else {
+                      {{ 'admin.developer.off' | translate }}
+                    }
+                  </span>
+                </button>
+              }
+
+              <!-- Effective State -->
+              <span class="feature-flag-override__effective">
+                {{ effectiveStateLabel(flag) | translate }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</section>

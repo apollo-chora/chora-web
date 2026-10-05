@@ -1,0 +1,74 @@
+<section
+  class="transaction-history"
+  role="main"
+  [attr.aria-label]="'choraverse.transactions.title' | translate"
+  data-testid="transaction-history">
+
+  <!-- Header -->
+  <header class="transaction-history__header">
+    <div class="transaction-history__header-left">
+      <h1 class="transaction-history__title" data-testid="transactions-title">
+        {{ 'choraverse.transactions.title' | translate }}
+      </h1>
+    </div>
+    <div
+      class="transaction-history__balance"
+      data-testid="transactions-balance"
+      role="status"
+      [attr.aria-label]="'choraverse.transactions.balance_label' | translate">
+      <span class="transaction-history__balance-icon" aria-hidden="true">&#9733;</span>
+      <span class="transaction-history__balance-amount">{{ coinBalance() }}</span>
+      <span class="transaction-history__balance-currency">{{ 'choraverse.transactions.star_credits' | translate }}</span>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="transaction-history__loading" data-testid="transactions-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="transaction-history__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (isEmpty()) {
+    <div class="transaction-history__empty" data-testid="transactions-empty" role="status">
+      <p class="transaction-history__empty-text">
+        {{ 'choraverse.transactions.no_transactions' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Transaction List -->
+  @if (!isLoading() && !isEmpty()) {
+    <div class="transaction-history__list" data-testid="transaction-list" role="list">
+      @for (tx of transactions(); track tx.id) {
+        <div
+          class="transaction-history__entry"
+          role="listitem"
+          [attr.data-testid]="'transaction-' + tx.id">
+
+          <div class="transaction-history__entry-left">
+            <span
+              class="transaction-history__type"
+              [class]="typeClass(tx.transaction_type)">
+              {{ typeLabels[tx.transaction_type] | translate }}
+            </span>
+            <span class="transaction-history__reason">{{ tx.reason }}</span>
+            <span class="transaction-history__date">{{ formatDateTime(tx.created_at) }}</span>
+          </div>
+
+          <div class="transaction-history__entry-right">
+            <span
+              class="transaction-history__amount"
+              [class]="amountClass(tx.amount)"
+              [attr.aria-label]="amountPrefix(tx) + tx.amount">
+              {{ amountPrefix(tx) }}{{ tx.amount }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

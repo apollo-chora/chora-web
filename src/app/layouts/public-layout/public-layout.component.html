@@ -1,0 +1,20 @@
+<div class="public-layout">
+  <header class="public-layout__header" role="banner">
+    <a routerLink="/" class="public-layout__logo" aria-label="Chora home">
+      Chora
+    </a>
+
+    <nav class="public-layout__actions" aria-label="Account actions">
+      @if (isAuthenticated()) {
+        <a [routerLink]="landingRoute" class="public-layout__link">Home</a>
+      } @else {
+        <a routerLink="/login" class="public-layout__link">Log In</a>
+        <a routerLink="/register" class="public-layout__link public-layout__link--primary">Sign Up</a>
+      }
+    </nav>
+  </header>
+
+  <main class="public-layout__content" id="main-content" role="main" aria-label="Public content">
+    <router-outlet />
+  </main>
+</div>

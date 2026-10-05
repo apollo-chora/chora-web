@@ -1,0 +1,131 @@
+<div class="topic-explorer" data-testid="topic-explorer">
+  <div class="topic-explorer__search">
+    <label for="topic-search-input" class="topic-explorer__search-label">
+      {{ 'atomic.topic-explorer.search-label' | translate }}
+    </label>
+    <input
+      id="topic-search-input"
+      type="search"
+      class="topic-explorer__search-input"
+      [value]="searchQuery()"
+      (input)="onSearchInput($event)"
+      [attr.placeholder]="'atomic.topic-explorer.search-placeholder' | translate"
+      [attr.aria-label]="'atomic.topic-explorer.search-label' | translate"
+      data-testid="topic-search-input" />
+  </div>
+
+  @if (filteredTopics().length === 0) {
+    <div
+      class="topic-explorer__empty"
+      role="status"
+      data-testid="topic-explorer-empty">
+      {{ 'atomic.topic-explorer.empty' | translate }}
+    </div>
+  } @else {
+    <ul
+      class="topic-explorer__tree"
+      role="tree"
+      [attr.aria-label]="'atomic.topic-explorer.tree-label' | translate"
+      tabindex="0"
+      (keydown)="onTreeKeydown($event)">
+      @for (node of filteredTopics(); track node.id) {
+        <li role="treeitem"
+          [attr.aria-expanded]="node.children.length > 0 ? isExpanded(node.id) : null"
+          [attr.aria-selected]="isSelected(node.id)">
+          <div
+            class="topic-explorer__node"
+            [class.topic-explorer__node--selected]="isSelected(node.id)"
+            [class.topic-explorer__node--focused]="isFocused(node.id)"
+            tabindex="-1"
+            [attr.data-testid]="'topic-node-' + node.id"
+            (click)="selectNode(node)"
+            (keydown)="onNodeKeydown($event, node)">
+            @if (node.children.length > 0) {
+              <button
+                class="topic-explorer__expand-btn"
+                [class.topic-explorer__expand-btn--expanded]="isExpanded(node.id)"
+                (click)="toggleExpand(node); $event.stopPropagation()"
+                [attr.aria-label]="isExpanded(node.id) ? 'Collapse ' + node.name : 'Expand ' + node.name"
+                data-testid="topic-expand-btn"
+                tabindex="-1">
+                <span aria-hidden="true">&#9654;</span>
+              </button>
+            } @else {
+              <span class="topic-explorer__leaf-spacer" aria-hidden="true"></span>
+            }
+            <span class="topic-explorer__node-name">{{ node.name }}</span>
+            @if (node.atom_count !== undefined && node.atom_count !== null) {
+              <span class="topic-explorer__atom-count" aria-hidden="true">
+                ({{ node.atom_count }})
+              </span>
+            }
+          </div>
+
+          @if (node.children.length > 0 && isExpanded(node.id)) {
+            <ul class="topic-explorer__subtree" role="group">
+              @for (child of node.children; track child.id) {
+                <li role="treeitem"
+                  [attr.aria-expanded]="child.children.length > 0 ? isExpanded(child.id) : null"
+                  [attr.aria-selected]="isSelected(child.id)">
+                  <div
+                    class="topic-explorer__node topic-explorer__node--level-1"
+                    [class.topic-explorer__node--selected]="isSelected(child.id)"
+                    [class.topic-explorer__node--focused]="isFocused(child.id)"
+                    tabindex="-1"
+                    [attr.data-testid]="'topic-node-' + child.id"
+                    (click)="selectNode(child)"
+                    (keydown)="onNodeKeydown($event, child)">
+                    @if (child.children.length > 0) {
+                      <button
+                        class="topic-explorer__expand-btn"
+                        [class.topic-explorer__expand-btn--expanded]="isExpanded(child.id)"
+                        (click)="toggleExpand(child); $event.stopPropagation()"
+                        [attr.aria-label]="isExpanded(child.id) ? 'Collapse ' + child.name : 'Expand ' + child.name"
+                        data-testid="topic-expand-btn"
+                        tabindex="-1">
+                        <span aria-hidden="true">&#9654;</span>
+                      </button>
+                    } @else {
+                      <span class="topic-explorer__leaf-spacer" aria-hidden="true"></span>
+                    }
+                    <span class="topic-explorer__node-name">{{ child.name }}</span>
+                    @if (child.atom_count !== undefined && child.atom_count !== null) {
+                      <span class="topic-explorer__atom-count" aria-hidden="true">
+                        ({{ child.atom_count }})
+                      </span>
+                    }
+                  </div>
+
+                  @if (child.children.length > 0 && isExpanded(child.id)) {
+                    <ul class="topic-explorer__subtree" role="group">
+                      @for (grandchild of child.children; track grandchild.id) {
+                        <li role="treeitem" [attr.aria-selected]="isSelected(grandchild.id)">
+                          <div
+                            class="topic-explorer__node topic-explorer__node--level-2"
+                            [class.topic-explorer__node--selected]="isSelected(grandchild.id)"
+                            [class.topic-explorer__node--focused]="isFocused(grandchild.id)"
+                            tabindex="-1"
+                            [attr.data-testid]="'topic-node-' + grandchild.id"
+                            (click)="selectNode(grandchild)"
+                            (keydown)="onNodeKeydown($event, grandchild)">
+                            <span class="topic-explorer__leaf-spacer" aria-hidden="true"></span>
+                            <span class="topic-explorer__node-name">{{ grandchild.name }}</span>
+                            @if (grandchild.atom_count !== undefined && grandchild.atom_count !== null) {
+                              <span class="topic-explorer__atom-count" aria-hidden="true">
+                                ({{ grandchild.atom_count }})
+                              </span>
+                            }
+                          </div>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

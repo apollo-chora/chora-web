@@ -1,0 +1,116 @@
+@if (loadError()) {
+  <section
+    class="incubation-card incubation-card--error glass-panel"
+    data-testid="incubation-error"
+    role="alert"
+    aria-live="assertive">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+    <p>{{ 'aplus.incubation.error' | translate }}</p>
+    <button
+      type="button"
+      class="incubation-card__retry"
+      (click)="reload()"
+      data-testid="incubation-retry">
+      {{ 'aplus.incubation.retry' | translate }}
+    </button>
+  </section>
+} @else if (isEgg()) {
+  <section
+    class="incubation-card glass-panel"
+    [class.incubation-card--stirring]="stirring()"
+    data-testid="aplus-incubation-card"
+    aria-labelledby="incubation-heading">
+    <!-- ── Tier 1: the egg ─────────────────────────────────────────── -->
+    <div class="incubation-card__canvas">
+      <div class="incubation-card__halo" aria-hidden="true"></div>
+      <img
+        class="incubation-card__egg"
+        src="/assets/familiars/pods/pod-standard.png"
+        [alt]="'aplus.incubation.pod_alt' | translate"
+        width="180"
+        height="196"
+        loading="lazy"
+        data-testid="incubation-egg-art" />
+
+      <!-- Mystery chip: the species stays hidden until the companion HATCHES —
+           the ceremony reveal is the ONLY place the breed is shown (owner
+           directive 2026-07-16; supersedes ADR-228's later-egg reveal). -->
+      <span
+        class="incubation-card__mystery"
+        data-testid="incubation-species-mystery">
+        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+        <span class="incubation-card__mystery-mark">???</span>
+        <span class="incubation-card__mystery-sub">
+          {{ 'aplus.incubation.species_hidden' | translate }}
+        </span>
+      </span>
+    </div>
+
+    <!-- ── Tier 2: identity + bound goal ───────────────────────────── -->
+    <header class="incubation-card__head">
+      <p class="incubation-card__eyebrow">
+        {{ 'aplus.incubation.eyebrow' | translate }}
+      </p>
+      <!-- A pre-hatch pod is UNNAMED: the learner names it during the hatch
+           ceremony, and the `name` the wire carries here is only the backend's
+           NOT NULL placeholder (see the component's note). So the heading is
+           the untitled-Pod string, never the stored name. -->
+      <h3 id="incubation-heading" class="incubation-card__title">
+        {{ 'aplus.incubation.untitled_egg' | translate }}
+      </h3>
+      @if (boundGoalName()) {
+        <p class="incubation-card__goal" data-testid="incubation-bound-goal">
+          <i class="fa-solid fa-bullseye" aria-hidden="true"></i>
+          {{ 'aplus.incubation.warming_toward' | translate }}
+          <strong>{{ boundGoalName() }}</strong>
+        </p>
+      }
+    </header>
+
+    <!-- ── Tier 3: warming bar ─────────────────────────────────────── -->
+    <div class="incubation-card__warmth">
+      <div class="incubation-card__warmth-labels">
+        <span class="incubation-card__warmth-tag">
+          {{ 'aplus.incubation.warmth' | translate }}
+        </span>
+        <span
+          class="incubation-card__warmth-value"
+          data-testid="incubation-warmth-value">
+          {{ expCurrent() }} / {{ hatchThreshold() }}
+        </span>
+      </div>
+      <div
+        class="incubation-card__warmth-track"
+        role="progressbar"
+        [attr.aria-valuenow]="warmthPct()"
+        [attr.aria-valuemin]="0"
+        [attr.aria-valuemax]="100"
+        [attr.aria-label]="'aplus.incubation.warmth' | translate"
+        data-testid="incubation-warmth-bar">
+        <span
+          class="incubation-card__warmth-fill"
+          [style.width.%]="warmthPct()"></span>
+      </div>
+    </div>
+
+    <!-- ── Tier 4: stirring CTA vs keep-warming hint ───────────────── -->
+    @if (stirring()) {
+      <a
+        [routerLink]="['/a/companion/hatching', familiarId()]"
+        class="incubation-card__hatch-cta"
+        data-testid="incubation-hatch-cta">
+        <i class="fa-solid fa-egg-crack" aria-hidden="true"></i>
+        {{ 'aplus.incubation.hatch_cta' | translate }}
+      </a>
+    } @else {
+      <p
+        class="incubation-card__hint"
+        role="status"
+        aria-live="polite"
+        data-testid="incubation-warming-hint">
+        <i class="fa-solid fa-temperature-arrow-up" aria-hidden="true"></i>
+        {{ 'aplus.incubation.keep_warming' | translate }}
+      </p>
+    }
+  </section>
+}

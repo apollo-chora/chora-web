@@ -1,0 +1,34 @@
+<chora-top-nav
+  [sidebarCollapsed]="sidebarCollapsed()"
+  [compassShell]="usesCompass()"
+  (toggleSidebar)="toggleSidebar()" />
+
+<div
+  class="main-layout"
+  [class.main-layout--sidebar-collapsed]="sidebarCollapsed()"
+  [class.main-layout--no-rail]="!railVisible()"
+  [class.main-layout--compass]="usesCompass()"
+  data-testid="main-layout">
+  @if (railVisible()) {
+    <chora-surface-rail class="main-layout__rail" />
+  }
+
+  @if (!usesCompass()) {
+    <chora-sidebar
+      [collapsed]="sidebarCollapsed()"
+      class="main-layout__sidebar" />
+  }
+
+  <main class="main-layout__content" id="main-content" role="main" aria-label="Main content" data-testid="main-content">
+    @if (usesCompass()) {
+      <chora-compass-bar />
+    }
+    <router-outlet />
+  </main>
+
+  <!-- The HUD is viewport-anchored rather than laid out in the grid, so it sits
+       outside the content column. A+ only, like the compass it belongs to. -->
+  @if (usesCompass()) {
+    <chora-hud />
+  }
+</div>

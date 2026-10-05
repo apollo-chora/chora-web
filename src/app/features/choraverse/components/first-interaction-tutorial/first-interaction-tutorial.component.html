@@ -1,0 +1,95 @@
+<section
+  class="tutorial"
+  role="main"
+  [attr.aria-label]="'choraverse.tutorial.title' | translate"
+  data-testid="first-interaction-tutorial">
+
+  <!-- Header with progress -->
+  <header class="tutorial__header">
+    <div class="tutorial__header-top">
+      <h1 class="tutorial__title" data-testid="tutorial-title">
+        {{ step().titleKey | translate }}
+      </h1>
+      <button
+        type="button"
+        class="tutorial__skip-btn"
+        data-testid="skip-tutorial"
+        (click)="skipTutorial()">
+        {{ 'choraverse.tutorial.skip' | translate }}
+      </button>
+    </div>
+
+    <!-- Progress dots -->
+    <div
+      class="tutorial__progress"
+      role="progressbar"
+      [attr.aria-valuenow]="currentStep() + 1"
+      [attr.aria-valuemin]="1"
+      [attr.aria-valuemax]="totalSteps"
+      data-testid="tutorial-progress">
+      @for (s of steps; track s.titleKey; let i = $index) {
+        <span
+          class="tutorial__progress-dot"
+          [class.tutorial__progress-dot--active]="i === currentStep()"
+          [class.tutorial__progress-dot--completed]="i < currentStep()"
+          [attr.aria-label]="'Step ' + (i + 1)">
+        </span>
+      }
+    </div>
+  </header>
+
+  <!-- Chat area -->
+  <div class="tutorial__chat" role="log" aria-live="polite" data-testid="tutorial-chat">
+    @for (msg of chatMessages(); track $index) {
+      <div
+        class="tutorial__message"
+        [class.tutorial__message--familiar]="msg.role === 'familiar'"
+        [class.tutorial__message--learner]="msg.role === 'learner'">
+        @if (msg.role === 'familiar') {
+          <span class="tutorial__message-avatar">{{ familiarIcon() }}</span>
+        }
+        <div class="tutorial__message-bubble">
+          <p class="tutorial__message-text">{{ msg.contentKey | translate }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Response chips -->
+  @if (!hasResponded()) {
+    <div class="tutorial__chips" role="group" [attr.aria-label]="'choraverse.tutorial.response_options' | translate" data-testid="response-chips">
+      @for (chip of step().responseChips; track chip.labelKey) {
+        <button
+          type="button"
+          class="tutorial__chip"
+          [attr.data-testid]="'chip-' + chip.value"
+          (click)="selectChip(chip)">
+          {{ chip.labelKey | translate }}
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Continue / Finish -->
+  @if (hasResponded()) {
+    <div class="tutorial__actions" data-testid="tutorial-actions">
+      @if (!isLastStep()) {
+        <button
+          type="button"
+          class="tutorial__continue-btn"
+          data-testid="continue-btn"
+          (click)="nextStep()">
+          {{ 'choraverse.tutorial.continue' | translate }}
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="tutorial__continue-btn tutorial__continue-btn--finish"
+          data-testid="finish-btn"
+          (click)="completeTutorial()">
+          {{ 'choraverse.tutorial.finish' | translate }}
+        </button>
+      }
+    </div>
+  }
+</section>

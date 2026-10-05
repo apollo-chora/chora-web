@@ -1,0 +1,578 @@
+@use '../../../../../../styles/breed-accents';
+
+:host {
+  display: block;
+}
+
+.routines {
+  &__intro {
+    margin-bottom: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    margin: 0 0 var(--chora-space-xs, 4px);
+    font-size: 1.25rem;
+  }
+
+  &__lede {
+    margin: 0;
+    color: var(--text-muted, #6b7280);
+    font-size: 0.9rem;
+  }
+
+  &__status,
+  &__empty {
+    color: var(--text-muted, #6b7280);
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__error {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+    align-items: flex-start;
+    padding: var(--chora-space-md, 16px);
+    border: 1px solid var(--breed-accent-border, rgba(220, 38, 38, 0.3));
+    border-radius: var(--chora-radius-md, 12px);
+    background: var(--breed-accent-soft, rgba(220, 38, 38, 0.06));
+  }
+
+  &__list-head {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--chora-space-sm, 8px);
+  }
+}
+
+.ritual-row {
+  &__open {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+    padding: var(--chora-space-md, 16px);
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.4));
+    border-radius: var(--chora-radius-md, 12px);
+    background: var(--glass-bg, rgba(255, 255, 255, 0.6));
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--breed-accent-border, rgba(21, 101, 192, 0.3));
+      box-shadow: 0 4px 16px var(--breed-accent-glow, rgba(25, 118, 210, 0.2));
+    }
+  }
+
+  &__name {
+    font-weight: 600;
+  }
+
+  &__meta {
+    color: var(--text-muted, #6b7280);
+    font-size: 0.8rem;
+  }
+
+  &__badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(107, 114, 128, 0.15);
+    color: var(--text-muted, #6b7280);
+
+    &--on {
+      background: var(--breed-accent-mid, rgba(16, 185, 129, 0.18));
+      color: var(--breed-accent, #10b981);
+    }
+  }
+
+  &__price {
+    font-size: 0.75rem;
+    color: var(--breed-accent, var(--primary, #1976d2));
+    font-weight: 600;
+  }
+}
+
+.routines__create {
+  display: grid;
+  gap: var(--chora-space-md, 16px);
+  max-width: 520px;
+
+  .field {
+    display: grid;
+    gap: var(--chora-space-xs, 4px);
+
+    &__label {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    input,
+    select {
+      padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+      border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.12));
+      border-radius: var(--chora-radius-sm, 8px);
+      font: inherit;
+    }
+  }
+
+  &-actions {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+    justify-content: flex-end;
+  }
+}
+
+.composer {
+  &__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__title {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__name {
+    font-weight: 700;
+  }
+
+  &__meta {
+    color: var(--text-muted, #6b7280);
+    font-size: 0.8rem;
+  }
+
+  &__panes {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__publish {
+    margin-top: var(--chora-space-md, 16px);
+    width: 100%;
+  }
+
+  // CHO-2362: the 422 RITUAL_INVALID strip reuses the routines error styling
+  // untouched; only spacing + the detail line are local.
+  &__invalid {
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__invalid-detail {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--chora-color-text-muted, #616161);
+    overflow-wrap: anywhere;
+  }
+
+  // Tablet-enhanced 3-pane (never a mobile breakpoint below 768).
+  @media (min-width: 1280px) {
+    &__panes {
+      grid-template-columns: 260px 1fr 280px;
+      align-items: start;
+    }
+  }
+}
+
+.pane {
+  padding: var(--chora-space-md, 16px);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.4));
+  border-radius: var(--chora-radius-md, 12px);
+  background: var(--glass-bg, rgba(255, 255, 255, 0.55));
+
+  &__title {
+    margin: 0 0 var(--chora-space-sm, 8px);
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  &__count {
+    font-size: 0.75rem;
+    color: var(--text-muted, #6b7280);
+  }
+
+  &__empty {
+    color: var(--text-muted, #6b7280);
+    font-size: 0.85rem;
+    margin: 0;
+  }
+}
+
+.palette {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--chora-space-xs, 4px);
+
+  &__skill {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px dashed var(--breed-accent-border, rgba(25, 118, 210, 0.3));
+    border-radius: var(--chora-radius-sm, 8px);
+    background: var(--breed-accent-soft, rgba(25, 118, 210, 0.06));
+    cursor: pointer;
+    font: inherit;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__add {
+    font-weight: 700;
+    color: var(--breed-accent, var(--primary, #1976d2));
+  }
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--chora-space-xs, 4px);
+
+  &__dark-note {
+    // The designed-but-not-real note. Muted, because it describes what is NOT
+    // there, and a caveat styled louder than the thing it qualifies is worse
+    // than the omission it explains.
+    margin: var(--chora-space-xs, 4px) 0 0;
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    border-left: 2px solid var(--glass-border, rgba(0, 0, 0, 0.1));
+    font-size: 0.7rem;
+    line-height: 1.4;
+    color: var(--chora-color-text-muted, #616161);
+  }
+
+  &__live {
+    // Deliberately VISIBLE, matching this component's own aria-live precedent
+    // (`params__counter`). "Socratic Drill, position 3 of 5" is useful feedback
+    // for a pointer user too, and a live region nobody can see is a live region
+    // nobody notices has stopped working.
+    margin: var(--chora-space-xs, 4px) 0 0;
+    min-height: 1rem;
+    font-size: 0.7rem;
+    color: var(--chora-color-text-muted, #616161);
+  }
+}
+
+/**
+ * The roving tab stop: the focused row is outlined, never only colour-coded.
+ *
+ * Coral, not violet. The first version reached for `--chora-color-accent` with
+ * a violet fallback and put the retired hue back into a file that had none
+ * (B1, master plan section 7). A focus ring is a NON-TEXT indicator, so it
+ * takes the `-coral` stop rather than `-coral-text`.
+ */
+.step:focus-visible {
+  outline: 2px solid var(--chora-color-accent-coral, #ea580c);
+  outline-offset: 2px;
+}
+
+.step__cost {
+  font-size: 0.7rem;
+  color: var(--chora-color-text-muted, #616161);
+}
+
+.run__history-open {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--chora-space-sm, 8px);
+  padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+  border: 1px solid transparent;
+  border-radius: var(--chora-radius-sm, 8px);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--glass-border, rgba(0, 0, 0, 0.12));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chora-color-accent-coral, #ea580c);
+    outline-offset: 2px;
+  }
+}
+
+.run__replay-error {
+  margin: var(--chora-space-xs, 4px) 0 0;
+  font-size: 0.75rem;
+  color: var(--chora-color-accent-coral-text, #9a3412);
+}
+
+.run__sources-heading {
+  margin: var(--chora-space-xs, 4px) 0 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--chora-color-text-muted, #616161);
+}
+
+.run__sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.7rem;
+  color: var(--chora-color-text-muted, #616161);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-sm, 8px);
+  padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1));
+  border-radius: var(--chora-radius-sm, 8px);
+  background: #fff;
+  cursor: grab;
+
+  &--selected {
+    border-color: var(--breed-accent, var(--primary, #1976d2));
+    box-shadow: 0 0 0 2px var(--breed-accent-glow, rgba(25, 118, 210, 0.25));
+  }
+
+  &__order {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--breed-accent-mid, rgba(25, 118, 210, 0.18));
+    color: var(--breed-accent, var(--primary, #1976d2));
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  &__key {
+    flex: 1;
+  }
+
+  // CHO-2362: the selectable area is a real button (keyboard operable - it
+  // opens the step's param editor); visual chrome stays on the chip.
+  &__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    border: none;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  // CHO-2362: key + compact params summary stack inside the chip.
+  &__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .step__key {
+      flex: initial;
+    }
+  }
+
+  &__params {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #616161);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__remove {
+    border: none;
+    background: transparent;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-muted, #6b7280);
+  }
+}
+
+.inspector {
+  &__key {
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__note {
+    color: var(--text-muted, #6b7280);
+    font-size: 0.8rem;
+    margin: 0;
+  }
+}
+
+// CHO-2362: schema-driven per-step param editor (inspector pane).
+.params {
+  display: grid;
+  gap: var(--chora-space-md, 16px);
+
+  &__field {
+    display: grid;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__label {
+    display: flex;
+    align-items: baseline;
+    gap: var(--chora-space-sm, 8px);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  &__recommended {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--breed-accent-soft, rgba(25, 118, 210, 0.08));
+    color: var(--breed-accent, var(--primary, #1976d2));
+    border: 1px solid var(--breed-accent-border, rgba(25, 118, 210, 0.3));
+  }
+
+  &__help,
+  &__hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #616161);
+  }
+
+  &__control {
+    width: 100%;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.12));
+    border-radius: var(--chora-radius-sm, 8px);
+    font: inherit;
+    background: #fff;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__counter {
+    margin: 0;
+    font-size: 0.7rem;
+    color: var(--chora-color-text-muted, #616161);
+    text-align: right;
+  }
+
+  &__ref-filter {
+    margin-bottom: var(--chora-space-xs, 4px);
+  }
+
+  &__ref-error {
+    display: grid;
+    gap: var(--chora-space-xs, 4px);
+    justify-items: start;
+    font-size: 0.8rem;
+
+    p {
+      margin: 0;
+      color: var(--chora-color-text-muted, #616161);
+    }
+  }
+}
+
+.run {
+  margin-top: var(--chora-space-lg, 24px);
+  border-top: 1px solid var(--glass-border, rgba(0, 0, 0, 0.08));
+  padding-top: var(--chora-space-md, 16px);
+
+  &__btn {
+    width: 100%;
+  }
+
+  // The run was accepted and is finishing server-side — a calm wait, styled as
+  // secondary copy rather than an alert (it is NOT an error state).
+  &__pending {
+    margin-top: var(--chora-space-md, 16px);
+    font-size: 0.85rem;
+    color: var(--chora-color-text-secondary, rgba(0, 0, 0, 0.6));
+  }
+
+  &__result {
+    margin-top: var(--chora-space-md, 16px);
+  }
+
+  &__status {
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  &__story-title {
+    font-style: italic;
+  }
+
+  &__steps {
+    margin: var(--chora-space-sm, 8px) 0 0;
+    padding-left: var(--chora-space-lg, 24px);
+    display: grid;
+    gap: var(--chora-space-xs, 4px);
+
+    li {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.85rem;
+    }
+  }
+
+  &__history {
+    margin-top: var(--chora-space-md, 16px);
+    font-size: 0.85rem;
+
+    ul {
+      list-style: none;
+      margin: var(--chora-space-sm, 8px) 0 0;
+      padding: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+
+  &__history-status {
+    text-transform: capitalize;
+  }
+}
+
+.cdk-drag-preview {
+  box-shadow: var(--glass-shadow-hover, 0 8px 24px rgba(0, 0, 0, 0.15));
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}

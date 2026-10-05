@@ -1,0 +1,224 @@
+<section class="partner-suspension" data-testid="partner-suspension"
+  aria-labelledby="partner-suspension-title">
+
+  <!-- Header -->
+  <header class="partner-suspension__header">
+    <h2 id="partner-suspension-title" class="partner-suspension__title">
+      {{ 'a2a.suspension.title' | translate }}
+    </h2>
+  </header>
+
+  @if (partnerDetailState().status === 'loading') {
+    <div class="partner-suspension__loading" role="status" aria-live="polite">
+      {{ 'a2a.suspension.loading' | translate }}
+    </div>
+  } @else if (partner(); as partnerData) {
+    <!-- Partner info -->
+    <div class="partner-suspension__partner-card" role="region"
+      aria-labelledby="partner-info-heading">
+      <h3 id="partner-info-heading" class="partner-suspension__section-title">
+        {{ 'a2a.suspension.partner_info' | translate }}
+      </h3>
+      <dl class="partner-suspension__info-grid">
+        <div class="partner-suspension__info-item">
+          <dt>{{ 'a2a.suspension.org_name' | translate }}</dt>
+          <dd>{{ partnerData.orgName }}</dd>
+        </div>
+        <div class="partner-suspension__info-item">
+          <dt>{{ 'a2a.suspension.domain' | translate }}</dt>
+          <dd>{{ partnerData.orgDomain }}</dd>
+        </div>
+        <div class="partner-suspension__info-item">
+          <dt>{{ 'a2a.suspension.status' | translate }}</dt>
+          <dd>
+            <span class="partner-suspension__badge"
+              [class]="statusBadgeClass(partnerData.status)">
+              {{ statusLabels[partnerData.status] | translate }}
+            </span>
+          </dd>
+        </div>
+        <div class="partner-suspension__info-item">
+          <dt>{{ 'a2a.suspension.contact' | translate }}</dt>
+          <dd>{{ partnerData.contactEmail }}</dd>
+        </div>
+      </dl>
+
+      @if (isSuspended() && partnerData.suspensionReason) {
+        <div class="partner-suspension__current-reason">
+          <span class="partner-suspension__reason-label">
+            {{ 'a2a.suspension.current_reason' | translate }}
+          </span>
+          <p class="partner-suspension__reason-text">{{ partnerData.suspensionReason }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Status management buttons -->
+    <div class="partner-suspension__status-actions">
+      @if (isSuspended()) {
+        <button
+          type="button"
+          class="partner-suspension__btn partner-suspension__btn--restore"
+          [disabled]="isSubmitting()"
+          [attr.aria-label]="'a2a.suspension.restore_aria' | translate"
+          (click)="restorePartner()">
+          {{ 'a2a.suspension.restore' | translate }}
+        </button>
+      }
+    </div>
+
+    <!-- Impact preview (only when not already suspended) -->
+    @if (!isSuspended()) {
+      <div class="partner-suspension__impact" role="region" aria-labelledby="impact-heading">
+        <h3 id="impact-heading" class="partner-suspension__section-title">
+          {{ 'a2a.suspension.impact_title' | translate }}
+        </h3>
+
+        @if (suspensionImpact(); as impact) {
+          <div class="partner-suspension__impact-grid">
+            <div class="partner-suspension__impact-card">
+              <span class="partner-suspension__impact-value">{{ impact.affectedGrantCount }}</span>
+              <span class="partner-suspension__impact-label">
+                {{ 'a2a.suspension.affected_grants' | translate }}
+              </span>
+            </div>
+            <div class="partner-suspension__impact-card">
+              <span class="partner-suspension__impact-value">{{ impact.activeTaskCount }}</span>
+              <span class="partner-suspension__impact-label">
+                {{ 'a2a.suspension.active_tasks' | translate }}
+              </span>
+            </div>
+          </div>
+        } @else {
+          <p class="partner-suspension__impact-loading" role="status">
+            {{ 'a2a.suspension.loading_impact' | translate }}
+          </p>
+        }
+      </div>
+
+      <!-- Suspension form -->
+      <div class="partner-suspension__form-section" role="region"
+        aria-labelledby="suspend-form-heading">
+        <h3 id="suspend-form-heading" class="partner-suspension__section-title">
+          {{ 'a2a.suspension.suspend_form_title' | translate }}
+        </h3>
+
+        <div class="partner-suspension__field">
+          <label for="suspension-reason" class="partner-suspension__label">
+            {{ 'a2a.suspension.reason_label' | translate }}
+          </label>
+          <textarea
+            id="suspension-reason"
+            class="partner-suspension__textarea"
+            rows="4"
+            [value]="reason()"
+            (input)="updateReason($event)"
+            [attr.aria-describedby]="'reason-hint'"
+            [attr.aria-invalid]="reasonLength() > 0 && !isReasonValid()"></textarea>
+          <div id="reason-hint" class="partner-suspension__field-hint">
+            <span [class]="reasonCharCountClass()">
+              {{ reasonLength() }} / {{ minReasonLength }}
+            </span>
+            <span class="partner-suspension__hint-text">
+              {{ 'a2a.suspension.reason_hint' | translate }}
+            </span>
+          </div>
+        </div>
+
+        <label class="partner-suspension__checkbox-option">
+          <input
+            type="checkbox"
+            class="partner-suspension__checkbox"
+            [checked]="effectiveImmediately()"
+            (change)="toggleEffectiveImmediately()" />
+          <span class="partner-suspension__checkbox-text">
+            {{ 'a2a.suspension.effective_immediately' | translate }}
+          </span>
+        </label>
+
+        <button
+          type="button"
+          class="partner-suspension__btn partner-suspension__btn--suspend"
+          [disabled]="!isReasonValid() || isSubmitting()"
+          [attr.aria-label]="'a2a.suspension.suspend_aria' | translate"
+          (click)="openConfirmDialog()">
+          {{ 'a2a.suspension.suspend' | translate }}
+        </button>
+      </div>
+    }
+
+    <!-- Suspension history log -->
+    <div class="partner-suspension__history" role="region" aria-labelledby="history-heading">
+      <h3 id="history-heading" class="partner-suspension__section-title">
+        {{ 'a2a.suspension.history_title' | translate }}
+      </h3>
+
+      @if (suspensionHistory().length === 0) {
+        <p class="partner-suspension__history-empty">
+          {{ 'a2a.suspension.no_history' | translate }}
+        </p>
+      } @else {
+        <ul class="partner-suspension__history-list" role="log">
+          @for (entry of suspensionHistory(); track entry.id) {
+            <li class="partner-suspension__history-entry">
+              <div class="partner-suspension__history-row">
+                <span class="partner-suspension__action-badge"
+                  [class]="actionBadgeClass(entry.action)">
+                  {{ actionLabel(entry.action) | translate }}
+                </span>
+                <time class="partner-suspension__history-time">
+                  {{ formatDateTime(entry.timestamp) }}
+                </time>
+                <span class="partner-suspension__history-by">
+                  {{ entry.performedBy }}
+                </span>
+              </div>
+              <p class="partner-suspension__history-reason">{{ entry.reason }}</p>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <!-- Confirmation dialog -->
+  @if (showConfirmDialog()) {
+    <div class="partner-suspension__dialog-backdrop" (click)="closeConfirmDialog()"
+      aria-hidden="true"></div>
+    <div class="partner-suspension__dialog" role="alertdialog" aria-modal="true"
+      aria-labelledby="confirm-suspend-title">
+      <h3 id="confirm-suspend-title" class="partner-suspension__dialog-title">
+        {{ 'a2a.suspension.confirm_title' | translate }}
+      </h3>
+      <p class="partner-suspension__dialog-desc">
+        {{ 'a2a.suspension.confirm_desc' | translate }}
+        <strong>{{ partner()?.orgName }}</strong>
+      </p>
+
+      @if (suspensionImpact(); as impact) {
+        <div class="partner-suspension__dialog-impact" role="alert">
+          <span>{{ impact.affectedGrantCount }}
+            {{ 'a2a.suspension.grants_affected' | translate }}</span>
+          <span>{{ impact.activeTaskCount }}
+            {{ 'a2a.suspension.tasks_cancelled' | translate }}</span>
+        </div>
+      }
+
+      <div class="partner-suspension__dialog-actions">
+        <button
+          type="button"
+          class="partner-suspension__btn partner-suspension__btn--cancel"
+          (click)="closeConfirmDialog()">
+          {{ 'a2a.suspension.cancel' | translate }}
+        </button>
+        <button
+          type="button"
+          class="partner-suspension__btn partner-suspension__btn--confirm-suspend"
+          [disabled]="isSubmitting()"
+          (click)="confirmSuspend()">
+          {{ 'a2a.suspension.confirm_suspend' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+</section>

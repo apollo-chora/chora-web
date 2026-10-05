@@ -1,0 +1,306 @@
+<section
+  class="assessment-authoring glass-panel surface-rplus"
+  data-testid="rplus-assessment-authoring"
+  aria-labelledby="rplus-assessment-heading">
+  <header class="assessment-authoring__header">
+    <h1 id="rplus-assessment-heading" class="assessment-authoring__title">
+      {{ 'rplus.assessment_authoring.heading' | translate }}
+    </h1>
+    <p class="assessment-authoring__lede">
+      {{ 'rplus.assessment_authoring.lede' | translate }}
+    </p>
+  </header>
+
+  @switch (composeState().status) {
+    @case ('review') {
+      <!-- Reuse the SHARED unified review + accept list (kills the bespoke
+           review/editor/accept). The test_set block on accept assembles the
+           R+ DRAFT TestSet (chora-delivery). -->
+      <div class="assessment-authoring__review" data-testid="rplus-assessment-review">
+        <chora-unified-review-list
+          [items]="reviewItems()"
+          [manaPreview]="manaPreview()"
+          [busy]="acceptBusy()"
+          [testSet]="testSetConfig()"
+          [canAccept]="canAccept()"
+          [acceptError]="acceptError()"
+          [canAssembleTestSet]="canAssembleTestSet()"
+          [allowRegen]="true"
+          [regenState]="regenState()"
+          (toggleSelect)="onToggleSelect($event)"
+          (editItem)="onEditItem($event)"
+          (titleChange)="onTitleChange($event)"
+          (addManual)="onAddManual($event)"
+          (removeManual)="onRemoveManual($event)"
+          (regenImage)="onRegenImage($event)"
+          (toggleAll)="onToggleAll()"
+          (reorder)="onReorder($event)"
+          (pointsChange)="onPointsChange($event)"
+          (setTestSetEnabled)="onSetTestSetEnabled($event)"
+          (setTestSetTitle)="onSetTestSetTitle($event)"
+          (setTestSetDescription)="onSetTestSetDescription($event)"
+          (accept)="onAccept()" />
+
+        <button
+          type="button"
+          class="btn btn-secondary assessment-authoring__reset"
+          data-testid="rplus-assessment-reset"
+          (click)="reset()">
+          {{ 'aplus.unified_authoring.reset_cta' | translate }}
+        </button>
+      </div>
+    }
+    @case ('accepting') {
+      <div
+        class="assessment-authoring__working"
+        data-testid="rplus-assessment-accepting"
+        role="status"
+        aria-live="polite">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        {{ 'aplus.unified_authoring.working_accepting' | translate }}
+      </div>
+    }
+    @case ('submitting') {
+      <div
+        class="assessment-authoring__working"
+        data-testid="rplus-assessment-working"
+        role="status"
+        aria-live="polite">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        {{ 'rplus.assessment_authoring.generating' | translate }}
+      </div>
+    }
+    @case ('polling') {
+      <div
+        class="assessment-authoring__working"
+        data-testid="rplus-assessment-working"
+        role="status"
+        aria-live="polite">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        {{ 'aplus.unified_authoring.working_generating' | translate }}
+      </div>
+    }
+    @case ('done') {
+      <p
+        class="assessment-authoring__done"
+        role="status"
+        data-testid="rplus-assessment-done">
+        {{ createdCount() }}
+        {{ 'rplus.assessment_authoring.done_count' | translate }}
+      </p>
+      <button
+        type="button"
+        class="btn btn-secondary assessment-authoring__reset"
+        data-testid="rplus-assessment-reset"
+        (click)="reset()">
+        {{ 'aplus.unified_authoring.reset_cta' | translate }}
+      </button>
+    }
+    @default {
+      <!-- ── Compose form (idle / error) ──────────────────────────── -->
+      @if (errorMessage(); as err) {
+        <p
+          class="assessment-authoring__error"
+          role="alert"
+          data-testid="rplus-assessment-error">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{ err | translate }}
+        </p>
+      }
+
+      <!-- ZONE 1: mode (AI assist / By hand) — shared canvas parity -->
+      <fieldset class="assessment-authoring__fieldset">
+        <legend class="assessment-authoring__field-label">
+          {{ 'aplus.unified_authoring.mode_label' | translate }}
+        </legend>
+        <div
+          class="assessment-authoring__segmented"
+          role="radiogroup"
+          [attr.aria-label]="'aplus.unified_authoring.mode_label' | translate">
+          <button
+            type="button"
+            class="assessment-authoring__segment"
+            role="radio"
+            [class.assessment-authoring__segment--active]="mode() === 'ai'"
+            [attr.aria-checked]="mode() === 'ai'"
+            (click)="onModeChange('ai')"
+            data-testid="rplus-mode-ai">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            {{ 'aplus.unified_authoring.mode_ai' | translate }}
+          </button>
+          <button
+            type="button"
+            class="assessment-authoring__segment"
+            role="radio"
+            [class.assessment-authoring__segment--active]="mode() === 'manual'"
+            [attr.aria-checked]="mode() === 'manual'"
+            (click)="onModeChange('manual')"
+            data-testid="rplus-mode-manual">
+            <i class="fa-solid fa-pen-nib" aria-hidden="true"></i>
+            {{ 'aplus.unified_authoring.mode_manual' | translate }}
+          </button>
+        </div>
+      </fieldset>
+
+      @if (mode() === 'manual') {
+        <!-- By hand: drop straight into the shared review list (manualOnly). Each
+             row commits as its own atom; no test set (manual rows carry no
+             draft_id). -->
+        <p class="assessment-authoring__field-hint" data-testid="rplus-manual-intro">
+          {{ 'aplus.unified_authoring.manual_intro' | translate }}
+        </p>
+        <chora-unified-review-list
+          [items]="reviewItems()"
+          [manaPreview]="manaPreview()"
+          [busy]="acceptBusy()"
+          [manualOnly]="true"
+          [canAccept]="canAcceptManual()"
+          [acceptError]="acceptError()"
+          (toggleSelect)="onToggleSelect($event)"
+          (editItem)="onEditItem($event)"
+          (titleChange)="onTitleChange($event)"
+          (addManual)="onAddManual($event)"
+          (removeManual)="onRemoveManual($event)"
+          (toggleAll)="onToggleAll()"
+          (reorder)="onReorder($event)"
+          (accept)="onManualAccept()" />
+      } @else {
+        <!-- ── AI compose form (mode === 'ai') ─────────────────────── -->
+        <label class="assessment-authoring__field-label" for="rplus-topic-input">
+          {{ 'aplus.unified_authoring.topic_label' | translate }}
+        </label>
+        <input
+          id="rplus-topic-input"
+          type="text"
+          class="assessment-authoring__topic-input"
+          [value]="topic()"
+          (input)="onTopicInput($any($event.target).value)"
+          [placeholder]="'aplus.unified_authoring.topic_placeholder' | translate"
+          data-testid="rplus-topic" />
+        <p class="assessment-authoring__field-hint">
+          {{ 'aplus.unified_authoring.topic_hint' | translate }}
+        </p>
+
+        <label class="assessment-authoring__field-label" for="rplus-context-input">
+          {{ 'aplus.unified_authoring.context_label' | translate }}
+        </label>
+        <textarea
+          id="rplus-context-input"
+          class="assessment-authoring__body-input"
+          rows="4"
+          [value]="contextBody()"
+          (input)="onContextBodyInput($any($event.target).value)"
+          [placeholder]="'aplus.unified_authoring.context_placeholder' | translate"
+          data-testid="rplus-context"></textarea>
+
+        <div class="assessment-authoring__settings-row">
+          <div class="assessment-authoring__setting">
+            <label class="assessment-authoring__field-label" for="rplus-cognitive-level">
+              {{ 'aplus.unified_authoring.cognitive_level_label' | translate }}
+            </label>
+            <select
+              id="rplus-cognitive-level"
+              class="assessment-authoring__select"
+              [value]="cognitiveLevel()"
+              (change)="onCognitiveLevelChange($any($event.target).value)"
+              data-testid="rplus-cognitive-level">
+              @for (level of cognitiveLevels; track level) {
+                <option [value]="level">
+                  {{ 'aplus.unified_authoring.cognitive_level_' + level | translate }}
+                </option>
+              }
+            </select>
+          </div>
+          <div class="assessment-authoring__setting">
+            <label class="assessment-authoring__field-label" for="rplus-difficulty">
+              {{ 'aplus.unified_authoring.difficulty_label' | translate }}
+              <span class="assessment-authoring__difficulty-value">{{ difficulty() }}</span>
+            </label>
+            <input
+              id="rplus-difficulty"
+              type="range"
+              class="assessment-authoring__difficulty-input"
+              min="1"
+              max="5"
+              step="1"
+              [value]="difficulty()"
+              (input)="onDifficultyChange($any($event.target).value)"
+              data-testid="rplus-difficulty" />
+          </div>
+        </div>
+
+        <!-- ZONE 1: mixed-type composer (shared) -->
+        <chora-question-batch-generator
+          [allowedTypes]="allowedComposerTypes"
+          (planChange)="onBatchPlanChange($event)" />
+
+        <!-- ZONE 2: OPTIONAL source material + grounding mode (source-file
+             authoring parity — the batch_source_material path). -->
+        <div class="assessment-authoring__zone2" data-testid="rplus-zone2">
+          <chora-file-dropzone
+            [label]="'aplus.unified_authoring.upload_title' | translate"
+            [hint]="'aplus.unified_authoring.upload_hint' | translate"
+            [formats]="'aplus.unified_authoring.upload_formats' | translate"
+            [accept]="acceptAttr"
+            [multiple]="true"
+            [files]="sourceFiles()"
+            testIdPrefix="rplus-source-"
+            (filesAdded)="onSourceFilesAdded($event)"
+            (fileRemoved)="removeSourceFile($event)" />
+          @if (fileError(); as fe) {
+            <p
+              class="assessment-authoring__field-error"
+              role="alert"
+              data-testid="rplus-assessment-file-error">
+              {{ fe | translate }}
+            </p>
+          }
+
+          <fieldset class="assessment-authoring__fieldset">
+            <legend class="assessment-authoring__field-label">
+              {{ 'aplus.unified_authoring.grounding_label' | translate }}
+            </legend>
+            <div
+              class="assessment-authoring__segmented"
+              role="radiogroup"
+              [attr.aria-label]="'aplus.unified_authoring.grounding_label' | translate">
+              <button
+                type="button"
+                class="assessment-authoring__segment"
+                role="radio"
+                [class.assessment-authoring__segment--active]="groundingMode() === 'starting_point'"
+                [attr.aria-checked]="groundingMode() === 'starting_point'"
+                (click)="setGroundingMode('starting_point')"
+                data-testid="rplus-grounding-starting-point">
+                {{ 'aplus.unified_authoring.grounding_starting_point' | translate }}
+              </button>
+              <button
+                type="button"
+                class="assessment-authoring__segment"
+                role="radio"
+                [class.assessment-authoring__segment--active]="groundingMode() === 'strict'"
+                [attr.aria-checked]="groundingMode() === 'strict'"
+                (click)="setGroundingMode('strict')"
+                data-testid="rplus-grounding-strict">
+                {{ 'aplus.unified_authoring.grounding_strict' | translate }}
+              </button>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- Primary CTA -->
+        <div class="assessment-authoring__actions">
+          <button
+            type="button"
+            class="btn btn-primary assessment-authoring__generate"
+            data-testid="rplus-assessment-start"
+            [disabled]="!canStart()"
+            (click)="start()">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            {{ 'rplus.assessment_authoring.generate_cta' | translate }}
+          </button>
+        </div>
+      }
+    }
+  }
+</section>

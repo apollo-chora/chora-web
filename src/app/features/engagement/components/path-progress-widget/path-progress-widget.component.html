@@ -1,0 +1,44 @@
+<div
+  class="path-progress-widget"
+  role="region"
+  aria-label="Path Progress"
+  data-testid="path-progress-widget">
+
+  <h3 class="path-progress-widget__title">{{ 'engagement.paths.title' | translate }}</h3>
+
+  @if (paths().length === 0) {
+    <p class="path-progress-widget__empty" data-testid="path-empty">
+      {{ 'engagement.paths.empty' | translate }}
+    </p>
+  } @else {
+    @for (path of paths(); track path.path_id) {
+      <button
+        class="path-progress-widget__card"
+        (click)="onPathClick(path.path_id)"
+        data-testid="path-card">
+
+        <div class="path-progress-widget__card-header">
+          <span class="path-progress-widget__card-name" data-testid="path-name">{{ path.path_title }}</span>
+          <span class="path-progress-widget__card-percent" data-testid="path-percent">{{ path.completion_pct }}%</span>
+        </div>
+
+        <div class="path-progress-widget__progress-bar">
+          <div
+            class="path-progress-widget__progress-fill"
+            [style.width.%]="path.completion_pct"
+            role="progressbar"
+            [attr.aria-valuenow]="path.completion_pct"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="path.path_title + ' progress: ' + path.completion_pct + '%'"
+            data-testid="path-progress">
+          </div>
+        </div>
+
+        <div class="path-progress-widget__card-meta">
+          <span>{{ path.steps_completed }} / {{ path.steps_total }} {{ 'engagement.paths.steps' | translate }}</span>
+        </div>
+      </button>
+    }
+  }
+</div>

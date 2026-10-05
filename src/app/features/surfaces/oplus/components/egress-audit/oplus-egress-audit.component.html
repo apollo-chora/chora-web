@@ -1,0 +1,179 @@
+<section class="oplus-ea surface-oplus" data-testid="oplus-egress-audit-root">
+  <header class="oplus-ea__head">
+    <div class="oplus-ea__head-text">
+      <h1 class="oplus-ea__title" data-testid="oplus-ea-title">
+        {{ 'oplus.egressAudit.title' | translate }}
+      </h1>
+      <p class="oplus-ea__lede">
+        {{ 'oplus.egressAudit.lede' | translate }}
+      </p>
+    </div>
+    <button
+      type="button"
+      class="btn btn-secondary oplus-ea__refresh"
+      [disabled]="loading()"
+      (click)="load()"
+      data-testid="oplus-ea-refresh"
+    >
+      {{ 'oplus.egressAudit.refresh' | translate }}
+    </button>
+  </header>
+
+  @switch (loadState().status) {
+    @case ('loading') {
+      <p
+        class="oplus-ea__status"
+        role="status"
+        aria-live="polite"
+        data-testid="oplus-ea-loading"
+      >
+        {{ 'oplus.egressAudit.loading' | translate }}
+      </p>
+    }
+
+    @case ('error') {
+      <!-- A refused read is never rendered as an empty list — an empty list
+           reads as "no egress happened", a different and dangerous claim. -->
+      <div class="oplus-ea__alert" role="alert" data-testid="oplus-ea-error">
+        @if (isForbidden()) {
+          <p data-testid="oplus-ea-forbidden">
+            {{ 'oplus.egressAudit.error.forbidden' | translate }}
+          </p>
+        } @else {
+          <p>{{ (errorKey() ?? 'oplus.egressAudit.error.generic') | translate }}</p>
+        }
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="load()"
+          data-testid="oplus-ea-retry"
+        >
+          {{ 'oplus.egressAudit.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    @case ('success') {
+      @if (hasItems()) {
+        <p class="oplus-ea__count">
+          {{ count() }} {{ 'oplus.egressAudit.decisions' | translate }}
+        </p>
+
+        <ul class="oplus-ea__list" role="list">
+          @for (ev of items(); track ev.event_id) {
+            <li
+              class="oplus-ea__row glass-panel"
+              [class.oplus-ea__row--denied]="isDenied(ev)"
+              data-testid="oplus-ea-row"
+            >
+              <div class="oplus-ea__row-head">
+                <span
+                  class="oplus-ea__chip"
+                  [class.oplus-ea__chip--denied]="isDenied(ev)"
+                  [class.oplus-ea__chip--permitted]="!isDenied(ev)"
+                  [attr.data-decision]="ev.decision"
+                  data-testid="oplus-ea-decision"
+                >
+                  @if (isDenied(ev)) {
+                    {{ 'oplus.egressAudit.decision_denied' | translate }}
+                  } @else {
+                    {{ 'oplus.egressAudit.decision_permitted' | translate }}
+                  }
+                </span>
+
+                @if (isAnomaly(ev)) {
+                  <span class="oplus-ea__chip oplus-ea__chip--anomaly">
+                    {{ 'oplus.egressAudit.anomaly' | translate }}
+                  </span>
+                }
+
+                <time class="oplus-ea__time" data-testid="oplus-ea-time">
+                  {{ fmtTime(ev.created_at) }}
+                </time>
+              </div>
+
+              <dl class="oplus-ea__meta">
+                @if (subjectOf(ev)) {
+                  <div class="oplus-ea__meta-item">
+                    <dt>{{ 'oplus.egressAudit.subject' | translate }}</dt>
+                    <dd data-testid="oplus-ea-subject">{{ subjectOf(ev) }}</dd>
+                  </div>
+                }
+                @if (actionCodeOf(ev)) {
+                  <div class="oplus-ea__meta-item">
+                    <dt>{{ 'oplus.egressAudit.action_code' | translate }}</dt>
+                    <dd data-testid="oplus-ea-action-code">{{ actionCodeOf(ev) }}</dd>
+                  </div>
+                }
+                @if (citationCountOf(ev) !== null) {
+                  <div class="oplus-ea__meta-item">
+                    <dt>{{ 'oplus.egressAudit.citations' | translate }}</dt>
+                    <dd>{{ citationCountOf(ev) }}</dd>
+                  </div>
+                }
+                @if (armorPreOf(ev)) {
+                  <div class="oplus-ea__meta-item">
+                    <dt>{{ 'oplus.egressAudit.armor_pre' | translate }}</dt>
+                    <dd>{{ armorPreOf(ev) }}</dd>
+                  </div>
+                }
+                @if (armorPostOf(ev)) {
+                  <div class="oplus-ea__meta-item">
+                    <dt>{{ 'oplus.egressAudit.armor_post' | translate }}</dt>
+                    <dd>{{ armorPostOf(ev) }}</dd>
+                  </div>
+                }
+                @if (vendorOf(ev)) {
+                  <div class="oplus-ea__meta-item">
+                    <dt>{{ 'oplus.egressAudit.vendor' | translate }}</dt>
+                    <dd>{{ vendorOf(ev) }}</dd>
+                  </div>
+                }
+                @if (modelOf(ev)) {
+                  <div class="oplus-ea__meta-item">
+                    <dt>{{ 'oplus.egressAudit.model' | translate }}</dt>
+                    <dd>{{ modelOf(ev) }}</dd>
+                  </div>
+                }
+              </dl>
+
+              <!-- "What was searched" — the search QUERY the model issued, NEVER
+                   the web-sourced content/knowledge it returned (proto §7). -->
+              @if (hasQueries(ev)) {
+                <div class="oplus-ea__searched" data-testid="oplus-ea-searched">
+                  <p class="oplus-ea__searched-label">
+                    {{ 'oplus.egressAudit.searched_label' | translate }}
+                  </p>
+                  <ul class="oplus-ea__queries" role="list">
+                    @for (query of queriesOf(ev); track $index) {
+                      <li class="oplus-ea__query" data-testid="oplus-ea-query">
+                        {{ query }}
+                      </li>
+                    }
+                  </ul>
+                  <p class="oplus-ea__searched-caption">
+                    {{ 'oplus.egressAudit.searched_caption' | translate }}
+                  </p>
+                </div>
+              }
+
+              @if (isDenied(ev) && ev.reason) {
+                <p class="oplus-ea__reason" data-testid="oplus-ea-reason">
+                  <span class="oplus-ea__reason-label"
+                    >{{ 'oplus.egressAudit.reason_label' | translate }}:</span
+                  >
+                  {{ ev.reason }}
+                </p>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="oplus-ea__empty" data-testid="oplus-ea-empty">
+          <strong>{{ 'oplus.egressAudit.empty_title' | translate }}</strong>
+          <p>{{ 'oplus.egressAudit.empty_body' | translate }}</p>
+        </div>
+      }
+    }
+  }
+</section>

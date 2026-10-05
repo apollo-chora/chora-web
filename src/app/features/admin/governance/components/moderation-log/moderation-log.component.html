@@ -1,0 +1,105 @@
+<section
+  class="moderation-log"
+  role="main"
+  [attr.aria-label]="'admin.governance.moderation_title' | translate"
+  data-testid="moderation-log">
+
+  <!-- Page Header -->
+  <header class="moderation-log__header">
+    <div class="moderation-log__header-nav">
+      <h1 class="moderation-log__title" data-testid="moderation-title">
+        {{ 'admin.governance.moderation_title' | translate }}
+      </h1>
+    </div>
+    <button
+      type="button"
+      class="moderation-log__btn moderation-log__btn--primary"
+      (click)="loadModerationLog()"
+      data-testid="btn-refresh-moderation"
+      [attr.aria-label]="'admin.governance.refresh' | translate">
+      {{ 'admin.governance.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="moderation-log__filters" data-testid="moderation-filters" role="search">
+    <div class="moderation-log__filter-group">
+      <label for="action-filter" class="moderation-log__filter-label">
+        {{ 'admin.governance.action_type' | translate }}
+      </label>
+      <select
+        id="action-filter"
+        class="moderation-log__select"
+        data-testid="action-filter"
+        (change)="onActionFilter($any($event.target).value)">
+        <option value="">{{ 'admin.governance.all_actions' | translate }}</option>
+        @for (action of allActions; track action) {
+          <option [value]="action">{{ actionLabels[action] | translate }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="moderation-log__loading" data-testid="moderation-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="moderation-log__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="moderation-log__empty" data-testid="moderation-empty" role="status">
+      <p class="moderation-log__empty-text">
+        {{ 'admin.governance.no_moderation_actions' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Moderation Action List -->
+  @if (!loading() && !isEmpty()) {
+    <div class="moderation-log__list" data-testid="moderation-list" role="list">
+      @for (entry of filteredActions(); track entry.id) {
+        <div
+          class="moderation-log__entry"
+          role="listitem"
+          [attr.data-testid]="'moderation-' + entry.id">
+
+          <div class="moderation-log__entry-header">
+            <span class="moderation-log__timestamp">
+              {{ formatDateTime(entry.created_at) }}
+            </span>
+            <span
+              class="moderation-log__action"
+              [class]="actionClass(entry.action)">
+              {{ actionLabels[entry.action] | translate }}
+            </span>
+          </div>
+
+          <div class="moderation-log__entry-body">
+            <div class="moderation-log__content-ref">
+              <span class="moderation-log__label">
+                {{ 'admin.governance.content_type' | translate }}:
+              </span>
+              {{ entry.content_type }}
+              <span class="moderation-log__separator">|</span>
+              <span class="moderation-log__label">
+                {{ 'admin.governance.content_id' | translate }}:
+              </span>
+              {{ entry.content_id }}
+            </div>
+            <p class="moderation-log__reason">{{ entry.reason }}</p>
+          </div>
+
+          <div class="moderation-log__entry-footer">
+            <span class="moderation-log__moderator">
+              {{ 'admin.governance.moderator' | translate }}: {{ entry.moderator_gcid }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

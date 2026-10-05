@@ -1,0 +1,513 @@
+<section
+  class="setup-wizard"
+  role="main"
+  [attr.aria-label]="'admin.wizard.title' | translate"
+  data-testid="setup-wizard">
+
+  <header class="setup-wizard__header">
+    <h1 class="setup-wizard__title" data-testid="wizard-title">
+      {{ 'admin.wizard.title' | translate }}
+    </h1>
+  </header>
+
+  <!-- UX Track U, E1 item 4b: the session has no active organisation, so every
+       step of this wizard will be refused. Persistent and above the steps
+       because nothing on this screen can clear it: the operator has to create
+       an organisation or switch into one first. PLATFORM_OPERATOR is
+       tenant-less by design, so this is ordinary, not an error state. -->
+  @if (noActiveTenant()) {
+    <div
+      class="setup-wizard__no-tenant"
+      role="alert"
+      data-testid="no-active-tenant">
+      <p>{{ 'admin.wizard.no_active_tenant' | translate }}</p>
+      <a routerLink="/h/tenants/new" data-testid="no-active-tenant-create">
+        {{ 'admin.wizard.no_active_tenant_create' | translate }}
+      </a>
+    </div>
+  }
+
+  <!-- CHO-1692 Phase D — re-entry banner shown when wizard_completed_at
+       is non-null. Non-blocking; informational only. -->
+  @if (showReentryBanner()) {
+    <div
+      class="setup-wizard__reentry-banner"
+      role="status"
+      data-testid="reentry-banner">
+      {{ 'admin.wizard.reentry_banner' | translate }}
+      <time [attr.datetime]="wizardCompletedAt()">{{ wizardCompletedAt() }}</time>
+    </div>
+  }
+
+  <!-- A hydration leg failed, so what is on screen is this component's
+       DEFAULTS, not the tenant's saved values. Blocking in effect rather than
+       informational: the step-0 branding persist and the final apply both
+       refuse while it shows, because writing a fabricated payload would
+       destroy the real settings. role="alert" because it changes what the
+       admin can do, unlike the re-entry banner above. -->
+  @if (hydrationFailed()) {
+    <div
+      class="setup-wizard__hydration-error"
+      role="alert"
+      data-testid="hydration-failed-banner">
+      <p>{{ 'admin.wizard.hydration_failed' | translate }}</p>
+      <button
+        type="button"
+        class="setup-wizard__btn setup-wizard__btn--secondary"
+        (click)="retryHydration()"
+        data-testid="hydration-failed-retry">
+        {{ 'common.retry' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- CHO-1692 Phase D — hydration skeleton shown while parallel BFF
+       reads are in flight (avoids flash-of-defaults). -->
+  @if (hydrationLoading()) {
+    <div
+      class="setup-wizard__hydration-skeleton"
+      role="status"
+      aria-busy="true"
+      data-testid="hydration-skeleton">
+      {{ 'admin.wizard.hydration_loading' | translate }}
+    </div>
+  }
+
+  <!-- Step Indicators -->
+  <nav class="setup-wizard__steps" role="tablist"
+       [attr.aria-label]="'admin.wizard.step_navigation' | translate"
+       data-testid="step-indicators">
+    @for (step of steps; track step; let i = $index) {
+      <button
+        type="button"
+        class="setup-wizard__step-indicator"
+        [class.setup-wizard__step-indicator--active]="currentStepIndex() === i"
+        [class.setup-wizard__step-indicator--completed]="currentStepIndex() > i"
+        role="tab"
+        [attr.aria-selected]="currentStepIndex() === i"
+        (click)="goToStep(i)"
+        [attr.data-testid]="'step-indicator-' + step"
+        [attr.aria-label]="getStepLabel(step) | translate">
+        <span class="setup-wizard__step-number">{{ i + 1 }}</span>
+        <span class="setup-wizard__step-label">{{ getStepLabel(step) | translate }}</span>
+      </button>
+    }
+  </nav>
+
+  <!-- Step Content -->
+  <div class="setup-wizard__content" data-testid="wizard-content">
+
+    <!-- Step 1: Branding -->
+    @if (currentStep() === 'branding') {
+      <div class="setup-wizard__panel" data-testid="step-branding">
+        <h2 class="setup-wizard__panel-title">{{ 'admin.wizard.branding_title' | translate }}</h2>
+        <p class="setup-wizard__panel-desc">{{ 'admin.wizard.branding_desc' | translate }}</p>
+
+        <div class="setup-wizard__branding-layout">
+          <div class="setup-wizard__branding-form">
+            <!-- Logo URL (CHO-1655 Phase A — direct GCS upload deferred) -->
+            <div class="setup-wizard__field">
+              <label for="logo-url" class="setup-wizard__label">
+                {{ 'admin.wizard.logo_url' | translate }}
+              </label>
+              <input
+                type="url"
+                id="logo-url"
+                placeholder="https://"
+                [ngModel]="logoUrl()"
+                (ngModelChange)="logoUrl.set($event)"
+                class="setup-wizard__text-input"
+                data-testid="logo-url-input"
+                [attr.aria-label]="'admin.wizard.logo_url' | translate" />
+            </div>
+
+            <!-- Primary Color -->
+            <div class="setup-wizard__field">
+              <label for="primary-color" class="setup-wizard__label">
+                {{ 'admin.wizard.primary_color' | translate }}
+              </label>
+              <div class="setup-wizard__color-row">
+                <input
+                  type="color"
+                  id="primary-color"
+                  [ngModel]="primaryColorHex()"
+                  (ngModelChange)="primaryColorHex.set($event)"
+                  class="setup-wizard__color-picker"
+                  data-testid="primary-color-input"
+                  [attr.aria-label]="'admin.wizard.primary_color' | translate" />
+                <span class="setup-wizard__color-value">{{ primaryColorHex() }}</span>
+              </div>
+            </div>
+
+            @if (brandingError(); as msg) {
+              <p class="setup-wizard__error"
+                 data-testid="branding-error"
+                 role="alert">{{ msg }}</p>
+            }
+          </div>
+
+          <!-- Live Preview -->
+          <div class="setup-wizard__preview" data-testid="branding-preview">
+            <h3 class="setup-wizard__preview-title">{{ 'admin.wizard.preview' | translate }}</h3>
+            <div class="setup-wizard__preview-card"
+                 [style.border-color]="primaryColorHex()">
+              @if (logoUrl()) {
+                <img [src]="logoUrl()" alt="Tenant logo preview"
+                     class="setup-wizard__preview-logo" />
+              } @else {
+                <div class="setup-wizard__preview-logo-placeholder">
+                  {{ 'admin.wizard.logo_placeholder' | translate }}
+                </div>
+              }
+              <div class="setup-wizard__preview-header"
+                   [style.background-color]="primaryColorHex()">
+                <span class="setup-wizard__preview-header-text">
+                  {{ 'admin.wizard.preview_header' | translate }}
+                </span>
+              </div>
+              <div class="setup-wizard__preview-body">
+                <button
+                  type="button"
+                  class="setup-wizard__preview-btn"
+                  [style.background-color]="primaryColorHex()"
+                  disabled>
+                  {{ 'admin.wizard.preview_button' | translate }}
+                </button>
+                <span class="setup-wizard__preview-text">
+                  {{ 'admin.wizard.preview_text' | translate }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Add-Ons -->
+    @if (currentStep() === 'addons') {
+      <div class="setup-wizard__panel" data-testid="step-addons">
+        <h2 class="setup-wizard__panel-title">{{ 'admin.wizard.addons_title' | translate }}</h2>
+        <p class="setup-wizard__panel-desc">{{ 'admin.wizard.addons_readback_desc' | translate }}</p>
+
+        @if (entitlementsLoading()) {
+          <div
+            class="setup-wizard__readback-loading"
+            role="status"
+            aria-busy="true"
+            data-testid="addons-readback-loading">
+            {{ 'admin.wizard.addons_readback_loading' | translate }}
+          </div>
+        } @else if (entitlementsError()) {
+          <div
+            class="setup-wizard__readback-error"
+            role="alert"
+            data-testid="addons-readback-error">
+            <p>{{ entitlementsError() | translate }}</p>
+            <button
+              type="button"
+              class="setup-wizard__btn setup-wizard__btn--secondary"
+              (click)="retryEntitlements()"
+              data-testid="addons-readback-retry">
+              {{ 'common.retry' | translate }}
+            </button>
+          </div>
+        } @else {
+          <div class="setup-wizard__addon-list" role="list"
+               [attr.aria-label]="'admin.wizard.granted_addons' | translate">
+            @for (addOn of grantedAddOns(); track addOn.code) {
+              <div
+                class="setup-wizard__addon-item setup-wizard__addon-item--granted"
+                role="listitem"
+                [attr.data-testid]="'granted-addon-' + addOn.code">
+                <div class="setup-wizard__addon-info">
+                  @if (addOn.labelKey) {
+                    <span class="setup-wizard__addon-name">{{ addOn.labelKey | translate }}</span>
+                    @if (addOn.descriptionKey) {
+                      <span class="setup-wizard__addon-desc">{{ addOn.descriptionKey | translate }}</span>
+                    }
+                  } @else {
+                    <!-- A grant this wizard's hardcoded catalogue does not
+                         know. Shown under its raw code: hiding it would say
+                         the plan is smaller than it is. -->
+                    <span class="setup-wizard__addon-name">{{ addOn.code }}</span>
+                    <span class="setup-wizard__addon-desc">
+                      {{ 'admin.wizard.addon_uncatalogued' | translate }}
+                    </span>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <p class="setup-wizard__readback-none" data-testid="granted-addons-none">
+                {{ 'admin.wizard.addons_readback_none' | translate }}
+              </p>
+            }
+          </div>
+
+          @if (entitlementsUncodedCount() > 0) {
+            <p class="setup-wizard__readback-note" data-testid="addons-uncoded-note">
+              {{ 'admin.wizard.addons_readback_uncoded' | translate }}
+              ({{ entitlementsUncodedCount() }})
+            </p>
+          }
+        }
+
+        <p class="setup-wizard__readback-note">
+          {{ 'admin.wizard.addons_readback_manage' | translate }}
+          <a [routerLink]="addonsManagementPath" data-testid="addons-manage-link">
+            {{ 'admin.wizard.addons_readback_manage_link' | translate }}
+          </a>
+        </p>
+      </div>
+    }
+
+    <!-- Step 3: Identity -->
+    @if (currentStep() === 'identity') {
+      <div class="setup-wizard__panel" data-testid="step-identity">
+        <h2 class="setup-wizard__panel-title">{{ 'admin.wizard.identity_title' | translate }}</h2>
+        <p class="setup-wizard__panel-desc">{{ 'admin.wizard.identity_desc' | translate }}</p>
+
+        <div class="setup-wizard__field">
+          <label for="provider-type" class="setup-wizard__label">
+            {{ 'admin.wizard.provider_type' | translate }}
+          </label>
+          <select
+            id="provider-type"
+            class="setup-wizard__select"
+            [ngModel]="providerType()"
+            (ngModelChange)="providerType.set($event)"
+            data-testid="provider-type-select"
+            [attr.aria-label]="'admin.wizard.provider_type' | translate">
+            <option value="oidc">{{ 'admin.wizard.oidc' | translate }}</option>
+            <option value="singpass">{{ 'admin.wizard.singpass' | translate }}</option>
+          </select>
+        </div>
+
+        <!-- CHO-1683 — OIDC fields are HIDDEN when provider_type=singpass.
+             The backend's chk_provider_validity CHECK constraint 400s if
+             a singpass row carries client_id / client_secret / discovery_url,
+             so keep them off the wire by hiding them in the UI. -->
+        @if (!identityIsSingpass()) {
+          <div class="setup-wizard__field">
+            <label for="client-id" class="setup-wizard__label">
+              {{ 'admin.wizard.client_id' | translate }}
+            </label>
+            <input
+              type="text"
+              id="client-id"
+              class="setup-wizard__input"
+              [ngModel]="clientId()"
+              (ngModelChange)="clientId.set($event)"
+              [placeholder]="'admin.wizard.client_id_placeholder' | translate"
+              data-testid="client-id-input"
+              [attr.aria-label]="'admin.wizard.client_id' | translate" />
+          </div>
+
+          <div class="setup-wizard__field">
+            <label for="client-secret" class="setup-wizard__label">
+              {{ 'admin.wizard.client_secret' | translate }}
+            </label>
+            <input
+              type="password"
+              id="client-secret"
+              class="setup-wizard__input"
+              [ngModel]="clientSecret()"
+              (ngModelChange)="clientSecret.set($event)"
+              [placeholder]="'admin.wizard.client_secret_placeholder' | translate"
+              data-testid="client-secret-input"
+              [attr.aria-label]="'admin.wizard.client_secret' | translate" />
+          </div>
+
+          <div class="setup-wizard__field">
+            <label for="discovery-url" class="setup-wizard__label">
+              {{ 'admin.wizard.discovery_url' | translate }}
+            </label>
+            <input
+              type="url"
+              id="discovery-url"
+              class="setup-wizard__input"
+              [ngModel]="discoveryUrl()"
+              (ngModelChange)="discoveryUrl.set($event)"
+              [placeholder]="'admin.wizard.discovery_url_placeholder' | translate"
+              data-testid="discovery-url-input"
+              [attr.aria-label]="'admin.wizard.discovery_url' | translate" />
+          </div>
+        }
+
+        @if (identityIsSingpass()) {
+          <p class="setup-wizard__panel-hint" data-testid="singpass-hint">
+            {{ 'admin.wizard.identity_singpass_hint' | translate }}
+          </p>
+          <div class="setup-wizard__field">
+            <label class="setup-wizard__checkbox-label">
+              <input
+                type="checkbox"
+                [ngModel]="singpassEnabled()"
+                (ngModelChange)="singpassEnabled.set($event)"
+                data-testid="singpass-toggle" />
+              {{ 'admin.wizard.singpass_integration' | translate }}
+            </label>
+          </div>
+        }
+
+        @if (identityError()) {
+          <p class="setup-wizard__error" role="alert" data-testid="identity-error">
+            {{ identityError() }}
+          </p>
+        }
+      </div>
+    }
+
+    <!-- Step 4: Review -->
+    @if (currentStep() === 'review') {
+      <div class="setup-wizard__panel" data-testid="step-review">
+        <h2 class="setup-wizard__panel-title">{{ 'admin.wizard.review_title' | translate }}</h2>
+        <p class="setup-wizard__panel-desc">{{ 'admin.wizard.review_desc' | translate }}</p>
+
+        <!-- Branding Summary -->
+        <div class="setup-wizard__review-section">
+          <h3 class="setup-wizard__review-heading">{{ 'admin.wizard.step_branding' | translate }}</h3>
+          <div class="setup-wizard__review-row">
+            <span class="setup-wizard__review-label">{{ 'admin.wizard.primary_color' | translate }}:</span>
+            <span class="setup-wizard__review-value">
+              <span class="setup-wizard__review-swatch" [style.background-color]="primaryColorHex()"></span>
+              {{ primaryColorHex() }}
+            </span>
+          </div>
+          <div class="setup-wizard__review-row">
+            <span class="setup-wizard__review-label">{{ 'admin.wizard.logo_url' | translate }}:</span>
+            <span class="setup-wizard__review-value">
+              @if (logoUrl()) {
+                {{ logoUrl() }}
+              } @else {
+                {{ 'admin.wizard.no_logo' | translate }}
+              }
+            </span>
+          </div>
+        </div>
+
+        <!-- Add-Ons Summary -->
+        <div class="setup-wizard__review-section">
+          <h3 class="setup-wizard__review-heading">{{ 'admin.wizard.step_addons' | translate }}</h3>
+          @if (grantedAddOns().length > 0) {
+            @for (addOn of grantedAddOns(); track addOn.code) {
+              <div class="setup-wizard__review-row">
+                <span class="setup-wizard__review-check" aria-hidden="true">&#10003;</span>
+                <span class="setup-wizard__review-value">
+                  @if (addOn.labelKey) {
+                    {{ addOn.labelKey | translate }}
+                  } @else {
+                    {{ addOn.code }}
+                  }
+                </span>
+              </div>
+            }
+          } @else {
+            <p class="setup-wizard__review-none">{{ 'admin.wizard.addons_readback_none' | translate }}</p>
+          }
+          @if (entitlementsUncodedCount() > 0) {
+            <p class="setup-wizard__review-none" data-testid="review-addons-uncoded">
+              {{ 'admin.wizard.addons_readback_uncoded' | translate }}
+              ({{ entitlementsUncodedCount() }})
+            </p>
+          }
+        </div>
+
+        <!-- Identity Summary -->
+        <div class="setup-wizard__review-section">
+          <h3 class="setup-wizard__review-heading">{{ 'admin.wizard.step_identity' | translate }}</h3>
+          <div class="setup-wizard__review-row">
+            <span class="setup-wizard__review-label">{{ 'admin.wizard.provider_type' | translate }}:</span>
+            <span class="setup-wizard__review-value">{{ providerType() }}</span>
+          </div>
+          @if (clientId()) {
+            <div class="setup-wizard__review-row">
+              <span class="setup-wizard__review-label">{{ 'admin.wizard.client_id' | translate }}:</span>
+              <span class="setup-wizard__review-value">{{ clientId() }}</span>
+            </div>
+          }
+          @if (discoveryUrl()) {
+            <div class="setup-wizard__review-row">
+              <span class="setup-wizard__review-label">{{ 'admin.wizard.discovery_url' | translate }}:</span>
+              <span class="setup-wizard__review-value">{{ discoveryUrl() }}</span>
+            </div>
+          }
+          <div class="setup-wizard__review-row">
+            <span class="setup-wizard__review-label">{{ 'admin.wizard.singpass_integration' | translate }}:</span>
+            <span class="setup-wizard__review-value">
+              @if (singpassEnabled()) {
+                {{ 'common.enabled' | translate }}
+              } @else {
+                {{ 'common.disabled' | translate }}
+              }
+            </span>
+          </div>
+        </div>
+
+        @if (tenancyRetryAvailable()) {
+          <div class="setup-wizard__retry-banner" role="alert" data-testid="tenancy-retry-banner">
+            <p>{{ 'admin.wizard.apply_tenancy_failed_retry_safe' | translate }}</p>
+            <button
+              type="button"
+              class="setup-wizard__btn setup-wizard__btn--primary"
+              (click)="apply()"
+              [disabled]="applying()"
+              data-testid="tenancy-retry-btn">
+              {{ 'admin.wizard.apply_retry' | translate }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Footer Navigation -->
+  <footer class="setup-wizard__footer" data-testid="wizard-footer">
+    <button
+      type="button"
+      class="setup-wizard__btn setup-wizard__btn--secondary"
+      (click)="cancel()"
+      data-testid="cancel-btn"
+      [attr.aria-label]="'common.cancel' | translate">
+      {{ 'common.cancel' | translate }}
+    </button>
+
+    <div class="setup-wizard__footer-right">
+      @if (!isFirstStep()) {
+        <button
+          type="button"
+          class="setup-wizard__btn setup-wizard__btn--secondary"
+          (click)="previousStep()"
+          data-testid="back-btn"
+          [attr.aria-label]="'common.back' | translate">
+          {{ 'common.back' | translate }}
+        </button>
+      }
+
+      @if (!isLastStep()) {
+        <button
+          type="button"
+          class="setup-wizard__btn setup-wizard__btn--primary"
+          (click)="nextStep()"
+          [disabled]="!canProceed()"
+          data-testid="next-btn"
+          [attr.aria-label]="'common.next' | translate">
+          {{ 'common.next' | translate }}
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="setup-wizard__btn setup-wizard__btn--primary"
+          (click)="apply()"
+          [disabled]="applying()"
+          data-testid="apply-btn"
+          [attr.aria-label]="'admin.wizard.apply' | translate">
+          @if (applying()) {
+            {{ 'common.applying' | translate }}
+          } @else {
+            {{ 'admin.wizard.apply' | translate }}
+          }
+        </button>
+      }
+    </div>
+  </footer>
+</section>

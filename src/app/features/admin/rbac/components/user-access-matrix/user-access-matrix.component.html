@@ -1,0 +1,308 @@
+<section
+  class="user-access-matrix"
+  role="main"
+  [attr.aria-label]="'admin.rbac.title' | translate"
+  data-testid="user-access-matrix">
+
+  <!-- Page Header -->
+  <header class="user-access-matrix__header">
+    <h1 class="user-access-matrix__title" data-testid="rbac-title">
+      {{ 'admin.rbac.title' | translate }}
+    </h1>
+    <button
+      type="button"
+      class="user-access-matrix__btn user-access-matrix__btn--primary"
+      (click)="loadUsers()"
+      data-testid="btn-refresh"
+      [attr.aria-label]="'admin.rbac.refresh' | translate">
+      {{ 'admin.rbac.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Search Bar -->
+  <div class="user-access-matrix__search" data-testid="search-bar" role="search">
+    <label for="user-search" class="user-access-matrix__search-label">
+      {{ 'admin.rbac.search_users' | translate }}
+    </label>
+    <input
+      id="user-search"
+      type="search"
+      class="user-access-matrix__search-input"
+      data-testid="search-input"
+      [value]="searchQuery()"
+      (input)="onSearch($any($event.target).value)"
+      [attr.placeholder]="'admin.rbac.search_placeholder' | translate" />
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="user-access-matrix__loading" data-testid="users-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="user-access-matrix__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="user-access-matrix__empty" data-testid="users-empty" role="status">
+      <p class="user-access-matrix__empty-text">
+        {{ 'admin.rbac.no_users' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- User Table -->
+  @if (!loading() && !isEmpty()) {
+    <div class="user-access-matrix__table-wrapper" data-testid="user-table">
+      <table class="user-access-matrix__table" role="table">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'admin.rbac.col_name' | translate }}</th>
+            <th scope="col">{{ 'admin.rbac.col_email' | translate }}</th>
+            <th scope="col">{{ 'admin.rbac.col_roles' | translate }}</th>
+            <th scope="col">{{ 'admin.rbac.col_last_active' | translate }}</th>
+            <th scope="col">{{ 'admin.rbac.col_actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.gcid) {
+            <tr
+              class="user-access-matrix__row"
+              [class.user-access-matrix__row--selected]="isPreviewOpen(user.gcid)"
+              [attr.data-testid]="'user-row-' + user.gcid">
+
+              <!-- Name -->
+              <td class="user-access-matrix__cell">
+                <button
+                  type="button"
+                  class="user-access-matrix__user-link"
+                  (click)="showPermissionPreview(user)"
+                  [attr.aria-expanded]="isPreviewOpen(user.gcid)"
+                  [attr.data-testid]="'btn-preview-' + user.gcid">
+                  {{ user.displayName }}
+                </button>
+              </td>
+
+              <!-- Email -->
+              <td class="user-access-matrix__cell user-access-matrix__cell--email">
+                {{ user.email }}
+              </td>
+
+              <!-- Roles (multi-badge) -->
+              <td class="user-access-matrix__cell">
+                <div class="user-access-matrix__roles">
+                  @for (role of user.roles; track role) {
+                    <span
+                      class="user-access-matrix__role-badge"
+                      [class]="roleClass(role)"
+                      [attr.data-testid]="'role-badge-' + role"
+                      (click)="onRoleClick(role)"
+                      (keyup.enter)="onRoleClick(role)"
+                      tabindex="0"
+                      role="button"
+                      [attr.aria-label]="(roleLabels[role] | translate) + ', click to view permissions'">
+                      {{ roleLabels[role] | translate }}
+                      <button
+                        type="button"
+                        class="user-access-matrix__role-revoke"
+                        (click)="revokeRole(user, role); $event.stopPropagation()"
+                        [attr.aria-label]="'admin.rbac.revoke_role' | translate"
+                        [attr.data-testid]="'btn-revoke-' + role + '-' + user.gcid">
+                        &times;
+                      </button>
+                    </span>
+                  }
+                </div>
+              </td>
+
+              <!-- Last Active -->
+              <td class="user-access-matrix__cell user-access-matrix__cell--date">
+                {{ formatDateTime(user.lastActiveAt) }}
+              </td>
+
+              <!-- Actions -->
+              <td class="user-access-matrix__cell">
+                <button
+                  type="button"
+                  class="user-access-matrix__btn user-access-matrix__btn--info"
+                  (click)="openAssignDialog(user)"
+                  [attr.data-testid]="'btn-assign-' + user.gcid"
+                  [attr.aria-label]="'admin.rbac.assign_role' | translate">
+                  {{ 'admin.rbac.assign_role' | translate }}
+                </button>
+              </td>
+            </tr>
+
+            <!-- Expanded Permission Preview Row -->
+            @if (isPreviewOpen(user.gcid)) {
+              <tr class="user-access-matrix__preview-row" data-testid="permission-preview">
+                <td colspan="5" class="user-access-matrix__preview-cell">
+                  <div class="user-access-matrix__preview">
+                    <h3 class="user-access-matrix__preview-title">
+                      {{ 'admin.rbac.effective_permissions' | translate }}
+                      for {{ user.displayName }}
+                    </h3>
+
+                    @if (previewLoading()) {
+                      <p class="user-access-matrix__preview-loading" aria-live="polite">
+                        {{ 'admin.rbac.loading_permissions' | translate }}
+                      </p>
+                    }
+
+                    <!-- Role capability preview (when a role badge is clicked) -->
+                    @if (previewRole()) {
+                      <div class="user-access-matrix__capability-preview" data-testid="role-capabilities">
+                        <h4 class="user-access-matrix__capability-heading">
+                          {{ roleLabels[previewRole()!] | translate }}
+                          {{ 'admin.rbac.capabilities' | translate }}
+                        </h4>
+                        @if (previewRoleCapabilities().length === 0) {
+                          <p class="user-access-matrix__empty-text">
+                            {{ 'admin.rbac.no_capabilities' | translate }}
+                          </p>
+                        }
+                        @for (cap of previewRoleCapabilities(); track cap.code) {
+                          <div class="user-access-matrix__capability-item">
+                            <code class="user-access-matrix__capability-code">{{ cap.code }}</code>
+                            <span class="user-access-matrix__capability-desc">{{ cap.description }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <!-- Full effective permissions list -->
+                    @if (!previewLoading() && previewPermissions().length > 0 && !previewRole()) {
+                      <div class="user-access-matrix__permissions-list" data-testid="permissions-list" role="list">
+                        @for (perm of previewPermissions(); track perm.capability) {
+                          <div class="user-access-matrix__permission-item" role="listitem">
+                            <code class="user-access-matrix__permission-code">{{ perm.capability }}</code>
+                            <span class="user-access-matrix__permission-granted">
+                              @for (grantedRole of perm.grantedBy; track grantedRole) {
+                                <span class="user-access-matrix__role-chip">
+                                  {{ roleLabels[grantedRole] | translate }}
+                                </span>
+                              }
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    @if (!previewLoading() && previewPermissions().length === 0 && !previewRole()) {
+                      <p class="user-access-matrix__empty-text">
+                        {{ 'admin.rbac.no_permissions' | translate }}
+                      </p>
+                    }
+
+                    <button
+                      type="button"
+                      class="user-access-matrix__btn"
+                      (click)="closePermissionPreview()"
+                      data-testid="btn-close-preview">
+                      {{ 'admin.rbac.close_preview' | translate }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <nav
+        class="user-access-matrix__pagination"
+        data-testid="pagination"
+        [attr.aria-label]="'admin.rbac.pagination' | translate">
+        <button
+          type="button"
+          class="user-access-matrix__btn"
+          [disabled]="currentPage() <= 1"
+          (click)="goToPage(currentPage() - 1)"
+          data-testid="btn-prev-page">
+          {{ 'admin.rbac.prev_page' | translate }}
+        </button>
+        <span class="user-access-matrix__page-info">
+          {{ currentPage() }} / {{ totalPages() }}
+        </span>
+        <button
+          type="button"
+          class="user-access-matrix__btn"
+          [disabled]="currentPage() >= totalPages()"
+          (click)="goToPage(currentPage() + 1)"
+          data-testid="btn-next-page">
+          {{ 'admin.rbac.next_page' | translate }}
+        </button>
+      </nav>
+    }
+  }
+
+  <!-- Role Assignment Dialog (Overlay) -->
+  @if (assignDialogVisible()) {
+    <div
+      class="user-access-matrix__overlay"
+      data-testid="assign-dialog-overlay"
+      (click)="closeAssignDialog()"
+      (keyup.escape)="closeAssignDialog()"
+      role="presentation">
+      <div
+        class="user-access-matrix__dialog"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="'admin.rbac.assign_role_title' | translate"
+        data-testid="assign-dialog"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()">
+
+        <h2 class="user-access-matrix__dialog-title">
+          {{ 'admin.rbac.assign_role_title' | translate }}
+        </h2>
+        <p class="user-access-matrix__dialog-subtitle">
+          {{ assignTargetUser()?.displayName }}
+          ({{ assignTargetUser()?.email }})
+        </p>
+
+        <div class="user-access-matrix__dialog-field">
+          <label for="assign-role-select" class="user-access-matrix__dialog-label">
+            {{ 'admin.rbac.select_role' | translate }}
+          </label>
+          <select
+            id="assign-role-select"
+            class="user-access-matrix__select"
+            data-testid="assign-role-select"
+            (change)="onAssignRoleSelect($any($event.target).value)">
+            <option value="">{{ 'admin.rbac.choose_role' | translate }}</option>
+            @for (role of availableRolesForAssignment(); track role) {
+              <option [value]="role">{{ roleLabels[role] | translate }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="user-access-matrix__dialog-actions">
+          <button
+            type="button"
+            class="user-access-matrix__btn"
+            (click)="closeAssignDialog()"
+            data-testid="btn-cancel-assign">
+            {{ 'admin.rbac.cancel' | translate }}
+          </button>
+          <button
+            type="button"
+            class="user-access-matrix__btn user-access-matrix__btn--primary"
+            [disabled]="!assignSelectedRole() || assignLoading()"
+            (click)="confirmAssignRole()"
+            data-testid="btn-confirm-assign">
+            @if (assignLoading()) {
+              {{ 'admin.rbac.assigning' | translate }}
+            } @else {
+              {{ 'admin.rbac.confirm_assign' | translate }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

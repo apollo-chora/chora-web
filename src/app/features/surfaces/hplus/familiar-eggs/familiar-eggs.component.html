@@ -1,0 +1,68 @@
+<section
+  class="hplus-eggs surface-hplus"
+  aria-labelledby="hplus-eggs-heading"
+  data-testid="hplus-familiar-eggs">
+  <header class="hplus-eggs__header glass-panel">
+    <div>
+      <h1 id="hplus-eggs-heading" class="hplus-eggs__title">
+        <i class="fa-solid fa-egg" aria-hidden="true"></i>
+        {{ 'hplus.familiar_eggs.heading' | translate }}
+      </h1>
+      <p class="hplus-eggs__tagline">
+        {{ 'hplus.familiar_eggs.tagline' | translate }}
+      </p>
+    </div>
+  </header>
+
+  @if (catalog().skus.length > 0) {
+    <table class="hplus-eggs__table glass-panel" data-testid="hplus-eggs-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'hplus.familiar_eggs.col_sku' | translate }}</th>
+          <th scope="col">{{ 'hplus.familiar_eggs.col_name' | translate }}</th>
+          <th scope="col">{{ 'hplus.familiar_eggs.col_price' | translate }}</th>
+          <th scope="col">{{ 'hplus.familiar_eggs.col_tier' | translate }}</th>
+          <th scope="col">{{ 'hplus.familiar_eggs.col_tenant' | translate }}</th>
+          <th scope="col">{{ 'hplus.familiar_eggs.col_actions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of catalog().skus; track s.sku) {
+          <tr [attr.data-testid]="'hplus-eggs-row-' + s.sku">
+            <td><code>{{ s.sku }}</code></td>
+            <td><strong>{{ s.displayName }}</strong></td>
+            <td>{{ formatPrice(s.priceMicros, s.currency) }}</td>
+            <td>
+              @if (s.includedInManaTier) {
+                <span class="hplus-eggs__tier-chip" [attr.data-tier]="s.includedInManaTier">
+                  {{ s.includedInManaTier }}
+                </span>
+              } @else {
+                <span class="hplus-eggs__dim">–</span>
+              }
+            </td>
+            <td>{{ s.brandedTenantName ?? '–' }}</td>
+            <td>
+              <a
+                [routerLink]="['/h/marketplace/companion-eggs', s.sku]"
+                class="hplus-eggs__edit-link"
+                [attr.data-testid]="'hplus-eggs-edit-' + s.sku">
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                {{ 'hplus.familiar_eggs.edit_cta' | translate }}
+              </a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p class="hplus-eggs__loading" role="status">
+      {{ 'hplus.familiar_eggs.loading' | translate }}
+    </p>
+  }
+
+  <footer class="hplus-eggs__footer">
+    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+    <p>{{ 'hplus.familiar_eggs.audit_footer' | translate }}</p>
+  </footer>
+</section>

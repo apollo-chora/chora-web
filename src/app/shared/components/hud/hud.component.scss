@@ -1,0 +1,196 @@
+:host {
+  display: block;
+}
+
+// Anchored to the viewport, not to the content column, so the HUD stays put as
+// the learner scrolls. `pointer-events` is released on the frame and taken back
+// on each region, so the HUD never swallows a click on the content beneath it.
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+
+  &__world,
+  &__turn {
+    position: absolute;
+    bottom: var(--chora-space-md);
+    pointer-events: auto;
+  }
+
+  // Right edge, vertically centred: the quest stack. A third region, taking
+  // pointer events back like the other two so the frame stays click-through.
+  &__quests {
+    position: absolute;
+    right: var(--chora-space-md);
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: auto;
+    display: none;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 0.25rem);
+    max-width: 15rem;
+  }
+
+  // Bottom left. When the CHORA rail is hidden (R39) the layout has already
+  // reclaimed the left edge, so this anchors to the page edge either way.
+  &__world {
+    left: var(--chora-space-md);
+    display: none;
+  }
+
+  &__turn {
+    right: var(--chora-space-md);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--chora-space-sm);
+    // Never wider than the viewport on a 768px tablet, where the world is
+    // hidden and this is the only floating region.
+    max-width: min(20rem, calc(100vw - var(--chora-space-md) * 2));
+  }
+
+  &__layers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-xs);
+    margin-top: var(--chora-space-sm);
+  }
+
+  &__lens {
+    padding: var(--chora-space-xs) var(--chora-space-sm);
+    border-radius: var(--chora-radius-md);
+    border: 1px solid var(--chora-color-border);
+    background: var(--chora-color-surface-1);
+    color: var(--chora-color-text-secondary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.8125rem;
+
+    &:hover {
+      color: var(--chora-color-text-primary);
+    }
+
+    // Same AA-safe pair the sidebar and compass use for an active entry.
+    &--active {
+      background: rgba(25, 118, 210, 0.08);
+      color: var(--chora-color-primary-strong, #0d47a1);
+      font-weight: 600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary-strong, #0d47a1);
+      outline-offset: 2px;
+    }
+  }
+
+  &__map-jump,
+  &__turn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    border-radius: var(--chora-radius-md);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  &__map-jump {
+    background: var(--chora-color-surface-1);
+    border: 1px solid var(--chora-color-border);
+    color: var(--chora-color-text-secondary);
+
+    &:hover {
+      color: var(--chora-color-text-primary);
+    }
+  }
+
+  // The one primary action on the screen, so it is the one filled control.
+  // `--chora-color-accent-coral-fill` is the B1 ramp stop that carries white
+  // text at 5.18:1; the non-text coral fails 4.5:1 on every surface we ship.
+  &__turn-action {
+    background: var(--chora-color-accent-coral-fill);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  // ── The party strip ────────────────────────────────────────────────────
+  &__party {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-xs, 0.25rem);
+    margin-top: var(--chora-space-sm);
+  }
+
+  &__portrait {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    text-decoration: none;
+    color: var(--chora-color-text-primary);
+    background: var(--chora-color-surface-2, rgba(255, 255, 255, 0.6));
+    border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+    font-weight: 600;
+  }
+
+  // A stationed companion is marked by a RING, not by colour alone: the state
+  // also reaches a screen reader through the portrait's aria-label, and a
+  // colour-only difference would carry it to nobody else.
+  &__portrait--stationed {
+    border-color: var(--chora-color-primary-strong, #0d47a1);
+    border-width: 2px;
+  }
+
+  &__portrait-initial {
+    line-height: 1;
+  }
+
+  // ── The quest stack ────────────────────────────────────────────────────
+  &__quest {
+    display: block;
+    padding: var(--chora-space-xs, 0.25rem) var(--chora-space-sm);
+    border-radius: var(--chora-radius-sm, 0.375rem);
+    background: var(--chora-color-surface-2, rgba(255, 255, 255, 0.6));
+    border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+    color: var(--chora-color-text-primary);
+    text-decoration: none;
+    font-size: 0.8125rem;
+  }
+
+  // An unmounted quest is not a link and must not look like one.
+  &__quest--unmounted {
+    opacity: 0.75;
+    cursor: default;
+  }
+
+  &__quest-title {
+    display: block;
+  }
+
+  &__map-jump:focus-visible,
+  &__turn-action:focus-visible,
+  &__portrait:focus-visible,
+  &__quest:focus-visible {
+    outline: 2px solid var(--chora-color-primary-strong, #0d47a1);
+    outline-offset: 2px;
+  }
+
+  // The mini world is desktop-only (plan section 3.1). Below 1280px the tablet
+  // keeps the turn action and the dock alone, which is what stops the two
+  // bottom regions meeting in the middle of a 768px viewport.
+  @media (min-width: 1280px) {
+    &__world {
+      display: block;
+    }
+
+    // The quest stack is desktop-only for the same reason as the mini world:
+    // on a 768px tablet the right edge belongs to the turn action and the dock,
+    // and a second right-edge region would stack on top of them.
+    &__quests {
+      display: flex;
+    }
+  }
+}

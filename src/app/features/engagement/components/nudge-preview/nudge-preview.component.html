@@ -1,0 +1,69 @@
+<div
+  class="nudge-preview"
+  role="region"
+  aria-label="Streak Nudge"
+  data-testid="nudge-preview">
+
+  <div class="nudge-preview__header">
+    <span class="material-icons-outlined" aria-hidden="true">tips_and_updates</span>
+    <h3>{{ 'engagement.nudge.title' | translate }}</h3>
+  </div>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div class="nudge-preview__loading" role="status" data-testid="nudge-loading">
+        <span class="nudge-preview__spinner"></span>
+        <span>{{ 'engagement.nudge.loading' | translate }}</span>
+      </div>
+    }
+
+    @case ('error') {
+      <p class="nudge-preview__error-msg" role="alert" data-testid="nudge-error">
+        {{ 'engagement.nudge.error' | translate }}
+      </p>
+    }
+
+    @case ('success') {
+      @if (nudge(); as n) {
+        <!-- Urgency indicator + message -->
+        <div class="nudge-preview__message-row" data-testid="nudge-message-row">
+          <span
+            class="nudge-preview__urgency material-icons-outlined"
+            [class]="urgencyClass()"
+            [attr.aria-label]="'Urgency: ' + n.urgency"
+            data-testid="nudge-urgency-icon">
+            {{ urgencyIcon() }}
+          </span>
+          <p class="nudge-preview__message" data-testid="nudge-message">
+            {{ n.message }}
+          </p>
+        </div>
+
+        <div class="nudge-preview__meta" data-testid="nudge-type">
+          <span class="nudge-preview__type-badge">{{ n.nudge_type }}</span>
+        </div>
+
+        <!-- Suggested atoms -->
+        @if (n.suggested_atoms.length > 0) {
+          <div class="nudge-preview__suggestions" data-testid="nudge-suggestions">
+            <h4>{{ 'engagement.nudge.suggested-title' | translate }}</h4>
+            <ul class="nudge-preview__list" role="list">
+              @for (atom of n.suggested_atoms; track atom.atom_id) {
+                <li class="nudge-preview__item" role="listitem">
+                  <button
+                    class="nudge-preview__atom-btn"
+                    [attr.aria-label]="atom.title + ': ' + atom.reason"
+                    [attr.data-testid]="'nudge-atom-' + atom.atom_id"
+                    (click)="openAtom(atom.atom_id)">
+                    <span class="nudge-preview__atom-title">{{ atom.title }}</span>
+                    <span class="nudge-preview__atom-reason">{{ atom.reason }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      }
+    }
+  }
+</div>

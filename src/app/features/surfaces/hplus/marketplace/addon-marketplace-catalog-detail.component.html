@@ -1,0 +1,323 @@
+<section
+  class="surface-hplus catalog-detail"
+  data-testid="hplus-marketplace-catalog-detail">
+  <main class="catalog-detail__main">
+    <nav
+      class="catalog-detail__breadcrumb"
+      [attr.aria-label]="'hplus.marketplace.detail.breadcrumbLabel' | translate">
+      <a
+        class="catalog-detail__back"
+        data-testid="catalog-detail-back"
+        routerLink="/h/marketplace">
+        ‹ {{ 'hplus.marketplace.detail.backToMarketplace' | translate }}
+      </a>
+    </nav>
+
+    @if (loading()) {
+      <p
+        class="catalog-detail__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="catalog-detail-loading">
+        {{ 'hplus.marketplace.detail.loading' | translate }}
+      </p>
+    }
+
+    @if (loadError(); as msg) {
+      @if (msg === 'hplus.marketplace.detail.error.unauthenticated') {
+        <p
+          class="catalog-detail__load-error"
+          role="alert"
+          data-testid="catalog-detail-unauthenticated">
+          {{ msg | translate }}
+        </p>
+      } @else {
+        <p
+          class="catalog-detail__load-error"
+          role="alert"
+          data-testid="catalog-detail-load-error">
+          {{ msg | translate }}
+        </p>
+      }
+    }
+
+    @if (notFound()) {
+      <p
+        class="catalog-detail__not-found"
+        role="alert"
+        data-testid="catalog-detail-not-found">
+        {{ 'hplus.marketplace.detail.notFound' | translate }}
+      </p>
+    }
+
+    @if (detail(); as d) {
+      <header class="catalog-detail__hero">
+        <h1 class="catalog-detail__title" data-testid="catalog-detail-title">
+          {{ d.display_name }}
+          <span class="catalog-detail__code">{{ d.code }}</span>
+        </h1>
+        <span
+          class="catalog-detail__category-badge"
+          data-testid="catalog-detail-category">
+          {{ d.category }}
+        </span>
+        @if (isSystem()) {
+          <span
+            class="badge badge-info catalog-detail__system-badge"
+            data-testid="catalog-detail-system-badge">
+            <i class="fa-solid fa-shield" aria-hidden="true"></i>
+            {{ 'hplus.marketplace.systemBadge' | translate }}
+          </span>
+          <p
+            class="catalog-detail__system-hint"
+            data-testid="catalog-detail-system-hint">
+            {{ 'hplus.marketplace.systemHint' | translate }}
+          </p>
+        } @else if (isInstalled()) {
+          <span
+            class="badge badge-success catalog-detail__installed-badge"
+            data-testid="catalog-detail-installed-badge">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'hplus.marketplace.detail.installedBadge' | translate }}
+          </span>
+        }
+        @if (d.description) {
+          <p
+            class="catalog-detail__description"
+            data-testid="catalog-detail-description">
+            {{ d.description }}
+          </p>
+        }
+        @if (scheduledTier(); as st) {
+          <p
+            class="catalog-detail__scheduled-badge"
+            data-testid="catalog-detail-scheduled-badge">
+            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+            {{ st }} starting {{ formatScheduledDate(scheduledEffectiveAt() ?? '') }}
+          </p>
+        }
+        @if (deactivationEffectiveAt(); as deact) {
+          <p
+            class="catalog-detail__deactivating-badge"
+            data-testid="catalog-detail-deactivating-badge">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            {{ 'hplus.addons.scheduled.deactivating' | translate }}
+            {{ formatScheduledDate(deact) }}
+          </p>
+        }
+        <div class="catalog-detail__cta-row">
+          @if (isSystem()) {
+            <a
+              class="btn btn-primary"
+              data-testid="catalog-detail-manage"
+              routerLink="/h/addons">
+              {{ 'hplus.marketplace.detail.manageInstalled' | translate }}
+            </a>
+          } @else if (isInstalled()) {
+            <!-- CHO-1755 — installed addons skip the management list
+                 entirely and go straight to the change-tier surface
+                 so the "I want to upgrade" intent is one click. -->
+            <a
+              class="btn btn-primary"
+              data-testid="catalog-detail-manage"
+              [routerLink]="['/h/addons', d.addon_plan_id, 'change-tier']">
+              {{ 'hplus.marketplace.detail.manageInstalled' | translate }}
+            </a>
+          } @else if (isFreeAddon()) {
+            <button
+              type="button"
+              class="btn btn-primary catalog-detail__activate-free"
+              data-testid="catalog-detail-activate-free"
+              [disabled]="activateInFlight()"
+              [attr.aria-busy]="activateInFlight() ? 'true' : null"
+              (click)="onActivateFree()">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              @if (activateInFlight()) {
+                {{ 'hplus.marketplace.detail.activateFreeInFlight' | translate }}
+              } @else {
+                {{ 'hplus.marketplace.detail.activateFreeCta' | translate }}
+              }
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="btn btn-primary catalog-detail__subscribe"
+              data-testid="catalog-detail-subscribe"
+              [disabled]="subscribeInFlight()"
+              [attr.aria-busy]="subscribeInFlight() ? 'true' : null"
+              (click)="onSubscribe()">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              @if (subscribeInFlight()) {
+                {{ 'hplus.marketplace.detail.subscribeInFlight' | translate }}
+              } @else {
+                {{ 'hplus.marketplace.detail.subscribeCta' | translate }}
+              }
+            </button>
+          }
+        </div>
+      </header>
+
+      @if (entitlements().length > 0) {
+        <section class="catalog-detail__section">
+          <h2>{{ 'hplus.marketplace.detail.entitlementsTitle' | translate }}</h2>
+          <ul class="catalog-detail__entitlements">
+            @for (e of entitlements(); track trackByEntitlement($index, e)) {
+              <li
+                class="catalog-detail__entitlement"
+                [attr.data-testid]="'catalog-detail-entitlement-' + e.feature_code">
+                <strong>{{ e.label }}</strong>
+                <span class="catalog-detail__entitlement-code">{{ e.feature_code }}</span>
+                @if (e.limit !== null && e.limit !== undefined) {
+                  <span class="catalog-detail__entitlement-limit">
+                    {{ e.limit }} {{ e.limit_unit }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (integrations().length > 0) {
+        <section class="catalog-detail__section">
+          <h2>{{ 'hplus.marketplace.detail.integrationsTitle' | translate }}</h2>
+          <ul class="catalog-detail__integrations">
+            @for (i of integrations(); track trackByIntegration($index, i)) {
+              <li
+                class="catalog-detail__integration"
+                [attr.data-testid]="'catalog-detail-integration-' + i.type">
+                <strong>{{ i.label }}</strong>
+                <span class="catalog-detail__integration-type">{{ i.type }}</span>
+                @if (i.status) {
+                  <span class="catalog-detail__integration-status">
+                    {{ i.status }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <section class="catalog-detail__section">
+        <h2>{{ 'hplus.marketplace.detail.complianceTitle' | translate }}</h2>
+        <ul class="catalog-detail__compliance-pills">
+          @for (pill of compliancePills(); track pill.key) {
+            <li
+              class="catalog-detail__pill"
+              [class.catalog-detail__pill--compliant]="pill.compliant"
+              [attr.data-testid]="'catalog-detail-compliance-' + pill.key"
+              [attr.data-compliant]="pill.compliant">
+              {{ pill.labelKey | translate }}
+              <span class="catalog-detail__pill-status">
+                {{
+                  (pill.compliant
+                    ? 'hplus.marketplace.detail.compliance.yes'
+                    : 'hplus.marketplace.detail.compliance.no'
+                  ) | translate
+                }}
+              </span>
+            </li>
+          }
+        </ul>
+        @if (residencyRegions().length > 0) {
+          <p
+            class="catalog-detail__residency-regions"
+            data-testid="catalog-detail-residency-regions">
+            {{ 'hplus.marketplace.detail.residencyLabel' | translate }}
+            @for (region of residencyRegions(); track region) {
+              <span class="catalog-detail__region-chip">{{ region }}</span>
+            }
+          </p>
+        }
+      </section>
+
+      @if (pricingTiers().length > 0) {
+        <section class="catalog-detail__section">
+          <h2>{{ 'hplus.marketplace.detail.pricingTitle' | translate }}</h2>
+          @if (pricingTiers().length > 1 && !isInstalled()) {
+            <p
+              class="catalog-detail__tier-picker-hint"
+              data-testid="catalog-detail-tier-picker-hint">
+              {{ 'hplus.marketplace.detail.tierPickerHint' | translate }}
+            </p>
+          }
+          <ul
+            class="catalog-detail__tiers"
+            [class.catalog-detail__tiers--pickable]="pricingTiers().length > 1 && !isInstalled()"
+            data-testid="catalog-detail-tiers"
+            [attr.role]="pricingTiers().length > 1 && !isInstalled() ? 'radiogroup' : 'list'"
+            [attr.aria-label]="
+              pricingTiers().length > 1 && !isInstalled()
+                ? ('hplus.marketplace.detail.tierPickerLabel' | translate)
+                : null
+            ">
+            @for (tier of pricingTiers(); track trackByTier($index, tier)) {
+              @if (pricingTiers().length > 1 && !isInstalled()) {
+                <!-- CHO-1755 radio-card form when the addon offers more
+                     than one tier. Clicking selects, Subscribe honours
+                     selectedTier(). -->
+                <li
+                  class="glass-panel catalog-detail__tier catalog-detail__tier--pickable"
+                  [class.catalog-detail__tier--selected]="selectedTier() === tier.tier_code"
+                  role="radio"
+                  tabindex="0"
+                  [attr.aria-checked]="selectedTier() === tier.tier_code ? 'true' : 'false'"
+                  [attr.data-testid]="'catalog-detail-tier-radio-' + tier.tier_code"
+                  (click)="selectTier(tier.tier_code)"
+                  (keydown.enter)="selectTier(tier.tier_code)"
+                  (keydown.space)="
+                    selectTier(tier.tier_code); $event.preventDefault()
+                  ">
+                  <h3 class="catalog-detail__tier-label">{{ tier.label }}</h3>
+                  <p class="catalog-detail__tier-price">
+                    {{ formatTierPrice(tier) }}
+                  </p>
+                  <dl class="catalog-detail__tier-meta">
+                    @if (tier.included_units !== null && tier.included_units !== undefined) {
+                      <div>
+                        <dt>{{ 'hplus.marketplace.detail.tier.includedUnits' | translate }}</dt>
+                        <dd>{{ tier.included_units }}</dd>
+                      </div>
+                    }
+                    @if (tier.overage_unit_cents !== null && tier.overage_unit_cents !== undefined) {
+                      <div>
+                        <dt>{{ 'hplus.marketplace.detail.tier.overageUnitCents' | translate }}</dt>
+                        <dd>{{ tier.overage_unit_cents }}¢</dd>
+                      </div>
+                    }
+                  </dl>
+                </li>
+              } @else {
+              <li
+                class="glass-panel catalog-detail__tier"
+                [class.catalog-detail__tier--selected]="
+                  isInstalled() && selectedTier() === tier.tier_code
+                "
+                role="listitem"
+                [attr.data-testid]="'catalog-detail-tier-' + tier.tier_code">
+                <h3 class="catalog-detail__tier-label">{{ tier.label }}</h3>
+                <p class="catalog-detail__tier-price">{{ formatTierPrice(tier) }}</p>
+                <dl class="catalog-detail__tier-meta">
+                  @if (tier.included_units !== null && tier.included_units !== undefined) {
+                    <div>
+                      <dt>{{ 'hplus.marketplace.detail.tier.includedUnits' | translate }}</dt>
+                      <dd>{{ tier.included_units }}</dd>
+                    </div>
+                  }
+                  @if (tier.overage_unit_cents !== null && tier.overage_unit_cents !== undefined) {
+                    <div>
+                      <dt>{{ 'hplus.marketplace.detail.tier.overageUnitCents' | translate }}</dt>
+                      <dd>{{ tier.overage_unit_cents }}¢</dd>
+                    </div>
+                  }
+                </dl>
+              </li>
+              }
+            }
+          </ul>
+        </section>
+      }
+    }
+  </main>
+</section>

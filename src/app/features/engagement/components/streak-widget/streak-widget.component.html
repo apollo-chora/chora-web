@@ -1,0 +1,38 @@
+<div
+  class="streak-widget"
+  role="region"
+  aria-label="Streak Tracker"
+  data-testid="streak-widget">
+
+  <div class="streak-widget__header">
+    <span
+      class="streak-widget__flame material-icons-outlined"
+      [class]="flameClass()"
+      [attr.aria-label]="statusLabel()"
+      data-testid="streak-flame">
+      local_fire_department
+    </span>
+    <span class="streak-widget__count" data-testid="streak-count">
+      {{ streak().current_days }}
+    </span>
+    <span class="streak-widget__label">
+      {{ 'engagement.streak.days' | translate }}
+    </span>
+  </div>
+
+  @if (streak().status === 'at_risk') {
+    <p class="streak-widget__warning" role="alert" data-testid="streak-warning">
+      {{ 'engagement.streak.at-risk' | translate }}
+    </p>
+  }
+
+  @if (streak().status === 'broken') {
+    <p class="streak-widget__broken" data-testid="streak-broken">
+      {{ 'engagement.streak.broken' | translate }}
+    </p>
+  }
+
+  <div class="streak-widget__meta" data-testid="streak-longest">
+    {{ 'engagement.streak.longest' | translate }}: {{ streak().longest_streak }}
+  </div>
+</div>

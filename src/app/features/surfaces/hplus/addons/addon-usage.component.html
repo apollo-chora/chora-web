@@ -1,0 +1,245 @@
+<section class="surface-hplus addon-usage" data-testid="hplus-addon-usage">
+  <main class="addon-usage__main">
+    <nav
+      class="addon-usage__breadcrumb"
+      [attr.aria-label]="'hplus.addons.usage.breadcrumbLabel' | translate">
+      <a
+        class="addon-usage__back"
+        data-testid="addon-usage-back"
+        routerLink="/h/addons">
+        ‹ {{ 'hplus.addons.usage.backToDashboard' | translate }}
+      </a>
+    </nav>
+
+    <header class="addon-usage__hero">
+      <h1 class="addon-usage__title">
+        {{ 'hplus.addons.usage.title' | translate }}
+      </h1>
+      <p class="addon-usage__subtitle">
+        {{ 'hplus.addons.usage.subtitle' | translate }}
+      </p>
+    </header>
+
+    <div
+      class="addon-usage__periods"
+      role="tablist"
+      [attr.aria-label]="'hplus.addons.usage.periodLabel' | translate"
+      data-testid="addon-usage-periods">
+      @for (p of periods; track p) {
+        <button
+          type="button"
+          class="addon-usage__chip"
+          role="tab"
+          [class.addon-usage__chip--active]="isPeriodActive(p)"
+          [attr.aria-selected]="isPeriodActive(p)"
+          [attr.data-testid]="'addon-usage-period-' + p"
+          (click)="setPeriod(p)">
+          {{ 'hplus.addons.usage.period.' + p | translate }}
+        </button>
+      }
+      <label class="addon-usage__granularity">
+        <span class="sr-only">
+          {{ 'hplus.addons.usage.granularityLabel' | translate }}
+        </span>
+        <select
+          name="granularity"
+          data-testid="addon-usage-granularity"
+          [ngModel]="granularity()"
+          (ngModelChange)="setGranularity($event)">
+          <option value="day">
+            {{ 'hplus.addons.usage.granularity.day' | translate }}
+          </option>
+          <option value="week">
+            {{ 'hplus.addons.usage.granularity.week' | translate }}
+          </option>
+          <option value="month">
+            {{ 'hplus.addons.usage.granularity.month' | translate }}
+          </option>
+        </select>
+      </label>
+    </div>
+
+    @if (loading()) {
+      <p
+        class="addon-usage__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="addon-usage-loading">
+        {{ 'hplus.addons.usage.loading' | translate }}
+      </p>
+    }
+
+    @if (loadError(); as msg) {
+      <p
+        class="addon-usage__load-error"
+        role="alert"
+        data-testid="addon-usage-load-error">
+        {{ msg | translate }}
+      </p>
+    }
+
+    @if (notFound()) {
+      <p
+        class="addon-usage__not-found"
+        role="alert"
+        data-testid="addon-usage-not-found">
+        {{ 'hplus.addons.usage.notFound' | translate }}
+      </p>
+    }
+
+    @if (usage(); as u) {
+      <div class="addon-usage__cards">
+        <div
+          class="glass-panel addon-usage__card"
+          data-testid="addon-usage-card-seats">
+          <h3>{{ 'hplus.addons.usage.card.seats' | translate }}</h3>
+          <dl>
+            <div>
+              <dt>{{ 'hplus.addons.usage.card.seatsUsed' | translate }}</dt>
+              <dd>{{ seatsUsed() }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'hplus.addons.usage.card.seatsTotal' | translate }}</dt>
+              <dd>{{ seatsTotal() }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'hplus.addons.usage.card.seatsPeak' | translate }}</dt>
+              <dd>{{ seatsUsedPeak() }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        @if (hasQuota()) {
+          <div
+            class="glass-panel addon-usage__card"
+            data-testid="addon-usage-card-quota">
+            <h3>{{ 'hplus.addons.usage.card.quota' | translate }}</h3>
+            <dl>
+              <div>
+                <dt>{{ 'hplus.addons.usage.card.quotaConsumed' | translate }}</dt>
+                <dd>{{ quotaConsumed() }} {{ quotaUnit() }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'hplus.addons.usage.card.quotaLimit' | translate }}</dt>
+                <dd>{{ quotaLimit() }}</dd>
+              </div>
+              @if (quotaConsumedPct() !== null) {
+                <div>
+                  <dt>{{ 'hplus.addons.usage.card.quotaPct' | translate }}</dt>
+                  <dd>{{ quotaConsumedPct() }}%</dd>
+                </div>
+              }
+            </dl>
+          </div>
+        }
+      </div>
+
+      <div
+        class="addon-usage__metric-switcher"
+        role="tablist"
+        [attr.aria-label]="'hplus.addons.usage.metricLabel' | translate"
+        data-testid="addon-usage-metrics">
+        <button
+          type="button"
+          class="addon-usage__metric-button"
+          role="tab"
+          [class.addon-usage__metric-button--active]="metric() === 'seats'"
+          [attr.aria-selected]="metric() === 'seats'"
+          data-testid="addon-usage-metric-seats"
+          (click)="setMetric('seats')">
+          {{ 'hplus.addons.usage.metric.seats' | translate }}
+        </button>
+        @if (hasQuota()) {
+          <button
+            type="button"
+            class="addon-usage__metric-button"
+            role="tab"
+            [class.addon-usage__metric-button--active]="metric() === 'quota'"
+            [attr.aria-selected]="metric() === 'quota'"
+            data-testid="addon-usage-metric-quota"
+            (click)="setMetric('quota')">
+            {{ 'hplus.addons.usage.metric.quota' | translate }}
+          </button>
+        }
+        <button
+          type="button"
+          class="addon-usage__metric-button"
+          role="tab"
+          [class.addon-usage__metric-button--active]="metric() === 'api_calls'"
+          [attr.aria-selected]="metric() === 'api_calls'"
+          data-testid="addon-usage-metric-api_calls"
+          (click)="setMetric('api_calls')">
+          {{ 'hplus.addons.usage.metric.api_calls' | translate }}
+        </button>
+      </div>
+
+      @if (hasBuckets()) {
+        <svg
+          class="addon-usage__chart"
+          data-testid="addon-usage-chart"
+          [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight"
+          [attr.aria-label]="'hplus.addons.usage.chartAriaLabel' | translate"
+          role="img">
+          <polyline
+            class="addon-usage__series"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            [attr.points]="chartPolylinePoints()" />
+          @for (pt of chartPoints(); track trackByBucket($index, pt.bucket)) {
+            <circle
+              class="addon-usage__point"
+              [attr.cx]="pt.x"
+              [attr.cy]="pt.y"
+              r="3"
+              fill="currentColor">
+              <title>{{ pt.bucket.bucket_start }}</title>
+            </circle>
+          }
+        </svg>
+        <table class="sr-only" aria-label="Time series data">
+          <thead>
+            <tr>
+              <th>{{ 'hplus.addons.usage.chart.bucketStart' | translate }}</th>
+              <th>{{ 'hplus.addons.usage.metric.' + metric() | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pt of chartPoints(); track trackByBucket($index, pt.bucket)) {
+              <tr>
+                <td>{{ pt.bucket.bucket_start }}</td>
+                <td>{{ pt.bucket.seats_used ?? pt.bucket.quota_consumed ?? pt.bucket.api_calls ?? 0 }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else if (!loading() && !loadError() && !notFound()) {
+        <div class="addon-usage__empty" data-testid="addon-usage-empty">
+          <p>{{ 'hplus.addons.usage.empty' | translate }}</p>
+        </div>
+      }
+
+      @if (topConsumers().length > 0) {
+        <section class="addon-usage__consumers">
+          <h2>{{ 'hplus.addons.usage.topConsumers' | translate }}</h2>
+          <ul class="addon-usage__consumer-list" role="list">
+            @for (c of topConsumers(); track trackByConsumer($index, c)) {
+              <li
+                class="addon-usage__consumer"
+                [attr.data-testid]="'addon-usage-consumer-' + c.user_id_pseudonymous">
+                <span
+                  class="addon-usage__consumer-id"
+                  [attr.data-testid]="'addon-usage-consumer-id-' + c.user_id_pseudonymous">
+                  {{ c.user_id_pseudonymous }}
+                </span>
+                <span class="addon-usage__consumer-share">
+                  {{ c.share_pct }}%
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  </main>
+</section>

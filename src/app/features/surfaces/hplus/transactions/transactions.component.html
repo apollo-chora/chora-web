@@ -1,0 +1,28 @@
+<section class="surface-hplus transactions" data-testid="hplus-transactions">
+  <main class="transactions__main">
+    <nav
+      class="transactions__breadcrumb"
+      [attr.aria-label]="'hplus.transaction_history.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.transaction_history.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="transactions__crumb-active">
+        {{ 'hplus.transaction_history.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    <header class="transactions__hero">
+      <div>
+        <h1 class="transactions__title">
+          {{ 'hplus.transaction_history.title' | translate }}
+        </h1>
+        <p class="transactions__subtitle">
+          {{ 'hplus.transaction_history.subtitle' | translate }}
+        </p>
+      </div>
+    </header>
+
+    <!-- Unified, scope-parameterized timeline (ADR-205 D4). H+ owns the D1
+         scope decision: operator → master span-all, else tenant. Read-only. -->
+    <chora-transaction-history [scope]="scope()" />
+  </main>
+</section>

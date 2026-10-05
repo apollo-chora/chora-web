@@ -1,0 +1,25 @@
+<div
+  class="goal-graduated glass-panel"
+  role="status"
+  aria-live="polite"
+  data-testid="goal-graduated-celebration"
+>
+  <span class="goal-graduated__icon" aria-hidden="true">
+    <i class="fa-solid fa-graduation-cap"></i>
+  </span>
+
+  <div class="goal-graduated__body">
+    <p class="goal-graduated__title">{{ 'aplus.dashboard.goal.graduated_celebration_title' | translate }}</p>
+    <p class="goal-graduated__message" data-testid="goal-graduated-celebration-message">{{ bodyText() }}</p>
+  </div>
+
+  <button
+    type="button"
+    class="goal-graduated__dismiss"
+    data-testid="goal-graduated-celebration-dismiss"
+    [attr.aria-label]="'aplus.dashboard.goal.graduated_celebration_dismiss_aria' | translate"
+    (click)="dismiss()"
+  >
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>

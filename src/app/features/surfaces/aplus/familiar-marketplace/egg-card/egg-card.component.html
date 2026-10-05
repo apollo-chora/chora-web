@@ -1,0 +1,75 @@
+<article
+  class="egg-card glass-panel"
+  [class.is-trial]="isTrial()"
+  [class.is-tenant-branded]="isBrandedTenant()"
+  [attr.data-sku]="sku().sku"
+  [attr.data-testid]="'egg-card-' + sku().sku">
+  <header class="egg-card__header">
+    @if (isBrandedTenant()) {
+      <span class="egg-card__tenant-chip" data-testid="egg-card-tenant-chip">
+        <i class="fa-solid fa-building" aria-hidden="true"></i>
+        {{ sku().brandedTenantName }}
+      </span>
+    }
+    <h2 class="egg-card__name">{{ sku().displayName }}</h2>
+  </header>
+
+  <div class="egg-card__art-wrap">
+    <img
+      class="egg-card__art"
+      [src]="podArt()"
+      [alt]="'aplus.familiar_marketplace.pod_alt' | translate"
+      width="160"
+      height="170"
+      loading="lazy" />
+    <span class="egg-card__art-glow" aria-hidden="true"></span>
+  </div>
+
+  <p class="egg-card__description">{{ sku().description }}</p>
+
+  @if (sku().includedInManaTier; as tier) {
+    <p class="egg-card__mana-tier" data-testid="egg-card-mana-tier">
+      <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+      {{ ('aplus.familiar_marketplace.included_in_' + tier) | translate }}
+    </p>
+  }
+
+  <div class="egg-card__price-row">
+    <span class="egg-card__price" data-testid="egg-card-price">
+      {{ priceDisplay() }}
+    </span>
+    @if (!isTrial()) {
+      <span class="egg-card__currency-line">{{ sku().currency }} · one-time</span>
+    } @else {
+      <span class="egg-card__currency-line">{{ 'aplus.familiar_marketplace.trial_subnote' | translate }}</span>
+    }
+  </div>
+
+  @if (!oddsRevealed()) {
+    <button
+      type="button"
+      class="egg-card__odds-toggle"
+      (click)="showOdds()"
+      [attr.aria-expanded]="false"
+      data-testid="egg-card-show-odds">
+      <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+      {{ 'aplus.familiar_marketplace.show_odds' | translate }}
+    </button>
+  } @else {
+    <chora-egg-odds-table [sku]="sku().sku" />
+  }
+
+  <button
+    type="button"
+    class="egg-card__checkout"
+    (click)="onCheckout()"
+    [attr.data-testid]="'egg-card-checkout-' + sku().sku">
+    @if (isTrial()) {
+      <i class="fa-solid fa-seedling" aria-hidden="true"></i>
+      {{ 'aplus.familiar_marketplace.claim_trial' | translate }}
+    } @else {
+      <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+      {{ 'aplus.familiar_marketplace.choose_egg' | translate }}
+    }
+  </button>
+</article>

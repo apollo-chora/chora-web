@@ -1,0 +1,603 @@
+// =====================================================================
+// A+ Atomic Session — Phyllis demo Step 7 (atom playback)
+// Wired LIVE 2026-05-15: reading view + session-start + Cloud-Armor-blocked submit.
+// Tablet-first per chora-web CLAUDE.md §11. 1-col ≥768px, 2-col rail ≥1280px.
+// =====================================================================
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.aplus-atomic-session {
+  padding: 2rem clamp(1rem, 3vw, 2rem);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+// ── Loading / error envelopes ────────────────────────────────────────
+.atomic-session__loading,
+.atomic-session__error {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.atomic-session__error {
+  border-left: 4px solid var(--danger, #d33);
+}
+
+// ── Layout ───────────────────────────────────────────────────────────
+.atomic-session__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1280px) {
+  .atomic-session__layout {
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+  }
+}
+
+// ── Main panel ───────────────────────────────────────────────────────
+.atomic-session__main {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.topic-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(25, 118, 210, 0.1);
+  color: var(--primary);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  align-self: flex-start;
+}
+
+.atomic-session__title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0.5rem 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.atomic-session__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+
+  code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    color: var(--text-main);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+  }
+}
+
+.atomic-session__difficulty {
+  color: var(--warning, #f59e0b);
+  letter-spacing: 0.1em;
+}
+
+.atomic-session__status {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--success, #0f766e);
+
+  &[data-status='draft'] {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--warning, #f59e0b);
+  }
+}
+
+.atomic-session__tags {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.atomic-session__tag-chip {
+  font-size: 11px;
+  padding: 0.2rem 0.55rem;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 999px;
+  color: var(--text-muted);
+}
+
+// ── Partial / A16 notices ────────────────────────────────────────────
+.atomic-session__partial-notice,
+.atomic-session__a16-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 13px;
+  margin: 0;
+
+  i {
+    color: var(--warning, #f59e0b);
+  }
+
+  code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+}
+
+.atomic-session__partial-notice {
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid var(--warning, #f59e0b);
+  color: var(--text-main);
+}
+
+.atomic-session__a16-notice {
+  background: rgba(25, 118, 210, 0.08);
+  border-left: 3px solid var(--primary);
+
+  i {
+    color: var(--primary);
+  }
+}
+
+// ── Reading view ─────────────────────────────────────────────────────
+.atomic-session__reading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+}
+
+.atomic-session__reading-heading {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.atomic-session__body {
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+// ── Question containers (MCQ + OE) — WS-1 ────────────────────────────
+.atomic-session__mcq-question,
+.atomic-session__oe-question {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+}
+
+// Alias for legacy shim containers (kept for backwards compat)
+.atomic-session__mcq,
+.atomic-session__oe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+}
+
+.atomic-session__question-prompt {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--text-main);
+  margin: 0;
+}
+
+// ── CHO-1638 — QUESTION illustration (learner-safe; answer image never shown) ──
+.atomic-session__question-image {
+  // The question illustration now renders via the shared
+  // `<chora-question-image>` (width-primary, aspect-aware, click-to-zoom); the
+  // old `max-height: 22rem` cap that crushed portrait diagrams is gone.
+  margin: var(--chora-space-md, 16px) 0 0;
+}
+
+// ── MCQ timer ────────────────────────────────────────────────────────
+.atomic-session__mcq-timer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warning, #f59e0b);
+  margin: 0;
+
+  i { font-size: 12px; }
+}
+
+// ── MCQ option buttons ────────────────────────────────────────────────
+.atomic-session__mcq-options {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  li { display: contents; }
+}
+
+.atomic-session__mcq-opt-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  border: 1.5px solid var(--glass-border);
+  cursor: pointer;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text-main);
+  text-align: left;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(255, 255, 255, 0.82);
+    border-color: var(--primary);
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    transform: translateX(2px);
+  }
+
+  &--selected {
+    background: rgba(25, 118, 210, 0.10);
+    border-color: var(--primary);
+    font-weight: 600;
+  }
+}
+
+.atomic-session__mcq-opt-marker {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(25, 118, 210, 0.12);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.atomic-session__mcq-opt-text {
+  flex: 1;
+}
+
+.atomic-session__mcq-correct-badge {
+  flex-shrink: 0;
+  color: var(--success, #10b981);
+  font-size: 14px;
+}
+
+.atomic-session__mcq-xp {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+
+  i { color: var(--warning, #f59e0b); }
+}
+
+// ── OE specific ───────────────────────────────────────────────────────
+.atomic-session__oe-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+
+  i { margin-right: 0.3rem; }
+}
+
+.atomic-session__oe-rubric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.atomic-session__oe-rubric-heading {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.atomic-session__oe-rubric-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.atomic-session__oe-rubric-criterion {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 13px;
+  padding: 0.45rem 0.65rem;
+  background: rgba(0, 0, 0, 0.025);
+  border-radius: 6px;
+}
+
+.atomic-session__oe-rubric-desc {
+  color: var(--text-main);
+  flex: 1;
+}
+
+.atomic-session__oe-rubric-weight {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 12px;
+}
+
+.atomic-session__oe-response-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.35rem;
+}
+
+.atomic-session__oe-textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.65;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text-main);
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-color: var(--primary);
+  }
+}
+
+// ── Legacy OE model-answer / rubric (pre-A16 shim) ───────────────────
+.atomic-session__oe-model-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  h3 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  p {
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+.atomic-session__mcq-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  font-size: 15px;
+}
+
+.atomic-session__mcq-option-label {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.atomic-session__mcq-option-text {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+// ── Session panel ────────────────────────────────────────────────────
+.atomic-session__session-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(25, 118, 210, 0.04);
+  border-radius: 12px;
+  border: 1px solid rgba(25, 118, 210, 0.18);
+}
+
+.atomic-session__session-heading {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  margin: 0;
+}
+
+.atomic-session__session-meta {
+  dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem 1.25rem;
+    margin: 0;
+  }
+
+  dt {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.15rem;
+  }
+
+  dd {
+    font-size: 13px;
+    color: var(--text-main);
+    margin: 0;
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  code {
+    font-family: 'Courier New', monospace;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+}
+
+.atomic-session__starting,
+.atomic-session__submitting,
+.atomic-session__graded {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.atomic-session__submit-error,
+.atomic-session__start-error {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: rgba(220, 38, 38, 0.06);
+  border-left: 3px solid var(--danger, #dc2626);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text-main);
+
+  p {
+    margin: 0;
+  }
+}
+
+// ── Footer ───────────────────────────────────────────────────────────
+.atomic-session__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+// ── Familiar rail ────────────────────────────────────────────────────
+.atomic-session__rail {
+  padding: 1.5rem;
+}
+
+.atomic-session__familiar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.atomic-session__familiar-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.atomic-session__familiar-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.atomic-session__familiar-rank {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin: 0;
+}
+
+// Reduced-motion respect (a11y)
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .atomic-session__main,
+  .atomic-session__rail {
+    transition: none;
+  }
+}

@@ -1,0 +1,87 @@
+<div class="mcq-fields">
+  <label class="mcq-fields__field">
+    <span class="mcq-fields__label">Question stem</span>
+    <textarea
+      class="mcq-fields__textarea"
+      data-testid="mcq-fields-prompt"
+      [value]="prompt()"
+      [disabled]="readonly()"
+      rows="3"
+      (input)="onPromptInput($any($event.target).value)"></textarea>
+  </label>
+
+  @if (imageUrl(); as url) {
+    <chora-question-image
+      [src]="url"
+      alt="Generated question illustration"
+      testIdPrefix="mcq-fields-image" />
+  }
+
+  <fieldset class="mcq-fields__options" [disabled]="readonly()">
+    <legend class="mcq-fields__legend">Options</legend>
+    @for (option of options(); track option.option_id; let i = $index) {
+      <div
+        class="mcq-fields__option-row"
+        [attr.data-testid]="'mcq-fields-option-row-' + i">
+        <input
+          type="radio"
+          name="mcq-correct"
+          class="mcq-fields__correct"
+          [attr.data-testid]="'mcq-fields-option-correct-' + i"
+          [checked]="option.is_correct"
+          [disabled]="readonly()"
+          (change)="onCorrectSelect(i)" />
+
+        <input
+          type="text"
+          class="mcq-fields__option-label"
+          [attr.data-testid]="'mcq-fields-option-label-' + i"
+          [value]="option.label"
+          [disabled]="readonly()"
+          placeholder="Answer choice"
+          (input)="onLabelInput(i, $any($event.target).value)" />
+
+        <textarea
+          class="mcq-fields__option-explainer"
+          [attr.data-testid]="'mcq-fields-option-explainer-' + i"
+          [value]="option.explainer"
+          [disabled]="readonly()"
+          placeholder="Explainer (required for publish)"
+          rows="2"
+          (input)="onExplainerInput(i, $any($event.target).value)"></textarea>
+
+        <button
+          type="button"
+          class="mcq-fields__remove-btn"
+          [attr.data-testid]="'mcq-fields-remove-option-' + i"
+          [disabled]="!canRemoveOption()"
+          (click)="removeOption(i)">
+          Remove
+        </button>
+      </div>
+    }
+
+    <button
+      type="button"
+      class="mcq-fields__add-btn"
+      data-testid="mcq-fields-add-option"
+      [disabled]="!canAddOption()"
+      (click)="addOption()">
+      Add option
+    </button>
+  </fieldset>
+
+  <!--
+    Generated MODEL-ANSWER image (W8 AUTHOR-OPT-IN, 2nd slot) — surfaced in
+    the correct-answer / explainer area, after the options. Display-only,
+    dormant until `answer_image_url` is present on the candidate. `image_url`
+    (above the options) stays the question/stem image.
+  -->
+  @if (answerImageUrl(); as answerUrl) {
+    <chora-question-image
+      [src]="answerUrl"
+      alt="Generated model-answer illustration"
+      caption="Model answer illustration"
+      testIdPrefix="mcq-fields-answer-image" />
+  }
+</div>

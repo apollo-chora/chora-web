@@ -1,0 +1,117 @@
+<section
+  class="agent-monitor-dashboard"
+  role="main"
+  [attr.aria-label]="'admin.monitoring.dashboard_title' | translate"
+  data-testid="agent-monitor-dashboard">
+
+  <!-- Page Header -->
+  <header class="agent-monitor-dashboard__header">
+    <h1 class="agent-monitor-dashboard__title" data-testid="dashboard-title">
+      {{ 'admin.monitoring.dashboard_title' | translate }}
+    </h1>
+    <button
+      type="button"
+      class="agent-monitor-dashboard__btn agent-monitor-dashboard__btn--primary"
+      (click)="refresh()"
+      data-testid="btn-refresh"
+      [attr.aria-label]="'admin.monitoring.refresh' | translate">
+      {{ 'admin.monitoring.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Summary Cards -->
+  <div class="agent-monitor-dashboard__summary" data-testid="monitoring-summary">
+    <div class="agent-monitor-dashboard__summary-card agent-monitor-dashboard__summary-card--total">
+      <span class="agent-monitor-dashboard__summary-value" data-testid="total-agents">
+        {{ agents().length }}
+      </span>
+      <span class="agent-monitor-dashboard__summary-label">
+        {{ 'admin.monitoring.total_agents' | translate }}
+      </span>
+    </div>
+    <div class="agent-monitor-dashboard__summary-card agent-monitor-dashboard__summary-card--healthy">
+      <span class="agent-monitor-dashboard__summary-value" data-testid="healthy-count">
+        {{ healthyCount() }}
+      </span>
+      <span class="agent-monitor-dashboard__summary-label">
+        {{ 'admin.monitoring.healthy' | translate }}
+      </span>
+    </div>
+    <div class="agent-monitor-dashboard__summary-card agent-monitor-dashboard__summary-card--degraded">
+      <span class="agent-monitor-dashboard__summary-value" data-testid="degraded-count">
+        {{ degradedCount() }}
+      </span>
+      <span class="agent-monitor-dashboard__summary-label">
+        {{ 'admin.monitoring.degraded' | translate }}
+      </span>
+    </div>
+    <div class="agent-monitor-dashboard__summary-card agent-monitor-dashboard__summary-card--down">
+      <span class="agent-monitor-dashboard__summary-value" data-testid="down-count">
+        {{ downCount() }}
+      </span>
+      <span class="agent-monitor-dashboard__summary-label">
+        {{ 'admin.monitoring.down' | translate }}
+      </span>
+    </div>
+    <div class="agent-monitor-dashboard__summary-card agent-monitor-dashboard__summary-card--tokens">
+      <span class="agent-monitor-dashboard__summary-value" data-testid="total-tokens">
+        {{ formatTokens(totalTokens24h()) }}
+      </span>
+      <span class="agent-monitor-dashboard__summary-label">
+        {{ 'admin.monitoring.tokens_24h' | translate }}
+      </span>
+    </div>
+    <div class="agent-monitor-dashboard__summary-card agent-monitor-dashboard__summary-card--errors">
+      <span class="agent-monitor-dashboard__summary-value" data-testid="avg-error-rate">
+        {{ formatErrorRate(avgErrorRate()) }}
+      </span>
+      <span class="agent-monitor-dashboard__summary-label">
+        {{ 'admin.monitoring.avg_error_rate' | translate }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="agent-monitor-dashboard__loading" data-testid="dashboard-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="agent-monitor-dashboard__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Agent Cards Grid -->
+  @if (!loading() && agentListState().status === 'success') {
+    <div class="agent-monitor-dashboard__grid" data-testid="agent-grid" role="list">
+      @for (agent of agents(); track agent.agent_id) {
+        <chora-agent-metric-card
+          [agent]="agent"
+          (viewDetails)="onViewAgentDetails($event)"
+          role="listitem">
+        </chora-agent-metric-card>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (agentListState().status === 'error') {
+    <div class="agent-monitor-dashboard__error" data-testid="dashboard-error" role="alert">
+      <p>{{ 'admin.monitoring.load_error' | translate }}</p>
+      <button
+        type="button"
+        class="agent-monitor-dashboard__btn agent-monitor-dashboard__btn--primary"
+        (click)="refresh()"
+        data-testid="btn-retry"
+        [attr.aria-label]="'admin.monitoring.retry' | translate">
+        {{ 'admin.monitoring.retry' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && agentListState().status === 'success' && agents().length === 0) {
+    <p class="agent-monitor-dashboard__empty" role="status" data-testid="dashboard-empty">
+      {{ 'admin.monitoring.no_agents' | translate }}
+    </p>
+  }
+</section>

@@ -1,0 +1,407 @@
+// A+ Growth-Edge HITL review (ADR-205 WS-8). Tablet-first: panes stack at
+// >=768px, becoming a 3-column layout at >=1280px (enhanced). Glassmorphism +
+// A+ accent. Bounded controls only (segmented buttons / chips / checkboxes).
+
+$accent: rgba(25, 118, 210, 1);
+$accent-soft: rgba(25, 118, 210, 0.12);
+$muted: var(--chora-color-text-muted, #5b6470);
+
+.ge-review {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.ge-review-header {
+  h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+  .ge-review-sub {
+    margin: 0.35rem 0 0;
+    color: $muted;
+  }
+  .ge-review-familiar-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-right: 0.4rem;
+    color: $accent;
+    i {
+      color: $accent;
+    }
+  }
+}
+
+// ── 3-pane grid ───────────────────────────────────────────────────────────
+.ge-review-panes {
+  display: grid;
+  grid-template-columns: 1fr; // tablet portrait: stacked
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (min-width: 1280px) {
+  .ge-review-panes {
+    grid-template-columns: 18rem minmax(0, 1fr) 20rem;
+  }
+  // The commit rail tracks the viewport while the learner scrolls the edges.
+  .ge-review-commit {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+.glass-panel {
+  padding: 1.25rem 1.5rem;
+}
+
+.ge-review-rail-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $muted;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ge-review-rail-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: $muted;
+}
+.ge-review-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: $accent;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+// ── Familiar pane ──────────────────────────────────────────────────────────
+.ge-review-familiar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ge-review-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $accent-soft;
+  color: $accent;
+  font-size: 1.4rem;
+}
+.ge-review-voiced {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.ge-review-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.7rem;
+  margin: 0 0.4rem 0.45rem 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--chora-glass-border, rgba(0, 0, 0, 0.08));
+  cursor: pointer;
+  font-size: 0.85rem;
+  &:has(input:checked) {
+    background: $accent-soft;
+    border-color: $accent;
+  }
+}
+
+// ── Edges pane ─────────────────────────────────────────────────────────────
+.ge-review-edges {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.ge-review-edge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: opacity 0.2s ease;
+  &.ge-review-edge-rejected {
+    opacity: 0.55;
+  }
+}
+.ge-review-edge-label {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.ge-review-edge-summary {
+  margin: 0;
+  color: var(--chora-color-text, #1f2933);
+  line-height: 1.5;
+}
+.ge-review-angles {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: $muted;
+  font-size: 0.9rem;
+}
+
+// Segmented control (decision + difficulty) — bounded, keyboard-focusable.
+.ge-review-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.ge-review-seg-btn {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--chora-glass-border, rgba(0, 0, 0, 0.12));
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--chora-color-text, #1f2933);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  &.is-active {
+    background: $accent;
+    border-color: $accent;
+    color: #fff;
+  }
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: 2px;
+  }
+}
+.ge-review-difficulty {
+  margin-top: 0.15rem;
+}
+
+.ge-review-merge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: $muted;
+}
+.ge-review-select {
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--chora-glass-border, rgba(0, 0, 0, 0.12));
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+// ── Commit pane ────────────────────────────────────────────────────────────
+.ge-review-commit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ge-review-output {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0;
+  font-size: 0.92rem;
+  cursor: pointer;
+  .ge-review-output-label {
+    flex: 1;
+  }
+  .ge-review-output-price {
+    font-weight: 700;
+    color: $accent;
+    font-size: 0.85rem;
+  }
+}
+.ge-review-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--chora-glass-border, rgba(0, 0, 0, 0.08));
+  strong {
+    font-size: 1.15rem;
+    &.ge-review-over {
+      color: #c62828;
+    }
+  }
+}
+.ge-review-wallet {
+  margin: 0.15rem 0 0.5rem;
+  font-size: 0.85rem;
+  color: $muted;
+}
+.ge-review-insufficient {
+  background: rgba(198, 40, 40, 0.08);
+  border: 1px solid rgba(198, 40, 40, 0.25);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  p {
+    margin: 0 0 0.5rem;
+  }
+}
+.ge-review-submit-error {
+  margin: 0.25rem 0;
+  color: #c62828;
+  font-size: 0.85rem;
+}
+// Commit-rail actions. A self-contained glass PRIMARY (confirm) + GHOST
+// (reiterate) pair. These own their full look (padding, radius, sizing,
+// states), so they do not lean on the global .btn-primary / .btn-secondary
+// classes (which set only a fill). Stacked, full-width, 44px tap targets.
+.ge-review-confirm,
+.ge-review-reiterate {
+  width: 100%;
+  margin-top: 0.4rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: background 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, color 0.15s ease, transform 0.15s ease;
+
+  &:focus-visible {
+    // Visible focus ring: accent on the light surface clears WCAG 1.4.11 (3:1).
+    outline: 2px solid $accent;
+    outline-offset: 2px;
+  }
+  &:disabled {
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+// PRIMARY. Filled glass in the A+ accent with a soft top sheen. The white
+// label on $accent clears WCAG AA 4.5:1 for normal text.
+.ge-review-confirm {
+  border: 1px solid $accent;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0) 48%),
+    $accent;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(25, 118, 210, 0.28);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0) 48%),
+      var(--primary-hover, #1565c0);
+    border-color: var(--primary-hover, #1565c0);
+    box-shadow: 0 8px 22px rgba(25, 118, 210, 0.34);
+    transform: translateY(-1px);
+  }
+  &:active:not(:disabled) {
+    background: var(--primary-hover, #1565c0);
+    box-shadow: 0 3px 10px rgba(25, 118, 210, 0.28);
+    transform: translateY(0);
+  }
+  // Disabled when unaffordable or submitting: a faded accent tint that stays
+  // legible ($muted on the soft tint measures about 5.2:1).
+  &:disabled {
+    background: $accent-soft;
+    border-color: transparent;
+    color: $muted;
+  }
+}
+
+// GHOST. Subtle glass with an accent border and AA-safe accent text
+// (primary-strong), filling to the accent tint on hover. Clearly secondary.
+.ge-review-reiterate {
+  border: 1px solid $accent;
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--chora-color-primary-strong, #0d47a1);
+
+  &:hover:not(:disabled) {
+    background: $accent-soft;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.14);
+  }
+  &:active:not(:disabled) {
+    background: rgba(25, 118, 210, 0.18);
+  }
+  &:disabled {
+    border-color: var(--chora-glass-border, rgba(0, 0, 0, 0.12));
+    background: rgba(255, 255, 255, 0.2);
+    color: $muted;
+  }
+}
+.ge-review-reiterate-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: $muted;
+}
+
+// ── Shared states ──────────────────────────────────────────────────────────
+.ge-review-muted {
+  color: $muted;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ge-review-error,
+.ge-review-success {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  i {
+    font-size: 2rem;
+    color: $accent;
+  }
+}
+.ge-review-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid $accent-soft;
+  border-top-color: $accent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: ge-review-spin 0.8s linear infinite;
+}
+@keyframes ge-review-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ge-review-spinner {
+    animation: none;
+  }
+  .ge-review-confirm,
+  .ge-review-reiterate {
+    transition: none;
+  }
+  .ge-review-confirm:hover:not(:disabled) {
+    transform: none;
+  }
+}

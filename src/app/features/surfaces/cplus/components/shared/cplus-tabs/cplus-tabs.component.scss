@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.cplus-tabs {
+  display: flex;
+  gap: var(--cplus-space-md);
+  border-block-end: 1px solid var(--cplus-border);
+
+  &__tab {
+    position: relative;
+    padding: var(--cplus-space-sm) var(--cplus-space-sm) var(--cplus-space-md);
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--cplus-text-secondary);
+    cursor: pointer;
+    transition: color var(--cplus-transition-fast);
+
+    &:hover {
+      color: var(--cplus-text);
+    }
+
+    &[aria-selected='true'] {
+      color: var(--cplus-text);
+      font-weight: 600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--cplus-focus-ring);
+      outline-offset: var(--cplus-focus-ring-offset);
+      border-radius: var(--cplus-radius-control);
+    }
+  }
+
+  // Flat solid underline indicator — never a gradient pill.
+  &__indicator {
+    position: absolute;
+    inset-block-end: -1px;
+    inset-inline: 0;
+    height: 2px;
+    background: var(--cplus-accent-strong);
+  }
+}

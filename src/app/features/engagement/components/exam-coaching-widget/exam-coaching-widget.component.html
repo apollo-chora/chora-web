@@ -1,0 +1,173 @@
+<div
+  class="exam-coaching"
+  role="region"
+  aria-label="Exam Coaching"
+  data-testid="exam-coaching-widget">
+
+  <div class="exam-coaching__header">
+    <span class="material-icons-outlined" aria-hidden="true">school</span>
+    <h3>{{ 'engagement.exam-coaching.title' | translate }}</h3>
+  </div>
+
+  @switch (coachingState().status) {
+    @case ('loading') {
+      <div class="exam-coaching__loading" role="status" data-testid="coaching-loading">
+        <span class="exam-coaching__spinner"></span>
+        <span>{{ 'engagement.exam-coaching.loading' | translate }}</span>
+      </div>
+    }
+
+    @case ('error') {
+      <p class="exam-coaching__error-msg" role="alert" data-testid="coaching-error">
+        {{ 'engagement.exam-coaching.error' | translate }}
+      </p>
+    }
+
+    @case ('success') {
+      <!-- Readiness score bar -->
+      <div class="exam-coaching__score-section" data-testid="coaching-score">
+        <div class="exam-coaching__score-label">
+          <span>{{ 'engagement.exam-coaching.readiness' | translate }}</span>
+          <span
+            class="exam-coaching__score-value"
+            [class]="'exam-coaching__score-value--' + scoreLevel()"
+            data-testid="coaching-score-value">
+            {{ readinessScore() }}%
+          </span>
+        </div>
+        <div class="exam-coaching__bar-track">
+          <div
+            class="exam-coaching__bar-fill"
+            [class]="'exam-coaching__bar-fill--' + scoreLevel()"
+            [style.width]="gaugeWidth()"
+            role="progressbar"
+            [attr.aria-valuenow]="readinessScore()"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="'Readiness: ' + readinessScore() + '%'"
+            data-testid="coaching-bar-fill">
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="exam-coaching__actions">
+        <button
+          class="exam-coaching__btn exam-coaching__btn--primary"
+          (click)="toggleExpanded()"
+          [attr.aria-expanded]="expanded()"
+          aria-controls="coaching-details"
+          data-testid="coaching-expand-btn">
+          @if (expanded()) {
+            <span class="material-icons-outlined" aria-hidden="true">expand_less</span>
+            {{ 'engagement.exam-coaching.hide-plan' | translate }}
+          } @else {
+            <span class="material-icons-outlined" aria-hidden="true">expand_more</span>
+            {{ 'engagement.exam-coaching.show-plan' | translate }}
+          }
+        </button>
+        <button
+          class="exam-coaching__btn exam-coaching__btn--secondary"
+          (click)="toggleChat()"
+          [attr.aria-expanded]="chatOpen()"
+          aria-controls="coaching-chat"
+          data-testid="coaching-chat-btn">
+          <span class="material-icons-outlined" aria-hidden="true">chat</span>
+          {{ 'engagement.exam-coaching.get-coaching' | translate }}
+        </button>
+      </div>
+
+      <!-- Expanded study plan -->
+      @if (expanded()) {
+        <div id="coaching-details" class="exam-coaching__details" data-testid="coaching-details">
+          <!-- Coaching message -->
+          @if (coachingMessage()) {
+            <p class="exam-coaching__coaching-msg" data-testid="coaching-message">
+              {{ coachingMessage() }}
+            </p>
+          }
+
+          <!-- Weak topics -->
+          @if (weakTopics().length > 0) {
+            <div class="exam-coaching__weak-topics" data-testid="coaching-weak-topics">
+              <h4>{{ 'engagement.exam-coaching.weak-topics' | translate }}</h4>
+              <ul class="exam-coaching__topic-list" role="list">
+                @for (topic of weakTopics(); track topic.topic_name) {
+                  <li class="exam-coaching__topic-item" role="listitem">
+                    <span class="exam-coaching__topic-name">{{ topic.topic_name }}</span>
+                    <span class="exam-coaching__topic-pct">{{ topic.mastery_pct }}%</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          <!-- Study plan -->
+          @if (studyPlan().length > 0) {
+            <div class="exam-coaching__study-plan" data-testid="coaching-study-plan">
+              <h4>{{ 'engagement.exam-coaching.study-plan' | translate }}</h4>
+              <ol class="exam-coaching__plan-list" role="list">
+                @for (item of studyPlan(); track item.atom_id) {
+                  <li class="exam-coaching__plan-item" role="listitem">
+                    <button
+                      class="exam-coaching__plan-btn"
+                      [attr.aria-label]="item.title + ': ' + item.reason"
+                      [attr.data-testid]="'coaching-plan-' + item.atom_id"
+                      (click)="openAtom(item.atom_id)">
+                      <span class="exam-coaching__plan-priority">{{ item.priority }}</span>
+                      <span class="exam-coaching__plan-title">{{ item.title }}</span>
+                      <span class="exam-coaching__plan-reason">{{ item.reason }}</span>
+                    </button>
+                  </li>
+                }
+              </ol>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Chat interface -->
+      @if (chatOpen()) {
+        <div id="coaching-chat" class="exam-coaching__chat" data-testid="coaching-chat">
+          <div class="exam-coaching__chat-messages" data-testid="coaching-chat-messages">
+            @if (chatText()) {
+              <div class="exam-coaching__chat-bubble" data-testid="coaching-chat-response">
+                {{ chatText() }}
+                @if (isChatStreaming()) {
+                  <span class="exam-coaching__chat-cursor" aria-hidden="true"></span>
+                }
+              </div>
+            }
+
+            @if (chatState().status === 'error') {
+              <p class="exam-coaching__chat-error" role="alert" data-testid="coaching-chat-error">
+                {{ 'engagement.exam-coaching.chat-error' | translate }}
+              </p>
+            }
+          </div>
+
+          <div class="exam-coaching__chat-input-row">
+            <input
+              type="text"
+              class="exam-coaching__chat-input"
+              [value]="chatInput()"
+              (input)="updateChatInput($any($event.target).value)"
+              (keydown)="onChatKeydown($event)"
+              [attr.placeholder]="'engagement.exam-coaching.chat-placeholder' | translate"
+              [disabled]="isChatStreaming()"
+              aria-label="Ask your exam coach"
+              data-testid="coaching-chat-input" />
+            <button
+              class="exam-coaching__chat-send"
+              [disabled]="isChatStreaming() || !chatInput().trim()"
+              (click)="sendMessage()"
+              aria-label="Send message"
+              data-testid="coaching-chat-send">
+              <span class="material-icons-outlined" aria-hidden="true">send</span>
+            </button>
+          </div>
+        </div>
+      }
+    }
+  }
+</div>

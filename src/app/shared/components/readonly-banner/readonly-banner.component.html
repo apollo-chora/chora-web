@@ -1,0 +1,22 @@
+@if (isVisible()) {
+  <div
+    class="readonly-banner"
+    role="status"
+    data-testid="readonly-banner">
+    <div class="readonly-banner__content">
+      <span class="readonly-banner__icon" aria-hidden="true">&#128683;</span>
+      <div class="readonly-banner__text">
+        <span class="readonly-banner__title" data-testid="readonly-title">
+          {{ 'governance.readonly_mode' | translate }}
+        </span>
+        <span class="readonly-banner__explanation" data-testid="readonly-explanation">
+          @if (explanation()) {
+            {{ explanation() }}
+          } @else {
+            {{ 'governance.readonly_explanation' | translate }}
+          }
+        </span>
+      </div>
+    </div>
+  </div>
+}

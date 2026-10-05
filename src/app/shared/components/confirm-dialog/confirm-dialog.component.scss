@@ -1,0 +1,138 @@
+:host {
+  display: block;
+}
+
+.confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: backdrop-fade-in 0.15s ease-out;
+}
+
+.confirm-dialog {
+  background: var(--chora-color-surface-0, #fff);
+  border-radius: var(--chora-radius-lg, 12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  padding: var(--chora-space-xl);
+  max-width: 480px;
+  width: 90%;
+  animation: dialog-scale-in 0.15s ease-out;
+  outline: none;
+
+  &__title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--chora-color-text-primary);
+    margin: 0 0 var(--chora-space-sm) 0;
+  }
+
+  &__message {
+    font-size: 14px;
+    color: var(--chora-color-text-secondary);
+    margin: 0 0 var(--chora-space-xl) 0;
+    line-height: 1.5;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--chora-space-sm);
+  }
+
+  &__btn {
+    padding: var(--chora-space-sm) var(--chora-space-lg);
+    border-radius: var(--chora-radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color var(--chora-transition-fast),
+                color var(--chora-transition-fast);
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+
+    &--cancel {
+      background: var(--chora-color-surface-1, #f5f5f5);
+      color: var(--chora-color-text-primary);
+
+      &:hover {
+        background: var(--chora-color-surface-2, #e0e0e0);
+      }
+    }
+
+    &--confirm {
+      background: var(--chora-color-primary);
+      color: var(--chora-color-on-primary, #fff);
+
+      &:hover {
+        filter: brightness(0.9);
+      }
+    }
+
+    &--danger {
+      background: var(--chora-color-error, #f44336);
+      color: #fff;
+
+      &:hover {
+        background: var(--chora-color-error-dark, #d32f2f);
+      }
+    }
+
+    &--warning {
+      background: var(--chora-color-warning, #ff9800);
+      color: #fff;
+
+      &:hover {
+        background: var(--chora-color-warning-dark, #f57c00);
+      }
+    }
+
+    &--info {
+      background: var(--chora-color-primary);
+      color: var(--chora-color-on-primary, #fff);
+
+      &:hover {
+        filter: brightness(0.9);
+      }
+    }
+  }
+}
+
+@keyframes backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-dialog-backdrop {
+    animation: none;
+  }
+
+  .confirm-dialog {
+    animation: none;
+  }
+}

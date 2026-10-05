@@ -1,0 +1,190 @@
+<!--
+  "Your Cast": a single-row Familiar carousel read from the authoritative roster
+  (GET /api/v1/me/familiars). Each member's portrait links to its profile
+  (/a/companion/{id}) at any stage; a hatched Familiar not yet bound to a goal
+  also shows a small "summon to a goal" trigger (→ SummonWizard). The ‹ › arrows
+  appear only on overflow and disable at the ends. The hatch-new egg is pinned at
+  the row end, OUTSIDE the scroll (→ marketplace). Fail-loud loading/error states.
+-->
+<section
+  class="cast glass-panel"
+  aria-labelledby="aplus-cast-heading"
+  data-testid="aplus-dashboard-cast">
+  <header class="cast__head">
+    <h2 id="aplus-cast-heading" class="cast__heading">
+      <i class="fa-solid fa-hat-wizard" aria-hidden="true"></i>
+      {{ 'aplus.dashboard.cast.heading' | translate }}
+    </h2>
+  </header>
+
+  @switch (roster().status) {
+    @case ('loading') {
+      <p
+        class="cast__status"
+        role="status"
+        aria-busy="true"
+        aria-live="polite"
+        data-testid="aplus-cast-loading">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        {{ 'aplus.dashboard.cast.loading' | translate }}
+      </p>
+    }
+
+    @case ('error') {
+      <div class="cast__status cast__status--error" role="alert" data-testid="aplus-cast-error">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <span>{{ 'aplus.dashboard.cast.error' | translate }}</span>
+        <button
+          type="button"
+          class="cast__retry"
+          (click)="load()"
+          data-testid="aplus-cast-retry">
+          {{ 'aplus.dashboard.cast.retry' | translate }}
+        </button>
+      </div>
+    }
+
+    @default {
+      <div class="cast__row">
+        @if (hasOverflow()) {
+          <button
+            type="button"
+            class="cast__arrow cast__arrow--left"
+            [disabled]="!canScrollLeft()"
+            (click)="scrollByStep(-1)"
+            [attr.aria-label]="'aplus.dashboard.cast.scroll_left_aria' | translate"
+            data-testid="aplus-cast-arrow-left">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+          </button>
+        }
+
+        <!-- The scrolling row (Familiars only; the hatch egg is pinned outside it). -->
+        <ul
+          #viewport
+          class="cast__viewport"
+          role="list"
+          (scroll)="recomputeScroll()"
+          [attr.aria-label]="'aplus.dashboard.cast.roster_aria' | translate"
+          data-testid="aplus-cast-viewport">
+          @for (f of familiars(); track f.familiarId) {
+            <li class="cast__item">
+              <!-- Portrait → profile page (/a/companion/{id}) at ANY stage. -->
+              <a
+                [routerLink]="['/a/companion', f.familiarId]"
+                class="cast__member"
+                [class.cast__member--egg]="isEgg(f)"
+                [attr.data-testid]="'aplus-cast-familiar-' + f.familiarId">
+                <span class="cast__art">
+                  <chora-breed-art
+                    [species]="breedSpecies(f)"
+                    [stage]="breedStage(f)"
+                    size="sm"
+                    [altText]="memberName(f) || stageLabel(f)" />
+                </span>
+                <!-- A pre-hatch pod is unnamed: memberName() suppresses the
+                     backend's NOT NULL placeholder, so the strip shows the
+                     untitled-Pod string rather than the raw "Egg". -->
+                <span class="cast__member-name">
+                  {{
+                    memberName(f) || ('aplus.dashboard.cast.untitled_pod' | translate)
+                  }}
+                </span>
+                <span class="cast__member-stage">{{ stageLabel(f) }}</span>
+                <!--
+                  C3 where-line. Same three states and the SAME keys as the
+                  roster card, through the same shared helper, so the two
+                  surfaces cannot answer "where is this companion" differently.
+                  ⚠ No "marching on {node}" clause: the focus node is on the
+                  per-map graph read, not the maps list, so rendering it would
+                  cost one graph call per map. C4 owns whether the list read
+                  should carry a focus.
+                -->
+                @let station = stationOf(f);
+                <span
+                  class="cast__member-where"
+                  [attr.data-testid]="'aplus-cast-where-' + f.familiarId">
+                  @if (station.kind === 'stationed') {
+                    {{
+                      'familiar_roster.stationed'
+                        | translate: { map: station.mapTitle }
+                    }}
+                  } @else if (station.kind === 'unstationed') {
+                    {{ 'familiar_roster.unstationed' | translate }}
+                  } @else {
+                    {{ 'familiar_roster.station_unknown' | translate }}
+                  }
+                </span>
+              </a>
+
+              <!-- Hatched + not-yet-summoned → offer the goal bond. Bound
+                   Familiars (already summoned) show no trigger. -->
+              @if (canSummon(f)) {
+                <button
+                  type="button"
+                  class="cast__summon"
+                  (click)="openSummon(f)"
+                  [attr.aria-label]="'aplus.dashboard.cast.summon_trigger' | translate"
+                  [attr.data-testid]="'aplus-cast-summon-' + f.familiarId">
+                  <i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+                  <span>{{ 'aplus.dashboard.cast.summon_trigger' | translate }}</span>
+                </button>
+              }
+            </li>
+          }
+        </ul>
+
+        @if (hasOverflow()) {
+          <button
+            type="button"
+            class="cast__arrow cast__arrow--right"
+            [disabled]="!canScrollRight()"
+            (click)="scrollByStep(1)"
+            [attr.aria-label]="'aplus.dashboard.cast.scroll_right_aria' | translate"
+            data-testid="aplus-cast-arrow-right">
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        }
+
+        <!-- Pinned hatch-new egg — ALWAYS at the row end, OUTSIDE the scroll. -->
+        <a
+          routerLink="/a/companion/marketplace"
+          class="cast__hatch"
+          data-testid="aplus-cast-hatch">
+          <span class="cast__hatch-egg" aria-hidden="true">
+            <i class="fa-solid fa-egg"></i>
+            <i class="fa-solid fa-plus cast__hatch-plus"></i>
+          </span>
+          <span class="cast__hatch-label">
+            {{ 'aplus.dashboard.cast.hatch_cta' | translate }}
+          </span>
+        </a>
+
+        <!--
+          C3: the way out to the full roster. It could not exist before
+          `/a/roster` did. Pinned beside the hatch pod, outside the scroll, so
+          it is reachable however far the row has been scrolled.
+        -->
+        <a
+          routerLink="/a/roster"
+          class="cast__all"
+          data-testid="aplus-cast-roster-link">
+          <span class="cast__all-label">
+            {{ 'familiar_roster.title' | translate }}
+          </span>
+          <span class="cast__all-sub">
+            {{ 'familiar_roster.all_companions' | translate }}
+          </span>
+        </a>
+      </div>
+    }
+  }
+
+  <!-- Summon wizard — opened by tapping a Familiar's summon trigger. -->
+  @if (summonTarget(); as f) {
+    <chora-aplus-summon-wizard
+      data-testid="aplus-cast-summon-wizard"
+      [familiar]="f"
+      (closed)="closeSummon()"
+      (summoned)="onSummoned()" />
+  }
+</section>

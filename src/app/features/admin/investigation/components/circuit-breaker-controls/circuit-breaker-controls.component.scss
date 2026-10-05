@@ -1,0 +1,335 @@
+:host {
+  display: block;
+}
+
+.circuit-breaker-controls {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-block-end: var(--chora-space-lg, 24px);
+    flex-wrap: wrap;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__header-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__back-link {
+    font-size: 0.8125rem;
+    color: var(--chora-color-primary, #2563eb);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Buttons
+  // -------------------------------------------------------------------------
+
+  &__btn {
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    cursor: pointer;
+    font-size: 0.8125rem;
+    background: var(--chora-color-surface-1, #f5f5f5);
+    color: var(--chora-color-text, #111);
+
+    &--primary {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &--danger {
+      background: #fecaca;
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+
+    &--success {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #86efac;
+    }
+
+    &--small {
+      padding: 2px var(--chora-space-sm, 8px);
+      font-size: 0.75rem;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Summary Cards
+  // -------------------------------------------------------------------------
+
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--chora-space-md, 16px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__summary-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-md, 8px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+
+    &--closed {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+
+    &--half-open {
+      border-color: #fde68a;
+      background: #fffbeb;
+    }
+
+    &--open {
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+
+    &--quarantined {
+      border-color: #c4b5fd;
+      background: #f5f3ff;
+    }
+  }
+
+  &__summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  &__summary-label {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  // -------------------------------------------------------------------------
+  // Agent List
+  // -------------------------------------------------------------------------
+
+  &__agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__agent-card {
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    padding: var(--chora-space-md, 16px);
+    transition: border-color 0.15s;
+
+    &:hover {
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &--quarantined {
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+  }
+
+  &__agent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-block-end: var(--chora-space-sm, 8px);
+    flex-wrap: wrap;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__agent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__agent-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__agent-service {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__badges {
+    display: flex;
+    gap: var(--chora-space-xs, 4px);
+    align-items: center;
+  }
+
+  &__state-badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+
+    &--closed {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    &--open {
+      background: #fecaca;
+      color: #991b1b;
+    }
+
+    &--half-open {
+      background: #fef3c7;
+      color: #92400e;
+    }
+  }
+
+  &__quarantine-badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #ede9fe;
+    color: #5b21b6;
+    text-transform: uppercase;
+  }
+
+  // -------------------------------------------------------------------------
+  // Agent Details
+  // -------------------------------------------------------------------------
+
+  &__agent-details {
+    display: flex;
+    gap: var(--chora-space-lg, 24px);
+    margin-block-end: var(--chora-space-sm, 8px);
+    flex-wrap: wrap;
+  }
+
+  &__detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__detail-label {
+    font-size: 0.6875rem;
+    color: var(--chora-color-text-muted, #666);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  &__detail-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  // -------------------------------------------------------------------------
+  // Canary Routing
+  // -------------------------------------------------------------------------
+
+  &__canary-section {
+    margin-block-end: var(--chora-space-sm, 8px);
+  }
+
+  &__canary-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: block;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__canary-row {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__canary-slider {
+    flex: 1;
+    accent-color: var(--chora-color-primary, #2563eb);
+    cursor: pointer;
+    height: 6px;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Agent Actions
+  // -------------------------------------------------------------------------
+
+  &__agent-actions {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Loading
+  // -------------------------------------------------------------------------
+
+  &__loading {
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__skeleton-row {
+    height: 80px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-md, 8px);
+    margin-block-end: var(--chora-space-md, 16px);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Desktop enhancement — 2-column agent grid
+@media (min-width: 1280px) {
+  .circuit-breaker-controls {
+    &__agent-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}

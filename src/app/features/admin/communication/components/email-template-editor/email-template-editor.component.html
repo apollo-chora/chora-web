@@ -1,0 +1,179 @@
+<section
+  class="email-template-editor"
+  role="main"
+  [attr.aria-label]="'admin.communication.email_templates_title' | translate"
+  data-testid="email-template-editor">
+
+  <!-- Header -->
+  <header class="email-template-editor__header">
+    <div class="email-template-editor__header-nav">
+      <a
+        routerLink="../"
+        class="email-template-editor__back-link"
+        data-testid="btn-back"
+        [attr.aria-label]="'admin.communication.back_to_communication' | translate">
+        &larr; {{ 'admin.communication.back_to_communication' | translate }}
+      </a>
+      <h1 class="email-template-editor__title" data-testid="templates-title">
+        {{ 'admin.communication.email_templates_title' | translate }}
+      </h1>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="email-template-editor__loading" data-testid="templates-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="email-template-editor__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="email-template-editor__empty" data-testid="templates-empty" role="status">
+      <p class="email-template-editor__empty-text">
+        {{ 'admin.communication.no_templates' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Two-Panel Layout -->
+  @if (!loading() && !isEmpty()) {
+    <div class="email-template-editor__layout">
+      <!-- Left: Template List -->
+      <aside class="email-template-editor__sidebar" data-testid="template-list"
+        [attr.aria-label]="'admin.communication.template_list' | translate">
+        <h2 class="email-template-editor__sidebar-title">
+          {{ 'admin.communication.templates' | translate }}
+        </h2>
+        <div class="email-template-editor__list" role="listbox">
+          @for (tpl of templates(); track tpl.id) {
+            <button
+              type="button"
+              class="email-template-editor__list-item"
+              [class.email-template-editor__list-item--selected]="isSelected(tpl.id)"
+              (click)="selectTemplate(tpl.id)"
+              [attr.data-testid]="'template-' + tpl.id"
+              [attr.aria-selected]="isSelected(tpl.id)"
+              role="option">
+              <span class="email-template-editor__list-name">{{ tpl.name }}</span>
+              <span class="email-template-editor__list-date">{{ formatDateTime(tpl.updated_at) }}</span>
+            </button>
+          }
+        </div>
+      </aside>
+
+      <!-- Right: Editor / Preview -->
+      <div class="email-template-editor__main">
+        @if (!selectedTemplate()) {
+          <div class="email-template-editor__placeholder" data-testid="editor-placeholder" role="status">
+            <p class="email-template-editor__placeholder-text">
+              {{ 'admin.communication.select_template' | translate }}
+            </p>
+          </div>
+        }
+
+        @if (selectedTemplate()) {
+          <div class="email-template-editor__editor" data-testid="template-editor">
+            <!-- Subject -->
+            <div class="email-template-editor__field">
+              <label for="tpl-subject" class="email-template-editor__field-label">
+                {{ 'admin.communication.subject' | translate }}
+              </label>
+              <input
+                type="text"
+                id="tpl-subject"
+                class="email-template-editor__input"
+                [value]="editSubject()"
+                (input)="onSubjectChange($any($event.target).value)"
+                data-testid="input-subject"
+                [attr.aria-label]="'admin.communication.subject' | translate" />
+            </div>
+
+            <!-- Variable Toolbar -->
+            @if (selectedVariables().length > 0) {
+              <div class="email-template-editor__variables" data-testid="variable-toolbar"
+                role="toolbar"
+                [attr.aria-label]="'admin.communication.insert_variable' | translate">
+                <span class="email-template-editor__variables-label">
+                  {{ 'admin.communication.variables' | translate }}:
+                </span>
+                @for (v of selectedVariables(); track v.name) {
+                  <button
+                    type="button"
+                    class="email-template-editor__variable-btn"
+                    (click)="insertVariable(v)"
+                    [attr.data-testid]="'var-' + v.name"
+                    [attr.aria-label]="'admin.communication.insert' | translate"
+                    [attr.title]="v.description">
+                    {{ '{' + '{' + v.name + '}' + '}' }}
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Body Textarea -->
+            <div class="email-template-editor__field">
+              <div class="email-template-editor__field-header">
+                <label for="tpl-body" class="email-template-editor__field-label">
+                  {{ 'admin.communication.body_html' | translate }}
+                </label>
+                <button
+                  type="button"
+                  class="email-template-editor__preview-toggle"
+                  (click)="togglePreview()"
+                  data-testid="btn-toggle-preview"
+                  [attr.aria-label]="'admin.communication.toggle_preview' | translate">
+                  @if (showPreview()) {
+                    {{ 'admin.communication.hide_preview' | translate }}
+                  } @else {
+                    {{ 'admin.communication.show_preview' | translate }}
+                  }
+                </button>
+              </div>
+
+              @if (!showPreview()) {
+                <textarea
+                  #bodyTextarea
+                  id="tpl-body"
+                  class="email-template-editor__textarea"
+                  [value]="editBodyHtml()"
+                  (input)="onBodyChange($any($event.target).value)"
+                  data-testid="textarea-body"
+                  [attr.aria-label]="'admin.communication.body_html' | translate"
+                  rows="16"></textarea>
+              }
+
+              @if (showPreview()) {
+                <div
+                  class="email-template-editor__preview"
+                  data-testid="template-preview"
+                  [attr.aria-label]="'admin.communication.preview' | translate"
+                  [innerHTML]="previewHtml()">
+                </div>
+              }
+            </div>
+
+            <!-- Save -->
+            <div class="email-template-editor__actions">
+              <button
+                type="button"
+                class="email-template-editor__btn email-template-editor__btn--primary"
+                [disabled]="!hasChanges() || saving()"
+                (click)="saveTemplate()"
+                data-testid="btn-save-template"
+                [attr.aria-label]="'admin.communication.save_template' | translate">
+                @if (saving()) {
+                  {{ 'admin.communication.saving' | translate }}
+                } @else {
+                  {{ 'admin.communication.save_template' | translate }}
+                }
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>

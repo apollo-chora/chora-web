@@ -1,0 +1,240 @@
+<!-- Loading state -->
+@if (isLoading()) {
+  <div class="summoning__loading" data-testid="familiar-loading" aria-live="polite">
+    <div class="summoning__loading-spinner"></div>
+    <p>{{ 'choraverse.summoning.loading' | translate }}</p>
+  </div>
+}
+
+<!-- Summoning ceremony (not yet summoned) -->
+@if (!isLoading() && !isSummoned()) {
+  <section
+    class="summoning"
+    role="main"
+    [attr.aria-label]="'choraverse.summoning.title' | translate"
+    data-testid="summoning-ceremony">
+
+    <!-- Header -->
+    <header class="summoning__header">
+      <h1 class="summoning__title" data-testid="summoning-title">
+        {{ 'choraverse.summoning.title' | translate }}
+      </h1>
+      <p class="summoning__subtitle">
+        {{ 'choraverse.summoning.subtitle' | translate }}
+      </p>
+    </header>
+
+    <!-- Archetype carousel -->
+    <div class="summoning__carousel" role="region" [attr.aria-label]="'choraverse.summoning.carousel_label' | translate">
+      <!-- Navigation arrows -->
+      <button
+        type="button"
+        class="summoning__nav-btn summoning__nav-btn--prev"
+        (click)="previousArchetype()"
+        [attr.aria-label]="'choraverse.summoning.previous' | translate"
+        data-testid="carousel-prev">
+        &lsaquo;
+      </button>
+
+      <!-- Archetype cards -->
+      <div class="summoning__cards" role="listbox" [attr.aria-label]="'choraverse.summoning.archetypes' | translate">
+        @for (archetype of archetypes; track archetype.species; let i = $index) {
+          <button
+            type="button"
+            class="summoning__card"
+            role="option"
+            [class.summoning__card--selected]="i === selectedIndex()"
+            [attr.aria-selected]="i === selectedIndex()"
+            [attr.data-testid]="'archetype-' + archetype.species"
+            (click)="selectArchetype(i)">
+            <span class="summoning__card-icon">{{ archetype.icon }}</span>
+            <span class="summoning__card-name">{{ archetype.nameKey | translate }}</span>
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="summoning__nav-btn summoning__nav-btn--next"
+        (click)="nextArchetype()"
+        [attr.aria-label]="'choraverse.summoning.next' | translate"
+        data-testid="carousel-next">
+        &rsaquo;
+      </button>
+    </div>
+
+    <!-- Selected archetype detail -->
+    <div class="summoning__detail" data-testid="archetype-detail" aria-live="polite">
+      <div class="summoning__detail-icon">{{ selectedArchetype().icon }}</div>
+      <h2 class="summoning__detail-name">{{ selectedArchetype().nameKey | translate }}</h2>
+      <p class="summoning__detail-flavor">{{ selectedArchetype().flavorKey | translate }}</p>
+
+      <!-- Personality preview bars -->
+      <div class="summoning__traits" role="group" [attr.aria-label]="'choraverse.summoning.personality_preview' | translate">
+        @for (trait of traitKeys; track trait) {
+          <div class="summoning__trait-row">
+            <span class="summoning__trait-label">{{ traitLabelKeys[trait] | translate }}</span>
+            <div
+              class="summoning__trait-bar"
+              role="progressbar"
+              [attr.aria-valuenow]="selectedArchetype().defaultTraits[trait]"
+              [attr.aria-valuemin]="0"
+              [attr.aria-valuemax]="20"
+              [attr.aria-label]="traitLabelKeys[trait] | translate">
+              <div
+                class="summoning__trait-fill"
+                [style.width.%]="traitPercent(selectedArchetype().defaultTraits[trait])">
+              </div>
+            </div>
+            <span class="summoning__trait-value">{{ selectedArchetype().defaultTraits[trait] }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Choose button -->
+    <div class="summoning__actions">
+      <button
+        type="button"
+        class="summoning__choose-btn"
+        data-testid="choose-familiar-btn"
+        [disabled]="isSubmitting()"
+        (click)="openConfirmDialog()"
+        [attr.aria-label]="'choraverse.summoning.choose' | translate">
+        {{ 'choraverse.summoning.choose' | translate }}
+      </button>
+    </div>
+  </section>
+
+  <!-- Confirmation dialog -->
+  @if (showConfirmDialog()) {
+    <div
+      class="summoning__overlay"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="'choraverse.summoning.confirm_title' | translate"
+      data-testid="confirm-dialog">
+      <div class="summoning__dialog">
+        <h2 class="summoning__dialog-title">
+          {{ 'choraverse.summoning.confirm_title' | translate }}
+        </h2>
+        <p class="summoning__dialog-body">
+          {{ 'choraverse.summoning.confirm_body' | translate }}
+        </p>
+        <div class="summoning__dialog-preview">
+          <span class="summoning__dialog-icon">{{ selectedArchetype().icon }}</span>
+          <span class="summoning__dialog-name">{{ selectedArchetype().nameKey | translate }}</span>
+        </div>
+        <p class="summoning__dialog-warning" role="alert">
+          {{ 'choraverse.summoning.permanent_warning' | translate }}
+        </p>
+        <div class="summoning__dialog-actions">
+          <button
+            type="button"
+            class="summoning__dialog-btn summoning__dialog-btn--cancel"
+            data-testid="confirm-cancel"
+            (click)="cancelConfirm()"
+            [disabled]="isSubmitting()">
+            {{ 'choraverse.summoning.cancel' | translate }}
+          </button>
+          <button
+            type="button"
+            class="summoning__dialog-btn summoning__dialog-btn--confirm"
+            data-testid="confirm-summon"
+            (click)="confirmSummon()"
+            [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              {{ 'choraverse.summoning.summoning' | translate }}
+            } @else {
+              {{ 'choraverse.summoning.confirm_summon' | translate }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}
+
+<!-- Dashboard (already summoned) -->
+@if (!isLoading() && isSummoned()) {
+  <section
+    class="familiar-dashboard"
+    role="main"
+    [attr.aria-label]="'choraverse.dashboard.title' | translate"
+    data-testid="familiar-dashboard">
+
+    <header class="familiar-dashboard__header">
+      <div class="familiar-dashboard__avatar" data-testid="familiar-avatar-display">
+        <span class="familiar-dashboard__avatar-icon">
+          @switch (profile()?.speciesType) {
+            @case ('fox') { 🦊 }
+            @case ('owl') { 🦉 }
+            @case ('dragon') { 🐉 }
+            @case ('cat') { 🐱 }
+            @case ('robot') { 🤖 }
+            @case ('phoenix') { 🔥 }
+          }
+        </span>
+      </div>
+      <div class="familiar-dashboard__info">
+        <h1 class="familiar-dashboard__name" data-testid="familiar-name">
+          {{ profile()?.displayName }}
+        </h1>
+        <p class="familiar-dashboard__level">
+          {{ 'choraverse.dashboard.level' | translate }} {{ profile()?.evolutionLevel }}
+        </p>
+      </div>
+    </header>
+
+    <nav class="familiar-dashboard__nav" [attr.aria-label]="'choraverse.dashboard.nav_label' | translate">
+      <button
+        type="button"
+        class="familiar-dashboard__nav-card"
+        data-testid="nav-chat"
+        (click)="navigateTo('chat')">
+        <span class="familiar-dashboard__nav-icon">💬</span>
+        <span class="familiar-dashboard__nav-label">{{ 'choraverse.dashboard.chat' | translate }}</span>
+      </button>
+      <button
+        type="button"
+        class="familiar-dashboard__nav-card"
+        data-testid="nav-persona"
+        (click)="navigateTo('persona')">
+        <span class="familiar-dashboard__nav-icon">🎭</span>
+        <span class="familiar-dashboard__nav-label">{{ 'choraverse.dashboard.persona' | translate }}</span>
+      </button>
+      <button
+        type="button"
+        class="familiar-dashboard__nav-card"
+        data-testid="nav-stats"
+        (click)="navigateTo('stats')">
+        <span class="familiar-dashboard__nav-icon">📊</span>
+        <span class="familiar-dashboard__nav-label">{{ 'choraverse.dashboard.stats' | translate }}</span>
+      </button>
+      <button
+        type="button"
+        class="familiar-dashboard__nav-card"
+        data-testid="nav-memory"
+        (click)="navigateTo('memory')">
+        <span class="familiar-dashboard__nav-icon">🧠</span>
+        <span class="familiar-dashboard__nav-label">{{ 'choraverse.dashboard.memory' | translate }}</span>
+      </button>
+      <button
+        type="button"
+        class="familiar-dashboard__nav-card"
+        data-testid="nav-evolution"
+        (click)="navigateTo('evolution')">
+        <span class="familiar-dashboard__nav-icon">⬆️</span>
+        <span class="familiar-dashboard__nav-label">{{ 'choraverse.dashboard.evolution' | translate }}</span>
+      </button>
+      <button
+        type="button"
+        class="familiar-dashboard__nav-card"
+        data-testid="nav-skins"
+        (click)="navigateTo('skins')">
+        <span class="familiar-dashboard__nav-icon">🎨</span>
+        <span class="familiar-dashboard__nav-label">{{ 'choraverse.dashboard.skins' | translate }}</span>
+      </button>
+    </nav>
+  </section>
+}

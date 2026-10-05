@@ -1,0 +1,626 @@
+<section
+  class="surface-rplus scheduling"
+  data-testid="rplus-scheduling">
+  <header class="scheduling__header glass-panel">
+    <div class="scheduling__title-row">
+      <h1
+        class="scheduling__title"
+        data-testid="scheduling-week-label">
+        {{ weekLabel() }}
+      </h1>
+      <p class="scheduling__tz" data-testid="scheduling-tz">
+        <i class="fa-solid fa-clock" aria-hidden="true"></i>
+        {{ timezoneLabel() }}
+      </p>
+    </div>
+    <div class="scheduling__actions">
+      <button
+        type="button"
+        class="btn btn-primary scheduling__add-cta"
+        data-testid="scheduling-add-cta"
+        (click)="toggleForm()"
+        [attr.aria-expanded]="formOpen()"
+        [attr.aria-label]="'rplus.scheduling.add_aria' | translate">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{ 'rplus.scheduling.add_cta' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (createError(); as msg) {
+    <div
+      class="scheduling__error glass-panel"
+      role="alert"
+      aria-live="polite"
+      data-testid="scheduling-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <span class="scheduling__error-text">{{ msg }}</span>
+      <button
+        type="button"
+        class="btn btn-ghost scheduling__error-dismiss"
+        data-testid="scheduling-error-dismiss"
+        (click)="dismissError()"
+        [attr.aria-label]="'rplus.scheduling.create.error_dismiss_aria' | translate">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+  }
+
+  @if (formOpen()) {
+    <form
+      class="scheduling__form glass-panel"
+      data-testid="scheduling-form"
+      (ngSubmit)="onCreate()">
+      <h2 class="scheduling__form-title">
+        {{ 'rplus.scheduling.create.title' | translate }}
+      </h2>
+      <div class="scheduling__form-grid">
+        <div class="scheduling__field">
+          <label for="scheduling-course-id">
+            {{ 'rplus.scheduling.create.course_label' | translate }}
+          </label>
+          <!-- Goal 1: pick a PUBLISHED course by id, never hand-paste an opaque
+               UUID. Mirrors the room picker's loading / error / empty pattern;
+               null (load failure) must read differently from an empty list. -->
+          @if (coursesError()) {
+            <p class="scheduling__room-error" role="alert" data-testid="scheduling-courses-error">
+              {{ 'rplus.scheduling.create.courses_error' | translate }}
+            </p>
+          } @else {
+            <select
+              id="scheduling-course-id"
+              name="courseId"
+              class="scheduling__input"
+              data-testid="scheduling-course-id"
+              [ngModel]="courseIdInput()"
+              (ngModelChange)="onCourseChange($event)"
+              [disabled]="coursesLoading()">
+              <option value="">
+                @if (coursesLoading()) {
+                  {{ 'rplus.scheduling.create.courses_loading' | translate }}
+                } @else {
+                  {{ 'rplus.scheduling.create.course_placeholder' | translate }}
+                }
+              </option>
+              @for (course of courses(); track course.id) {
+                <option [value]="course.id" [attr.title]="course.label">
+                  {{ course.label }}
+                </option>
+              }
+            </select>
+            @if (!coursesLoading() && courses().length === 0) {
+              <p class="scheduling__room-empty" data-testid="scheduling-courses-empty">
+                {{ 'rplus.scheduling.create.courses_empty' | translate }}
+              </p>
+            }
+          }
+        </div>
+        <div class="scheduling__field">
+          <label for="scheduling-instructor-gcid">
+            {{ 'rplus.scheduling.create.instructor_label' | translate }}
+          </label>
+          <!-- Goal 2: the instructor list is the chosen course's own
+               instructor_gcids (no extra fetch, no people directory deployed).
+               Disabled until a course is chosen. No display-name source exists
+               for arbitrary GCIDs, so the GCID is the honest option label. -->
+          <select
+            id="scheduling-instructor-gcid"
+            name="instructorGcid"
+            class="scheduling__input"
+            data-testid="scheduling-instructor-gcid"
+            [ngModel]="instructorGcidInput()"
+            (ngModelChange)="instructorGcidInput.set($event)"
+            [disabled]="!selectedCourse()">
+            <option value="">
+              @if (!selectedCourse()) {
+                {{ 'rplus.scheduling.create.instructor_choose_course_first' | translate }}
+              } @else {
+                {{ 'rplus.scheduling.create.instructor_placeholder' | translate }}
+              }
+            </option>
+            @for (gcid of instructorOptions(); track $index) {
+              <option [value]="gcid" [attr.title]="gcid">{{ gcid }}</option>
+            }
+          </select>
+          @if (selectedCourse() && instructorOptions().length === 0) {
+            <p class="scheduling__room-empty" data-testid="scheduling-instructors-empty">
+              {{ 'rplus.scheduling.create.instructors_empty' | translate }}
+            </p>
+          }
+        </div>
+        <div class="scheduling__field">
+          <label for="scheduling-room">
+            {{ 'rplus.scheduling.create.room_label' | translate }}
+          </label>
+          <!-- CHO-2299: a room is booked by room_id, from the one durable
+               catalogue. Free text was the typo-bypass that forked "Room A "
+               from "Room A" and re-opened the double-book. -->
+          @if (roomsError()) {
+            <p class="scheduling__room-error" role="alert" data-testid="scheduling-rooms-error">
+              {{ 'rplus.scheduling.create.rooms_error' | translate }}
+            </p>
+          } @else {
+            <select
+              id="scheduling-room"
+              name="room_id"
+              class="scheduling__input"
+              data-testid="scheduling-room"
+              [ngModel]="roomIdInput()"
+              (ngModelChange)="roomIdInput.set($event)"
+              [disabled]="roomsLoading()">
+              <option value="">
+                @if (roomsLoading()) {
+                  {{ 'rplus.scheduling.create.rooms_loading' | translate }}
+                } @else {
+                  {{ 'rplus.scheduling.create.room_placeholder' | translate }}
+                }
+              </option>
+              @for (room of rooms(); track room.id) {
+                <option [value]="room.id">{{ room.name }}</option>
+              }
+            </select>
+            @if (!roomsLoading() && rooms().length === 0) {
+              <p class="scheduling__room-empty" data-testid="scheduling-rooms-empty">
+                {{ 'rplus.scheduling.create.rooms_empty' | translate }}
+              </p>
+            }
+          }
+          <a
+            class="scheduling__manage-link"
+            routerLink="/r/campusops/rooms"
+            data-testid="scheduling-manage-rooms">
+            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+            {{ 'rplus.scheduling.create.manage_rooms' | translate }}
+          </a>
+        </div>
+        <div class="scheduling__field">
+          <label for="scheduling-date">
+            {{ 'rplus.scheduling.create.date_label' | translate }}
+          </label>
+          <input
+            id="scheduling-date"
+            type="date"
+            name="date"
+            class="scheduling__input"
+            data-testid="scheduling-date"
+            [ngModel]="dateInput()"
+            (ngModelChange)="dateInput.set($event)" />
+        </div>
+        <div class="scheduling__field">
+          <label for="scheduling-start-time">
+            {{ 'rplus.scheduling.create.start_label' | translate }}
+          </label>
+          <input
+            id="scheduling-start-time"
+            type="time"
+            name="startTime"
+            class="scheduling__input"
+            data-testid="scheduling-start-time"
+            [ngModel]="startTimeInput()"
+            (ngModelChange)="startTimeInput.set($event)" />
+        </div>
+        <div class="scheduling__field">
+          <label for="scheduling-end-time">
+            {{ 'rplus.scheduling.create.end_label' | translate }}
+          </label>
+          <input
+            id="scheduling-end-time"
+            type="time"
+            name="endTime"
+            class="scheduling__input"
+            data-testid="scheduling-end-time"
+            [ngModel]="endTimeInput()"
+            (ngModelChange)="endTimeInput.set($event)" />
+        </div>
+        <div class="scheduling__field">
+          <label for="scheduling-capacity">
+            {{ 'rplus.scheduling.create.capacity_label' | translate }}
+          </label>
+          <input
+            id="scheduling-capacity"
+            type="number"
+            name="maxCapacity"
+            min="1"
+            class="scheduling__input"
+            data-testid="scheduling-capacity"
+            [ngModel]="maxCapacityInput()"
+            (ngModelChange)="maxCapacityInput.set($event)" />
+        </div>
+      </div>
+      <div class="scheduling__form-actions">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="scheduling-cancel-cta"
+          (click)="toggleForm()">
+          {{ 'rplus.scheduling.create.cancel_cta' | translate }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary scheduling__create-cta"
+          data-testid="scheduling-create-cta"
+          [disabled]="!canCreate()"
+          [attr.aria-label]="'rplus.scheduling.create.submit_aria' | translate">
+          <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>
+          {{ 'rplus.scheduling.create.submit_cta' | translate }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <!--
+    A11y: the day/hour scaffold below is a VISUAL RULER, not a data grid, so it
+    carries no grid roles.
+
+    It previously claimed role="grid" while (a) every role="gridcell" was empty
+    AND aria-hidden="true", so the grid's entire cell population conveyed
+    nothing, and (b) the component implements no arrow-key or roving-tabindex
+    navigation, which the ARIA APG requires of a grid. Same test that retired
+    role="tab" on the assessment filters in bf973edda: the role promised a
+    keyboard contract nothing honoured.
+
+    The real content is the session overlay. It cannot become grid rows/cells:
+    sessions SPAN several hour rows, and the overlay must stay inside this
+    element because .scheduling__grid is the `position: relative` anchor AND the
+    `overflow-x: auto` scroll container, so it scrolls with the 720px-wide rows.
+    As a plain <div> it was an illegal generic child of role="grid"
+    (aria-required-children, CRITICAL).
+
+    So: the ruler is decorative, and the sessions carry the meaning as a labelled
+    list. Each session now names its OWN day, which the grid only ever conveyed
+    through visual position and never actually exposed to a screen reader.
+  -->
+  <div class="scheduling__grid glass-panel" data-testid="scheduling-grid">
+    <!-- Decorative ruler: day-of-week header -->
+    <div class="scheduling__grid-head" aria-hidden="true">
+      <span class="scheduling__time-spacer"></span>
+      @for (col of dayColumns(); track col.day) {
+        <span
+          class="scheduling__col-header"
+          [attr.data-testid]="'scheduling-day-' + col.day">
+          {{ col.labelKey | translate }}
+        </span>
+      }
+    </div>
+
+    <!-- The hour ruler and the session overlay share ONE positioning context
+         (.scheduling__body) so their geometry cannot drift: the overlay's
+         top:0 IS the first hour row's top. -->
+    <div class="scheduling__body">
+      <!-- Decorative ruler: hourly slot rows -->
+      @for (hour of hourSlots; track hour) {
+        <div
+          class="scheduling__row"
+          aria-hidden="true"
+          [attr.data-testid]="'scheduling-hour-' + hour">
+          <span class="scheduling__time-label">{{ hour }}</span>
+          @for (col of dayColumns(); track col.day) {
+            <span
+              class="scheduling__cell"
+              [class.scheduling__cell--drop]="isDropTarget(col.day, hour)"
+              (dragover)="onSlotDragOver(col.day, hour, $event)"
+              (dragleave)="onSlotDragLeave(col.day, hour)"
+              (drop)="onSlotDrop(col.day, hour, $event)"></span>
+          }
+        </div>
+      }
+
+    <!-- The content: session blocks, absolutely placed over the ruler -->
+    <div
+      class="scheduling__sessions"
+      role="list"
+      [attr.aria-label]="'rplus.scheduling.grid_aria' | translate">
+      @for (col of dayColumns(); track col.day) {
+        @for (card of col.sessions; track card.sessionId) {
+          <article
+            class="scheduling__session surface-accent-border"
+            role="listitem"
+            [class.scheduling__session--dragging]="draggingId() === card.sessionId"
+            [attr.data-testid]="'scheduling-session-' + card.sessionId"
+            [attr.data-day]="card.day"
+            [attr.data-start]="card.startTime"
+            [attr.data-lane]="card.lane"
+            [attr.data-lanes]="card.lanes"
+            draggable="true"
+            (dragstart)="onCardDragStart(card, $event)"
+            (dragend)="onCardDragEnd()"
+            [style.--session-day]="card.dayCol"
+            [style.--session-row]="card.row"
+            [style.--session-span]="card.span"
+            [style.--session-lane]="card.lane"
+            [style.--session-lanes]="card.lanes"
+            [attr.aria-label]="
+              ('rplus.scheduling.day.' + card.day | translate) +
+              ' ' +
+              card.courseTitle +
+              ' ' +
+              card.instructorLabel +
+              (card.roomLabel ? ' ' + card.roomLabel : '') +
+              ' ' +
+              card.startTime +
+              '-' +
+              card.endTime
+            ">
+            <!-- The whole card is one button so a click / Enter / Space opens the
+                 detail dialog; drag is handled on the draggable <article> parent.
+                 All children are phrasing content so they can live in a button. -->
+            <button
+              type="button"
+              class="scheduling__session-btn"
+              [attr.data-testid]="'scheduling-open-' + card.sessionId"
+              (click)="openDetail(card, $event)"
+              [attr.aria-label]="
+                ('rplus.scheduling.detail.open_aria' | translate) + ' ' + card.courseTitle
+              ">
+              <!-- Title is the ONE always-on line. Time + meta reveal per the
+                   tile's available room (see the @container tiers); DOM order
+                   here is priority order, and the raw instructor GCID is last +
+                   de-emphasized so it yields the space first in cramped tiles. -->
+              <span class="scheduling__session-title" [attr.title]="card.courseTitle">
+                {{ card.courseTitle }}
+              </span>
+              <time class="scheduling__session-time surface-accent-text">
+                {{ card.startTime }}-{{ card.endTime }}
+              </time>
+              @if (card.roomLabel) {
+                <span class="scheduling__session-meta scheduling__session-meta--room">
+                  <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                  <span
+                    class="scheduling__session-meta-text"
+                    [attr.title]="card.roomLabel">
+                    {{ card.roomLabel }}
+                  </span>
+                </span>
+              }
+              @if (card.maxCapacity > 0) {
+                <span class="scheduling__session-meta scheduling__session-meta--capacity">
+                  <i class="fa-solid fa-users" aria-hidden="true"></i>
+                  <span class="scheduling__session-meta-text">
+                    {{ 'rplus.scheduling.capacity' | translate }} {{ card.maxCapacity }}
+                  </span>
+                </span>
+              }
+              <span class="scheduling__session-meta scheduling__session-meta--instructor">
+                <i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i>
+                <span
+                  class="scheduling__session-meta-text"
+                  [attr.title]="card.instructorLabel">
+                  {{ card.instructorLabel }}
+                </span>
+              </span>
+            </button>
+          </article>
+        }
+      }
+      </div>
+    </div>
+  </div>
+
+  <!-- CHO-2334: session detail dialog (course meta + Reschedule + Cancel). -->
+  @if (selectedCard(); as card) {
+    <div
+      class="scheduling__detail-overlay"
+      data-testid="scheduling-detail"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="detailTitleId"
+      tabindex="-1"
+      (click)="onDetailBackdrop($event)">
+      <div
+        class="scheduling__detail glass-panel"
+        data-testid="scheduling-detail-panel"
+        (click)="$event.stopPropagation()">
+        <header class="scheduling__detail-head">
+          <h2
+            [id]="detailTitleId"
+            class="scheduling__detail-title surface-accent-text"
+            data-testid="scheduling-detail-title">
+            {{ card.courseTitle }}
+          </h2>
+          <button
+            #detailCloseBtn
+            type="button"
+            class="scheduling__detail-close"
+            data-testid="scheduling-detail-close"
+            [attr.aria-label]="'rplus.scheduling.detail.close_aria' | translate"
+            (click)="closeDetail()">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <dl class="scheduling__detail-meta">
+          <div class="scheduling__detail-row">
+            <dt>{{ 'rplus.scheduling.detail.instructor_label' | translate }}</dt>
+            <dd data-testid="scheduling-detail-instructor">{{ card.instructorLabel }}</dd>
+          </div>
+          @if (card.roomLabel) {
+            <div class="scheduling__detail-row">
+              <dt>{{ 'rplus.scheduling.detail.room_label' | translate }}</dt>
+              <dd data-testid="scheduling-detail-room">{{ card.roomLabel }}</dd>
+            </div>
+          }
+          <div class="scheduling__detail-row">
+            <dt>{{ 'rplus.scheduling.detail.date_label' | translate }}</dt>
+            <dd data-testid="scheduling-detail-date">{{ card.dateIso }}</dd>
+          </div>
+          <div class="scheduling__detail-row">
+            <dt>{{ 'rplus.scheduling.detail.time_label' | translate }}</dt>
+            <dd data-testid="scheduling-detail-time">{{ card.startTime }}-{{ card.endTime }}</dd>
+          </div>
+          @if (card.maxCapacity > 0) {
+            <div class="scheduling__detail-row">
+              <dt>{{ 'rplus.scheduling.detail.capacity_label' | translate }}</dt>
+              <dd data-testid="scheduling-detail-capacity">{{ card.maxCapacity }}</dd>
+            </div>
+          }
+        </dl>
+
+        @if (rescheduleOpen()) {
+          <form
+            class="scheduling__detail-form"
+            data-testid="scheduling-reschedule-form"
+            (ngSubmit)="onReschedule()">
+            <h3 class="scheduling__detail-subtitle">
+              {{ 'rplus.scheduling.reschedule.title' | translate }}
+            </h3>
+            <div class="scheduling__detail-fields">
+              <div class="scheduling__field">
+                <label for="reschedule-date">
+                  {{ 'rplus.scheduling.reschedule.date_label' | translate }}
+                </label>
+                <input
+                  id="reschedule-date"
+                  type="date"
+                  name="reschedule-date"
+                  class="scheduling__input"
+                  data-testid="scheduling-reschedule-date"
+                  [ngModel]="rsDate()"
+                  (ngModelChange)="rsDate.set($event)" />
+              </div>
+              <div class="scheduling__field">
+                <label for="reschedule-start">
+                  {{ 'rplus.scheduling.reschedule.start_label' | translate }}
+                </label>
+                <input
+                  id="reschedule-start"
+                  type="time"
+                  name="reschedule-start"
+                  class="scheduling__input"
+                  data-testid="scheduling-reschedule-start"
+                  [ngModel]="rsStart()"
+                  (ngModelChange)="rsStart.set($event)" />
+              </div>
+              <div class="scheduling__field">
+                <label for="reschedule-end">
+                  {{ 'rplus.scheduling.reschedule.end_label' | translate }}
+                </label>
+                <input
+                  id="reschedule-end"
+                  type="time"
+                  name="reschedule-end"
+                  class="scheduling__input"
+                  data-testid="scheduling-reschedule-end"
+                  [ngModel]="rsEnd()"
+                  (ngModelChange)="rsEnd.set($event)" />
+              </div>
+              <div class="scheduling__field">
+                <label for="reschedule-room">
+                  {{ 'rplus.scheduling.reschedule.room_label' | translate }}
+                </label>
+                @if (roomsError()) {
+                  <p class="scheduling__room-error" role="alert">
+                    {{ 'rplus.scheduling.create.rooms_error' | translate }}
+                  </p>
+                } @else {
+                  <select
+                    id="reschedule-room"
+                    name="reschedule-room"
+                    class="scheduling__input"
+                    data-testid="scheduling-reschedule-room"
+                    [ngModel]="rsRoomId()"
+                    (ngModelChange)="rsRoomId.set($event)"
+                    [disabled]="roomsLoading()">
+                    <option value="">
+                      {{ 'rplus.scheduling.reschedule.room_none' | translate }}
+                    </option>
+                    @for (room of rooms(); track room.id) {
+                      <option [value]="room.id">{{ room.name }}</option>
+                    }
+                  </select>
+                }
+              </div>
+            </div>
+            @if (rsError(); as msg) {
+              <p
+                class="scheduling__detail-error"
+                role="alert"
+                aria-live="polite"
+                data-testid="scheduling-reschedule-error">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                {{ msg }}
+              </p>
+            }
+            <div class="scheduling__detail-actions">
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="scheduling-reschedule-back"
+                (click)="closeReschedule()">
+                {{ 'rplus.scheduling.reschedule.back_cta' | translate }}
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                data-testid="scheduling-reschedule-submit"
+                [disabled]="!canReschedule()"
+                [attr.aria-label]="'rplus.scheduling.reschedule.submit_aria' | translate">
+                <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                {{ 'rplus.scheduling.reschedule.submit_cta' | translate }}
+              </button>
+            </div>
+          </form>
+        } @else if (confirmingCancel()) {
+          <div
+            class="scheduling__detail-confirm"
+            data-testid="scheduling-cancel-confirm"
+            role="group"
+            [attr.aria-label]="'rplus.scheduling.cancel.confirm_title' | translate">
+            <p class="scheduling__detail-confirm-title">
+              {{ 'rplus.scheduling.cancel.confirm_title' | translate }}
+            </p>
+            <p class="scheduling__detail-confirm-body">
+              {{ 'rplus.scheduling.cancel.confirm_body' | translate }}
+            </p>
+            @if (cancelError(); as msg) {
+              <p
+                class="scheduling__detail-error"
+                role="alert"
+                aria-live="polite"
+                data-testid="scheduling-cancel-error">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                {{ msg }}
+              </p>
+            }
+            <div class="scheduling__detail-actions">
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="scheduling-cancel-keep"
+                (click)="dismissCancel()">
+                {{ 'rplus.scheduling.cancel.keep_cta' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                data-testid="scheduling-cancel-confirm-yes"
+                [disabled]="cancelBusy()"
+                (click)="onConfirmCancel()">
+                <i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i>
+                {{ 'rplus.scheduling.cancel.confirm_cta' | translate }}
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="scheduling__detail-actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-testid="scheduling-detail-reschedule"
+              (click)="openReschedule()">
+              <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+              {{ 'rplus.scheduling.detail.reschedule_cta' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              data-testid="scheduling-detail-cancel"
+              (click)="requestCancel()">
+              <i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i>
+              {{ 'rplus.scheduling.detail.cancel_cta' | translate }}
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>

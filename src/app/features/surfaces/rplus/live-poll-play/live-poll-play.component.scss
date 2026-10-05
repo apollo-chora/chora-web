@@ -1,0 +1,191 @@
+// R+ Live Poll Play — polyglass BEM (Track 2).
+// Tablet-first: 768px primary; ≥1280px desktop enhancement.
+
+:host { display: block; }
+
+.poll-play {
+  padding: 1.5rem;
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.4rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__conn {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+
+    &--ok { background: rgba(46, 160, 67, 0.18); color: #2ea043; }
+    &--warn { background: rgba(210, 153, 34, 0.18); color: #d29922; }
+    &--off { background: rgba(220, 73, 73, 0.18); color: #dc4949; }
+  }
+
+  &__kpis {
+    display: flex;
+    gap: 2rem;
+    margin: 0;
+  }
+
+  &__kpi {
+    dt {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    dd {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+  }
+
+  &__poll {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  &__question {
+    margin: 0 0 1.25rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.4;
+  }
+
+  &__options {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__option {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12));
+    border-radius: 12px;
+    background: var(--glass-bg, rgba(255, 255, 255, 0.04));
+    color: var(--text-main);
+    font-size: 1rem;
+    text-align: start;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.2s ease, transform 0.1s ease;
+
+    &:hover:not(:disabled) {
+      border-color: var(--surface-accent, #7c4dff);
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--surface-accent, #7c4dff);
+      outline-offset: 2px;
+    }
+
+    &--disabled,
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+  }
+
+  &__option-label {
+    position: relative;
+    z-index: 1;
+    font-weight: 600;
+    flex: 1;
+  }
+
+  &__option-count {
+    position: relative;
+    z-index: 1;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  // The live-tally bar fills behind the option content (logical-start anchored
+  // so it grows correctly in both LTR and RTL).
+  &__option-bar {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 0;
+    border-radius: 12px;
+    opacity: 0.18;
+    transition: width 0.3s ease;
+    min-width: 0;
+  }
+
+  &__voted,
+  &__empty {
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__empty {
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-top: 0;
+    font-style: italic;
+  }
+
+  &__closed {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+}
+
+@media (min-width: 1280px) {
+  .poll-play {
+    padding: 2rem;
+
+    &__poll {
+      max-width: 56rem;
+    }
+  }
+}

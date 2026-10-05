@@ -1,0 +1,158 @@
+<section class="notification-archive" data-testid="notification-archive">
+  <header class="notification-archive__header">
+    <h1 class="notification-archive__title">{{ 'notifications.archive_title' | translate }}</h1>
+    <button
+      class="notification-archive__export"
+      (click)="exportCsv()"
+      [disabled]="exporting() || isEmpty()"
+      data-testid="export-csv">
+      @if (exporting()) {
+        <span class="notification-archive__spinner" aria-hidden="true"></span>
+      }
+      {{ 'notifications.export_csv' | translate }}
+    </button>
+  </header>
+
+  <!-- Filters -->
+  <div class="notification-archive__filters" data-testid="archive-filters">
+    <div class="notification-archive__filter-group">
+      <label for="archive-search" class="notification-archive__filter-label">
+        {{ 'notifications.search' | translate }}
+      </label>
+      <input
+        type="search"
+        id="archive-search"
+        class="notification-archive__input"
+        [value]="searchQuery()"
+        (input)="onSearchInput($any($event.target).value)"
+        (keydown.enter)="search()"
+        [placeholder]="'notifications.search_placeholder' | translate"
+        data-testid="archive-search" />
+    </div>
+
+    <div class="notification-archive__filter-group">
+      <label for="archive-from" class="notification-archive__filter-label">
+        {{ 'notifications.date_from' | translate }}
+      </label>
+      <input
+        type="date"
+        id="archive-from"
+        class="notification-archive__input notification-archive__input--date"
+        [value]="dateFrom()"
+        (change)="onDateFromChange($any($event.target).value)"
+        data-testid="archive-date-from" />
+    </div>
+
+    <div class="notification-archive__filter-group">
+      <label for="archive-to" class="notification-archive__filter-label">
+        {{ 'notifications.date_to' | translate }}
+      </label>
+      <input
+        type="date"
+        id="archive-to"
+        class="notification-archive__input notification-archive__input--date"
+        [value]="dateTo()"
+        (change)="onDateToChange($any($event.target).value)"
+        data-testid="archive-date-to" />
+    </div>
+
+    <div class="notification-archive__filter-group">
+      <label for="archive-category" class="notification-archive__filter-label">
+        {{ 'notifications.category' | translate }}
+      </label>
+      <select
+        id="archive-category"
+        class="notification-archive__select"
+        [value]="selectedCategory()"
+        (change)="onCategoryChange($any($event.target).value)"
+        data-testid="archive-category">
+        <option value="">{{ 'notifications.all_categories' | translate }}</option>
+        @for (cat of allCategories; track cat) {
+          <option [value]="cat">{{ cat }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="notification-archive__filter-group">
+      <label for="archive-priority" class="notification-archive__filter-label">
+        {{ 'notifications.priority' | translate }}
+      </label>
+      <select
+        id="archive-priority"
+        class="notification-archive__select"
+        [value]="selectedPriority()"
+        (change)="onPriorityChange($any($event.target).value)"
+        data-testid="archive-priority">
+        <option value="">{{ 'notifications.all_priorities' | translate }}</option>
+        @for (pri of allPriorities; track pri) {
+          <option [value]="pri">{{ pri }}</option>
+        }
+      </select>
+    </div>
+
+    <button
+      class="notification-archive__search-btn"
+      (click)="search()"
+      data-testid="archive-search-btn">
+      {{ 'notifications.apply_filters' | translate }}
+    </button>
+  </div>
+
+  <!-- Results -->
+  @if (loading() && notifications().length === 0) {
+    <div class="notification-archive__loading" data-testid="archive-loading">
+      <span class="notification-archive__spinner" aria-hidden="true"></span>
+      {{ 'notifications.loading' | translate }}
+    </div>
+  } @else if (isEmpty()) {
+    <div class="notification-archive__empty" data-testid="archive-empty">
+      <p>{{ 'notifications.archive_empty' | translate }}</p>
+    </div>
+  } @else {
+    <table class="notification-archive__table" data-testid="archive-table">
+      <thead>
+        <tr>
+          <th>{{ 'notifications.col_title' | translate }}</th>
+          <th>{{ 'notifications.col_priority' | translate }}</th>
+          <th>{{ 'notifications.col_category' | translate }}</th>
+          <th>{{ 'notifications.col_status' | translate }}</th>
+          <th>{{ 'notifications.col_date' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (n of notifications(); track trackById($index, n)) {
+          <tr class="notification-archive__row"
+              [class.notification-archive__row--unread]="!n.is_read"
+              data-testid="archive-row">
+            <td class="notification-archive__cell-title">
+              <span class="notification-archive__item-title">{{ n.title }}</span>
+              <span class="notification-archive__item-body">{{ n.body }}</span>
+            </td>
+            <td>
+              <span class="notification-archive__priority-badge"
+                    [attr.data-priority]="n.priority">
+                {{ n.priority }}
+              </span>
+            </td>
+            <td>{{ n.category }}</td>
+            <td>{{ n.is_read ? ('notifications.read' | translate) : ('notifications.unread_label' | translate) }}</td>
+            <td>{{ n.created_at | date:'medium' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (hasMore()) {
+      <button
+        class="notification-archive__load-more"
+        (click)="loadMore()"
+        [disabled]="loading()"
+        data-testid="archive-load-more">
+        @if (loading()) {
+          <span class="notification-archive__spinner notification-archive__spinner--sm" aria-hidden="true"></span>
+        }
+        {{ 'notifications.load_more' | translate }}
+      </button>
+    }
+  }
+</section>

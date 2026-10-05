@@ -1,0 +1,103 @@
+<div class="concept-hex" data-testid="concept-hex-map">
+  <div
+    class="hex-grid"
+    [class.is-loading]="loading()"
+    [class.is-panning]="panTransform() !== ''"
+    [style.transform]="panTransform()"
+    data-testid="concept-hex-grid">
+    <!-- Up to 6 related concepts fan out radially around the focal. -->
+    @for (n of fisheye().neighbors; track n.conceptId) {
+      <button
+        type="button"
+        class="hex-cell hex-cell--neighbor"
+        [attr.data-position]="n.position"
+        [attr.data-relation]="n.relation"
+        [attr.data-testid]="'concept-hex-neighbor-' + n.position"
+        [disabled]="loading()"
+        (click)="onRecenter(n)"
+        [attr.aria-label]="
+          (relationKey(n.relation) | translate) + ': ' + n.title + ', ' +
+          n.atomCount + ' ' + ('aplus.discovery.atoms_unit' | translate) + '. ' +
+          ('aplus.discovery.recenter_hint' | translate)
+        ">
+        <span class="hex-cell__clip">
+          <span class="hex-cell__surface">
+            <span class="hex-cell__inner">
+              <span class="hex-cell__relation">
+                {{ relationKey(n.relation) | translate }}
+              </span>
+              <span class="hex-cell__title">{{ n.title }}</span>
+              <span class="hex-cell__badge" aria-hidden="true">
+                <i class="fa-solid fa-atom"></i> {{ n.atomCount }}
+              </span>
+            </span>
+          </span>
+        </span>
+      </button>
+    }
+
+    <!-- Focal concept (centre). Tapping it opens the focal's detail (the
+         concept is the trigger — ADR-212 direct manipulation). -->
+    <button
+      type="button"
+      class="hex-cell hex-cell--focal"
+      data-testid="concept-hex-focal"
+      [class.hex-cell--is-root]="fisheye().isRoot"
+      (click)="onFocalSelect()"
+      [attr.aria-label]="
+        fisheye().focal.title + '. ' +
+        ('aplus.discovery.open_detail' | translate)
+      ">
+      <span class="hex-cell__clip hex-cell__clip--focal">
+        <span class="hex-cell__surface hex-cell__surface--focal">
+          <span class="hex-cell__inner">
+            @if (fisheye().isRoot) {
+              <span class="hex-cell__root-pill" data-testid="concept-hex-root-pill">
+                <i class="fa-solid fa-crown" aria-hidden="true"></i>
+                {{ 'aplus.discovery.root_pill' | translate }}
+              </span>
+            }
+            <span
+              class="hex-cell__title hex-cell__title--focal"
+              data-testid="concept-hex-focal-title">
+              {{ fisheye().focal.title }}
+            </span>
+            <span
+              class="hex-cell__badge hex-cell__badge--focal"
+              data-testid="concept-hex-focal-atomcount">
+              <i class="fa-solid fa-atom" aria-hidden="true"></i>
+              {{ fisheye().focal.atomCount }}
+              {{ 'aplus.discovery.atoms_unit' | translate }}
+            </span>
+          </span>
+        </span>
+      </span>
+    </button>
+  </div>
+
+  <!-- Distinct "make this my root" control (not clipped inside a hex). -->
+  <div class="concept-hex__controls">
+    <button
+      type="button"
+      class="concept-hex__root-btn"
+      data-testid="concept-hex-make-root"
+      [disabled]="loading() || fisheye().isRoot"
+      (click)="onMakeRoot()">
+      <i class="fa-solid fa-crown" aria-hidden="true"></i>
+      @if (fisheye().isRoot) {
+        {{ 'aplus.discovery.is_root' | translate }}
+      } @else {
+        {{ 'aplus.discovery.make_root' | translate }}
+      }
+    </button>
+
+    @if (fisheye().neighbors.length === 0) {
+      <p
+        class="concept-hex__lonely"
+        role="status"
+        data-testid="concept-hex-lonely">
+        {{ 'aplus.discovery.lonely_focal' | translate }}
+      </p>
+    }
+  </div>
+</div>

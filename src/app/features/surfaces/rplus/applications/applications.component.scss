@@ -1,0 +1,346 @@
+// ApplicationsComponent — R+ Course Applications review queue.
+//
+// Tablet-first (>= 768px primary): stacked-card layout per row.
+// Desktop enhancement (>= 1280px): meta dl flips to a 2-column grid
+// so the row reads like a wide-screen table without a horizontal scroll.
+//
+// BEM root: `.applications` + `__element` + `--modifier`.
+// Surface accent: R+ amber via `surface-rplus` (set on the section root)
+// + the `--surface-accent`/`--surface-accent-gradient` tokens defined
+// in `core/theme/surfaces/_rplus.scss`.
+
+@mixin glass-panel {
+  background: var(--glass-bg, var(--chora-color-surface-1, rgba(255, 255, 255, 0.04)));
+  border: 1px solid var(--glass-border, var(--chora-color-border-subtle, rgba(255, 255, 255, 0.08)));
+  border-radius: var(--chora-radius-md);
+  box-shadow: var(--glass-shadow, 0 4px 12px rgba(0, 0, 0, 0.08));
+  backdrop-filter: var(--glass-backdrop, blur(12px));
+}
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.applications {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--chora-space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+
+  // ── Header ────────────────────────────────────────────────────────
+  &__header {
+    @include glass-panel;
+    padding: var(--chora-space-lg);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--chora-space-md);
+    flex-wrap: wrap;
+  }
+
+  &__header-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--chora-color-text, inherit);
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: var(--chora-color-text-muted, inherit);
+    font-size: 0.95rem;
+  }
+
+  &__total-pill {
+    @include glass-panel;
+    padding: var(--chora-space-xs) var(--chora-space-md);
+    background: var(--surface-accent-soft, var(--chora-color-surface-1));
+    color: var(--surface-accent, var(--chora-color-primary));
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: var(--chora-radius-pill, 999px);
+    white-space: nowrap;
+
+    strong {
+      font-size: 1.1rem;
+      margin-right: 0.25em;
+    }
+  }
+
+  // ── Tabs ──────────────────────────────────────────────────────────
+  &__tabs {
+    @include glass-panel;
+    padding: var(--chora-space-xs);
+    display: flex;
+    gap: var(--chora-space-xs);
+    overflow-x: auto;
+  }
+
+  &__tab {
+    flex: 1 1 auto;
+    min-width: max-content;
+    padding: var(--chora-space-sm) var(--chora-space-lg);
+    background: transparent;
+    color: var(--chora-color-text-muted, inherit);
+    border: none;
+    border-radius: var(--chora-radius-sm);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--chora-color-surface-1);
+      color: var(--chora-color-text);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--surface-accent, var(--chora-color-primary));
+      outline-offset: 2px;
+    }
+
+    &--active {
+      background: var(--surface-accent-gradient, var(--chora-color-primary));
+      color: var(--chora-color-on-accent, #ffffff);
+
+      &:hover {
+        filter: brightness(1.05);
+        background: var(--surface-accent-gradient, var(--chora-color-primary));
+        color: var(--chora-color-on-accent, #ffffff);
+      }
+    }
+  }
+
+  // ── Loading + Empty ───────────────────────────────────────────────
+  &__loading {
+    @include glass-panel;
+    padding: var(--chora-space-xl);
+    text-align: center;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__empty {
+    @include glass-panel;
+    padding: var(--chora-space-xl);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+  }
+
+  &__empty-title {
+    margin: 0;
+    font-weight: 500;
+    color: var(--chora-color-text);
+  }
+
+  &__empty-body {
+    margin: 0;
+    color: var(--chora-color-text-muted);
+    font-size: 0.95rem;
+  }
+
+  // ── Error ─────────────────────────────────────────────────────────
+  &__error {
+    @include glass-panel;
+    padding: var(--chora-space-md) var(--chora-space-lg);
+    background: var(--chora-color-danger-surface, rgba(220, 38, 38, 0.08));
+    color: var(--chora-color-danger, #b91c1c);
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md);
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  &__error-message {
+    margin: 0;
+    flex: 1 1 auto;
+  }
+
+  &__retry {
+    padding: var(--chora-space-xs) var(--chora-space-md);
+    background: transparent;
+    border: 1px solid currentColor;
+    border-radius: var(--chora-radius-sm);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(220, 38, 38, 0.05);
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+  }
+
+  // ── Row list ──────────────────────────────────────────────────────
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-md);
+  }
+
+  &__row {
+    @include glass-panel;
+    padding: var(--chora-space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-md);
+
+    @media (min-width: 1280px) {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--chora-space-lg);
+    }
+  }
+
+  &__row-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm);
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  &__row-header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md);
+    flex-wrap: wrap;
+  }
+
+  &__row-id {
+    font-family: var(--chora-font-mono, ui-monospace, monospace);
+    font-size: 0.85rem;
+    color: var(--chora-color-text-muted);
+    word-break: break-all;
+  }
+
+  &__row-badge {
+    padding: var(--chora-space-xs) var(--chora-space-sm);
+    border-radius: var(--chora-radius-pill, 999px);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+
+    &.badge-info {
+      background: rgba(37, 99, 235, 0.12);
+      color: #1d4ed8;
+    }
+
+    &.badge-warning {
+      background: rgba(234, 88, 12, 0.12);
+      color: #b45309;
+    }
+
+    &.badge-success {
+      background: rgba(22, 163, 74, 0.12);
+      color: #15803d;
+    }
+
+    &.badge-danger {
+      background: rgba(220, 38, 38, 0.12);
+      color: #b91c1c;
+    }
+
+    &.badge-neutral {
+      background: rgba(100, 116, 139, 0.12);
+      color: #475569;
+    }
+  }
+
+  &__row-meta {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--chora-space-xs) var(--chora-space-md);
+
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__row-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    dt {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--chora-color-text-muted);
+    }
+
+    dd {
+      margin: 0;
+      color: var(--chora-color-text);
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+  }
+
+  &__row-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+
+    @media (min-width: 1280px) {
+      justify-content: flex-start;
+    }
+  }
+
+  &__detail-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs);
+    padding: var(--chora-space-sm) var(--chora-space-lg);
+    background: var(--surface-accent-gradient, var(--chora-color-primary));
+    color: var(--chora-color-on-accent, #ffffff);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: var(--chora-radius-sm);
+    transition: filter 0.15s ease;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--surface-accent, var(--chora-color-primary));
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Accessibility: reduced motion — kill the hover filter transition.
+@media (prefers-reduced-motion: reduce) {
+  .applications__tab,
+  .applications__detail-cta {
+    transition: none;
+  }
+}

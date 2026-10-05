@@ -1,0 +1,158 @@
+// HplusExternalEgressComponent — CHO-2148.
+//
+// Uses the POLYGLASS token family (--text-main / --glass-border / --primary,
+// defined in src/styles/_polyglass-tokens.scss) — the same one every other H+
+// page resolves inside the glass-panel shell (kg-config, mana, addons).
+//
+// Every var() carries an explicit fallback. A prior session shipped near-
+// invisible text on the light theme by reaching for --chora-color-text (which
+// does not exist): an undefined custom property yields empty, the fallback is
+// what actually renders, and there is no build error to catch it.
+
+.hplus-egress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg, 24px);
+  padding: var(--space-lg, 24px);
+  color: var(--text-main, #1e293b);
+}
+
+.hplus-egress__title {
+  margin: 0 0 var(--space-xs, 4px);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-main, #1e293b);
+}
+
+.hplus-egress__lede {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text-muted, #64748b);
+  line-height: 1.5;
+}
+
+.hplus-egress__status {
+  color: var(--text-muted, #64748b);
+}
+
+.hplus-egress__alert {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm, 8px);
+  padding: var(--space-md, 16px);
+  border: 1px solid var(--danger, #ef4444);
+  border-radius: var(--radius-md, 8px);
+  background: var(--danger-bg, rgba(239, 68, 68, 0.08));
+  color: var(--danger, #ef4444);
+}
+
+.hplus-egress__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg, 24px);
+  padding: var(--space-lg, 24px);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.5));
+  border-radius: var(--radius-lg, 12px);
+}
+
+// The never-opted-in note. Deliberately informational, not an error: a
+// default-OFF franchise tenant is the SAFE state, not a fault.
+.hplus-egress__default-note {
+  margin: 0;
+  padding: var(--space-sm, 8px) var(--space-md, 16px);
+  border-left: 3px solid var(--primary, #1976d2);
+  background: rgba(25, 118, 210, 0.06);
+  color: var(--text-main, #1e293b);
+  line-height: 1.5;
+}
+
+.hplus-egress__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs, 4px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  input[type='number'] {
+    max-width: 12rem;
+    padding: var(--space-sm, 8px);
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.5));
+    border-radius: var(--radius-sm, 4px);
+    background: var(--bg-elevated, #ffffff);
+    color: var(--text-main, #1e293b);
+    font: inherit;
+
+    &[aria-invalid='true'] {
+      border-color: var(--danger, #ef4444);
+    }
+  }
+}
+
+.hplus-egress__legend {
+  padding: 0;
+  font-weight: 600;
+  color: var(--text-main, #1e293b);
+}
+
+.hplus-egress__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+  cursor: pointer;
+  color: var(--text-main, #1e293b);
+
+  input[type='checkbox'] {
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: var(--primary, #1976d2);
+    cursor: pointer;
+  }
+}
+
+.hplus-egress__hint {
+  margin: 0;
+  color: var(--text-muted, #64748b);
+  font-size: 0.875rem;
+}
+
+.hplus-egress__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md, 16px);
+}
+
+.hplus-egress__audit {
+  margin: 0;
+  color: var(--text-muted, #64748b);
+  font-size: 0.8125rem;
+}
+
+.hplus-egress__actions {
+  display: flex;
+  gap: var(--space-sm, 8px);
+  margin-left: auto;
+}
+
+.hplus-egress__saved {
+  margin: 0;
+  color: var(--success, #10b981);
+  font-weight: 600;
+}
+
+.hplus-egress__inline-error {
+  margin: 0;
+  color: var(--danger, #ef4444);
+  font-weight: 600;
+}
+
+// Tablet-first: ≥768px is the primary target and must never scroll sideways.
+// No below-tablet breakpoints (tablet mandate, Tier 4 D16).
+@media (min-width: 1280px) {
+  .hplus-egress {
+    max-width: 72rem;
+  }
+}

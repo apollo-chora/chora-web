@@ -1,0 +1,112 @@
+// =====================================================================
+// Per-breed accent tokens for Familiar UI (ADR-149).
+//
+// Applied via `[data-breed="dragon"]` (etc.) wrapper attributes on
+// Familiar-bearing components. Loaded additively after _polyglass-tokens
+// and before per-component partials so component SCSS can reference
+// `var(--breed-accent)` to recolor chrome.
+//
+// Default (no `data-breed`) falls back to A+ indigo so screens without
+// a specific Familiar still render correctly.
+// =====================================================================
+
+:root {
+  // B1: the default tier was indigo (#4f46e5) in everything but name. It is the
+  // brand blue now, so a screen with no `data-breed` reads as Chora rather than
+  // as a violet that no longer exists anywhere else.
+  --breed-accent:           var(--primary);          // brand blue fallback
+  --breed-accent-soft:      rgba(25, 118, 210, 0.10);
+  --breed-accent-mid:       rgba(25, 118, 210, 0.18);
+  --breed-accent-border:    rgba(25, 118, 210, 0.30);
+  --breed-accent-glow:      rgba(25, 118, 210, 0.25);
+  // AA-safe text sibling for the default tier; its one consumer paints it as
+  // `color:` (persona-tab). Per-breed strong variants are additive later.
+  --breed-accent-strong:    #1565c0;                 // 5.75:1 / 5.27:1
+  --breed-name:             'Familiar';
+}
+
+[data-breed='dragon'] {
+  --breed-accent:           #4f86c4;   // pearl-blue
+  --breed-accent-soft:      rgba(79, 134, 196, 0.10);
+  --breed-accent-mid:       rgba(79, 134, 196, 0.18);
+  --breed-accent-border:    rgba(79, 134, 196, 0.30);
+  --breed-accent-glow:      rgba(79, 134, 196, 0.30);
+  --breed-name:             'Dragon';
+}
+
+[data-breed='phoenix'] {
+  --breed-accent:           #e07a3a;   // warm-amber
+  --breed-accent-soft:      rgba(224, 122, 58, 0.10);
+  --breed-accent-mid:       rgba(224, 122, 58, 0.18);
+  --breed-accent-border:    rgba(224, 122, 58, 0.30);
+  --breed-accent-glow:      rgba(224, 122, 58, 0.30);
+  --breed-name:             'Phoenix';
+}
+
+[data-breed='owl'] {
+  --breed-accent:           #6b8e6b;   // sage-green
+  --breed-accent-soft:      rgba(107, 142, 107, 0.10);
+  --breed-accent-mid:       rgba(107, 142, 107, 0.18);
+  --breed-accent-border:    rgba(107, 142, 107, 0.30);
+  --breed-accent-glow:      rgba(107, 142, 107, 0.30);
+  --breed-name:             'Owl';
+}
+
+[data-breed='fox'] {
+  --breed-accent:           #d97a4a;   // fox-orange
+  --breed-accent-soft:      rgba(217, 122, 74, 0.10);
+  --breed-accent-mid:       rgba(217, 122, 74, 0.18);
+  --breed-accent-border:    rgba(217, 122, 74, 0.30);
+  --breed-accent-glow:      rgba(217, 122, 74, 0.30);
+  --breed-name:             'Fox';
+}
+
+[data-breed='cat'] {
+  // B1: was lavender #a374d4. The species palette is art, not theme, but this
+  // one sat inside the retired violet band, so it moves to a rose-taupe that
+  // stays distinct from fox-orange and phoenix-amber.
+  --breed-accent:           #b0787f;   // rose-taupe
+  --breed-accent-soft:      rgba(176, 120, 127, 0.10);
+  --breed-accent-mid:       rgba(176, 120, 127, 0.18);
+  --breed-accent-border:    rgba(176, 120, 127, 0.30);
+  --breed-accent-glow:      rgba(176, 120, 127, 0.30);
+  --breed-name:             'Cat';
+}
+
+[data-breed='turtle'] {
+  --breed-accent:           #4a8576;   // jade
+  --breed-accent-soft:      rgba(74, 133, 118, 0.10);
+  --breed-accent-mid:       rgba(74, 133, 118, 0.18);
+  --breed-accent-border:    rgba(74, 133, 118, 0.30);
+  --breed-accent-glow:      rgba(74, 133, 118, 0.30);
+  --breed-name:             'Turtle';
+}
+
+[data-breed='wolf'] {
+  --breed-accent:           #4f5b6e;   // steel-blue
+  --breed-accent-soft:      rgba(79, 91, 110, 0.10);
+  --breed-accent-mid:       rgba(79, 91, 110, 0.18);
+  --breed-accent-border:    rgba(79, 91, 110, 0.30);
+  --breed-accent-glow:      rgba(79, 91, 110, 0.30);
+  --breed-name:             'Wolf';
+}
+
+[data-breed='raven'] {
+  // B1: was dusk-violet #5d4a7c. A raven reads truer as a near-black with a
+  // blue cast anyway, and this clears the retired band.
+  --breed-accent:           #2f4858;   // ink-teal
+  --breed-accent-soft:      rgba(47, 72, 88, 0.10);
+  --breed-accent-mid:       rgba(47, 72, 88, 0.18);
+  --breed-accent-border:    rgba(47, 72, 88, 0.30);
+  --breed-accent-glow:      rgba(47, 72, 88, 0.30);
+  --breed-name:             'Raven';
+}
+
+[data-breed='penguin'] {
+  --breed-accent:           #5a8fb0;   // glacier-blue (hero species; ADR-149 gap)
+  --breed-accent-soft:      rgba(90, 143, 176, 0.10);
+  --breed-accent-mid:       rgba(90, 143, 176, 0.18);
+  --breed-accent-border:    rgba(90, 143, 176, 0.30);
+  --breed-accent-glow:      rgba(90, 143, 176, 0.30);
+  --breed-name:             'Penguin';
+}

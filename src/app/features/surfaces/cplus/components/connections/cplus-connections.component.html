@@ -1,0 +1,226 @@
+<chora-cplus-page-header
+  [title]="'cplus.connections.title' | translate"
+  [description]="'cplus.connections.subtitle' | translate"
+  [breadcrumb]="breadcrumb"
+></chora-cplus-page-header>
+
+<div class="cplus-connections">
+  @switch (step()) {
+    @case ('browse') {
+      <!-- Step 1: Browse connections + relationship actions (follow/block plane) -->
+      <section class="cplus-connections__browse">
+        <chora-cplus-tabs
+          [tabs]="typeTabs"
+          [activeId]="activeTab()"
+          (activeChange)="onTabChange($event)"
+        />
+
+        @if (actionState().status === 'error') {
+          <p class="cplus-connections__status cplus-connections__status--error" role="alert">
+            {{ $any(actionState()).error.message | translate }}
+          </p>
+        }
+
+        @if (activeTab() === 'suggestions') {
+          <!-- Hybrid suggestions (Phase 1) — ranked by shared interest tags + mutual follows -->
+          @if (suggestionsState().status === 'loading') {
+            <p class="cplus-connections__status" role="status">
+              {{ 'cplus.connections.loading' | translate }}
+            </p>
+          }
+
+          @if (suggestionsState().status === 'error') {
+            <p class="cplus-connections__status cplus-connections__status--error" role="alert">
+              {{ $any(suggestionsState()).error.message | translate }}
+            </p>
+          }
+
+          @if (suggestionsState().status === 'success') {
+            @if (suggestions().length === 0) {
+              <chora-cplus-empty-state
+                [heading]="'cplus.connections.empty.suggestions' | translate"
+                [icon]="'users'"
+              />
+            } @else {
+              <div class="cplus-connections__grid" role="list">
+                @for (entry of suggestions(); track entry.gcid) {
+                  <chora-cplus-card [title]="displayName(entry)" cardRole="listitem">
+                    <div class="cplus-connections__entry">
+                      @if (myGcid() === entry.gcid) {
+                        <span class="cplus-connections__badge">
+                          {{ 'cplus.connections.you' | translate }}
+                        </span>
+                      }
+
+                      @if (sharedTagsLabel(entry)) {
+                        <div
+                          class="cplus-connections__tags"
+                          [attr.aria-label]="'cplus.connections.shared_tags_label' | translate"
+                        >
+                          @for (tag of entry.shared_tags; track tag) {
+                            <span class="cplus-connections__tag-chip">{{ tag }}</span>
+                          }
+                        </div>
+                        <span class="cplus-connections__since">
+                          {{ 'cplus.connections.suggested_reason_tags'
+                              | translate: { tags: sharedTagsLabel(entry) } }}
+                        </span>
+                      }
+
+                      @if (entry.mutual_follows > 0) {
+                        <span class="cplus-connections__since">
+                          {{ 'cplus.connections.mutual_follows_label'
+                              | translate: { count: entry.mutual_follows } }}
+                        </span>
+                      }
+
+                      <div class="cplus-connections__entry-actions">
+                        @if (relationSets().following.has(entry.gcid)) {
+                          <button
+                            type="button"
+                            class="cplus-connections__action-btn"
+                            [disabled]="actionPending(entry.gcid)"
+                            (click)="onUnfollow(entry.gcid)"
+                          >
+                            {{ 'cplus.connections.unfollow' | translate }}
+                          </button>
+                        } @else {
+                          <button
+                            type="button"
+                            class="cplus-connections__action-btn cplus-connections__action-btn--primary"
+                            [disabled]="actionPending(entry.gcid)"
+                            (click)="onFollow(entry.gcid)"
+                          >
+                            {{ 'cplus.connections.follow' | translate }}
+                          </button>
+                        }
+                        <button
+                          type="button"
+                          class="cplus-connections__view-btn"
+                          (click)="viewConnectionProfile(entry.gcid, displayName(entry))"
+                        >
+                          {{ 'cplus.connections.view_profile' | translate }}
+                        </button>
+                      </div>
+                    </div>
+                  </chora-cplus-card>
+                }
+              </div>
+            }
+          }
+        } @else {
+          @if (connectionsState().status === 'loading') {
+            <p class="cplus-connections__status" role="status">
+              {{ 'cplus.connections.loading' | translate }}
+            </p>
+          }
+
+          @if (connectionsState().status === 'error') {
+            <p class="cplus-connections__status cplus-connections__status--error" role="alert">
+              {{ $any(connectionsState()).error.message | translate }}
+            </p>
+          }
+
+          @if (connectionsState().status === 'success') {
+            @if (connections().length === 0) {
+              <chora-cplus-empty-state
+                [heading]="emptyKey() | translate"
+                [icon]="'users'"
+              />
+            } @else {
+              <div
+                class="cplus-connections__grid"
+                role="list"
+                aria-label="{{ 'cplus.connections.title' | translate }}"
+              >
+                @for (entry of connections(); track entry.gcid) {
+                  <chora-cplus-card [title]="entry.display_name || shortGcid(entry.gcid)" cardRole="listitem">
+                    <div class="cplus-connections__entry">
+                      @if (entry.created_at) {
+                        <span class="cplus-connections__since">
+                          {{ 'cplus.connections.connected_since' | translate }}
+                          {{ entry.created_at }}
+                        </span>
+                      }
+
+                      @if (activeTab() === 'blocked') {
+                        <!-- Blocked list (caller's own blocks ONLY, ADR-230 D8) -->
+                        <div class="cplus-connections__entry-actions">
+                          <button
+                            type="button"
+                            class="cplus-connections__action-btn"
+                            [disabled]="actionPending(entry.gcid)"
+                            (click)="onUnblock(entry.gcid)"
+                          >
+                            {{ 'cplus.connections.unblock' | translate }}
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="cplus-connections__entry-actions">
+                          <!-- Follow plane -->
+                          @if (relationSets().following.has(entry.gcid)) {
+                            <button
+                              type="button"
+                              class="cplus-connections__action-btn"
+                              [disabled]="actionPending(entry.gcid)"
+                              (click)="onUnfollow(entry.gcid)"
+                            >
+                              {{ 'cplus.connections.unfollow' | translate }}
+                            </button>
+                          } @else {
+                            <button
+                              type="button"
+                              class="cplus-connections__action-btn cplus-connections__action-btn--primary"
+                              [disabled]="actionPending(entry.gcid)"
+                              (click)="onFollow(entry.gcid)"
+                            >
+                              {{ 'cplus.connections.follow' | translate }}
+                            </button>
+                          }
+
+                          <!-- Profile flow -->
+                          <button
+                            type="button"
+                            class="cplus-connections__view-btn"
+                            (click)="viewConnectionProfile(entry.gcid, entry.display_name)"
+                          >
+                            {{ 'cplus.connections.view_profile' | translate }}
+                          </button>
+
+                          <!-- Block plane: two-tap confirm (severance is irreversible) -->
+                          <button
+                            type="button"
+                            class="cplus-connections__action-btn cplus-connections__action-btn--danger"
+                            [disabled]="actionPending(entry.gcid)"
+                            (click)="onBlock(entry.gcid)"
+                          >
+                            {{ (confirmBlockGcid() === entry.gcid
+                                ? 'cplus.connections.block_confirm'
+                                : 'cplus.connections.block') | translate }}
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </chora-cplus-card>
+                }
+              </div>
+            }
+          }
+        }
+      </section>
+    }
+
+    @case ('profile') {
+      @if (selectedGcid(); as gcid) {
+        <chora-cplus-person-card
+          [gcid]="gcid"
+          [displayName]="selectedDisplayName() || shortGcid(gcid)"
+          [shareCount]="connectionShareCount(gcid)"
+          [recentAtoms]="connectionAtoms(gcid)"
+          [showBack]="true"
+          (back)="backToBrowse()"
+        />
+      }
+    }
+  }
+</div>

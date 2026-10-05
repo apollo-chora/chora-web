@@ -1,0 +1,166 @@
+<section
+  class="consent-manager"
+  role="main"
+  [attr.aria-label]="'parent.consent_manager_title' | translate"
+  data-testid="consent-manager">
+
+  <!-- Page Header -->
+  <header class="consent-manager__header">
+    <h1 class="consent-manager__title" data-testid="consent-manager-title">
+      {{ 'parent.consent_manager_title' | translate }}
+    </h1>
+    <p class="consent-manager__subtitle">
+      {{ 'parent.consent_manager_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Loading -->
+  @if (linkState().status === 'loading') {
+    <div class="consent-manager__loading" data-testid="consent-loading" aria-live="polite">
+      @for (i of [1, 2]; track i) {
+        <div class="consent-manager__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (linkState().status === 'error') {
+    <div class="consent-manager__error" data-testid="consent-error" role="alert">
+      <p class="consent-manager__error-text">
+        {{ 'parent.consent_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (linkState().status === 'success') {
+    <!-- Guardian Links Section -->
+    <div class="consent-manager__section" data-testid="links-section">
+      <h2 class="consent-manager__section-title">
+        {{ 'parent.linked_learners' | translate }}
+        <span class="consent-manager__count-badge" data-testid="link-count">
+          {{ totalLinks() }}
+        </span>
+      </h2>
+
+      <!-- Empty -->
+      @if (!hasLinks()) {
+        <div class="consent-manager__empty" data-testid="links-empty" role="status">
+          <p class="consent-manager__empty-text">
+            {{ 'parent.no_linked_learners' | translate }}
+          </p>
+        </div>
+      }
+
+      <!-- Links List -->
+      @if (hasLinks()) {
+        <div class="consent-manager__links-list" data-testid="links-list">
+          @for (link of guardianLinks(); track link.id) {
+            <article class="consent-manager__link-card" data-testid="link-card">
+              <div class="consent-manager__link-header">
+                <div class="consent-manager__link-info">
+                  <span class="consent-manager__learner-id" data-testid="learner-id">
+                    {{ 'parent.learner' | translate }}: {{ link.learner_gcid }}
+                  </span>
+                  <span class="consent-manager__relationship" data-testid="link-relationship">
+                    {{ relationshipLabels[link.relationship] | translate }}
+                  </span>
+                </div>
+                <span
+                  class="consent-manager__status"
+                  [class]="statusClass(link.status)"
+                  data-testid="link-status">
+                  {{ statusLabels[link.status] | translate }}
+                </span>
+              </div>
+
+              <!-- Consent Dates -->
+              <div class="consent-manager__consent-dates" data-testid="consent-dates">
+                <span class="consent-manager__date-item">
+                  {{ 'parent.consent_granted' | translate }}: {{ formatDate(link.consent_granted_at) }}
+                </span>
+                @if (link.consent_revoked_at) {
+                  <span class="consent-manager__date-item consent-manager__date-item--revoked">
+                    {{ 'parent.consent_revoked_at' | translate }}: {{ formatDate(link.consent_revoked_at) }}
+                  </span>
+                }
+              </div>
+
+              <!-- Revoke Action -->
+              @if (isActive(link)) {
+                <div class="consent-manager__link-actions">
+                  <button
+                    type="button"
+                    class="consent-manager__btn consent-manager__btn--revoke"
+                    data-testid="btn-revoke"
+                    [attr.aria-label]="'parent.revoke_consent' | translate"
+                    (click)="revokeLink(link)">
+                    {{ 'parent.revoke_consent' | translate }}
+                  </button>
+                </div>
+              }
+            </article>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Digest Preferences Section -->
+    <div class="consent-manager__section" data-testid="preferences-section">
+      <h2 class="consent-manager__section-title">
+        {{ 'parent.digest_preferences' | translate }}
+      </h2>
+
+      <div class="consent-manager__preferences-form">
+        <!-- Frequency -->
+        <div class="consent-manager__form-group">
+          <label class="consent-manager__form-label" for="digest-frequency">
+            {{ 'parent.digest_frequency' | translate }}
+          </label>
+          <select
+            id="digest-frequency"
+            class="consent-manager__form-select"
+            data-testid="select-frequency"
+            [value]="selectedFrequency()"
+            (change)="onFrequencyChange($event)">
+            @for (freq of allFrequencies; track freq) {
+              <option [value]="freq">{{ frequencyLabels[freq] | translate }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Delivery Channels -->
+        <fieldset class="consent-manager__form-group">
+          <legend class="consent-manager__form-label">
+            {{ 'parent.delivery_channels' | translate }}
+          </legend>
+          <div class="consent-manager__channel-toggles" data-testid="channel-toggles">
+            @for (channel of allChannels; track channel) {
+              <label class="consent-manager__channel-label">
+                <input
+                  type="checkbox"
+                  class="consent-manager__channel-checkbox"
+                  [checked]="isChannelSelected(channel)"
+                  [attr.data-testid]="'channel-' + channel"
+                  (change)="toggleChannel(channel)" />
+                <span class="consent-manager__channel-text">
+                  {{ channelLabels[channel] | translate }}
+                </span>
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        <!-- Save -->
+        <button
+          type="button"
+          class="consent-manager__btn consent-manager__btn--save"
+          data-testid="btn-save-preferences"
+          [attr.aria-label]="'parent.save_preferences' | translate"
+          (click)="savePreferences()">
+          {{ 'parent.save_preferences' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+</section>

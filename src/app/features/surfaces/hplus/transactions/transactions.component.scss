@@ -1,0 +1,62 @@
+// =====================================================================
+// H+ Transaction History — tenant-admin / operator unified ledger surface.
+// Thin page chrome only (breadcrumb + hero); the table, filters, SSE pill
+// and refund actions now live in the shared <chora-transaction-history>
+// component (ADR-205 D4 read-only rewire, CHO-1945).
+// Tablet-first; glassmorphism per `_polyglass-tokens.scss`.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.transactions {
+  display: block;
+  padding: 1.5rem;
+  min-height: 100%;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1280px;
+    margin-inline: auto;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  &__crumb-active {
+    color: var(--primary);
+  }
+
+  &__hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+  }
+
+  &__subtitle {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    max-width: 70ch;
+  }
+}

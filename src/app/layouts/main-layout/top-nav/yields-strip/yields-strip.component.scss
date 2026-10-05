@@ -1,0 +1,43 @@
+:host {
+  display: block;
+}
+
+// Top-bar yields. Two pills, never three: there is no XP-today read model, and
+// a dashed third pill on every A+ screen would be noise rather than honesty.
+.yields-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-sm);
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs);
+    padding: var(--chora-space-xs) var(--chora-space-sm);
+    border-radius: var(--chora-radius-md);
+    background: var(--chora-color-surface-2);
+    color: var(--chora-color-text-secondary);
+    white-space: nowrap;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+  }
+
+  &__value {
+    color: var(--chora-color-text-primary);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // The canonical AA-safe muted token (text-token-contrast gate). Used for the
+  // honest "not loaded" state, never for a number.
+  &__muted {
+    color: var(--chora-color-text-muted);
+    font-size: 0.8125rem;
+  }
+
+  &__icon {
+    font-size: 0.8125rem;
+  }
+}

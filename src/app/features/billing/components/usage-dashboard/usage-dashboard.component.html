@@ -1,0 +1,92 @@
+<section
+  class="usage-dashboard"
+  role="main"
+  [attr.aria-label]="'billing.usage_title' | translate"
+  data-testid="usage-dashboard">
+
+  <!-- Header -->
+  <header class="usage-dashboard__header">
+    <h1 class="usage-dashboard__title" data-testid="usage-title">
+      {{ 'billing.usage_title' | translate }}
+    </h1>
+
+    <div class="usage-dashboard__period-toggle" role="group"
+      [attr.aria-label]="'billing.usage_period_selector' | translate">
+      <button
+        type="button"
+        class="usage-dashboard__period-btn"
+        [class.usage-dashboard__period-btn--active]="selectedPeriod() === 'current'"
+        data-testid="btn-period-current"
+        (click)="onPeriodChange('current')"
+        [attr.aria-pressed]="selectedPeriod() === 'current'">
+        {{ 'billing.usage_current_month' | translate }}
+      </button>
+      <button
+        type="button"
+        class="usage-dashboard__period-btn"
+        [class.usage-dashboard__period-btn--active]="selectedPeriod() === 'previous'"
+        data-testid="btn-period-previous"
+        (click)="onPeriodChange('previous')"
+        [attr.aria-pressed]="selectedPeriod() === 'previous'">
+        {{ 'billing.usage_previous_month' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Overage Alert -->
+  @if (hasOverages()) {
+    <div class="usage-dashboard__alert" data-testid="overage-banner"
+      role="alert" aria-live="assertive">
+      <span class="usage-dashboard__alert-text">
+        {{ 'billing.usage_overage_banner' | translate }}
+      </span>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="usage-dashboard__loading" data-testid="usage-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="usage-dashboard__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (isError()) {
+    <div class="usage-dashboard__error" data-testid="usage-error" role="alert">
+      <p class="usage-dashboard__error-text">
+        {{ 'billing.usage_load_error' | translate }}
+      </p>
+      <button
+        type="button"
+        class="usage-dashboard__btn"
+        data-testid="btn-retry"
+        (click)="loadUsage()">
+        {{ 'billing.usage_retry' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (isEmpty()) {
+    <div class="usage-dashboard__empty" data-testid="usage-empty" role="status">
+      <p class="usage-dashboard__empty-text">
+        {{ 'billing.usage_empty' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Usage Grid -->
+  @if (!isLoading() && !isError() && !isEmpty() && usageSummaries().length > 0) {
+    <div class="usage-dashboard__grid" data-testid="usage-grid">
+      @for (summary of usageSummaries(); track summary.resource_type) {
+        <chora-usage-quota-card
+          [resourceType]="summary.resource_type"
+          [currentUsage]="summary.current_usage"
+          [limit]="summary.limit"
+          [unit]="summary.unit" />
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,189 @@
+<section
+  class="course-curriculum surface-aplus"
+  aria-labelledby="curriculum-heading"
+  data-testid="aplus-course-curriculum">
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div
+        class="glass-panel curriculum__status"
+        role="status"
+        aria-busy="true"
+        data-testid="curriculum-loading">
+        <i
+          class="fa-solid fa-circle-notch fa-spin curriculum__spinner"
+          aria-hidden="true"></i>
+        <p class="curriculum__status-text">
+          {{ 'aplus.course_curriculum.loading' | translate }}
+        </p>
+      </div>
+    }
+
+    @case ('ready') {
+      <div class="glass-panel curriculum__panel">
+        <h2
+          id="curriculum-heading"
+          class="curriculum__heading"
+          data-testid="curriculum-heading">
+          {{ 'aplus.course_curriculum.heading' | translate }}
+        </h2>
+        @if (hasModules()) {
+          <section
+            class="curriculum__modules"
+            data-testid="course-module-progress"
+            [attr.aria-label]="'aplus.course_curriculum.modules_aria' | translate">
+            <p class="curriculum__modules-summary" data-testid="modules-summary">
+              {{
+                'aplus.course_curriculum.modules_complete'
+                  | translate: { complete: modulesComplete(), total: modulesTotal() }
+              }}
+            </p>
+            <ul class="curriculum__modules-list">
+              @for (m of moduleProgress(); track m.module_id) {
+                <li
+                  class="curriculum__module"
+                  [class.curriculum__module--complete]="m.is_complete"
+                  [attr.data-testid]="'module-progress-' + m.module_id">
+                  <div class="curriculum__module-head">
+                    <span class="curriculum__module-title">{{ m.title }}</span>
+                    <span class="curriculum__module-count">{{ m.completed_count }}/{{ m.total }}</span>
+                  </div>
+                  <div
+                    class="curriculum__module-bar"
+                    role="progressbar"
+                    [attr.aria-valuenow]="modulePercent(m)"
+                    aria-valuemin="0"
+                    aria-valuemax="100">
+                    <div class="curriculum__module-bar-fill" [style.width.%]="modulePercent(m)"></div>
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+        @for (group of contentGroups(); track group.kind) {
+          <section
+            class="curriculum__group"
+            [attr.data-testid]="'curriculum-group-' + group.kind">
+            <h3
+              class="curriculum__group-heading"
+              [attr.data-testid]="'curriculum-heading-' + group.kind">
+              {{ group.labelKey | translate }}
+            </h3>
+            <ol class="curriculum__list" aria-label="{{ 'aplus.course_curriculum.list_aria' | translate }}">
+              @for (item of group.items; track item.item_id) {
+            <li
+              class="curriculum__item"
+              [attr.data-testid]="'curriculum-item-' + item.item_id"
+              [attr.data-kind]="item.kind">
+              <div class="curriculum__item-pos" aria-hidden="true">
+                {{ item.position }}
+              </div>
+              <div class="curriculum__item-icon" aria-hidden="true">
+                @if (item.kind === 'youtube') {
+                  <i class="fa-brands fa-youtube"></i>
+                } @else {
+                  <i [class]="'fa-solid fa-' + icon(item)"></i>
+                }
+              </div>
+              <div class="curriculum__item-body">
+                <span
+                  class="curriculum__item-title"
+                  [attr.data-testid]="'curriculum-item-title-' + item.item_id">
+                  {{ item.title }}
+                </span>
+                <span
+                  class="curriculum__item-kind-badge"
+                  [attr.data-testid]="'curriculum-item-kind-' + item.item_id">
+                  {{ kindLabelKey(item) | translate }}
+                </span>
+              </div>
+              <div class="curriculum__item-action">
+                @if (item.kind === 'atom') {
+                  <a
+                    class="btn btn-primary curriculum__item-cta"
+                    [routerLink]="atomPlayLink(item)"
+                    [queryParams]="{ course: courseId() }"
+                    [attr.data-testid]="'curriculum-item-cta-' + item.item_id"
+                    [attr.aria-label]="(actionLabelKey(item) | translate) + ': ' + item.title">
+                    <i class="fa-solid fa-play" aria-hidden="true"></i>
+                    {{ actionLabelKey(item) | translate }}
+                  </a>
+                } @else if (item.kind === 'assessment') {
+                  <a
+                    class="btn btn-secondary curriculum__item-cta"
+                    [routerLink]="assessmentLink(item)"
+                    [attr.data-testid]="'curriculum-item-cta-' + item.item_id"
+                    [attr.aria-label]="(actionLabelKey(item) | translate) + ': ' + item.title">
+                    <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+                    {{ actionLabelKey(item) | translate }}
+                  </a>
+                } @else if (item.kind === 'live_classroom') {
+                  <!-- live_classroom → non-link instructor-led indicator. Its ref is a
+                       LiveQuiz TEMPLATE id (UUIDv7), not a URL; there is no learner
+                       route to launch a live session from a template id, so show a
+                       static live-session marker — never a broken <a href>. CHO-2134. -->
+                  <span
+                    class="curriculum__item-live"
+                    [attr.data-testid]="'curriculum-item-live-' + item.item_id"
+                    [attr.title]="'aplus.course_curriculum.live_classroom_hint' | translate"
+                    [attr.aria-label]="
+                      (actionLabelKey(item) | translate) + ': ' + item.title + ', ' +
+                      ('aplus.course_curriculum.live_classroom_hint' | translate)
+                    ">
+                    <i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i>
+                    {{ actionLabelKey(item) | translate }}
+                  </span>
+                } @else {
+                  <!-- video / youtube / document → external link (ref IS a URL) -->
+                  <a
+                    class="btn btn-secondary curriculum__item-cta"
+                    [href]="item.ref"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    [attr.data-testid]="'curriculum-item-cta-' + item.item_id"
+                    [attr.aria-label]="(actionLabelKey(item) | translate) + ': ' + item.title + ' (opens in new tab)'">
+                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    {{ actionLabelKey(item) | translate }}
+                  </a>
+                }
+              </div>
+            </li>
+              }
+            </ol>
+          </section>
+        }
+      </div>
+    }
+
+    @case ('empty') {
+      <div
+        class="glass-panel curriculum__status"
+        data-testid="curriculum-empty">
+        <i class="fa-solid fa-list-ol curriculum__empty-icon" aria-hidden="true"></i>
+        <p class="curriculum__status-text">
+          {{ 'aplus.course_curriculum.empty' | translate }}
+        </p>
+      </div>
+    }
+
+    @case ('error') {
+      <div
+        class="glass-panel curriculum__status curriculum__status--error"
+        role="alert"
+        data-testid="curriculum-error">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <p class="curriculum__status-text">
+          {{ errorMessage() | translate }}
+        </p>
+        <button
+          type="button"
+          class="btn btn-ghost"
+          (click)="load()"
+          data-testid="curriculum-retry">
+          {{ 'aplus.course_curriculum.retry' | translate }}
+        </button>
+      </div>
+    }
+  }
+</section>

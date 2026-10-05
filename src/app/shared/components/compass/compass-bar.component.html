@@ -1,0 +1,17 @@
+<nav
+  class="compass-bar"
+  [attr.aria-label]="'aplus.shell.compass.aria' | translate"
+  data-testid="compass-bar">
+  @for (entry of entries(); track entry.item.route) {
+    <a
+      class="compass-bar__entry"
+      [routerLink]="entry.item.route"
+      routerLinkActive="compass-bar__entry--active"
+      #link="routerLinkActive"
+      [attr.aria-current]="link.isActive ? 'page' : null"
+      [attr.data-testid]="'compass-entry-' + entry.key">
+      <i class="compass-bar__icon" [class]="'compass-bar__icon ' + entry.iconClass" aria-hidden="true"></i>
+      <span class="compass-bar__label">{{ entry.item.labelKey | translate }}</span>
+    </a>
+  }
+</nav>

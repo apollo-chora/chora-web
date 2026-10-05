@@ -1,0 +1,16 @@
+<nav class="cplus-breadcrumb" aria-label="Breadcrumb">
+  <ol class="cplus-breadcrumb__list">
+    @for (item of items(); track $index) {
+      <li
+        class="cplus-breadcrumb__item"
+        [attr.aria-current]="item.path === null ? 'page' : null"
+      >
+        @if (item.path !== null) {
+          <a class="cplus-breadcrumb__link" [href]="item.path">{{ item.label }}</a>
+        } @else {
+          <span class="cplus-breadcrumb__current">{{ item.label }}</span>
+        }
+      </li>
+    }
+  </ol>
+</nav>

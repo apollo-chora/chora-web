@@ -1,0 +1,158 @@
+:host {
+  display: block;
+}
+
+.oe-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+
+    &--inline {
+      flex: 1;
+    }
+  }
+
+  &__label,
+  &__legend {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__textarea,
+  &__number,
+  &__select,
+  &__rubric-label,
+  &__rubric-weight,
+  &__rubric-description {
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    border: 1px solid var(--chora-color-border-subtle, rgba(0, 0, 0, 0.16));
+    border-radius: var(--chora-radius-sm);
+    background: var(--chora-color-surface-0, #fff);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--chora-color-text-primary);
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+      border-color: var(--chora-color-primary);
+    }
+
+    &:disabled {
+      background: var(--chora-color-surface-1, #f5f5f5);
+      color: var(--chora-color-text-secondary);
+      cursor: not-allowed;
+    }
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 80px;
+
+    &--tall {
+      min-height: 140px;
+    }
+  }
+
+  // Generated question + model-answer illustrations (W8 image-gen) now render
+  // via the shared `<chora-question-image>` (width-primary, aspect-aware,
+  // click-to-zoom) — the old `max-height: 50vh` caps are gone.
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-md);
+  }
+
+  &__rubric {
+    border: 1px solid var(--chora-color-border-subtle, rgba(0, 0, 0, 0.08));
+    border-radius: var(--chora-radius-md);
+    padding: var(--chora-space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-md);
+  }
+
+  &__rubric-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 1fr auto;
+    gap: var(--chora-space-sm);
+    align-items: center;
+    padding: var(--chora-space-sm);
+    background: var(--chora-color-surface-1, #fafafa);
+    border-radius: var(--chora-radius-sm);
+  }
+
+  &__add-btn,
+  &__remove-btn {
+    padding: var(--chora-space-xs) var(--chora-space-md);
+    border-radius: var(--chora-radius-sm);
+    border: 1px solid var(--chora-color-border-subtle, rgba(0, 0, 0, 0.16));
+    background: var(--chora-color-surface-0, #fff);
+    color: var(--chora-color-text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--chora-transition-fast);
+
+    &:hover:not(:disabled) {
+      background: var(--chora-color-surface-2, #efefef);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__add-btn {
+    align-self: flex-start;
+    border-color: var(--chora-color-primary);
+    color: var(--chora-color-primary);
+  }
+
+  &__model-answer-ai {
+    align-self: flex-start;
+    margin-top: var(--chora-space-xs, 4px);
+    background: linear-gradient(
+      135deg,
+      var(--chora-color-accent, #9a3412),
+      var(--chora-color-primary, #818cf8)
+    );
+    color: white;
+    border: 0;
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    border-radius: var(--chora-radius-sm, 8px);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__model-answer-hint {
+    font-size: 12px;
+    color: var(--chora-color-text-muted, rgba(0, 0, 0, 0.55));
+    margin-top: var(--chora-space-xs, 4px);
+  }
+}

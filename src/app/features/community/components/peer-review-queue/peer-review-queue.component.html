@@ -1,0 +1,287 @@
+<section
+  class="peer-review-queue"
+  role="main"
+  [attr.aria-label]="'community.peer_review_title' | translate"
+  data-testid="peer-review-queue">
+
+  <!-- Page Header -->
+  <header class="peer-review-queue__header">
+    <h1 class="peer-review-queue__title" data-testid="peer-review-title">
+      {{ 'community.peer_review_title' | translate }}
+    </h1>
+    <span class="peer-review-queue__pending-badge" data-testid="pending-count" aria-live="polite">
+      {{ pendingCount() }} {{ 'community.pending_reviews' | translate }}
+    </span>
+  </header>
+
+  <!-- Filters -->
+  <div class="peer-review-queue__filters" data-testid="review-filters">
+    <div class="peer-review-queue__filter-group">
+      <label class="peer-review-queue__filter-label" for="review-status-filter">
+        {{ 'community.filter_by_status' | translate }}
+      </label>
+      <select
+        id="review-status-filter"
+        class="peer-review-queue__filter-select"
+        data-testid="filter-review-status"
+        [value]="filterStatus()"
+        (change)="onFilterStatusChange($event)">
+        <option value="all">{{ 'community.all_statuses' | translate }}</option>
+        @for (status of allStatuses; track status) {
+          <option [value]="status">{{ statusLabels[status] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <span class="peer-review-queue__result-count" data-testid="review-count" aria-live="polite">
+      {{ reviewCount() }} {{ 'community.reviews_shown' | translate }}
+    </span>
+  </div>
+
+  <!-- Loading -->
+  @if (reviewListState().status === 'loading') {
+    <div class="peer-review-queue__loading" data-testid="review-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="peer-review-queue__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (reviewListState().status === 'error') {
+    <div class="peer-review-queue__error" data-testid="review-error" role="alert">
+      <p class="peer-review-queue__error-text">
+        {{ 'community.reviews_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (reviewListState().status === 'success' && filteredReviews().length === 0) {
+    <div class="peer-review-queue__empty" data-testid="review-empty" role="status">
+      <p class="peer-review-queue__empty-text">
+        {{ 'community.no_reviews_found' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Review List -->
+  @if (reviewListState().status === 'success' && filteredReviews().length > 0) {
+    <div class="peer-review-queue__list" data-testid="review-list">
+      @for (review of filteredReviews(); track review.id) {
+        <article class="peer-review-queue__card" data-testid="review-card">
+          <!-- Card header with status, contributor, and countdown -->
+          <div class="peer-review-queue__card-header">
+            <div class="peer-review-queue__card-info">
+              <span class="peer-review-queue__atom-ref" data-testid="review-atom-id">
+                {{ 'community.atom_ref' | translate }}: {{ review.community_atom_id }}
+              </span>
+              <span
+                class="peer-review-queue__status"
+                [class]="statusClass(review.status)"
+                data-testid="review-status">
+                {{ statusLabels[review.status] | translate }}
+              </span>
+            </div>
+            <div class="peer-review-queue__card-meta">
+              <!-- Anonymized contributor -->
+              <span class="peer-review-queue__contributor" data-testid="review-contributor">
+                {{ getAnonymizedContributor() }}
+              </span>
+              <span class="peer-review-queue__date" data-testid="review-date">
+                {{ formatDate(review.created_at) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- 48h Review window countdown -->
+          @if (isAssigned(review)) {
+            <div class="peer-review-queue__countdown"
+              [class.peer-review-queue__countdown--urgent]="isCountdownUrgent(review)"
+              [class.peer-review-queue__countdown--expired]="isCountdownExpired(review)"
+              role="timer"
+              aria-live="polite"
+              data-testid="review-countdown">
+              <span class="peer-review-queue__countdown-label">
+                {{ 'community.review_window' | translate }}:
+              </span>
+              <span class="peer-review-queue__countdown-value">
+                {{ getCountdown(review) }}
+              </span>
+            </div>
+          }
+
+          <!-- Atom content card display -->
+          <div class="peer-review-queue__atom-content" data-testid="atom-content-card">
+            <div class="peer-review-queue__atom-content-header">
+              <span class="peer-review-queue__atom-content-label">
+                {{ 'community.atom_content' | translate }}
+              </span>
+            </div>
+            <div class="peer-review-queue__atom-content-body">
+              <p class="peer-review-queue__atom-preview">
+                {{ 'community.content_preview_placeholder' | translate }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Existing Feedback -->
+          @if (review.feedback) {
+            <div class="peer-review-queue__existing-feedback" data-testid="review-feedback">
+              <span class="peer-review-queue__feedback-label">
+                {{ 'community.feedback' | translate }}:
+              </span>
+              <p class="peer-review-queue__feedback-text">{{ review.feedback }}</p>
+            </div>
+          }
+
+          <!-- Voting UI (upvote/downvote with reason) -->
+          @if (isAssigned(review)) {
+            <div class="peer-review-queue__voting" data-testid="voting-section">
+              <fieldset class="peer-review-queue__vote-fieldset">
+                <legend class="peer-review-queue__vote-legend">
+                  {{ 'community.vote_direction' | translate }}
+                </legend>
+                <div class="peer-review-queue__vote-options">
+                  <label class="peer-review-queue__vote-option">
+                    <input
+                      type="radio"
+                      [name]="'vote-' + review.id"
+                      value="up"
+                      [checked]="getVoteDirection(review.id) === 'up'"
+                      (change)="onVoteChange(review.id, 'up')"
+                      data-testid="vote-up-radio"
+                      class="peer-review-queue__vote-radio" />
+                    <span class="peer-review-queue__vote-label">
+                      {{ 'community.upvote' | translate }}
+                    </span>
+                  </label>
+                  <label class="peer-review-queue__vote-option">
+                    <input
+                      type="radio"
+                      [name]="'vote-' + review.id"
+                      value="down"
+                      [checked]="getVoteDirection(review.id) === 'down'"
+                      (change)="onVoteChange(review.id, 'down')"
+                      data-testid="vote-down-radio"
+                      class="peer-review-queue__vote-radio" />
+                    <span class="peer-review-queue__vote-label">
+                      {{ 'community.downvote' | translate }}
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
+
+              @if (getVoteDirection(review.id) !== null) {
+                <div class="peer-review-queue__vote-reason">
+                  <label
+                    [attr.for]="'vote-reason-' + review.id"
+                    class="peer-review-queue__vote-reason-label">
+                    {{ 'community.vote_reason' | translate }}
+                    <span class="peer-review-queue__required" aria-hidden="true">*</span>
+                  </label>
+                  <textarea
+                    [id]="'vote-reason-' + review.id"
+                    class="peer-review-queue__vote-reason-textarea"
+                    [value]="getVoteReason(review.id)"
+                    (input)="onVoteReasonChange(review.id, $event)"
+                    [attr.placeholder]="'community.vote_reason_placeholder' | translate"
+                    rows="2"
+                    required
+                    data-testid="vote-reason-textarea">
+                  </textarea>
+                </div>
+              }
+
+              <button
+                type="button"
+                class="peer-review-queue__btn peer-review-queue__btn--vote"
+                [disabled]="!canSubmitVote(review.id)"
+                (click)="submitVote(review)"
+                data-testid="submit-vote-btn">
+                {{ 'community.submit_vote' | translate }}
+              </button>
+            </div>
+          }
+
+          <!-- Comment field -->
+          @if (isAssigned(review)) {
+            <div class="peer-review-queue__comment-section" data-testid="comment-section">
+              <label
+                [attr.for]="'comment-' + review.id"
+                class="peer-review-queue__comment-label">
+                {{ 'community.add_comment' | translate }}
+              </label>
+              <textarea
+                [id]="'comment-' + review.id"
+                class="peer-review-queue__comment-textarea"
+                [value]="reviewComments()[review.id] || ''"
+                (input)="onCommentChange(review.id, $event)"
+                [attr.placeholder]="'community.comment_placeholder' | translate"
+                rows="2"
+                data-testid="comment-textarea">
+              </textarea>
+            </div>
+          }
+
+          <!-- Decision Form (only for assigned reviews) -->
+          @if (isAssigned(review)) {
+            <div class="peer-review-queue__decision-form" data-testid="decision-form">
+              <label
+                class="peer-review-queue__feedback-input-label"
+                [attr.for]="'feedback-' + review.id">
+                {{ 'community.review_feedback' | translate }}
+              </label>
+              <textarea
+                [id]="'feedback-' + review.id"
+                class="peer-review-queue__feedback-textarea"
+                data-testid="feedback-input"
+                rows="3"
+                [value]="activeFeedback()[review.id] || ''"
+                (input)="onFeedbackChange(review.id, $event)"
+                [attr.placeholder]="'community.feedback_placeholder' | translate">
+              </textarea>
+
+              <div class="peer-review-queue__actions">
+                <button
+                  type="button"
+                  class="peer-review-queue__btn peer-review-queue__btn--approve"
+                  data-testid="btn-approve"
+                  [attr.aria-label]="'community.approve_atom' | translate"
+                  (click)="submitDecision(review, 'approve')">
+                  {{ 'community.approve' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="peer-review-queue__btn peer-review-queue__btn--revise"
+                  data-testid="btn-revise"
+                  [attr.aria-label]="'community.request_revision' | translate"
+                  (click)="submitDecision(review, 'revise')">
+                  {{ 'community.request_revision' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="peer-review-queue__btn peer-review-queue__btn--reject"
+                  data-testid="btn-reject"
+                  [attr.aria-label]="'community.reject_atom' | translate"
+                  (click)="submitDecision(review, 'reject')">
+                  {{ 'community.reject' | translate }}
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Decided At -->
+          @if (review.decided_at) {
+            <div class="peer-review-queue__decided" data-testid="decided-at">
+              <span class="peer-review-queue__decided-label">
+                {{ 'community.decided_at' | translate }}:
+              </span>
+              <span>{{ formatDate(review.decided_at) }}</span>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

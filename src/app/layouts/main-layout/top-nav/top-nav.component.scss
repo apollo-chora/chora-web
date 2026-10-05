@@ -1,0 +1,197 @@
+:host {
+  display: block;
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--chora-top-nav-height);
+  padding: 0 var(--chora-space-md);
+  background: var(--chora-color-surface-1);
+  border-bottom: 1px solid var(--chora-color-border);
+  box-shadow: var(--chora-shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  &__start {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md);
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--chora-radius-md);
+
+    &:hover {
+      background: var(--chora-color-surface-2);
+    }
+  }
+
+  &__toggle-icon {
+    font-size: 20px;
+  }
+
+  &__logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--chora-color-primary);
+  }
+
+  &__center {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md);
+  }
+
+  &__end {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+  }
+
+  &__notification-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__bell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--chora-radius-md);
+    cursor: pointer;
+    color: var(--chora-color-text-secondary);
+    transition: background var(--chora-transition-fast), color var(--chora-transition-fast);
+
+    &:hover {
+      background: var(--chora-color-surface-2);
+      color: var(--chora-color-text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+
+    &[aria-expanded='true'] {
+      background: var(--chora-color-surface-2);
+      color: var(--chora-color-primary);
+    }
+  }
+
+  &__bell-icon {
+    display: block;
+  }
+
+  &__badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--chora-radius-full);
+    background: var(--chora-color-danger);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    pointer-events: none;
+    animation: badge-pop 0.2s ease-out;
+  }
+
+  &__reconnecting {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: var(--chora-space-xs);
+    padding: 2px var(--chora-space-sm);
+    border-radius: var(--chora-radius-sm);
+    background: var(--chora-color-warning);
+    color: var(--chora-color-text-primary);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+  }
+
+  &__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--chora-radius-full);
+    background: var(--chora-color-primary);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: box-shadow var(--chora-transition-fast), opacity var(--chora-transition-fast);
+
+    &:hover {
+      opacity: 0.85;
+      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.25);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__logout {
+    padding: var(--chora-space-xs) var(--chora-space-sm);
+    border: 1px solid var(--chora-color-border);
+    border-radius: var(--chora-radius-md);
+    background: var(--chora-color-surface-1);
+    color: var(--chora-color-text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--chora-color-surface-2);
+      color: var(--chora-color-danger);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 1px;
+    }
+  }
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-nav__badge {
+    animation: none;
+  }
+}

@@ -1,0 +1,137 @@
+<section
+  class="kyc-review"
+  role="main"
+  [attr.aria-label]="'admin.governance.kyc_title' | translate"
+  data-testid="kyc-review">
+
+  <!-- Page Header -->
+  <header class="kyc-review__header">
+    <div class="kyc-review__header-nav">
+      <h1 class="kyc-review__title" data-testid="kyc-title">
+        {{ 'admin.governance.kyc_title' | translate }}
+      </h1>
+    </div>
+    <button
+      type="button"
+      class="kyc-review__btn kyc-review__btn--primary"
+      (click)="loadVerifications()"
+      data-testid="btn-refresh-kyc"
+      [attr.aria-label]="'admin.governance.refresh' | translate">
+      {{ 'admin.governance.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="kyc-review__filters" data-testid="kyc-filters" role="search">
+    <div class="kyc-review__filter-group">
+      <label for="kyc-status-filter" class="kyc-review__filter-label">
+        {{ 'admin.governance.status' | translate }}
+      </label>
+      <select
+        id="kyc-status-filter"
+        class="kyc-review__select"
+        data-testid="kyc-status-filter"
+        (change)="onStatusFilter($any($event.target).value)">
+        <option value="">{{ 'admin.governance.all_statuses' | translate }}</option>
+        @for (st of allStatuses; track st) {
+          <option [value]="st">{{ kycStatusLabels[st] | translate }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="kyc-review__loading" data-testid="kyc-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="kyc-review__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="kyc-review__empty" data-testid="kyc-empty" role="status">
+      <p class="kyc-review__empty-text">
+        {{ 'admin.governance.no_kyc_verifications' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- KYC Card Grid -->
+  @if (!loading() && !isEmpty()) {
+    <div class="kyc-review__grid" data-testid="kyc-grid" role="list">
+      @for (verification of filteredVerifications(); track verification.id) {
+        <div
+          class="kyc-review__card"
+          role="listitem"
+          [attr.data-testid]="'kyc-' + verification.id">
+
+          <!-- Card Header -->
+          <div class="kyc-review__card-header">
+            <span
+              class="kyc-review__status"
+              [class]="statusClass(verification.status)">
+              {{ kycStatusLabels[verification.status] | translate }}
+            </span>
+          </div>
+
+          <!-- Card Body -->
+          <div class="kyc-review__card-body">
+            <div class="kyc-review__gcid">
+              <span class="kyc-review__label">
+                {{ 'admin.governance.gcid' | translate }}:
+              </span>
+              {{ verification.gcid }}
+            </div>
+            <div class="kyc-review__document-type">
+              <span class="kyc-review__label">
+                {{ 'admin.governance.document_type' | translate }}:
+              </span>
+              {{ verification.document_type }}
+            </div>
+          </div>
+
+          <!-- Card Meta -->
+          <div class="kyc-review__card-meta">
+            <span>
+              {{ 'admin.governance.submitted' | translate }}: {{ formatDateTime(verification.submitted_at) }}
+            </span>
+            @if (verification.verified_at) {
+              <span>
+                {{ 'admin.governance.verified' | translate }}: {{ formatDateTime(verification.verified_at) }}
+              </span>
+            }
+            @if (verification.expires_at) {
+              <span>
+                {{ 'admin.governance.expires' | translate }}: {{ formatDateTime(verification.expires_at) }}
+              </span>
+            }
+          </div>
+
+          <!-- Action Buttons -->
+          @if (canReview(verification)) {
+            <div class="kyc-review__actions">
+              <button
+                type="button"
+                class="kyc-review__btn kyc-review__btn--success"
+                [attr.data-testid]="'btn-approve-kyc-' + verification.id"
+                [attr.aria-label]="'admin.governance.approve' | translate"
+                (click)="approveKYC(verification)">
+                {{ 'admin.governance.approve' | translate }}
+              </button>
+              <button
+                type="button"
+                class="kyc-review__btn kyc-review__btn--danger"
+                [attr.data-testid]="'btn-reject-kyc-' + verification.id"
+                [attr.aria-label]="'admin.governance.reject' | translate"
+                (click)="rejectKYC(verification)">
+                {{ 'admin.governance.reject' | translate }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

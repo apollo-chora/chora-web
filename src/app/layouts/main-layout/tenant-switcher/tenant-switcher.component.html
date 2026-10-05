@@ -1,0 +1,83 @@
+<div class="tenant-switcher" role="presentation" tabindex="-1" (keydown)="onKeyDown($event)">
+  <button
+    class="tenant-switcher__trigger"
+    (click)="toggle()"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-label]="'tenant_switcher.label' | translate"
+    [attr.title]="currentTenant()?.name || ('tenant_switcher.label' | translate)"
+    aria-haspopup="listbox"
+    [attr.aria-controls]="isOpen() ? 'tenant-list' : null"
+    data-testid="tenant-switcher-trigger">
+    @if (activeLogoUrl(); as activeLogo) {
+      <img
+        class="tenant-switcher__trigger-logo"
+        [src]="activeLogo"
+        [alt]="activeName()"
+        width="24"
+        height="24"
+        (error)="onActiveLogoError()"
+        data-testid="tenant-switcher-active-logo" />
+    } @else {
+      <span class="material-icons-outlined tenant-switcher__icon" aria-hidden="true">domain</span>
+    }
+    @if (activeName()) {
+      <span class="tenant-switcher__trigger-name" data-testid="tenant-switcher-active-name">{{ activeName() }}</span>
+    }
+    <span class="tenant-switcher__arrow" aria-hidden="true">&#9662;</span>
+  </button>
+
+  @if (isOpen()) {
+    <div
+      id="tenant-list"
+      class="tenant-switcher__panel"
+      role="listbox"
+      [attr.aria-label]="'tenant_switcher.label' | translate"
+      data-testid="tenant-switcher-panel">
+      @for (tenant of availableTenants(); track tenant.id) {
+        <div
+          class="tenant-switcher__option"
+          [class.tenant-switcher__option--active]="tenant.id === currentTenant()?.id"
+          [class.tenant-switcher__option--focused]="$index === activeIndex()"
+          role="option"
+          tabindex="0"
+          [attr.aria-selected]="tenant.id === currentTenant()?.id"
+          (click)="switchTenant(tenant)"
+          (keydown.enter)="switchTenant(tenant)"
+          (keydown.space)="switchTenant(tenant); $event.preventDefault()"
+          [attr.data-testid]="'tenant-option-' + tenant.id">
+          @if (hasValidLogo(tenant)) {
+            <img
+              class="tenant-switcher__logo"
+              [src]="tenant.logoUrl"
+              [alt]="tenant.name"
+              width="24"
+              height="24"
+              (error)="onLogoError(tenant.id)" />
+          } @else {
+            <span class="tenant-switcher__logo-placeholder" aria-hidden="true">
+              {{ tenant.name.charAt(0).toUpperCase() }}
+            </span>
+          }
+          <span class="tenant-switcher__text">
+            <span class="tenant-switcher__name">{{ tenant.name }}</span>
+            @let roles = displayRoles(tenant);
+            @if (roles.length > 0) {
+              <span
+                class="tenant-switcher__roles"
+                [attr.data-testid]="'tenant-option-roles-' + tenant.id">
+                @for (role of roles; track role; let last = $last) {
+                  <span>{{ 'tenant_switcher.role.' + role | translate }}</span>@if (!last) {<span aria-hidden="true">,&nbsp;</span>}
+                }
+              </span>
+            }
+          </span>
+          @if (tenant.id === currentTenant()?.id) {
+            <span class="tenant-switcher__check" aria-hidden="true">&#10003;</span>
+          }
+        </div>
+      } @empty {
+        <p class="tenant-switcher__empty">{{ 'tenant_switcher.empty' | translate }}</p>
+      }
+    </div>
+  }
+</div>

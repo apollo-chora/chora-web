@@ -1,0 +1,327 @@
+// A+ Familiar egg (pre-hatch) screen — ADR-149 Stage 0.
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.aplus-egg {
+  padding: 1.5rem clamp(1rem, 3vw, 2rem);
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.aplus-egg__header {
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+}
+
+.aplus-egg__title {
+  margin: 0 0 0.3rem;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.aplus-egg__tagline {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.aplus-egg__canvas {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  border-radius: 18px;
+  background: radial-gradient(
+    circle at centre,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.25) 60%,
+    transparent 100%
+  );
+}
+
+.aplus-egg__halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(165, 180, 252, 0.4) 0%,
+    transparent 60%
+  );
+  transform: translate(-50%, -50%);
+  filter: blur(20px);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: egg-halo-pulse 4.8s ease-in-out infinite;
+  }
+}
+
+@keyframes egg-halo-pulse {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
+  50%      { opacity: 1.0; transform: translate(-50%, -50%) scale(1.05); }
+}
+
+.aplus-egg__art {
+  position: relative;
+  z-index: 1;
+  width: 240px;
+  height: auto;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: egg-wobble 3.6s ease-in-out infinite;
+  }
+}
+
+@keyframes egg-wobble {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  20%      { transform: rotate(-3deg) translateY(-2px); }
+  40%      { transform: rotate(2deg) translateY(0); }
+  60%      { transform: rotate(-2deg) translateY(-1px); }
+  80%      { transform: rotate(1deg) translateY(0); }
+}
+
+.aplus-egg__hint {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--glass-border);
+  font-size: 12px;
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  i { color: var(--primary); font-size: 11px; }
+}
+
+.aplus-egg__actions {
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.aplus-egg__hint-counter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.aplus-egg__hint-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.aplus-egg__hint-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.aplus-egg__hint-cta {
+  padding: 0.65rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--primary);
+  }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+.aplus-egg__hatch-cta {
+  padding: 0.85rem 1.5rem;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16); }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+}
+
+.aplus-egg__footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px dashed var(--glass-border);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+
+  i {
+    color: var(--info);
+    font-size: 13px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  p { margin: 0; }
+}
+
+/* ── Incubation card (CHO-2089, ADR-228 D2/D6) ───────────────────────── */
+.aplus-egg__canvas--stirring .aplus-egg__halo {
+  animation: aplus-egg-glow 1.6s ease-in-out infinite alternate;
+  opacity: 0.9;
+}
+
+@keyframes aplus-egg-glow {
+  from {
+    filter: drop-shadow(0 0 12px rgba(255, 200, 80, 0.35));
+  }
+  to {
+    filter: drop-shadow(0 0 28px rgba(255, 200, 80, 0.75));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aplus-egg__canvas--stirring .aplus-egg__halo {
+    animation: none;
+  }
+}
+
+.aplus-egg__card {
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+  margin: 16px auto 0;
+  padding: 16px 20px;
+}
+
+.aplus-egg__goal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+
+  &--nudge {
+    text-decoration: none;
+    color: var(--chora-color-primary, #4a67d8);
+  }
+}
+
+.aplus-egg__species {
+  margin: 0;
+  font-size: 14px;
+}
+
+.aplus-egg__rarity {
+  margin-left: 8px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.aplus-egg__warming {
+  display: grid;
+  gap: 6px;
+}
+
+.aplus-egg__warming-label {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.aplus-egg__warming-bar {
+  height: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.aplus-egg__warming-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0b429, #f7d070);
+  transition: width 480ms cubic-bezier(0.165, 0.84, 0.44, 1);
+
+  &--stirring {
+    background: linear-gradient(90deg, #f7b733, #fc4a1a);
+  }
+}
+
+.aplus-egg__stirring {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  background: rgba(255, 200, 80, 0.2);
+  white-space: nowrap;
+}
+
+.aplus-egg__hatch-locked {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.aplus-egg__hatch-cta--ready {
+  justify-self: start;
+}
+
+.aplus-egg__error,
+.aplus-egg__loading {
+  max-width: 420px;
+  margin: 16px auto 0;
+  padding: 16px 20px;
+}
+
+.aplus-egg__error-link {
+  margin-left: 8px;
+}

@@ -1,0 +1,232 @@
+<section
+  class="investigation-workspace"
+  role="main"
+  [attr.aria-label]="'admin.investigation.workspace_title' | translate"
+  data-testid="investigation-workspace">
+
+  <!-- Page Header -->
+  <header class="investigation-workspace__header">
+    <h1 class="investigation-workspace__title" data-testid="workspace-title">
+      {{ 'admin.investigation.workspace_title' | translate }}
+    </h1>
+    <div class="investigation-workspace__header-actions">
+      <a
+        routerLink="incidents"
+        class="investigation-workspace__btn investigation-workspace__btn--secondary"
+        data-testid="btn-incidents">
+        {{ 'admin.investigation.view_incidents' | translate }}
+      </a>
+      <button
+        type="button"
+        class="investigation-workspace__btn investigation-workspace__btn--primary"
+        (click)="refresh()"
+        data-testid="btn-refresh"
+        [attr.aria-label]="'admin.investigation.refresh' | translate">
+        {{ 'admin.investigation.refresh' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Summary Cards -->
+  <div class="investigation-workspace__summary" data-testid="health-summary">
+    <div class="investigation-workspace__summary-card investigation-workspace__summary-card--healthy">
+      <span class="investigation-workspace__summary-value" data-testid="healthy-count">{{ healthyCount() }}</span>
+      <span class="investigation-workspace__summary-label">{{ 'admin.investigation.healthy' | translate }}</span>
+    </div>
+    <div class="investigation-workspace__summary-card investigation-workspace__summary-card--degraded">
+      <span class="investigation-workspace__summary-value" data-testid="degraded-count">{{ degradedCount() }}</span>
+      <span class="investigation-workspace__summary-label">{{ 'admin.investigation.degraded' | translate }}</span>
+    </div>
+    <div class="investigation-workspace__summary-card investigation-workspace__summary-card--unhealthy">
+      <span class="investigation-workspace__summary-value" data-testid="unhealthy-count">{{ unhealthyCount() }}</span>
+      <span class="investigation-workspace__summary-label">{{ 'admin.investigation.unhealthy' | translate }}</span>
+    </div>
+    <div class="investigation-workspace__summary-card investigation-workspace__summary-card--incidents">
+      <span class="investigation-workspace__summary-value" data-testid="critical-incidents">{{ criticalIncidents() }}</span>
+      <span class="investigation-workspace__summary-label">{{ 'admin.investigation.critical_incidents' | translate }}</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="investigation-workspace__loading" data-testid="workspace-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="investigation-workspace__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading()) {
+    <div class="investigation-workspace__grid">
+      <!-- Service Health Panel -->
+      <section
+        class="investigation-workspace__panel"
+        data-testid="health-panel"
+        [attr.aria-label]="'admin.investigation.service_health' | translate">
+        <h2 class="investigation-workspace__panel-title">
+          {{ 'admin.investigation.service_health' | translate }}
+        </h2>
+        <div class="investigation-workspace__health-list" role="list">
+          @for (service of serviceHealth(); track service.serviceName) {
+            <div
+              class="investigation-workspace__health-item"
+              role="listitem"
+              [attr.data-testid]="'health-' + service.serviceName">
+              <span
+                class="investigation-workspace__health-dot"
+                [class]="healthStatusClass(service.status)"
+                [attr.aria-label]="service.status">
+              </span>
+              <span class="investigation-workspace__health-name">{{ service.serviceName }}</span>
+              <span class="investigation-workspace__health-time">{{ service.responseTimeMs }}ms</span>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- Recent Errors Panel -->
+      <section
+        class="investigation-workspace__panel"
+        data-testid="errors-panel"
+        [attr.aria-label]="'admin.investigation.recent_errors' | translate">
+        <h2 class="investigation-workspace__panel-title">
+          {{ 'admin.investigation.recent_errors' | translate }}
+        </h2>
+        @if (errorLogs().length === 0) {
+          <p class="investigation-workspace__empty" role="status">
+            {{ 'admin.investigation.no_errors' | translate }}
+          </p>
+        } @else {
+          <div class="investigation-workspace__log-list" role="log">
+            @for (entry of errorLogs(); track entry.correlationId) {
+              <div
+                class="investigation-workspace__log-entry"
+                [attr.data-testid]="'log-' + entry.correlationId">
+                <div class="investigation-workspace__log-header">
+                  <span
+                    class="investigation-workspace__log-level"
+                    [class]="logLevelClass(entry.level)">
+                    {{ entry.level | uppercase }}
+                  </span>
+                  <span class="investigation-workspace__log-service">{{ entry.service }}</span>
+                  <span class="investigation-workspace__log-timestamp">{{ formatTimestamp(entry.timestamp) }}</span>
+                </div>
+                <p class="investigation-workspace__log-message">{{ entry.message }}</p>
+                @if (entry.tenantId) {
+                  <span class="investigation-workspace__log-tenant">{{ entry.tenantId }}</span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Active Alerts Panel -->
+      <section
+        class="investigation-workspace__panel"
+        data-testid="alerts-panel"
+        [attr.aria-label]="'admin.investigation.active_alerts' | translate">
+        <h2 class="investigation-workspace__panel-title">
+          {{ 'admin.investigation.active_alerts' | translate }}
+        </h2>
+        @if (activeIncidents().length === 0) {
+          <p class="investigation-workspace__empty" role="status">
+            {{ 'admin.investigation.no_incidents' | translate }}
+          </p>
+        } @else {
+          <div class="investigation-workspace__alert-list" role="list">
+            @for (incident of activeIncidents(); track incident.id) {
+              <div
+                class="investigation-workspace__alert-item"
+                role="listitem"
+                [attr.data-testid]="'alert-' + incident.id">
+                <div class="investigation-workspace__alert-header">
+                  <span
+                    class="investigation-workspace__severity"
+                    [class]="severityClass(incident.severity)">
+                    {{ incident.severity | uppercase }}
+                  </span>
+                  <span class="investigation-workspace__alert-status">{{ incident.status }}</span>
+                </div>
+                <p class="investigation-workspace__alert-title">{{ incident.title }}</p>
+                <div class="investigation-workspace__alert-meta">
+                  <span>{{ formatDateTime(incident.updatedAt) }}</span>
+                  @if (incident.assignedTo) {
+                    <span class="investigation-workspace__alert-assignee">{{ incident.assignedTo }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Entity Search Panel -->
+      <section
+        class="investigation-workspace__panel"
+        data-testid="search-panel"
+        [attr.aria-label]="'admin.investigation.entity_search' | translate">
+        <h2 class="investigation-workspace__panel-title">
+          {{ 'admin.investigation.entity_search' | translate }}
+        </h2>
+        <div class="investigation-workspace__search-form" role="search">
+          <div class="investigation-workspace__search-row">
+            <label for="entity-type" class="investigation-workspace__search-label">
+              {{ 'admin.investigation.entity_type' | translate }}
+            </label>
+            <select
+              id="entity-type"
+              class="investigation-workspace__select"
+              data-testid="entity-type-select"
+              (change)="onEntityTypeChange($any($event.target).value)">
+              @for (et of entityTypes; track et.value) {
+                <option [value]="et.value">{{ et.label | translate }}</option>
+              }
+            </select>
+          </div>
+          <div class="investigation-workspace__search-row">
+            <label for="entity-id" class="investigation-workspace__search-label">
+              {{ 'admin.investigation.entity_id' | translate }}
+            </label>
+            <input
+              id="entity-id"
+              type="text"
+              class="investigation-workspace__search-input"
+              data-testid="entity-id-input"
+              [placeholder]="'admin.investigation.entity_id_placeholder' | translate"
+              [attr.aria-label]="'admin.investigation.entity_id' | translate"
+              (input)="onSearchIdInput($event)"
+              (keyup.enter)="searchEntity()" />
+          </div>
+          <button
+            type="button"
+            class="investigation-workspace__btn investigation-workspace__btn--primary"
+            data-testid="btn-search-entity"
+            [disabled]="searching()"
+            (click)="searchEntity()">
+            {{ 'admin.investigation.search' | translate }}
+          </button>
+        </div>
+
+        @if (searching()) {
+          <div class="investigation-workspace__search-loading" aria-live="polite">
+            {{ 'admin.investigation.searching' | translate }}
+          </div>
+        }
+
+        @if (searchResults().length > 0) {
+          <div class="investigation-workspace__search-results" data-testid="search-results" role="list">
+            @for (result of searchResults(); track result.entityId) {
+              <div class="investigation-workspace__search-result" role="listitem">
+                <span class="investigation-workspace__result-type">{{ result.entityType }}</span>
+                <span class="investigation-workspace__result-id">{{ result.entityId }}</span>
+                <span class="investigation-workspace__result-service">{{ result.service }}</span>
+                <span class="investigation-workspace__result-label">{{ result.label }}</span>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </div>
+  }
+</section>

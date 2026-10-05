@@ -1,0 +1,106 @@
+<header class="top-nav" role="banner" data-testid="top-nav">
+  <div class="top-nav__start">
+    @if (!compassShell()) {
+      <button
+        class="top-nav__toggle"
+        (click)="onToggleSidebar()"
+        [attr.aria-expanded]="!sidebarCollapsed()"
+        aria-controls="sidebar"
+        aria-label="Toggle navigation"
+        data-testid="sidebar-toggle">
+        <span class="top-nav__toggle-icon" aria-hidden="true">&#9776;</span>
+      </button>
+    }
+    <a routerLink="/" class="top-nav__logo" aria-label="Chora home" data-testid="logo-link">
+      Chora
+    </a>
+  </div>
+
+  <!--
+    The reserved "mode toggle" slot (Straight-Up / Discovery) is RETIRED here,
+    per the UX refactor master plan section 3.1. It was never implemented and
+    never could be: ADR-141 and Tier 4 D16 lock the integrative UI to
+    role-driven visibility with no toggles, so the switch this slot was holding
+    open is forbidden by the architecture it was waiting on. The empty <nav>
+    also announced itself to a screen reader as a "Primary navigation" landmark
+    containing nothing.
+
+    The A+ yields take its place; every other surface leaves the centre empty.
+  -->
+  @if (compassShell()) {
+    <div class="top-nav__center">
+      <chora-yields-strip />
+    </div>
+  }
+
+  <div class="top-nav__end">
+    <chora-tenant-switcher />
+
+    @if (user()) {
+      <!-- Notification Bell -->
+      <div class="top-nav__notification-wrapper">
+        <button
+          class="top-nav__bell"
+          (click)="onToggleNotifications($event)"
+          [attr.aria-expanded]="isNotificationOpen()"
+          [attr.aria-label]="unreadCount() > 0
+            ? ('notifications.bell_unread' | translate) + ' (' + unreadCount() + ')'
+            : ('notifications.bell' | translate)"
+          aria-haspopup="true"
+          data-testid="notification-bell">
+          <svg class="top-nav__bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               width="20" height="20" aria-hidden="true">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          @if (unreadCount() > 0) {
+            <span
+              class="top-nav__badge"
+              aria-live="polite"
+              data-testid="notification-badge">
+              {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+            </span>
+          }
+        </button>
+
+        <!--
+          Reconnecting visual chip removed 2026-05-17 per user directive
+          ("not serving any meaningful purpose"). The WebSocket state
+          signal + reconnectingAriaLive() suppression logic stay intact
+          for ws-dependent components (notification-center, etc.). The
+          visible chip only added noise on every backoff cycle.
+        -->
+        @if (false) {
+          <span
+            class="top-nav__reconnecting"
+            [attr.aria-live]="reconnectingAriaLive()"
+            data-testid="ws-reconnecting">
+            {{ 'aplus.top_nav.ws_reconnecting' | translate }}
+          </span>
+        }
+
+        @if (isNotificationOpen()) {
+          <chora-notification-center />
+        }
+      </div>
+
+      <div class="top-nav__user">
+        <a
+          routerLink="/settings"
+          class="top-nav__avatar"
+          [attr.aria-label]="'Settings for ' + (user()?.displayName || user()?.email || 'Account')"
+          data-testid="user-avatar">
+          {{ (user()?.displayName || user()?.email || 'U').charAt(0).toUpperCase() }}
+        </a>
+        <button
+          class="top-nav__logout"
+          (click)="logout()"
+          [attr.aria-label]="'common.logout' | translate"
+          data-testid="logout-btn">
+          {{ 'common.logout' | translate }}
+        </button>
+      </div>
+    }
+  </div>
+</header>

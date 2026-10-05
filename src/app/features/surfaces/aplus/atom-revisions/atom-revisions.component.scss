@@ -1,0 +1,425 @@
+// =====================================================================
+// A+ Atom Revisions — WS-7 revision timeline view
+// Glassmorphism design system; tablet-first ≥768px primary, ≥1280px desktop.
+// Topology A (Agent Trace Timeline) adapted for append-only revision history.
+// =====================================================================
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base, #f1f5f9);
+  background-attachment: fixed;
+  color: var(--text-main, #1e293b);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.atom-revisions {
+  padding: 2rem clamp(1rem, 3vw, 2rem);
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// ── Page header ──────────────────────────────────────────────────────
+.atom-revisions__header {
+  padding: 1.5rem 2rem;
+}
+
+.atom-revisions__header-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+
+  > i {
+    font-size: 24px;
+    color: var(--primary, #1976d2);
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+  }
+}
+
+.atom-revisions__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.02em;
+}
+
+.atom-revisions__subtitle {
+  font-size: 13px;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+
+  code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--text-main, #1e293b);
+  }
+}
+
+// ── Loading state ────────────────────────────────────────────────────
+.atom-revisions__loading {
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 14px;
+  color: var(--text-muted, #64748b);
+
+  i { color: var(--primary, #1976d2); }
+}
+
+// ── Error + contract-gap states ──────────────────────────────────────
+.atom-revisions__error,
+.atom-revisions__contract-gap {
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  border-left: 4px solid;
+
+  > i { font-size: 20px; flex-shrink: 0; margin-top: 0.2rem; }
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+}
+
+.atom-revisions__error {
+  border-color: var(--danger, #ef4444);
+  background: rgba(239, 68, 68, 0.04);
+
+  > i { color: var(--danger, #ef4444); }
+}
+
+.atom-revisions__contract-gap {
+  border-color: var(--warning, #f59e0b);
+  background: rgba(245, 158, 11, 0.06);
+
+  > i { color: var(--warning, #f59e0b); }
+
+  strong { font-size: 14px; font-weight: 700; }
+}
+
+.atom-revisions__error-message {
+  color: var(--text-main, #1e293b);
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+// ── Empty state ───────────────────────────────────────────────────────
+.atom-revisions__empty {
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+
+  > i {
+    font-size: 32px;
+    color: var(--text-muted, #64748b);
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--text-muted, #64748b);
+  }
+}
+
+.atom-revisions__empty-hint {
+  font-size: 13px !important;
+  opacity: 0.7;
+}
+
+// ── Timeline list (Topology A: vertical timeline) ─────────────────────
+.atom-revisions__timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+
+  // Vertical connecting line
+  &::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 28px;
+    bottom: 28px;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--primary, #1976d2) 0%,
+      rgba(25, 118, 210, 0.15) 100%
+    );
+    pointer-events: none;
+  }
+}
+
+// ── Revision card ─────────────────────────────────────────────────────
+.atom-revisions__card {
+  display: flex;
+  gap: 1.25rem;
+  padding: 0;
+  margin-bottom: 1rem;
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.35));
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+
+  &:focus-within {
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.3);
+    outline: none;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// ── Timeline marker (circular dot with revision number) ───────────────
+.atom-revisions__marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 1.25rem;
+  padding-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.atom-revisions__marker-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary, #1976d2), #1976d2);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.35);
+  position: relative;
+  z-index: 1;
+}
+
+// ── Card body ─────────────────────────────────────────────────────────
+.atom-revisions__card-body {
+  flex: 1;
+  padding: 1.25rem 1.5rem 1.25rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.atom-revisions__card-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+}
+
+.atom-revisions__rev-number {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary, #1976d2);
+}
+
+.atom-revisions__badge-current {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 0.2rem 0.55rem;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--success, #10b981);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 999px;
+}
+
+.atom-revisions__timestamp {
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  margin-left: auto;
+}
+
+// ── Author line ───────────────────────────────────────────────────────
+.atom-revisions__author {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted, #64748b);
+
+  i { font-size: 14px; }
+}
+
+.atom-revisions__gcid {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  cursor: help;
+}
+
+// ── Summary ───────────────────────────────────────────────────────────
+.atom-revisions__summary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-main, #1e293b);
+  font-style: italic;
+}
+
+// ── Content hash ──────────────────────────────────────────────────────
+.atom-revisions__hash {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+
+  i { font-size: 12px; }
+}
+
+.atom-revisions__hash-code {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  cursor: help;
+}
+
+// ── Diff toggle button ────────────────────────────────────────────────
+.atom-revisions__diff-toggle {
+  align-self: flex-start;
+  font-size: 13px;
+  padding: 0.4rem 0.85rem;
+}
+
+// ── Diff panel (side-by-side before/after) ────────────────────────────
+.atom-revisions__diff {
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.5));
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.atom-revisions__diff-panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.atom-revisions__diff-before,
+.atom-revisions__diff-after {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  overflow: hidden;
+
+  & + & {
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+    @media (min-width: 768px) {
+      border-top: none;
+      border-left: 1px solid rgba(0, 0, 0, 0.06);
+    }
+  }
+}
+
+.atom-revisions__diff-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.5rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  &--before {
+    background: rgba(239, 68, 68, 0.06);
+    color: var(--danger, #ef4444);
+  }
+
+  &--after {
+    background: rgba(16, 185, 129, 0.06);
+    color: var(--success, #10b981);
+  }
+}
+
+.atom-revisions__diff-pre {
+  margin: 0;
+  padding: 0.85rem;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-main, #1e293b);
+  max-height: 260px;
+  overflow-y: auto;
+  background: transparent;
+  border: none;
+}
+
+// ── Desktop enhancements (≥1280px) ────────────────────────────────────
+@media (min-width: 1280px) {
+  .atom-revisions {
+    max-width: 1000px;
+  }
+
+  .atom-revisions__diff-panels {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// ── Reduced-motion (WCAG 2.1 §2.3.3) ─────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .atom-revisions__card,
+  .atom-revisions__diff-toggle,
+  .btn {
+    transition: none;
+  }
+}

@@ -1,0 +1,82 @@
+<div class="cplus-person-card">
+  <div class="cplus-person-card__banner">
+    <span class="cplus-person-card__avatar">{{ avatarInitial() }}</span>
+  </div>
+
+  <div class="cplus-person-card__body">
+    <div class="cplus-person-card__identity">
+      <strong class="cplus-person-card__name">{{ displayName() }}</strong>
+      <span class="cplus-person-card__gcid">{{ shortGcid() }}</span>
+    </div>
+
+    <div class="cplus-person-card__stat-row">
+      <div class="cplus-person-card__stat">
+        <span class="cplus-person-card__stat-value">{{ shareCount() }}</span>
+        <span class="cplus-person-card__stat-label">{{ 'cplus.feed.shared_by' | translate }}</span>
+      </div>
+    </div>
+
+    @if (visibleAtoms().length > 0) {
+      <div class="cplus-person-card__atoms">
+        <h3 class="cplus-person-card__section-title">
+          {{ 'cplus.profile.contributions_title' | translate }}
+        </h3>
+        <ul class="cplus-person-card__atom-list" role="list">
+          @for (atom of visibleAtoms(); track atom.share_entry_id) {
+            <li class="cplus-person-card__atom-item">
+              <span class="cplus-person-card__atom-preview">{{ atom.atom_stem_preview }}</span>
+              @if (atom.caption) {
+                <span class="cplus-person-card__atom-caption">{{ atom.caption }}</span>
+              }
+              <span class="cplus-person-card__atom-meta">
+                {{ atom.question_type }} · {{ atom.reaction_count }}
+                {{ 'cplus.feed.reactions_label' | translate }}
+              </span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (showBack()) {
+      <div class="cplus-person-card__actions">
+        <button
+          type="button"
+          class="cplus-person-card__back-btn"
+          (click)="back.emit()"
+        >
+          {{ 'cplus.duels.back_to_people' | translate }}
+        </button>
+      </div>
+    }
+
+    @if (showFollowBlock()) {
+      <div class="cplus-person-card__actions">
+        <button
+          type="button"
+          class="cplus-person-card__follow-btn"
+          [disabled]="actionPending()"
+          (click)="followToggle.emit()"
+        >
+          @if (actionPending()) {
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+          }
+          {{ isFollowing()
+            ? ('cplus.feed.unfollow' | translate)
+            : ('cplus.feed.follow' | translate) }}
+        </button>
+        <button
+          type="button"
+          class="cplus-person-card__block-btn"
+          [class.cplus-person-card__block-btn--active]="isBlocked()"
+          [disabled]="actionPending()"
+          (click)="blockToggle.emit()"
+        >
+          {{ isBlocked()
+            ? ('cplus.feed.unblock' | translate)
+            : ('cplus.feed.block' | translate) }}
+        </button>
+      </div>
+    }
+  </div>
+</div>

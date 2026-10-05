@@ -1,0 +1,207 @@
+<section
+  class="survey-form"
+  role="main"
+  [attr.aria-label]="'survey.form_title' | translate"
+  data-testid="survey-form">
+
+  <!-- Loading -->
+  @if (surveyDetailState().status === 'loading') {
+    <div class="survey-form__loading" data-testid="survey-form-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="survey-form__skeleton-block"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (surveyDetailState().status === 'error') {
+    <div class="survey-form__error" data-testid="survey-form-error" role="alert">
+      <p class="survey-form__error-text">
+        {{ 'survey.form_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Survey Form Content -->
+  @if (surveyDetailState().status === 'success' && surveyDetail()) {
+    <!-- Survey Header -->
+    <header class="survey-form__header">
+      <h1 class="survey-form__title" data-testid="survey-form-title">
+        {{ surveyDetail()!.title }}
+      </h1>
+      @if (surveyDetail()!.description) {
+        <p class="survey-form__description">
+          {{ surveyDetail()!.description }}
+        </p>
+      }
+    </header>
+
+    <!-- Progress Bar -->
+    <div
+      class="survey-form__progress"
+      role="progressbar"
+      [attr.aria-valuenow]="progressPercent()"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-label]="'survey.progress_label' | translate"
+      data-testid="survey-progress">
+      <div
+        class="survey-form__progress-bar"
+        [style.width.%]="progressPercent()">
+      </div>
+      <span class="survey-form__progress-text" data-testid="survey-progress-text">
+        {{ answeredCount() }} / {{ totalQuestions() }} {{ 'survey.questions_answered' | translate }}
+      </span>
+    </div>
+
+    <!-- Questions -->
+    <div class="survey-form__questions">
+      @for (question of questions(); track question.id; let idx = $index) {
+        <fieldset
+          class="survey-form__question"
+          [class.survey-form__question--error]="validationErrors()[question.id]"
+          [attr.data-testid]="'question-' + question.id">
+
+          <legend class="survey-form__question-label">
+            <span class="survey-form__question-number">{{ idx + 1 }}.</span>
+            {{ question.question_text }}
+            @if (question.required) {
+              <span class="survey-form__required" aria-label="Required">*</span>
+            }
+          </legend>
+
+          <!-- Rating Type -->
+          @if (question.question_type === 'rating') {
+            <div
+              class="survey-form__rating"
+              role="radiogroup"
+              [attr.aria-label]="question.question_text"
+              [attr.data-testid]="'rating-group-' + question.id">
+              @for (star of getRatingRange(); track star) {
+                <button
+                  type="button"
+                  class="survey-form__rating-btn"
+                  [class.survey-form__rating-btn--selected]="getRatingValue(question.id) >= star"
+                  [attr.aria-label]="star + ' ' + ('survey.out_of_5' | translate)"
+                  [attr.aria-pressed]="getRatingValue(question.id) === star"
+                  [attr.data-testid]="'rating-' + question.id + '-' + star"
+                  (click)="setRatingAnswer(question.id, star)">
+                  {{ star }}
+                </button>
+              }
+              <span class="survey-form__rating-endpoints">
+                <span>{{ 'survey.rating_low' | translate }}</span>
+                <span>{{ 'survey.rating_high' | translate }}</span>
+              </span>
+            </div>
+          }
+
+          <!-- Text Type -->
+          @if (question.question_type === 'text') {
+            <div class="survey-form__text-input">
+              <textarea
+                class="survey-form__textarea"
+                [attr.aria-label]="question.question_text"
+                [attr.data-testid]="'text-input-' + question.id"
+                [value]="getTextValue(question.id)"
+                rows="4"
+                maxlength="2000"
+                [attr.placeholder]="'survey.text_placeholder' | translate"
+                (input)="setTextAnswer(question.id, $event)">
+              </textarea>
+              <span class="survey-form__char-count" aria-live="polite">
+                {{ getTextValue(question.id).length }} / 2000
+              </span>
+            </div>
+          }
+
+          <!-- Multiple Choice Type -->
+          @if (question.question_type === 'multiple_choice') {
+            <div
+              class="survey-form__choices"
+              role="radiogroup"
+              [attr.aria-label]="question.question_text"
+              [attr.data-testid]="'choice-group-' + question.id">
+              @for (choice of getChoices(question); track choice) {
+                <label class="survey-form__choice-label">
+                  <input
+                    type="radio"
+                    class="survey-form__choice-radio"
+                    [name]="'choice-' + question.id"
+                    [value]="choice"
+                    [checked]="getChoiceValue(question.id) === choice"
+                    [attr.data-testid]="'choice-' + question.id + '-' + choice"
+                    (change)="setMultipleChoiceAnswer(question.id, choice)" />
+                  <span class="survey-form__choice-text">{{ choice }}</span>
+                </label>
+              }
+            </div>
+          }
+
+          <!-- Scale Type -->
+          @if (question.question_type === 'scale') {
+            <div
+              class="survey-form__scale"
+              role="radiogroup"
+              [attr.aria-label]="question.question_text"
+              [attr.data-testid]="'scale-group-' + question.id">
+              @for (value of getScaleRange(question); track value) {
+                <button
+                  type="button"
+                  class="survey-form__scale-btn"
+                  [class.survey-form__scale-btn--selected]="getScaleValue(question.id) === value"
+                  [attr.aria-label]="value.toString()"
+                  [attr.aria-pressed]="getScaleValue(question.id) === value"
+                  [attr.data-testid]="'scale-' + question.id + '-' + value"
+                  (click)="setScaleAnswer(question.id, value)">
+                  {{ value }}
+                </button>
+              }
+              <span class="survey-form__scale-endpoints">
+                <span>{{ 'survey.scale_low' | translate }}</span>
+                <span>{{ 'survey.scale_high' | translate }}</span>
+              </span>
+            </div>
+          }
+
+          <!-- Validation Error -->
+          @if (validationErrors()[question.id]) {
+            <p
+              class="survey-form__validation-error"
+              role="alert"
+              aria-live="polite"
+              [attr.data-testid]="'error-' + question.id">
+              {{ validationErrors()[question.id] | translate }}
+            </p>
+          }
+        </fieldset>
+      }
+    </div>
+
+    <!-- Submit Actions -->
+    @if (blankSubmission()) {
+      <p
+        class="survey-form__validation-error"
+        role="alert"
+        aria-live="polite"
+        data-testid="blank-submission-error">
+        {{ 'survey.validation_answer_one' | translate }}
+      </p>
+    }
+    <div class="survey-form__actions">
+      <button
+        type="button"
+        class="survey-form__btn survey-form__btn--primary"
+        [disabled]="submitting()"
+        data-testid="btn-submit-survey"
+        [attr.aria-label]="'survey.submit' | translate"
+        (click)="submitSurvey()">
+        @if (submitting()) {
+          {{ 'survey.submitting' | translate }}
+        } @else {
+          {{ 'survey.submit' | translate }}
+        }
+      </button>
+    </div>
+  }
+</section>

@@ -1,0 +1,70 @@
+<div
+  class="recommendation-widget"
+  role="region"
+  aria-label="Personalized Recommendations"
+  data-testid="recommendation-widget">
+
+  <div class="recommendation-widget__header">
+    <span class="material-icons-outlined" aria-hidden="true">auto_awesome</span>
+    <h3>{{ 'engagement.recommendation.title' | translate }}</h3>
+  </div>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div class="recommendation-widget__loading" role="status" data-testid="recommendation-loading">
+        <span class="recommendation-widget__spinner"></span>
+        <span>{{ 'engagement.recommendation.loading' | translate }}</span>
+      </div>
+    }
+
+    @case ('error') {
+      <p class="recommendation-widget__error" role="alert" data-testid="recommendation-error">
+        {{ 'engagement.recommendation.error' | translate }}
+      </p>
+    }
+
+    @case ('success') {
+      @if (recommendations().length === 0) {
+        <p class="recommendation-widget__empty" data-testid="recommendation-empty">
+          {{ 'engagement.recommendation.empty' | translate }}
+        </p>
+      } @else {
+        <div
+          class="recommendation-widget__scroll"
+          role="list"
+          aria-label="Recommended atoms"
+          data-testid="recommendation-scroll">
+
+          @for (atom of recommendations(); track atom.atom_id) {
+            <button
+              class="recommendation-widget__card"
+              role="listitem"
+              [attr.aria-label]="atom.topic_name + ', score ' + atom.score"
+              [attr.data-testid]="'recommendation-card-' + atom.atom_id"
+              (click)="openAtom(atom.atom_id)">
+
+              <span
+                class="recommendation-widget__badge"
+                [class]="difficultyClass(atom.difficulty)"
+                data-testid="recommendation-difficulty">
+                {{ atom.difficulty }}
+              </span>
+
+              <span class="recommendation-widget__topic" data-testid="recommendation-topic">
+                {{ atom.topic_name }}
+              </span>
+
+              <span class="recommendation-widget__score" data-testid="recommendation-score">
+                {{ atom.score }}%
+              </span>
+
+              <span class="recommendation-widget__reason" data-testid="recommendation-reason">
+                {{ atom.reason }}
+              </span>
+            </button>
+          }
+        </div>
+      }
+    }
+  }
+</div>

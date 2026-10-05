@@ -1,0 +1,320 @@
+// A+ header goal control + learning-goals drawer (SP2.8). The glass drawer
+// mirrors the my-knowledge map switcher (.mc-switcher, CHO-2046 reskin).
+
+:host {
+  display: inline-flex;
+}
+
+// ─── Trigger ──────────────────────────────────────────────────────
+.hgc-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.7rem;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+
+  &:hover {
+    background: var(--primary-wash, rgba(25, 118, 210, 0.06));
+    border-color: var(--primary);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.hgc-ring {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--glass-border);
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+// Active-goal (no verified ring) — solid primary bullseye.
+.hgc-ring--set {
+  border-style: solid;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.hgc-trigger__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.hgc-trigger__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.hgc-trigger__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hgc-trigger__empty {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.hgc-trigger__status {
+  margin-left: 0.1rem;
+}
+
+.hgc-trigger__chevron {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 0.1rem;
+}
+
+// ─── Backdrop + drawer (glass) ────────────────────────────────────
+// Invisible full-screen click-catcher — closes the dropdown on outside click.
+// top/left are set inline (offset by the fixed containing block) so it always
+// covers the whole viewport regardless of a transformed glass ancestor.
+.hgc-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1510;
+  background: transparent;
+  border: 0;
+  cursor: default;
+}
+
+// Anchored dropdown popover — top/left are set inline from the trigger rect
+// (openDrawer) so the goals list drops BELOW the header control instead of a
+// full-height left slab overlapping the sidebar/nav.
+.hgc-drawer {
+  position: fixed;
+  z-index: 1520;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(70vh, 560px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.72));
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-border-top, rgba(255, 255, 255, 0.9));
+  box-shadow: 0 20px 48px -10px rgba(31, 38, 135, 0.34);
+  border-radius: 16px;
+  overflow: hidden;
+  transform-origin: top left;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+  transition:
+    opacity 150ms ease,
+    transform 200ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+}
+
+.hgc-drawer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.hgc-drawer__title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text-main);
+}
+
+.hgc-drawer__close {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  display: inline-grid;
+  place-items: center;
+
+  &:hover {
+    background: rgba(2, 6, 23, 0.06);
+    color: var(--text-main);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.hgc-drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// ─── Switch list ──────────────────────────────────────────────────
+.hgc-drawer__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.hgc-drawer__row {
+  display: flex;
+  align-items: stretch;
+  border-radius: 12px;
+  transition: background 0.15s var(--chora-ease-reveal, ease);
+
+  &:hover {
+    background: rgba(25, 118, 210, 0.05);
+  }
+  &.is-current {
+    background: var(--primary-wash, rgba(25, 118, 210, 0.08));
+    box-shadow: inset 3px 0 0 var(--primary);
+  }
+}
+
+.hgc-drawer__pick {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  &:hover {
+    background: rgba(25, 118, 210, 0.04);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+  }
+}
+
+.hgc-drawer__name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hgc-drawer__meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.hgc-drawer__current {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.hgc-drawer__empty {
+  margin: 0;
+  padding: 1rem 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+// ─── Actions ──────────────────────────────────────────────────────
+.hgc-drawer__actions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.hgc-drawer__action {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-main);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  i { color: var(--primary); font-size: 0.95rem; }
+
+  &:hover {
+    background: var(--primary-wash, rgba(25, 118, 210, 0.06));
+    border-color: var(--primary);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &--primary {
+    background: var(--primary-wash, rgba(25, 118, 210, 0.08));
+    border-color: rgba(21, 101, 192, 0.25);
+  }
+}
+
+.hgc-drawer__action-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.hgc-drawer__action-hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hgc-drawer { transition: none; }
+}

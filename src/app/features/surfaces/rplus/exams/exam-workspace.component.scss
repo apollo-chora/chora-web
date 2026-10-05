@@ -1,0 +1,327 @@
+:host {
+  display: block;
+}
+
+.exam-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs);
+    width: fit-content;
+    color: var(--chora-color-text-muted, #64748b);
+    text-decoration: none;
+    font-size: 0.9rem;
+
+    &:hover {
+      color: var(--chora-color-primary);
+      text-decoration: underline;
+    }
+  }
+
+  &__state {
+    padding: var(--chora-space-lg);
+    text-align: center;
+    color: var(--chora-color-text-muted, #64748b);
+  }
+
+  &__header {
+    padding: var(--chora-space-lg);
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-md);
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  &__subtitle {
+    margin: var(--chora-space-sm) 0 0;
+    color: var(--chora-color-text-muted, #64748b);
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs);
+    font-size: 0.95rem;
+  }
+
+  // ── Tabs (roving tabindex) ────────────────────────────────────────────
+  &__tabs {
+    display: flex;
+    gap: var(--chora-space-xs);
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--chora-color-border, rgba(148, 163, 184, 0.3));
+  }
+
+  &__tab {
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    font: inherit;
+    color: var(--chora-color-text-muted, #64748b);
+    cursor: pointer;
+    border-radius: var(--chora-radius-sm) var(--chora-radius-sm) 0 0;
+
+    &:hover {
+      color: var(--chora-color-text, #0f172a);
+      background: var(--chora-color-surface-1, rgba(148, 163, 184, 0.08));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: -2px;
+    }
+
+    &--active {
+      // AA-safe active-tab label. Brand --chora-color-primary (#1976d2) is only
+      // 4.4:1 on this surface (#fafafa), under the 4.5:1 AA floor for normal
+      // text. Same drift 8df58cf8a fixed on the offering workspace, which
+      // reached the identical colour via --primary.
+      // The 2px underline KEEPS the brand colour: it is a non-text indicator,
+      // where 3:1 is sufficient.
+      color: var(--chora-color-primary-strong);
+      border-bottom-color: var(--chora-color-primary);
+      font-weight: 600;
+    }
+  }
+
+  &__panel {
+    padding: var(--chora-space-lg);
+    min-height: 8rem;
+  }
+
+  // ── Overview ──────────────────────────────────────────────────────────
+  &__overview {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--chora-space-md);
+    margin: 0;
+
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    dt {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--chora-color-text-muted, #64748b);
+    }
+
+    dd {
+      margin: var(--chora-space-xs) 0 0;
+      font-size: 1rem;
+    }
+  }
+
+  // ── Form / items ──────────────────────────────────────────────────────
+  &__form {
+    & + & {
+      margin-top: var(--chora-space-md);
+      padding-top: var(--chora-space-md);
+      border-top: 1px solid var(--chora-color-border, rgba(148, 163, 184, 0.3));
+    }
+  }
+
+  &__form-head {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--chora-space-sm);
+  }
+
+  &__items {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: var(--chora-space-sm);
+    }
+  }
+
+  &__item-pos {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--chora-color-surface-1, rgba(148, 163, 184, 0.12));
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  // ── Candidates ────────────────────────────────────────────────────────
+  &__allocate {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--chora-space-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--chora-space-lg);
+  }
+
+  &__allocate-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+    flex: 1 1 20rem;
+
+    span {
+      font-size: 0.85rem;
+      color: var(--chora-color-text-muted, #64748b);
+    }
+
+    input {
+      padding: var(--chora-space-sm);
+      border: 1px solid var(--chora-color-border, rgba(148, 163, 184, 0.4));
+      border-radius: var(--chora-radius-sm);
+      font: inherit;
+    }
+  }
+
+  &__candidates {
+    width: 100%;
+  }
+
+  &__gcid {
+    font-size: 0.8rem;
+    word-break: break-all;
+  }
+
+  &__row-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+    flex-wrap: wrap;
+  }
+
+  &__row-error {
+    color: var(--chora-color-danger, #dc2626);
+    font-size: 0.85rem;
+  }
+
+  // ── Admin KYC review (manual-doc prerequisite — CHO-2103) ─────────────
+  &__kyc-reject {
+    flex: 1 1 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--chora-space-sm);
+    margin-top: var(--chora-space-xs);
+    padding: var(--chora-space-sm);
+    border: 1px solid var(--chora-color-border, rgba(148, 163, 184, 0.3));
+    border-radius: var(--chora-radius-sm, 6px);
+  }
+
+  &__kyc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.8rem;
+
+    input {
+      padding: 4px 6px;
+    }
+  }
+
+  &__kyc-retry {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs);
+    font-size: 0.8rem;
+  }
+
+  &__kyc-notice {
+    flex: 1 1 100%;
+    font-size: 0.85rem;
+    color: var(--chora-color-text-muted, #64748b);
+
+    &--error {
+      color: var(--chora-color-danger, #dc2626);
+    }
+  }
+
+  &__empty {
+    padding: var(--chora-space-lg);
+    text-align: center;
+    color: var(--chora-color-text-muted, #64748b);
+  }
+
+  // ── Slice 2 (Proctors / Incidents / Results) ──────────────────────────
+  &__allocate-field--wide {
+    flex: 1 1 100%;
+  }
+
+  &__hint {
+    color: var(--chora-color-text-muted, #64748b);
+    font-size: 0.9rem;
+    margin: 0 0 var(--chora-space-md);
+  }
+
+  &__row--selected {
+    background: var(--chora-color-surface-1, rgba(148, 163, 184, 0.12));
+  }
+
+  &__subpanel {
+    margin-top: var(--chora-space-lg);
+    padding-top: var(--chora-space-md);
+    border-top: 1px solid var(--chora-color-border, rgba(148, 163, 184, 0.3));
+
+    h3 {
+      margin: 0 0 var(--chora-space-md);
+      font-size: 1.05rem;
+    }
+  }
+
+  &__invig-list,
+  &__incident-list {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm);
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: var(--chora-space-sm);
+      flex-wrap: wrap;
+    }
+  }
+
+  &__result {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md);
+    margin-top: var(--chora-space-md);
+    padding: var(--chora-space-md);
+    border-radius: var(--chora-radius-sm);
+    background: var(--chora-color-surface-1, rgba(148, 163, 184, 0.08));
+    flex-wrap: wrap;
+  }
+}
+
+.btn-sm {
+  padding: var(--chora-space-xs) var(--chora-space-sm);
+  font-size: 0.85rem;
+}

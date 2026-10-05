@@ -1,0 +1,170 @@
+:host {
+  display: block;
+}
+
+.search-result-card {
+  padding: var(--chora-space-md, 16px);
+  border: 1px solid var(--chora-color-border, #e5e5e5);
+  border-radius: var(--chora-radius-md, 8px);
+  background: var(--chora-color-surface-0, #fff);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--chora-color-primary, #2563eb);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--chora-color-primary, #2563eb);
+    outline-offset: 2px;
+  }
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-end: var(--chora-space-sm, 8px);
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--chora-color-text, #111);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__badges {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    flex-shrink: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Type Badge
+  // -------------------------------------------------------------------------
+
+  &__type-badge {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    color: var(--chora-color-text-muted, #666);
+    white-space: nowrap;
+  }
+
+  // -------------------------------------------------------------------------
+  // Difficulty Badge
+  // -------------------------------------------------------------------------
+
+  &__difficulty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+
+    &--level-1 {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    &--level-2 {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    &--level-3 {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    &--level-4 {
+      background: #fed7aa;
+      color: #9a3412;
+    }
+
+    &--level-5 {
+      background: #fecaca;
+      color: #991b1b;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Excerpt
+  // -------------------------------------------------------------------------
+
+  &__excerpt {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--chora-color-text-muted, #555);
+    margin: 0 0 var(--chora-space-sm, 8px);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+
+    // Meilisearch wraps matches in <em> — style them as highlights
+    :host ::ng-deep em {
+      font-style: normal;
+      font-weight: 600;
+      color: var(--chora-color-text, #111);
+      background: #fef3c7;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Topics & Labels
+  // -------------------------------------------------------------------------
+
+  &__topics,
+  &__labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--chora-space-xs, 4px);
+    margin-block-end: var(--chora-space-xs, 4px);
+
+    &:last-child {
+      margin-block-end: 0;
+    }
+  }
+
+  &__topic-tag {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  &__label-tag {
+    font-size: 0.6875rem;
+    font-weight: 400;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: var(--chora-color-surface-1, #f5f5f5);
+    color: var(--chora-color-text-muted, #666);
+  }
+}
+
+// Desktop enhancement — wider cards
+@media (min-width: 1280px) {
+  .search-result-card {
+    padding: var(--chora-space-lg, 24px);
+  }
+}

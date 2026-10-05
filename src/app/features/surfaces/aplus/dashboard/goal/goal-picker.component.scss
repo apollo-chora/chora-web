@@ -1,0 +1,104 @@
+:host {
+  display: block;
+}
+
+// Topology-C progressive overlay (chora-design-system). Backdrop blur over a
+// dimmed atmospheric scrim; the panel is a standard glass-panel.
+.goal-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: goal-picker-fade 0.15s ease-out;
+}
+
+.goal-picker {
+  width: 100%;
+  max-width: 30rem;
+  padding: 1.5rem;
+  outline: none;
+  animation: goal-picker-rise 0.18s ease-out;
+
+  &__title {
+    margin: 0 0 0.25rem;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__subtitle {
+    margin: 0 0 1.25rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  &__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__hint {
+    font-size: 0.72rem;
+    line-height: 1.35;
+    color: var(--text-muted);
+  }
+
+  &__note {
+    resize: vertical;
+    min-height: 2.75rem;
+  }
+
+  &__error {
+    margin: 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--button-radius);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--danger);
+    font-size: 0.8rem;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 0.25rem;
+  }
+}
+
+@keyframes goal-picker-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes goal-picker-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .goal-picker-backdrop,
+  .goal-picker {
+    animation: none;
+  }
+}

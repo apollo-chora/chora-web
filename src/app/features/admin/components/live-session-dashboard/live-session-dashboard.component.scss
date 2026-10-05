@@ -1,0 +1,290 @@
+:host {
+  display: block;
+}
+
+.live-session-dashboard {
+  padding: var(--chora-space-lg);
+
+  // ---------------------------------------------------------------------------
+  // Loading & Error
+  // ---------------------------------------------------------------------------
+
+  &__loading,
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-2xl);
+    color: var(--chora-color-text-secondary);
+  }
+
+  &__error {
+    color: var(--chora-color-error);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--chora-space-xl);
+    padding-bottom: var(--chora-space-md);
+    border-bottom: 2px solid var(--chora-color-surface-1, #e9ecef);
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+    margin: 0;
+  }
+
+  &__header-stats {
+    display: flex;
+    gap: var(--chora-space-lg);
+    align-items: center;
+  }
+
+  &__attendance-counter {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__engagement {
+    font-size: 14px;
+    font-weight: 600;
+    padding: var(--chora-space-xs) var(--chora-space-sm);
+    border-radius: var(--chora-radius-sm);
+
+    &--high {
+      background: var(--chora-color-success-surface, #d4edda);
+      color: var(--chora-color-success, #155724);
+    }
+
+    &--medium {
+      background: var(--chora-color-warning-surface, #fff3cd);
+      color: var(--chora-color-warning, #856404);
+    }
+
+    &--low {
+      background: var(--chora-color-error-surface, #f8d7da);
+      color: var(--chora-color-error, #721c24);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Three-panel layout
+  // ---------------------------------------------------------------------------
+
+  &__panels {
+    display: grid;
+    grid-template-columns: 240px 1fr 320px;
+    gap: var(--chora-space-lg);
+    min-height: 600px;
+  }
+
+  &__panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--chora-color-text-secondary);
+    margin-bottom: var(--chora-space-md);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Agenda panel (left)
+  // ---------------------------------------------------------------------------
+
+  &__agenda-panel {
+    border: 2px solid var(--chora-color-surface-1, #e9ecef);
+    border-radius: var(--chora-radius-md);
+    padding: var(--chora-space-md);
+    overflow-y: auto;
+  }
+
+  &__agenda-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+  }
+
+  &__agenda-item {
+    display: flex;
+    gap: var(--chora-space-sm);
+    padding: var(--chora-space-sm);
+    border-radius: var(--chora-radius-sm);
+    transition: background 0.2s ease;
+
+    &--current {
+      background: var(--chora-color-primary-surface, rgba(0, 102, 204, 0.08));
+      border-inline-start: 3px solid var(--chora-color-primary);
+    }
+
+    &--completed {
+      opacity: 0.5;
+    }
+  }
+
+  &__agenda-index {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 50%;
+    background: var(--chora-color-surface-1, #e9ecef);
+    color: var(--chora-color-text-secondary);
+    flex-shrink: 0;
+
+    .live-session-dashboard__agenda-item--current & {
+      background: var(--chora-color-primary);
+      color: var(--chora-color-on-primary);
+    }
+  }
+
+  &__agenda-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__agenda-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--chora-color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__agenda-duration {
+    font-size: 11px;
+    color: var(--chora-color-text-secondary);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Current atom panel (center)
+  // ---------------------------------------------------------------------------
+
+  &__current-panel {
+    border: 2px solid var(--chora-color-surface-1, #e9ecef);
+    border-radius: var(--chora-radius-md);
+    padding: var(--chora-space-lg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__current-atom {
+    flex: 1;
+  }
+
+  &__atom-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+    margin: 0 0 var(--chora-space-sm);
+  }
+
+  &__atom-type {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: var(--chora-radius-sm);
+    background: var(--chora-color-surface-1, #e9ecef);
+    color: var(--chora-color-text-secondary);
+  }
+
+  &__atom-duration {
+    font-size: 14px;
+    color: var(--chora-color-text-secondary);
+    margin-top: var(--chora-space-md);
+  }
+
+  &__notes {
+    margin-top: var(--chora-space-lg);
+    padding: var(--chora-space-md);
+    background: var(--chora-color-surface-1, #f8f9fa);
+    border-radius: var(--chora-radius-sm);
+  }
+
+  &__notes-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--chora-color-text-secondary);
+    margin-bottom: var(--chora-space-xs);
+  }
+
+  &__notes-text {
+    font-size: 14px;
+    color: var(--chora-color-text-primary);
+    line-height: 1.5;
+  }
+
+  &__advance-btn {
+    margin-top: var(--chora-space-xl);
+    padding: var(--chora-space-md) var(--chora-space-xl);
+    background: var(--chora-color-primary);
+    color: var(--chora-color-on-primary);
+    border: none;
+    border-radius: var(--chora-radius-md);
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    align-self: center;
+    transition: opacity 0.2s ease;
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__completed {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--chora-color-success, #28a745);
+    font-weight: 600;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Attendance panel (right)
+  // ---------------------------------------------------------------------------
+
+  &__attendance-panel {
+    border: 2px solid var(--chora-color-surface-1, #e9ecef);
+    border-radius: var(--chora-radius-md);
+    padding: var(--chora-space-md);
+    overflow-y: auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  .live-session-dashboard {
+    &__panels {
+      grid-template-columns: 280px 1fr 360px;
+    }
+  }
+}

@@ -1,0 +1,166 @@
+@if (state(); as s) {
+  <section
+    class="stage-up surface-aplus"
+    [attr.data-breed]="s.species"
+    [attr.data-stage]="s.growthStage"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="stage-up-heading"
+    data-testid="aplus-familiar-stage-up">
+    <div class="stage-up__backdrop" aria-hidden="true"></div>
+    <div class="stage-up__sparkles" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+    </div>
+
+    <div class="stage-up__card glass-panel">
+      <header class="stage-up__head">
+        <p class="stage-up__eyebrow">
+          {{ 'aplus.familiar_stage_up.eyebrow' | translate }}
+        </p>
+        <h1 id="stage-up-heading" class="stage-up__heading">
+          <strong>{{ s.displayName }}</strong>
+          {{ 'aplus.familiar_stage_up.grew_to' | translate }}
+          <strong class="stage-up__new-label">{{ currentLabel() }}</strong>!
+        </h1>
+        <p class="stage-up__transition" data-testid="aplus-stage-up-transition">
+          {{ prevLabel() }} → {{ currentLabel() }}
+        </p>
+      </header>
+
+      <div class="stage-up__art-row">
+        <div class="stage-up__art-cell stage-up__art-cell--from">
+          <chora-breed-art
+            [species]="s.species"
+            [stage]="prevStage()"
+            size="md"
+            mood="idle"
+            [altText]="prevLabel()" />
+          <span class="stage-up__art-label">{{ prevLabel() }}</span>
+        </div>
+        <div class="stage-up__morph-arrow" aria-hidden="true">
+          <i class="fa-solid fa-right-long"></i>
+        </div>
+        <div class="stage-up__art-cell stage-up__art-cell--to">
+          <chora-breed-art
+            [species]="s.species"
+            [stage]="currentStage()"
+            [shiny]="s.shinyVariant"
+            size="lg"
+            mood="celebrating"
+            [altText]="currentLabel()" />
+          <span class="stage-up__art-label stage-up__art-label--new">
+            {{ currentLabel() }}
+          </span>
+        </div>
+      </div>
+
+      @if (newToolsBucket().length > 0) {
+        <section class="stage-up__section" data-testid="aplus-stage-up-tools">
+          <h2 class="stage-up__section-title">
+            <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
+            {{ 'aplus.familiar_stage_up.tools_unlocked' | translate }}
+          </h2>
+          <ul class="stage-up__tool-list">
+            @for (t of newToolsBucket(); track t; let i = $index) {
+              <li class="stage-up__tool" [style.animation-delay.ms]="i * 120">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                <span>{{ t }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (justWoke().length > 0) {
+        <section class="stage-up__section" data-testid="aplus-stage-up-woke">
+          <h2 class="stage-up__section-title">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            {{ 'aplus.familiar_stage_up.skills_woke' | translate }}
+          </h2>
+          <ul class="stage-up__tool-list">
+            @for (g of justWoke(); track g.skillKey; let i = $index) {
+              <li
+                class="stage-up__tool"
+                [class.is-dormant]="!g.catalogueActive"
+                [style.animation-delay.ms]="i * 120"
+                [attr.data-testid]="'aplus-stage-up-woke-' + g.skillKey">
+                <i
+                  class="fa-solid"
+                  [class.fa-circle-check]="g.catalogueActive"
+                  [class.fa-moon]="!g.catalogueActive"
+                  aria-hidden="true"></i>
+                <span>{{ ('familiar_skill.' + g.skillKey) | translate }}</span>
+                @if (!g.catalogueActive) {
+                  <span class="stage-up__dormant-chip">
+                    {{ 'familiar_loadout.dormant' | translate }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (nextUnlocks().length > 0) {
+        <section class="stage-up__section" data-testid="aplus-stage-up-next">
+          <h2 class="stage-up__section-title">
+            <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
+            {{ 'aplus.familiar_stage_up.skills_stirring' | translate }}
+          </h2>
+          <ul class="stage-up__tool-list stage-up__tool-list--tease">
+            @for (n of nextUnlocks(); track n.skillKey; let i = $index) {
+              <li
+                class="stage-up__tool stage-up__tool--tease"
+                [style.animation-delay.ms]="i * 120"
+                [attr.data-testid]="'aplus-stage-up-next-' + n.skillKey">
+                <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
+                <span>{{ ('familiar_skill.' + n.skillKey) | translate }}</span>
+                <span class="stage-up__dormant-chip">
+                  {{ 'aplus.familiar_stage_up.unlocks_at_stage' | translate }}
+                  {{ n.unlocksAtStage }}
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (llmTier()) {
+        <section class="stage-up__section" data-testid="aplus-stage-up-llm-tier">
+          <h2 class="stage-up__section-title">
+            <i class="fa-solid fa-brain" aria-hidden="true"></i>
+            {{ 'aplus.familiar_stage_up.llm_tier_label' | translate }}
+          </h2>
+          <p class="stage-up__llm-tier">
+            <span class="stage-up__llm-value">{{ llmTier() }}</span>
+            <span class="stage-up__llm-hint">
+              {{ 'aplus.familiar_stage_up.llm_tier_hint' | translate }}
+            </span>
+          </p>
+        </section>
+      }
+
+      <footer class="stage-up__footer">
+        <button
+          type="button"
+          class="stage-up__share-cta"
+          (click)="shareToCircle()"
+          data-testid="aplus-stage-up-share">
+          <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+          {{ 'aplus.familiar_stage_up.share_cta' | translate }}
+        </button>
+        <a
+          [routerLink]="['/a/companion', s.familiarId]"
+          class="stage-up__close-cta"
+          data-testid="aplus-stage-up-close">
+          {{ 'aplus.familiar_stage_up.continue_cta' | translate }}
+        </a>
+      </footer>
+    </div>
+  </section>
+} @else {
+  <p class="stage-up__loading" role="status" aria-live="polite">
+    Loading celebration…
+  </p>
+}

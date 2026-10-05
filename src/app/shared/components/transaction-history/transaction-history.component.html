@@ -1,0 +1,328 @@
+<section class="tx" [attr.data-scope]="scope()">
+  <!-- ── Scope banner (CHO-2296) ─────────────────────────────────────────
+       MASTER scope spans every tenant while the shell's switcher still names
+       one, so state the real scope here. role="status" so it is announced,
+       not conveyed by styling alone. -->
+  @if (scopeBadge(); as badge) {
+    <p class="tx__scope-badge" data-testid="tx-scope-badge" role="status">
+      <i class="fa-solid fa-globe" aria-hidden="true"></i>
+      <span>{{ badge.key | translate: badge.params }}</span>
+    </p>
+  }
+
+  <!-- ── Summary-first KPI panel (ADR-205 D5) ───────────────────────── -->
+  @if (summary(); as s) {
+    <div class="glass-panel tx__summary" data-testid="tx-summary">
+      <div class="tx__kpi">
+        <span class="tx__kpi-label">{{ 'transaction_history.summary.total' | translate }}</span>
+        <span class="tx__kpi-value">{{ s.total_count }}</span>
+      </div>
+      <div class="tx__kpi">
+        <span class="tx__kpi-label">{{ 'transaction_history.summary.manaToppedUp' | translate }}</span>
+        <span class="tx__kpi-value">{{ formatMana(s.total_mana_topped_up) }}</span>
+      </div>
+      <div class="tx__kpi">
+        <span class="tx__kpi-label">{{ 'transaction_history.summary.manaSpent' | translate }}</span>
+        <span class="tx__kpi-value" data-testid="tx-mana-spent">{{ formatManaSpent(s.total_mana_spent) }}</span>
+      </div>
+      @for (cur of summaryCurrencies(); track cur.code) {
+        <div class="tx__kpi">
+          <span class="tx__kpi-label">{{ cur.code }}</span>
+          <span class="tx__kpi-value">{{ (cur.minor / 100).toFixed(2) }}</span>
+        </div>
+      }
+      <!-- Bounded default window (ADR-205 D5.2): the server defaults to a
+           recent window; show it so the learner/admin knows older rows need an
+           explicit earlier "from" filter. -->
+      @if (s.window_from && s.window_to) {
+        <div class="tx__kpi tx__window" data-testid="tx-window">
+          <span class="tx__kpi-label">{{ 'transaction_history.summary.window' | translate }}</span>
+          <span class="tx__window-range" data-testid="tx-window-range">
+            {{ formatWindowRange(s.window_from, s.window_to) }}
+          </span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Filter bar ──────────────────────────────────────────────────── -->
+  <div class="glass-panel tx__filters">
+    <label class="tx__field">
+      <span class="tx__field-label">{{ 'transaction_history.col.type' | translate }}</span>
+      <select class="form-control" data-testid="filter-kind"
+              (change)="onKindChange($any($event.target).value)">
+        <option value="">{{ 'transaction_history.filter.allKinds' | translate }}</option>
+        @for (k of kindOptions; track k) {
+          <option [value]="k">{{ kindLabelKey(k) | translate }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="tx__field">
+      <span class="tx__field-label">{{ 'transaction_history.col.status' | translate }}</span>
+      <select class="form-control" data-testid="filter-status"
+              (change)="onStatusChange($any($event.target).value)">
+        <option value="all">{{ 'transaction_history.status.all' | translate }}</option>
+        @for (st of statusOptions; track st) {
+          <option [value]="st">{{ statusLabelKey(st) | translate }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="tx__field">
+      <span class="tx__field-label">{{ 'transaction_history.filter.from' | translate }}</span>
+      <input class="form-control" type="date" data-testid="filter-from"
+             (change)="onFromChange($any($event.target).value)" />
+    </label>
+
+    <label class="tx__field">
+      <span class="tx__field-label">{{ 'transaction_history.filter.to' | translate }}</span>
+      <input class="form-control" type="date" data-testid="filter-to"
+             (change)="onToChange($any($event.target).value)" />
+    </label>
+
+    <label class="tx__field">
+      <span class="tx__field-label">{{ 'transaction_history.filter.sort' | translate }}</span>
+      <select class="form-control" data-testid="filter-sort"
+              (change)="onSortChange($any($event.target).value)">
+        <option value="occurred_at:desc">{{ 'transaction_history.sort.newest' | translate }}</option>
+        <option value="occurred_at:asc">{{ 'transaction_history.sort.oldest' | translate }}</option>
+        <option value="amount:desc">{{ 'transaction_history.sort.amountHigh' | translate }}</option>
+        <option value="amount:asc">{{ 'transaction_history.sort.amountLow' | translate }}</option>
+      </select>
+    </label>
+
+    <!-- Franchisee multi-select (MASTER) — name-backed chips, pick before the
+         learner filter so its gate hint reads naturally. -->
+    @if (isMaster()) {
+      <div class="tx__field" data-testid="filter-franchisee-field">
+        <span class="tx__field-label">{{ 'transaction_history.filter.franchisee' | translate }}</span>
+        <chora-entity-picker
+          variant="multi"
+          entityType="franchisee"
+          data-testid="filter-franchisee"
+          [value]="franchiseeChips()"
+          [searchPortOverride]="franchiseePort"
+          [minChars]="0"
+          [placeholder]="'transaction_history.filter.franchisee_search_placeholder' | translate"
+          [loadingLabel]="'transaction_history.filter.picker_searching' | translate"
+          [emptyLabel]="'transaction_history.filter.picker_no_matches' | translate"
+          [emptyBrowseLabel]="'transaction_history.filter.franchisee_none' | translate"
+          [errorLabel]="'transaction_history.filter.picker_error' | translate"
+          [retryLabel]="'transaction_history.filter.picker_retry' | translate"
+          [loadMoreLabel]="'transaction_history.filter.picker_load_more' | translate"
+          (picked)="onFranchiseePicked($event)"
+          (removed)="onFranchiseeRemoved($event)" />
+      </div>
+    }
+
+    <!-- Learner multi-select (TENANT / MASTER) — name-backed chips. At MASTER
+         scope it is gated on exactly one franchisee (member search 403s the
+         operator and can't target a franchisee otherwise). -->
+    @if (isAdmin()) {
+      <div class="tx__field" data-testid="filter-learner-field">
+        <span class="tx__field-label">{{ 'transaction_history.filter.learner' | translate }}</span>
+        @if (learnerPickerEnabled()) {
+          <chora-entity-picker
+            variant="multi"
+            entityType="member"
+            data-testid="filter-learner"
+            [value]="learnerChips()"
+            [facets]="learnerFacets()"
+            [searchPortOverride]="memberPort"
+            [minChars]="0"
+            [placeholder]="'transaction_history.filter.learner_search_placeholder' | translate"
+            [loadingLabel]="'transaction_history.filter.picker_searching' | translate"
+            [emptyLabel]="'transaction_history.filter.picker_no_matches' | translate"
+            [emptyBrowseLabel]="'transaction_history.filter.learner_none_in_tenant' | translate"
+            [errorLabel]="'transaction_history.filter.picker_error' | translate"
+            [retryLabel]="'transaction_history.filter.picker_retry' | translate"
+            [loadMoreLabel]="'transaction_history.filter.picker_load_more' | translate"
+            (picked)="onLearnerPicked($event)"
+            (removed)="onLearnerRemoved($event)" />
+        } @else {
+          <p class="tx__field-hint" data-testid="filter-learner-hint">
+            {{ 'transaction_history.filter.pick_franchisee_first' | translate }}
+          </p>
+        }
+      </div>
+    }
+
+    <div class="tx__filter-actions">
+      <button type="button" class="btn btn-primary" data-testid="apply-filters"
+              (click)="applyFilters()">
+        {{ 'transaction_history.filter.apply' | translate }}
+      </button>
+      <button type="button" class="btn btn-ghost" data-testid="clear-filters"
+              (click)="clearFilters()">
+        {{ 'transaction_history.filter.clear' | translate }}
+      </button>
+
+      <span class="tx__filter-spacer"></span>
+
+      <button type="button" class="btn btn-ghost" data-testid="export-csv"
+              [disabled]="exportInFlight() !== null" (click)="onExport('csv')">
+        {{ 'transaction_history.export.csv' | translate }}
+      </button>
+      <button type="button" class="btn btn-ghost" data-testid="export-json"
+              [disabled]="exportInFlight() !== null" (click)="onExport('json')">
+        {{ 'transaction_history.export.json' | translate }}
+      </button>
+      @if (streaming()) {
+        <span class="tx__live" data-testid="live-badge" title="{{ 'transaction_history.streaming' | translate }}">●</span>
+      }
+    </div>
+  </div>
+
+  <!-- ── Async export job (202 → poll → signed link, ADR-205 D5.6) ─────── -->
+  @if (exportJob(); as job) {
+    <div class="glass-panel tx__export-job" role="status" data-testid="tx-export-job">
+      @if (job.status === 'ready' && job.download_url) {
+        <span class="tx__export-job-msg">{{ 'transaction_history.export.ready' | translate }}</span>
+        <!-- Signed GCS URL carries its own auth in the query string, so a
+             direct anchor is correct here (and required — getBlob would attach
+             the Chora Bearer to GCS and fail CORS). Deliberate exception to
+             ADR-205 D6, which governs BFF downloads. -->
+        <a class="btn btn-primary" [href]="job.download_url" target="_blank" rel="noopener"
+           data-testid="tx-export-download" (click)="dismissExportJob()">
+          {{ 'transaction_history.export.download' | translate }}
+        </a>
+      } @else if (job.status === 'failed') {
+        <span class="tx__export-job-msg tx__export-job-msg--error" role="alert"
+              data-testid="tx-export-failed">
+          {{ 'transaction_history.export.failed' | translate }}
+        </span>
+      } @else {
+        <span class="tx__export-spinner" aria-hidden="true"></span>
+        <span class="tx__export-job-msg" data-testid="tx-export-pending">
+          {{ 'transaction_history.export.preparing' | translate }}
+        </span>
+      }
+      <button type="button" class="btn btn-ghost tx__export-dismiss"
+              data-testid="tx-export-dismiss" (click)="dismissExportJob()"
+              [attr.aria-label]="'transaction_history.export.dismiss' | translate">✕</button>
+    </div>
+  }
+
+  <!-- ── Errors ──────────────────────────────────────────────────────── -->
+  @if (errorKey(); as ek) {
+    <div class="glass-panel tx__error" role="alert" data-testid="tx-error">
+      {{ ek | translate }}
+    </div>
+  }
+
+  <!-- ── Table (virtual-scrolled) ────────────────────────────────────── -->
+  <!-- tabindex="0": the panel scrolls (virtual-scroll viewport), so keyboard
+       users must be able to focus it to scroll — axe scrollable-region-focusable,
+       first live catch of the CHO-1602 CDP guard on /a/wallet (2026-07-17). -->
+  <div
+    class="glass-panel tx__panel"
+    tabindex="0"
+    role="region"
+    [attr.aria-label]="'transaction_history.aria_panel' | translate"
+  >
+    <div class="tx__row tx__row--head" [class.tx__row--master]="showTenantCol()">
+      <span>{{ 'transaction_history.col.date' | translate }}</span>
+      <span>{{ 'transaction_history.col.label' | translate }}</span>
+      <span>{{ 'transaction_history.col.type' | translate }}</span>
+      <span class="tx__cell--num">{{ 'transaction_history.col.amount' | translate }}</span>
+      <span>{{ 'transaction_history.col.status' | translate }}</span>
+      @if (showTenantCol()) {
+        <span>{{ 'transaction_history.col.tenant' | translate }}</span>
+      }
+      <span class="tx__cell--num">{{ 'transaction_history.col.details' | translate }}</span>
+    </div>
+
+    @if (isEmpty()) {
+      <div class="tx__empty" data-testid="tx-empty">
+        {{ 'transaction_history.empty' | translate }}
+      </div>
+    } @else {
+      <cdk-virtual-scroll-viewport
+        [itemSize]="rowSize"
+        class="tx__viewport"
+        data-testid="tx-viewport"
+      >
+        <div
+          *cdkVirtualFor="let row of rows(); trackBy: trackByLedgerId"
+          class="tx__row"
+          [class.tx__row--master]="showTenantCol()"
+          [class.tx__row--expanded]="expandedId() === row.ledger_id"
+          data-testid="tx-row"
+        >
+          <span class="tx__cell--muted">{{ row.occurred_at | date: 'short' }}</span>
+          <span class="tx__cell--label" [title]="row.label">{{ row.label }}</span>
+          <span>{{ kindLabelKey(row.kind) | translate }}</span>
+          <span class="tx__cell--num">{{ formatAmount(row) }}</span>
+          <span><span [class]="statusBadgeClass(row.status)">{{ statusLabelKey(row.status) | translate }}</span></span>
+          @if (showTenantCol()) {
+            <span class="tx__cell--muted" [title]="row.tenant_id">{{ shortId(row.tenant_id) }}</span>
+          }
+          <span class="tx__cell--num">
+            @if (row.has_detail) {
+              <button
+                type="button"
+                class="tx__expand"
+                data-testid="tx-expand"
+                [attr.aria-expanded]="expandedId() === row.ledger_id"
+                [attr.aria-label]="'transaction_history.detail.title' | translate"
+                (click)="toggleDetail(row)"
+              >
+                {{ expandedId() === row.ledger_id ? '▾' : '▸' }}
+              </button>
+            }
+          </span>
+        </div>
+      </cdk-virtual-scroll-viewport>
+
+      @if (hasMore()) {
+        <div class="tx__more">
+          <button type="button" class="btn btn-ghost" data-testid="load-more"
+                  [disabled]="loading()" (click)="loadMore()">
+            {{ (loading() ? 'transaction_history.loading' : 'transaction_history.loadMore') | translate }}
+          </button>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- ── Drill-down: per-call mana detail ────────────────────────────── -->
+  @if (expandedId()) {
+    <div class="glass-panel tx__detail" data-testid="tx-detail">
+      <header class="tx__detail-head">
+        <h3>{{ 'transaction_history.detail.title' | translate }}</h3>
+        <button type="button" class="btn btn-ghost" data-testid="detail-close"
+                (click)="collapseDetail()">✕</button>
+      </header>
+
+      @if (detailLoading()) {
+        <p class="tx__detail-status">{{ 'transaction_history.detail.loading' | translate }}</p>
+      } @else if (detailErrorKey(); as dek) {
+        <p class="tx__detail-status" role="alert">{{ dek | translate }}</p>
+      } @else if (detailRows().length === 0) {
+        <p class="tx__detail-status">{{ 'transaction_history.detail.empty' | translate }}</p>
+      } @else {
+        <table class="data-table tx__detail-table">
+          <thead>
+            <tr>
+              <th>{{ 'transaction_history.detail.time' | translate }}</th>
+              <th>{{ 'transaction_history.detail.action' | translate }}</th>
+              <th class="tx__cell--num">{{ 'transaction_history.detail.mana' | translate }}</th>
+              <th>{{ 'transaction_history.detail.model' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of detailRows(); track trackByDetailId($index, d)) {
+              <tr>
+                <td class="tx__cell--muted">{{ d.occurred_at | date: 'short' }}</td>
+                <td>{{ d.action_code }}</td>
+                <td class="tx__cell--num">−{{ d.mana_units }}</td>
+                <td class="tx__cell--muted">{{ d.model || '-' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</section>

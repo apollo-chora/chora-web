@@ -1,0 +1,89 @@
+<section
+  class="odds-table"
+  [attr.aria-label]="'aplus.familiar_marketplace.odds_aria' | translate"
+  data-testid="egg-odds-table">
+  <header class="odds-table__head">
+    <h3 class="odds-table__title">
+      <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+      {{ 'aplus.familiar_marketplace.odds_title' | translate }}
+    </h3>
+    <div class="odds-table__sort" role="tablist" [attr.aria-label]="'aplus.familiar_marketplace.odds_sort_aria' | translate">
+      <button
+        type="button"
+        role="tab"
+        class="sort-chip"
+        [class.is-active]="isSort('probability-desc')"
+        [attr.aria-selected]="isSort('probability-desc')"
+        (click)="setSortMode('probability-desc')"
+        data-testid="sort-probability-desc">
+        {{ 'aplus.familiar_marketplace.sort_probability' | translate }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="sort-chip"
+        [class.is-active]="isSort('rarity')"
+        [attr.aria-selected]="isSort('rarity')"
+        (click)="setSortMode('rarity')"
+        data-testid="sort-rarity">
+        {{ 'aplus.familiar_marketplace.sort_rarity' | translate }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="sort-chip"
+        [class.is-active]="isSort('species')"
+        [attr.aria-selected]="isSort('species')"
+        (click)="setSortMode('species')"
+        data-testid="sort-species">
+        {{ 'aplus.familiar_marketplace.sort_species' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (!isLoaded()) {
+    <p class="odds-table__loading" role="status">
+      {{ 'aplus.familiar_marketplace.odds_loading' | translate }}
+    </p>
+  } @else {
+    <ol class="odds-table__list" data-testid="odds-rows">
+      @for (row of odds(); track row.species) {
+        <li class="odds-row" [attr.data-rarity]="row.rarity" [attr.data-species]="row.species">
+          <span class="odds-row__species" [attr.data-breed]="row.species">
+            <span class="odds-row__species-name">
+              {{ ('aplus.familiar_marketplace.breed_' + row.species) | translate }}
+            </span>
+            <span class="odds-row__rarity-chip" [attr.data-rarity]="row.rarity">
+              {{ ('aplus.familiar.rarity_' + row.rarity) | translate }}
+            </span>
+          </span>
+          <div class="odds-row__bar" aria-hidden="true">
+            <div class="odds-row__bar-fill" [style.width.%]="row.probability"></div>
+          </div>
+          <span class="odds-row__pct" [attr.aria-label]="row.probability + '%'">
+            {{ row.probability }}%
+          </span>
+        </li>
+      }
+    </ol>
+
+    <footer class="odds-table__foot">
+      <p class="odds-table__total">
+        {{ 'aplus.familiar_marketplace.odds_total_weight' | translate }}:
+        <strong>{{ totalWeight() }}</strong>
+      </p>
+      @if (distributionUpdatedAt()) {
+        <p class="odds-table__updated">
+          {{ 'aplus.familiar_marketplace.odds_updated' | translate }}:
+          <time [attr.dateTime]="distributionUpdatedAt()">
+            {{ distributionUpdatedAt() }}
+          </time>
+        </p>
+      }
+      <p class="odds-table__compliance" data-testid="odds-compliance">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        {{ 'aplus.familiar_marketplace.odds_compliance' | translate }}
+      </p>
+    </footer>
+  }
+</section>

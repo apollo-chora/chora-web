@@ -1,0 +1,558 @@
+<section class="surface-rplus exam-workspace" data-testid="rplus-exam-workspace">
+  <a class="exam-workspace__back" routerLink="/r/exams" data-testid="exam-ws-back">
+    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+    {{ 'rplus.exams.workspace.back' | translate }}
+  </a>
+
+  @if (isUnauthorized()) {
+    <div class="glass-panel exam-workspace__state" role="alert" data-testid="exam-ws-unauthorized">
+      {{ 'rplus.exams.workspace.unauthorized' | translate }}
+    </div>
+  } @else if (isLoading()) {
+    <div class="glass-panel exam-workspace__state" data-testid="exam-ws-loading">
+      {{ 'rplus.exams.workspace.loading' | translate }}
+    </div>
+  } @else if (isNotFound()) {
+    <div class="glass-panel exam-workspace__state" role="alert" data-testid="exam-ws-notfound">
+      {{ 'rplus.exams.workspace.not_found' | translate }}
+    </div>
+  } @else if (isError()) {
+    <div class="glass-panel exam-workspace__state" role="alert" data-testid="exam-ws-error">
+      {{ 'rplus.exams.workspace.load_error' | translate }}
+    </div>
+  } @else if (exam(); as ex) {
+    <!-- Header -->
+    <header class="exam-workspace__header glass-panel">
+      <div class="exam-workspace__title-row">
+        <h1 class="exam-workspace__title" data-testid="exam-ws-title">{{ ex.title }}</h1>
+        <span
+          class="badge"
+          [class]="'badge ' + examStateBadge(ex.state)"
+          data-testid="exam-ws-state">
+          {{ ex.state }}
+        </span>
+      </div>
+      <p class="exam-workspace__subtitle">
+        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+        {{ ex.scheduledLabel || ('rplus.exams.workspace.overview.unscheduled' | translate) }}
+        <span aria-hidden="true">·</span>
+        {{ ex.durationMinutes }} {{ 'rplus.exams.workspace.overview.minutes' | translate }}
+      </p>
+    </header>
+
+    <!-- Tab bar (object-derived, role-gated, roving tabindex) -->
+    <nav
+      class="exam-workspace__tabs"
+      role="tablist"
+      [attr.aria-label]="'rplus.exams.workspace.tablist_aria' | translate">
+      @for (t of tabList(); track t.id; let i = $index) {
+        <button
+          #tabBtn
+          type="button"
+          role="tab"
+          class="exam-workspace__tab"
+          [class.exam-workspace__tab--active]="t.id === activeTabId()"
+          [id]="'exam-tab-' + t.id"
+          [attr.aria-selected]="t.id === activeTabId()"
+          [attr.aria-controls]="'exam-panel-' + t.id"
+          [attr.tabindex]="t.id === activeTabId() ? 0 : -1"
+          [attr.data-testid]="'exam-ws-tab-' + t.id"
+          (click)="selectTab(t.id)"
+          (keydown)="onTabKeydown($event, i)">
+          {{ t.labelKey | translate }}
+        </button>
+      }
+    </nav>
+
+    <!-- Panels -->
+    <div
+      class="exam-workspace__panel glass-panel"
+      role="tabpanel"
+      [id]="'exam-panel-' + activeTabId()"
+      [attr.aria-labelledby]="'exam-tab-' + activeTabId()">
+      @if (isOverviewActive()) {
+        <dl class="exam-workspace__overview" data-testid="exam-ws-overview">
+          <div>
+            <dt>{{ 'rplus.exams.workspace.overview.state' | translate }}</dt>
+            <dd>{{ ex.state }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'rplus.exams.workspace.overview.scheduled' | translate }}</dt>
+            <dd>{{ ex.scheduledAtIso ? (ex.scheduledAtIso | date: 'medium') : '-' }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'rplus.exams.workspace.overview.duration' | translate }}</dt>
+            <dd>{{ ex.durationMinutes }} {{ 'rplus.exams.workspace.overview.minutes' | translate }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'rplus.exams.workspace.overview.candidates' | translate }}</dt>
+            <dd>{{ candidateCount() }} / {{ ex.capacity }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'rplus.exams.workspace.overview.proctor_method' | translate }}</dt>
+            <dd>{{ ex.proctorMethod || '-' }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'rplus.exams.workspace.overview.course' | translate }}</dt>
+            <dd><code>{{ ex.courseId || '-' }}</code></dd>
+          </div>
+        </dl>
+      } @else if (isFormActive()) {
+        @switch (formsState().status) {
+          @case ('loading') {
+            <p data-testid="exam-ws-form-loading">{{ 'rplus.exams.workspace.form.loading' | translate }}</p>
+          }
+          @case ('error') {
+            <p role="alert" data-testid="exam-ws-form-error">
+              {{ 'rplus.exams.workspace.form.load_error' | translate }}
+            </p>
+          }
+          @default {
+            @if (forms().length === 0) {
+              <p class="exam-workspace__empty" data-testid="exam-ws-form-empty">
+                {{ 'rplus.exams.workspace.form.empty' | translate }}
+              </p>
+            } @else {
+              @for (f of forms(); track f.formId) {
+                <article class="exam-workspace__form" [attr.data-testid]="'exam-ws-form-' + f.formId">
+                  <div class="exam-workspace__form-head">
+                    <span class="badge badge-info">{{ f.state }}</span>
+                    <span>{{ f.itemCount }} {{ 'rplus.exams.workspace.form.items' | translate }}</span>
+                    @if (f.cutScore; as cut) {
+                      <span data-testid="exam-ws-form-cut">
+                        {{ 'rplus.exams.workspace.form.pass_mark' | translate }}:
+                        <strong>{{ cut.passMark }}</strong> / {{ cut.maxScore }}
+                      </span>
+                    }
+                  </div>
+                  <ol class="exam-workspace__items">
+                    @for (it of f.items; track it.itemId) {
+                      <li>
+                        <span class="exam-workspace__item-pos">{{ it.position }}</span>
+                        <code>{{ it.atomRevisionId }}</code>
+                      </li>
+                    }
+                  </ol>
+                </article>
+              }
+            }
+          }
+        }
+      } @else if (isCandidatesActive()) {
+        @if (isExamAdmin()) {
+          <form class="exam-workspace__allocate" (ngSubmit)="allocateCandidate()">
+            <label class="exam-workspace__allocate-field">
+              <span>{{ 'rplus.exams.workspace.candidates.allocate_label' | translate }}</span>
+              <input
+                type="text"
+                name="gcid"
+                data-testid="exam-ws-allocate-gcid"
+                [value]="newCandidateGcid()"
+                (input)="newCandidateGcid.set($any($event.target).value)"
+                [attr.placeholder]="'rplus.exams.workspace.candidates.allocate_placeholder' | translate" />
+            </label>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              data-testid="exam-ws-allocate-cta"
+              [disabled]="isAllocating() || !newCandidateGcid().trim()">
+              {{
+                isAllocating()
+                  ? ('rplus.exams.workspace.candidates.allocating' | translate)
+                  : ('rplus.exams.workspace.candidates.allocate_cta' | translate)
+              }}
+            </button>
+            @if (allocateError(); as err) {
+              <p class="exam-workspace__row-error" role="alert" data-testid="exam-ws-allocate-error">{{ err }}</p>
+            }
+          </form>
+        }
+
+        @switch (candidatesState().status) {
+          @case ('loading') {
+            <p data-testid="exam-ws-candidates-loading">{{ 'rplus.exams.workspace.candidates.loading' | translate }}</p>
+          }
+          @case ('error') {
+            <p role="alert" data-testid="exam-ws-candidates-error">
+              {{ 'rplus.exams.workspace.candidates.load_error' | translate }}
+            </p>
+          }
+          @default {
+            <table class="data-table exam-workspace__candidates" data-testid="exam-ws-candidates-table">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'rplus.exams.workspace.candidates.col_gcid' | translate }}</th>
+                  <th scope="col">{{ 'rplus.exams.workspace.candidates.col_state' | translate }}</th>
+                  <th scope="col">{{ 'rplus.exams.workspace.candidates.col_verification' | translate }}</th>
+                  @if (isExamAdmin()) {
+                    <th scope="col">{{ 'rplus.exams.workspace.candidates.col_actions' | translate }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of candidates(); track c.candidateId) {
+                  <tr [attr.data-testid]="'exam-ws-candidate-' + c.gcid">
+                    <td><code class="exam-workspace__gcid">{{ c.gcid }}</code></td>
+                    <td>
+                      <span class="badge" [class]="'badge ' + candidateStateBadge(c.state)"
+                        [attr.data-testid]="'exam-ws-cstate-' + c.gcid">{{ c.state }}</span>
+                    </td>
+                    <td>
+                      <span class="badge" [class]="'badge ' + verificationBadge(c.verificationStatus)">
+                        {{ c.verificationStatus }}
+                      </span>
+                    </td>
+                    @if (isExamAdmin()) {
+                      <td class="exam-workspace__row-actions">
+                        <!-- Admin KYC review — the manual-doc prerequisite that
+                             must clear before the candidate-verify can resolve
+                             the learner's claim VERIFIED (CHO-2103). -->
+                        @if (c.state === 'ALLOCATED' && c.verificationStatus === 'UNVERIFIED') {
+                          <button type="button" class="btn btn-ghost btn-sm"
+                            [attr.data-testid]="'exam-ws-kyc-verify-' + c.gcid"
+                            [disabled]="kycActingGcid() === c.gcid"
+                            (click)="verifyKyc(c.gcid)">
+                            {{ (kycActingGcid() === c.gcid
+                                ? 'rplus.exams.workspace.candidates.kyc.verifying'
+                                : 'rplus.exams.workspace.candidates.kyc.verify') | translate }}
+                          </button>
+                          <button type="button" class="btn btn-ghost btn-sm"
+                            [attr.data-testid]="'exam-ws-kyc-reject-open-' + c.gcid"
+                            [disabled]="kycActingGcid() === c.gcid"
+                            (click)="openKycReject(c.gcid)">
+                            {{ 'rplus.exams.workspace.candidates.kyc.reject' | translate }}
+                          </button>
+                        }
+                        @if (kycRejectingGcid() === c.gcid) {
+                          <form class="exam-workspace__kyc-reject" (ngSubmit)="submitKycReject(c.gcid)"
+                            [attr.data-testid]="'exam-ws-kyc-reject-form-' + c.gcid">
+                            <label class="exam-workspace__kyc-field">
+                              <span>{{ 'rplus.exams.workspace.candidates.kyc.code' | translate }}</span>
+                              <input type="text" [attr.data-testid]="'exam-ws-kyc-reject-code-' + c.gcid"
+                                [value]="kycRejectCode()" (input)="kycRejectCode.set($any($event.target).value)" />
+                            </label>
+                            <label class="exam-workspace__kyc-field">
+                              <span>{{ 'rplus.exams.workspace.candidates.kyc.notes' | translate }}</span>
+                              <input type="text" [attr.data-testid]="'exam-ws-kyc-reject-notes-' + c.gcid"
+                                [value]="kycRejectNotes()" (input)="kycRejectNotes.set($any($event.target).value)" />
+                            </label>
+                            <label class="exam-workspace__kyc-retry">
+                              <input type="checkbox" [attr.data-testid]="'exam-ws-kyc-reject-retry-' + c.gcid"
+                                [checked]="kycRejectRetry()" (change)="kycRejectRetry.set($any($event.target).checked)" />
+                              <span>{{ 'rplus.exams.workspace.candidates.kyc.retry' | translate }}</span>
+                            </label>
+                            <button type="submit" class="btn btn-primary btn-sm"
+                              [attr.data-testid]="'exam-ws-kyc-reject-submit-' + c.gcid"
+                              [disabled]="kycActingGcid() === c.gcid">
+                              {{ (kycActingGcid() === c.gcid
+                                  ? 'rplus.exams.workspace.candidates.kyc.submitting'
+                                  : 'rplus.exams.workspace.candidates.kyc.submit_reject') | translate }}
+                            </button>
+                            <button type="button" class="btn btn-ghost btn-sm"
+                              [attr.data-testid]="'exam-ws-kyc-reject-cancel-' + c.gcid"
+                              (click)="cancelKycReject()">
+                              {{ 'rplus.exams.workspace.candidates.kyc.cancel' | translate }}
+                            </button>
+                          </form>
+                        }
+                        @if (kycNotice(); as kn) {
+                          @if (kn.gcid === c.gcid) {
+                            <span class="exam-workspace__kyc-notice"
+                              [class.exam-workspace__kyc-notice--error]="kn.tone === 'error'"
+                              [attr.role]="kn.tone === 'error' ? 'alert' : 'status'"
+                              [attr.data-testid]="'exam-ws-kyc-notice-' + c.gcid">
+                              @if (kn.kind === 'key') {
+                                {{ kn.messageKey | translate }}
+                              } @else {
+                                {{ kn.message }}
+                              }
+                            </span>
+                          }
+                        }
+                        <!-- Exam-BC candidate lifecycle: verify (claim-resolve) → admit. -->
+                        @if (c.state === 'ALLOCATED') {
+                          <button type="button" class="btn btn-ghost btn-sm"
+                            [attr.data-testid]="'exam-ws-verify-' + c.gcid"
+                            [disabled]="actingGcid() === c.gcid"
+                            (click)="verifyCandidate(c.gcid)">
+                            {{ 'rplus.exams.workspace.candidates.verify' | translate }}
+                          </button>
+                        }
+                        @if (c.state === 'ID_VERIFIED') {
+                          <button type="button" class="btn btn-primary btn-sm"
+                            [attr.data-testid]="'exam-ws-admit-' + c.gcid"
+                            [disabled]="actingGcid() === c.gcid"
+                            (click)="admitCandidate(c.gcid)">
+                            {{ 'rplus.exams.workspace.candidates.admit' | translate }}
+                          </button>
+                        }
+                        @if (rowError(); as re) {
+                          @if (re.gcid === c.gcid) {
+                            <span class="exam-workspace__row-error" role="alert"
+                              [attr.data-testid]="'exam-ws-rowerror-' + c.gcid">{{ re.message }}</span>
+                          }
+                        }
+                      </td>
+                    }
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td [attr.colspan]="isExamAdmin() ? 4 : 3" class="exam-workspace__empty"
+                      data-testid="exam-ws-candidates-empty">
+                      {{ 'rplus.exams.workspace.candidates.empty' | translate }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+      } @else if (isProctorsActive()) {
+        <!-- Proctors = sittings + their invigilators -->
+        <form class="exam-workspace__allocate" (ngSubmit)="createSitting()" data-testid="exam-ws-sitting-form">
+          <label class="exam-workspace__allocate-field">
+            <span>{{ 'rplus.exams.workspace.sittings.starts' | translate }}</span>
+            <input type="datetime-local" data-testid="exam-ws-sitting-starts"
+              [value]="newSittingStartsAt()" (input)="newSittingStartsAt.set($any($event.target).value)" />
+          </label>
+          <label class="exam-workspace__allocate-field">
+            <span>{{ 'rplus.exams.workspace.sittings.ends' | translate }}</span>
+            <input type="datetime-local" data-testid="exam-ws-sitting-ends"
+              [value]="newSittingEndsAt()" (input)="newSittingEndsAt.set($any($event.target).value)" />
+          </label>
+          <label class="exam-workspace__allocate-field">
+            <span>{{ 'rplus.exams.workspace.sittings.capacity' | translate }}</span>
+            <input type="number" min="1" data-testid="exam-ws-sitting-capacity"
+              [value]="newSittingCapacity()" (input)="newSittingCapacity.set(+$any($event.target).value)" />
+          </label>
+          <button type="submit" class="btn btn-primary" data-testid="exam-ws-sitting-create"
+            [disabled]="isCreatingSitting() || !newSittingStartsAt() || !newSittingEndsAt() || !newSittingCapacity()">
+            {{ (isCreatingSitting() ? 'rplus.exams.workspace.sittings.creating' : 'rplus.exams.workspace.sittings.create') | translate }}
+          </button>
+        </form>
+        @if (sittingError(); as err) {
+          <p class="exam-workspace__row-error" role="alert" data-testid="exam-ws-sitting-error">{{ err }}</p>
+        }
+        @switch (sittingsState().status) {
+          @case ('loading') { <p>{{ 'rplus.exams.workspace.sittings.loading' | translate }}</p> }
+          @case ('error') { <p role="alert" data-testid="exam-ws-sittings-error">{{ 'rplus.exams.workspace.sittings.load_error' | translate }}</p> }
+          @default {
+            <table class="data-table" data-testid="exam-ws-sittings-table">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'rplus.exams.workspace.sittings.col_when' | translate }}</th>
+                  <th scope="col">{{ 'rplus.exams.workspace.sittings.col_capacity' | translate }}</th>
+                  <th scope="col">{{ 'rplus.exams.workspace.overview.state' | translate }}</th>
+                  <th scope="col">{{ 'rplus.exams.workspace.candidates.col_actions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of sittings(); track s.sittingId) {
+                  <tr [attr.data-testid]="'exam-ws-sitting-' + s.sittingId"
+                    [class.exam-workspace__row--selected]="s.sittingId === selectedSittingId()">
+                    <td>{{ s.startsLabel || s.startsAtIso }} @if (s.roomId) { · {{ s.roomId }} }</td>
+                    <td>{{ s.capacity }}</td>
+                    <td><span class="badge" [class]="'badge ' + sittingStateBadge(s.state)">{{ s.state }}</span></td>
+                    <td class="exam-workspace__row-actions">
+                      @for (a of actionsFor(s.state); track a) {
+                        <button type="button" class="btn btn-ghost btn-sm"
+                          [attr.data-testid]="'exam-ws-sitting-' + a + '-' + s.sittingId"
+                          [disabled]="sittingBusy() === s.sittingId" (click)="runSittingAction(s.sittingId, a)">
+                          {{ 'rplus.exams.workspace.sittings.action.' + a | translate }}
+                        </button>
+                      }
+                      <button type="button" class="btn btn-ghost btn-sm"
+                        [attr.data-testid]="'exam-ws-sitting-manage-' + s.sittingId" (click)="selectSitting(s.sittingId)">
+                        {{ 'rplus.exams.workspace.proctors.manage' | translate }}
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" class="exam-workspace__empty">{{ 'rplus.exams.workspace.sittings.empty' | translate }}</td></tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+        @if (selectedSittingId()) {
+          <section class="exam-workspace__subpanel" data-testid="exam-ws-invigilators">
+            <h3>{{ 'rplus.exams.workspace.proctors.heading' | translate }}</h3>
+            <form class="exam-workspace__allocate" (ngSubmit)="assignInvigilator()">
+              <label class="exam-workspace__allocate-field">
+                <span>{{ 'rplus.exams.workspace.proctors.gcid' | translate }}</span>
+                <input type="text" data-testid="exam-ws-invig-gcid"
+                  [value]="newInvigilatorGcid()" (input)="newInvigilatorGcid.set($any($event.target).value)" />
+              </label>
+              <label class="exam-workspace__allocate-field">
+                <span>{{ 'rplus.exams.workspace.proctors.rank' | translate }}</span>
+                <select data-testid="exam-ws-invig-rank" [value]="newInvigilatorRank()"
+                  (change)="newInvigilatorRank.set($any($event.target).value)">
+                  @for (r of rankOptions; track r) {
+                    <option [value]="r">{{ 'rplus.exams.workspace.proctors.rank_opt.' + r | translate }}</option>
+                  }
+                </select>
+              </label>
+              <button type="submit" class="btn btn-primary" data-testid="exam-ws-invig-assign"
+                [disabled]="isAssigning() || !newInvigilatorGcid().trim()">
+                {{ (isAssigning() ? 'rplus.exams.workspace.proctors.assigning' : 'rplus.exams.workspace.proctors.assign') | translate }}
+              </button>
+            </form>
+            @switch (invigilatorsState().status) {
+              @case ('loading') { <p>{{ 'rplus.exams.workspace.proctors.loading' | translate }}</p> }
+              @case ('error') { <p role="alert">{{ 'rplus.exams.workspace.proctors.load_error' | translate }}</p> }
+              @default {
+                <ul class="exam-workspace__invig-list">
+                  @for (iv of invigilators(); track iv.invigilatorId) {
+                    <li [attr.data-testid]="'exam-ws-invig-' + iv.invigilatorId">
+                      <code>{{ iv.invigilatorGcid }}</code>
+                      <span class="badge badge-info">{{ 'rplus.exams.workspace.proctors.rank_opt.' + iv.rank | translate }}</span>
+                      <button type="button" class="btn btn-ghost btn-sm"
+                        [attr.data-testid]="'exam-ws-invig-remove-' + iv.invigilatorId"
+                        [disabled]="sittingBusy() === iv.invigilatorId" (click)="removeInvigilator(iv.invigilatorId)">
+                        {{ 'rplus.exams.workspace.proctors.remove' | translate }}
+                      </button>
+                    </li>
+                  } @empty {
+                    <li class="exam-workspace__empty">{{ 'rplus.exams.workspace.proctors.empty' | translate }}</li>
+                  }
+                </ul>
+              }
+            }
+          </section>
+        }
+      } @else if (isIncidentsActive()) {
+        <label class="exam-workspace__allocate-field">
+          <span>{{ 'rplus.exams.workspace.incidents.pick_sitting' | translate }}</span>
+          <select data-testid="exam-ws-incident-sitting" [value]="selectedSittingId()"
+            (change)="selectSitting($any($event.target).value)">
+            <option value="">-</option>
+            @for (s of sittings(); track s.sittingId) {
+              <option [value]="s.sittingId">{{ s.startsLabel || s.sittingId }} ({{ s.state }})</option>
+            }
+          </select>
+        </label>
+        @if (!selectedSittingId()) {
+          <p class="exam-workspace__empty">{{ 'rplus.exams.workspace.incidents.no_sitting' | translate }}</p>
+        } @else {
+          <form class="exam-workspace__allocate" (ngSubmit)="fileIncident()">
+            <label class="exam-workspace__allocate-field">
+              <span>{{ 'rplus.exams.workspace.incidents.kind' | translate }}</span>
+              <select data-testid="exam-ws-incident-kind" [value]="newIncidentKind()"
+                (change)="newIncidentKind.set($any($event.target).value)">
+                @for (k of kindOptions; track k) {
+                  <option [value]="k">{{ 'rplus.exams.workspace.incidents.kind_opt.' + k | translate }}</option>
+                }
+              </select>
+            </label>
+            <label class="exam-workspace__allocate-field exam-workspace__allocate-field--wide">
+              <span>{{ 'rplus.exams.workspace.incidents.narrative' | translate }}</span>
+              <input type="text" data-testid="exam-ws-incident-narrative"
+                [value]="newIncidentNarrative()" (input)="newIncidentNarrative.set($any($event.target).value)" />
+            </label>
+            <button type="submit" class="btn btn-primary" data-testid="exam-ws-incident-file"
+              [disabled]="isFiling() || !newIncidentNarrative().trim()">
+              {{ (isFiling() ? 'rplus.exams.workspace.incidents.filing' : 'rplus.exams.workspace.incidents.file') | translate }}
+            </button>
+          </form>
+          @if (sittingError(); as err) {
+            <p class="exam-workspace__row-error" role="alert" data-testid="exam-ws-incident-error">{{ err }}</p>
+          }
+          @switch (incidentsState().status) {
+            @case ('loading') { <p>{{ 'rplus.exams.workspace.incidents.loading' | translate }}</p> }
+            @case ('error') { <p role="alert" data-testid="exam-ws-incidents-error">{{ 'rplus.exams.workspace.incidents.load_error' | translate }}</p> }
+            @default {
+              <ul class="exam-workspace__incident-list" data-testid="exam-ws-incidents-list">
+                @for (inc of incidents(); track inc.incidentId) {
+                  <li [attr.data-testid]="'exam-ws-incident-' + inc.incidentId">
+                    <span class="badge badge-warning">{{ 'rplus.exams.workspace.incidents.kind_opt.' + inc.kind | translate }}</span>
+                    <span>{{ inc.narrative }}</span>
+                    @if (inc.candidateRef) { <code>{{ inc.candidateRef }}</code> }
+                  </li>
+                } @empty {
+                  <li class="exam-workspace__empty">{{ 'rplus.exams.workspace.incidents.empty' | translate }}</li>
+                }
+              </ul>
+            }
+          }
+        }
+      } @else if (isResultsActive()) {
+        <p class="exam-workspace__hint">{{ 'rplus.exams.workspace.results.hint' | translate }}</p>
+        <form class="exam-workspace__allocate" (ngSubmit)="recordResult()" data-testid="exam-ws-result-form">
+          <label class="exam-workspace__allocate-field">
+            <span>{{ 'rplus.exams.workspace.results.form' | translate }}</span>
+            <select data-testid="exam-ws-result-form" [value]="resultFormId()"
+              (change)="resultFormId.set($any($event.target).value)">
+              <option value="">-</option>
+              @for (f of forms(); track f.formId) {
+                <option [value]="f.formId">{{ f.formId }} ({{ f.itemCount }} {{ 'rplus.exams.workspace.form.items' | translate }})</option>
+              }
+            </select>
+          </label>
+          <label class="exam-workspace__allocate-field">
+            <span>{{ 'rplus.exams.workspace.results.candidate' | translate }}</span>
+            <input type="text" data-testid="exam-ws-result-candidate"
+              [value]="resultCandidateRef()" (input)="resultCandidateRef.set($any($event.target).value)" />
+          </label>
+          <label class="exam-workspace__allocate-field">
+            <span>{{ 'rplus.exams.workspace.results.raw_score' | translate }}</span>
+            <input type="number" min="0" data-testid="exam-ws-result-score"
+              [value]="resultRawScore()" (input)="resultRawScore.set(+$any($event.target).value)" />
+          </label>
+          <button type="submit" class="btn btn-primary" data-testid="exam-ws-result-record"
+            [disabled]="isRecording() || !resultFormId() || !resultCandidateRef().trim() || resultRawScore() === null">
+            {{ (isRecording() ? 'rplus.exams.workspace.results.recording' : 'rplus.exams.workspace.results.record') | translate }}
+          </button>
+        </form>
+        @if (resultError(); as err) {
+          <p class="exam-workspace__row-error" role="alert" data-testid="exam-ws-result-error">{{ err }}</p>
+        }
+        @if (lastResult(); as r) {
+          <div class="exam-workspace__result" data-testid="exam-ws-result-outcome">
+            <span class="badge" [class]="'badge ' + outcomeBadge(r.outcome)">{{ r.outcome }}</span>
+            <span>{{ r.rawScore }} / {{ r.maxScore }} · {{ 'rplus.exams.workspace.form.pass_mark' | translate }} {{ r.passMark }}</span>
+            <code>{{ r.candidateRef }}</code>
+          </div>
+        }
+
+        @switch (resultsListState().status) {
+          @case ('loading') {
+            <p data-testid="exam-ws-results-loading">{{ 'rplus.exams.workspace.results.loading' | translate }}</p>
+          }
+          @case ('error') {
+            <p role="alert" data-testid="exam-ws-results-error">
+              {{ 'rplus.exams.workspace.results.load_error' | translate }}
+            </p>
+          }
+          @default {
+            <table class="data-table exam-workspace__results" data-testid="exam-ws-results-table">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'rplus.exams.workspace.results.candidate' | translate }}</th>
+                  <th scope="col">{{ 'rplus.exams.workspace.results.score' | translate }}</th>
+                  <th scope="col">{{ 'rplus.exams.workspace.results.outcome' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of resultsList(); track r.resultId) {
+                  <tr [attr.data-testid]="'exam-ws-result-' + r.resultId">
+                    <td><code class="exam-workspace__gcid">{{ r.candidateRef }}</code></td>
+                    <td>{{ r.rawScore }} / {{ r.maxScore }}</td>
+                    <td>
+                      <span class="badge" [class]="'badge ' + outcomeBadge(r.outcome)">{{ r.outcome }}</span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3" class="exam-workspace__empty" data-testid="exam-ws-results-empty">
+                      {{ 'rplus.exams.workspace.results.empty' | translate }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+      }
+    </div>
+  }
+</section>

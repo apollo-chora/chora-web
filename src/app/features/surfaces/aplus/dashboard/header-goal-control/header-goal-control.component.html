@@ -1,0 +1,164 @@
+<!-- Trigger — the header goal control. Shows the surfaced goal (ring + name +
+     status), or a "Set your first learning goal" CTA. Taps open the drawer. -->
+<button
+  type="button"
+  class="hgc-trigger"
+  (click)="openDrawer($event)"
+  [attr.aria-expanded]="drawerOpen()"
+  aria-haspopup="dialog"
+  [attr.aria-label]="'aplus.dashboard.goal.open_aria' | translate"
+  data-testid="aplus-header-goal-trigger">
+  @if (activeGoal(); as g) {
+    @if (g.totalConcepts) {
+      <chora-aplus-goal-progress-ring
+        class="hgc-ring"
+        [percent]="g.progressPercent ?? 0"
+        [mastered]="g.masteredConcepts ?? 0"
+        [total]="g.totalConcepts" />
+    } @else {
+      <span class="hgc-ring hgc-ring--set" aria-hidden="true">
+        <i class="fa-solid fa-bullseye"></i>
+      </span>
+    }
+    <span class="hgc-trigger__text">
+      <span class="hgc-trigger__label">{{ 'aplus.dashboard.goal_label' | translate }}</span>
+      <span class="hgc-trigger__name" data-testid="aplus-header-goal-name">
+        @if (goalDisplay()) {
+          {{ goalDisplay() }}
+        } @else {
+          {{ goalKindLabelKey() | translate }}
+        }
+      </span>
+    </span>
+    <span
+      class="badge {{ goalStatusClass() }} hgc-trigger__status"
+      [attr.aria-label]="'aplus.dashboard.goal.status_aria' | translate"
+      data-testid="aplus-header-goal-status">
+      @if (g.status === 'achieved') {
+        <i
+          class="fa-solid fa-graduation-cap"
+          aria-hidden="true"
+          data-testid="aplus-header-goal-graduated-badge"></i>
+      }
+      {{ goalStatusKey() | translate }}
+    </span>
+    <i class="fa-solid fa-chevron-down hgc-trigger__chevron" aria-hidden="true"></i>
+  } @else {
+    <span class="hgc-ring hgc-ring--set" aria-hidden="true">
+      <i class="fa-solid fa-bullseye"></i>
+    </span>
+    <span class="hgc-trigger__text">
+      <span class="hgc-trigger__label">{{ 'aplus.dashboard.goal_label' | translate }}</span>
+      <span class="hgc-trigger__empty" data-testid="aplus-header-goal-empty-cta">
+        {{ 'aplus.dashboard.goal.set_first' | translate }}
+      </span>
+    </span>
+    <i class="fa-solid fa-plus hgc-trigger__chevron" aria-hidden="true"></i>
+  }
+</button>
+
+<!-- Backdrop — only mounted while the drawer is open. -->
+@if (drawerOpen()) {
+  <div
+    class="hgc-backdrop"
+    (click)="closeDrawer()"
+    [style.top.px]="backdropTop()"
+    [style.left.px]="backdropLeft()"
+    data-testid="aplus-header-goal-drawer-backdrop"
+    aria-hidden="true"></div>
+}
+
+<!-- Learning-goals drawer (glass, mirrors the my-knowledge map switcher). Kept
+     mounted for the slide transition; inert + aria-hidden while closed. -->
+<aside
+  class="hgc-drawer"
+  [class.is-open]="drawerOpen()"
+  [style.top.px]="popoverTop()"
+  [style.left.px]="popoverLeft()"
+  [style.maxHeight.px]="popoverMaxHeight()"
+  [attr.aria-hidden]="!drawerOpen()"
+  [attr.inert]="drawerOpen() ? null : ''"
+  role="dialog"
+  [attr.aria-label]="'aplus.dashboard.goal.drawer_title' | translate"
+  data-testid="aplus-header-goal-drawer">
+  <div class="hgc-drawer__bar">
+    <span class="hgc-drawer__title">{{ 'aplus.dashboard.goal.drawer_title' | translate }}</span>
+    <button
+      type="button"
+      class="hgc-drawer__close"
+      (click)="closeDrawer()"
+      [attr.aria-label]="'aplus.dashboard.goal.drawer_close_aria' | translate"
+      data-testid="aplus-header-goal-drawer-close">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div class="hgc-drawer__body">
+    @if (switchableGoals().length) {
+      <ul class="hgc-drawer__list">
+        @for (g of switchableGoals(); track g.goalId) {
+          <li
+            class="hgc-drawer__row"
+            [class.is-current]="isCurrent(g)"
+            [attr.data-testid]="'aplus-header-goal-row-' + g.goalId">
+            <button
+              type="button"
+              class="hgc-drawer__pick"
+              (click)="switchToGoal(g.goalId)"
+              [attr.data-testid]="'aplus-header-goal-switch-' + g.goalId">
+              <span class="hgc-drawer__name">
+                @if (displayFor(g)) {
+                  {{ displayFor(g) }}
+                } @else {
+                  {{ kindKeyFor(g) | translate }}
+                }
+              </span>
+              <span class="hgc-drawer__meta">
+                {{ 'aplus.dashboard.goal.status_' + g.status | translate }}
+                @if (isCurrent(g)) {
+                  <span class="hgc-drawer__current">
+                    · {{ 'aplus.dashboard.goal.switch_current' | translate }}
+                  </span>
+                }
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="hgc-drawer__empty" data-testid="aplus-header-goal-drawer-empty">
+        {{ 'aplus.dashboard.goal.set_first' | translate }}
+      </p>
+    }
+  </div>
+
+  <!-- Pinned footer — always visible, never scrolled away with the goal list. -->
+  <div class="hgc-drawer__actions">
+    <button
+      type="button"
+      class="hgc-drawer__action hgc-drawer__action--primary"
+      (click)="openPicker()"
+      data-testid="aplus-header-goal-new">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      <span>{{ 'aplus.dashboard.goal.new_goal' | translate }}</span>
+    </button>
+    <button
+      type="button"
+      class="hgc-drawer__action"
+      (click)="proposeViaFamiliar()"
+      data-testid="aplus-header-goal-propose">
+      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+      <span class="hgc-drawer__action-text">
+        <span>{{ 'aplus.dashboard.goal.propose' | translate }}</span>
+        <span class="hgc-drawer__action-hint">{{ 'aplus.dashboard.goal.propose_hint' | translate }}</span>
+      </span>
+    </button>
+  </div>
+</aside>
+
+<!-- New-goal picker modal — opened by "＋ New learning goal". -->
+@if (pickerOpen()) {
+  <chora-aplus-goal-picker
+    (created)="onGoalCreated($event)"
+    (cancelled)="closePicker()" />
+}

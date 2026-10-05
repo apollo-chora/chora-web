@@ -1,0 +1,263 @@
+<section
+  class="surface-rplus bookings"
+  data-testid="rplus-bookings">
+  <header class="bookings__header glass-panel">
+    <div class="bookings__breadcrumb">
+      <span>{{ 'rplus.bookings.breadcrumb_root' | translate }}</span>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span class="surface-accent-text">
+        {{ 'rplus.bookings.breadcrumb_leaf' | translate }}
+      </span>
+    </div>
+    <div class="bookings__title-row">
+      <h1 class="bookings__title">
+        {{ 'rplus.bookings.title' | translate }}
+      </h1>
+      <span
+        class="bookings__tenant-pill"
+        data-testid="bookings-tenant">
+        <i class="fa-solid fa-building" aria-hidden="true"></i>
+        {{ 'rplus.bookings.tenant_label' | translate }}:
+        <strong>{{ tenantName() }}</strong>
+      </span>
+    </div>
+    <div class="bookings__meta">
+      <span
+        class="bookings__total"
+        data-testid="bookings-total">
+        <strong>{{ totalBookings() }}</strong>
+        {{ 'rplus.bookings.total_label' | translate }}
+      </span>
+    </div>
+  </header>
+
+  @if (errorMessage(); as msg) {
+    <!-- Create / status-PATCH mutation failure - keeps the list visible with a
+         dismissable banner (distinct from the list-region load-error below). -->
+    <div
+      class="bookings__mutation-error glass-panel"
+      role="alert"
+      aria-live="polite"
+      data-testid="bookings-mutation-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <span class="bookings__mutation-error-text">{{ msg }}</span>
+      <button
+        type="button"
+        class="btn btn-ghost bookings__mutation-error-dismiss"
+        data-testid="bookings-mutation-error-dismiss"
+        (click)="dismissError()"
+        [attr.aria-label]="'rplus.bookings.error_dismiss_aria' | translate">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+  }
+
+  <form
+    class="bookings__form glass-panel"
+    data-testid="bookings-form"
+    (ngSubmit)="onCreate()">
+    <h2 class="bookings__form-title">
+      {{ 'rplus.bookings.form.title' | translate }}
+    </h2>
+    <div class="bookings__form-grid">
+      <!-- CLASS picker (CHO-2336) - sourced from the durable ScheduledClass list
+           so the trainer picks a class by title/time; the option id IS the
+           booking class_id. Fail-loud retry when the source GET errors. -->
+      <div class="bookings__field">
+        @if (classLoadState() === 'error') {
+          <span class="bookings__field-label">
+            {{ 'rplus.bookings.form.class_label' | translate }}
+          </span>
+          <div
+            class="bookings__field-error"
+            role="alert"
+            data-testid="bookings-class-error">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span>{{ 'rplus.bookings.form.class_error' | translate }}</span>
+            <button
+              type="button"
+              class="btn btn-ghost bookings__field-retry"
+              data-testid="bookings-class-retry"
+              (click)="onRetryClasses()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.bookings.form.class_retry' | translate }}
+            </button>
+          </div>
+        } @else {
+          <label for="bookings-class-picker">
+            {{ 'rplus.bookings.form.class_label' | translate }}
+          </label>
+          <select
+            id="bookings-class-picker"
+            name="classId"
+            class="bookings__input"
+            data-testid="bookings-class-picker"
+            [ngModel]="selectedClassId()"
+            (ngModelChange)="selectedClassId.set($event)"
+            [attr.disabled]="
+              classLoadState() !== 'loaded' || !hasClasses() ? '' : null
+            ">
+            <option value="" disabled>
+              {{ 'rplus.bookings.form.class_placeholder' | translate }}
+            </option>
+            @for (opt of classOptions(); track opt.id) {
+              <option [value]="opt.id">{{ opt.label }}</option>
+            }
+          </select>
+          @if (classLoadState() === 'loading') {
+            <p class="bookings__field-hint" data-testid="bookings-class-loading">
+              {{ 'rplus.bookings.form.class_loading' | translate }}
+            </p>
+          } @else if (!hasClasses()) {
+            <p class="bookings__field-hint" data-testid="bookings-class-empty">
+              {{ 'rplus.bookings.form.class_empty' | translate }}
+            </p>
+          }
+        }
+      </div>
+
+      <!-- LEARNER picker (CHO-2336) - the SAME shared checklist the offering
+           roster bulk-enrol uses, capped to a single learner. Declared once as
+           a template; a successful create flips the nonce parity, swapping the
+           @switch case and re-mounting a fresh instance (the checklist reads its
+           selection only at init and exposes no reset). -->
+      <div class="bookings__field">
+        <p class="bookings__field-label">
+          {{ 'rplus.bookings.form.learner_label' | translate }}
+        </p>
+        <ng-template #learnerPicker>
+          <chora-member-multiselect
+            data-testid="bookings-learner-picker"
+            [memberRole]="'learner'"
+            [maxSelectable]="1"
+            (selectionChange)="onLearnerSelectionChange($event)" />
+        </ng-template>
+        @switch (learnerPickerNonce() % 2) {
+          @case (0) {
+            <ng-container [ngTemplateOutlet]="learnerPicker" />
+          }
+          @case (1) {
+            <ng-container [ngTemplateOutlet]="learnerPicker" />
+          }
+        }
+      </div>
+    </div>
+    <div class="bookings__form-actions">
+      <button
+        type="submit"
+        class="btn btn-primary bookings__create-cta"
+        data-testid="bookings-create-cta"
+        [disabled]="!canCreate()"
+        [attr.aria-label]="'rplus.bookings.form.create_aria' | translate">
+        <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>
+        {{ 'rplus.bookings.form.create_cta' | translate }}
+      </button>
+    </div>
+  </form>
+
+  <div class="bookings__list">
+    @if (loadState() === 'loading') {
+      <!-- J2 (CHO-1830) - skeleton placeholders while the bookings GET is in
+           flight, so a still-loading list is visually distinct from a genuinely
+           empty one (no longer a spinner row, no longer the empty-state). -->
+      <div
+        class="bookings__loading"
+        data-testid="bookings-loading"
+        aria-live="polite"
+        aria-busy="true">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="bookings__skeleton-card" aria-hidden="true"></div>
+        }
+      </div>
+    } @else if (loadState() === 'error') {
+      <!-- J1 (CHO-1830) - fail-loud load-error banner with retry; never a silent
+           empty list on a failed hydration. -->
+      <div class="bookings__error" role="alert" data-testid="bookings-error">
+        <i
+          class="fa-solid fa-triangle-exclamation bookings__error-icon"
+          aria-hidden="true"></i>
+        <p class="bookings__error-text">
+          {{ 'rplus.common.load_error' | translate }}
+          @if (loadError(); as err) {
+            <span class="bookings__error-detail">{{ err }}</span>
+          }
+        </p>
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="bookings-retry"
+          (click)="onRetry()">
+          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          {{ 'rplus.common.retry' | translate }}
+        </button>
+      </div>
+    } @else {
+      @for (booking of items(); track booking.id) {
+      <article
+        class="bookings__row glass-panel"
+        [attr.data-testid]="'bookings-row-' + booking.id">
+        <div class="bookings__row-head">
+          <span
+            class="badge"
+            [class]="'badge ' + badge(booking.status)"
+            [attr.data-testid]="'bookings-status-' + booking.id">
+            <i
+              class="fa-solid"
+              [class]="'fa-solid ' + icon(booking.status)"
+              aria-hidden="true"></i>
+            {{ labelKey(booking.status) | translate }}
+          </span>
+          <code class="bookings__booking-id">{{ booking.id }}</code>
+        </div>
+
+        <dl class="bookings__details">
+          <div class="bookings__detail">
+            <dt>{{ 'rplus.bookings.col.class' | translate }}</dt>
+            <dd>{{ booking.classId }}</dd>
+          </div>
+          <div class="bookings__detail">
+            <dt>{{ 'rplus.bookings.col.course' | translate }}</dt>
+            <dd>{{ booking.courseId }}</dd>
+          </div>
+          <div class="bookings__detail">
+            <dt>{{ 'rplus.bookings.col.learner' | translate }}</dt>
+            <dd>{{ booking.learnerGcid }}</dd>
+          </div>
+          <div class="bookings__detail">
+            <dt>{{ 'rplus.bookings.col.created_at' | translate }}</dt>
+            <dd>{{ booking.createdAt }}</dd>
+          </div>
+        </dl>
+
+        <footer class="bookings__row-foot">
+          <label
+            class="bookings__status-label"
+            [attr.for]="'bookings-status-select-' + booking.id">
+            {{ 'rplus.bookings.update_status_label' | translate }}
+          </label>
+          <select
+            class="bookings__status-select"
+            [id]="'bookings-status-select-' + booking.id"
+            [attr.data-testid]="'bookings-status-select-' + booking.id"
+            [disabled]="busy()"
+            [ngModel]="booking.status"
+            (ngModelChange)="onStatusChange(booking, $event)"
+            [attr.aria-label]="'rplus.bookings.update_status_aria' | translate">
+            @for (status of statuses; track status) {
+              <option [value]="status">
+                {{ labelKey(status) | translate }}
+              </option>
+            }
+          </select>
+        </footer>
+      </article>
+      } @empty {
+        <p
+          class="bookings__empty"
+          data-testid="bookings-empty">
+          {{ 'rplus.bookings.empty' | translate }}
+        </p>
+      }
+    }
+  </div>
+</section>

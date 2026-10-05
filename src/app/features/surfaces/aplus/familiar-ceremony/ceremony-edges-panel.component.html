@@ -1,0 +1,341 @@
+<section
+  class="ceremony-edges"
+  data-testid="ceremony-edges-panel"
+  aria-labelledby="ceremony-edges-heading">
+  <header class="ceremony-edges__header">
+    <h3
+      #ceremonyHeading
+      id="ceremony-edges-heading"
+      class="ceremony-edges__title"
+      tabindex="-1">
+      <i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+      {{ 'familiar.ceremony.heading' | translate }}
+    </h3>
+    @if (proposal(); as p) {
+      <span
+        class="ceremony-edges__mana-chip"
+        data-testid="ceremony-edges-mana-chip"
+        [class.ceremony-edges__mana-chip--free]="p.first_run === true">
+        <i class="fa-solid fa-droplet" aria-hidden="true"></i>
+        @if (p.first_run === true) {
+          {{ 'familiar.ceremony.first_scout_free' | translate }}
+        } @else {
+          {{ 'familiar.ceremony.scout_cost_prefix' | translate }}
+          {{ p.mana_charged }}
+          {{ 'familiar.ceremony.mana_unit' | translate }}
+        }
+      </span>
+    }
+  </header>
+  <p class="ceremony-edges__narrative">
+    {{ 'familiar.ceremony.narrative' | translate }}
+  </p>
+
+  <div role="status" aria-live="polite" class="ceremony-edges__live">
+    @switch (scout().status) {
+      @case ('loading') {
+        <div
+          class="ceremony-edges__skeleton"
+          data-testid="ceremony-edges-loading">
+          <span class="ceremony-edges__skeleton-line"></span>
+          <span class="ceremony-edges__skeleton-line"></span>
+          <span class="ceremony-edges__skeleton-line ceremony-edges__skeleton-line--short"></span>
+          <span class="visually-hidden">
+            {{ 'familiar.ceremony.loading' | translate }}
+          </span>
+        </div>
+      }
+      @case ('error') {
+        <div
+          class="ceremony-edges__error"
+          role="alert"
+          data-testid="ceremony-edges-error">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <p>{{ $any(scout()).error | translate }}</p>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-testid="ceremony-edges-retry"
+            (click)="rescout()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            {{ 'familiar.ceremony.error_retry' | translate }}
+          </button>
+        </div>
+      }
+      @case ('success') {
+        @if (!confirmed()) {
+          @if (proposal(); as p) {
+            @if (p.fallback) {
+              <div
+                class="ceremony-edges__fallback"
+                data-testid="ceremony-edges-fallback">
+                <i class="fa-solid fa-seedling" aria-hidden="true"></i>
+                <div>
+                  <p class="ceremony-edges__fallback-title">
+                    {{ 'familiar.ceremony.fallback_title' | translate }}
+                  </p>
+                  <p class="ceremony-edges__fallback-sub">
+                    {{ 'familiar.ceremony.fallback_sub' | translate }}
+                  </p>
+                </div>
+              </div>
+            }
+
+            @if (p.candidates.length === 0) {
+              <div
+                class="ceremony-edges__empty"
+                data-testid="ceremony-edges-empty">
+                <i class="fa-solid fa-compass" aria-hidden="true"></i>
+                <p class="ceremony-edges__empty-title">
+                  {{ 'familiar.ceremony.empty_title' | translate }}
+                </p>
+                <p class="ceremony-edges__empty-sub">
+                  {{ 'familiar.ceremony.empty_sub' | translate }}
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-testid="ceremony-edges-rescout"
+                  [disabled]="confirmInflight()"
+                  (click)="rescout()">
+                  <i class="fa-solid fa-binoculars" aria-hidden="true"></i>
+                  {{ 'familiar.ceremony.rescout' | translate }}
+                </button>
+              </div>
+            } @else {
+              @if (remediateCandidates().length > 0) {
+                <fieldset
+                  class="ceremony-edges__section ceremony-edges__section--remediate"
+                  data-testid="ceremony-edges-section-remediate">
+                  <legend class="ceremony-edges__section-title">
+                    <i class="fa-solid fa-hammer" aria-hidden="true"></i>
+                    {{ 'familiar.ceremony.remediate_heading' | translate }}
+                    <span class="ceremony-edges__section-sub">
+                      {{ 'familiar.ceremony.remediate_sub' | translate }}
+                    </span>
+                  </legend>
+                  <ul class="ceremony-edges__list">
+                    @for (entry of remediateCandidates(); track entry.index) {
+                      <li class="ceremony-edges__candidate">
+                        <label class="ceremony-edges__candidate-label">
+                          <input
+                            type="checkbox"
+                            class="ceremony-edges__tick"
+                            [attr.data-testid]="'ceremony-edges-checkbox-' + entry.index"
+                            [checked]="selected().has(entry.index)"
+                            [disabled]="isTickDisabled(entry.index)"
+                            (change)="toggle(entry.index)" />
+                          <span class="ceremony-edges__candidate-body">
+                            <span class="ceremony-edges__candidate-title">
+                              {{ entry.candidate.title }}
+                            </span>
+                            <span class="ceremony-edges__candidate-meta">
+                              <span
+                                class="ceremony-edges__source-badge"
+                                [attr.data-source]="entry.candidate.source">
+                                {{ sourceKey(entry.candidate) | translate }}
+                              </span>
+                              @if (atomRefCount(entry.candidate) > 0) {
+                                <span class="ceremony-edges__atoms-chip">
+                                  <i class="fa-solid fa-atom" aria-hidden="true"></i>
+                                  {{ atomRefCount(entry.candidate) }}
+                                  {{ 'familiar.ceremony.atoms_chip' | translate }}
+                                </span>
+                              }
+                            </span>
+                            @if (entry.candidate.rationale) {
+                              <span class="ceremony-edges__rationale">
+                                {{ entry.candidate.rationale }}
+                              </span>
+                            }
+                          </span>
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                </fieldset>
+              }
+
+              @if (exploreCandidates().length > 0) {
+                <fieldset
+                  class="ceremony-edges__section ceremony-edges__section--explore"
+                  data-testid="ceremony-edges-section-explore">
+                  <legend class="ceremony-edges__section-title">
+                    <i class="fa-solid fa-compass" aria-hidden="true"></i>
+                    {{ 'familiar.ceremony.explore_heading' | translate }}
+                    <span class="ceremony-edges__section-sub">
+                      {{ 'familiar.ceremony.explore_sub' | translate }}
+                    </span>
+                  </legend>
+                  <ul class="ceremony-edges__list">
+                    @for (entry of exploreCandidates(); track entry.index) {
+                      <li class="ceremony-edges__candidate">
+                        <label class="ceremony-edges__candidate-label">
+                          <input
+                            type="checkbox"
+                            class="ceremony-edges__tick"
+                            [attr.data-testid]="'ceremony-edges-checkbox-' + entry.index"
+                            [checked]="selected().has(entry.index)"
+                            [disabled]="isTickDisabled(entry.index)"
+                            (change)="toggle(entry.index)" />
+                          <span class="ceremony-edges__candidate-body">
+                            <span class="ceremony-edges__candidate-title">
+                              {{ entry.candidate.title }}
+                            </span>
+                            <span class="ceremony-edges__candidate-meta">
+                              <span
+                                class="ceremony-edges__source-badge"
+                                [attr.data-source]="entry.candidate.source">
+                                {{ sourceKey(entry.candidate) | translate }}
+                              </span>
+                              @if (atomRefCount(entry.candidate) > 0) {
+                                <span class="ceremony-edges__atoms-chip">
+                                  <i class="fa-solid fa-atom" aria-hidden="true"></i>
+                                  {{ atomRefCount(entry.candidate) }}
+                                  {{ 'familiar.ceremony.atoms_chip' | translate }}
+                                </span>
+                              }
+                            </span>
+                            @if (entry.candidate.rationale) {
+                              <span class="ceremony-edges__rationale">
+                                {{ entry.candidate.rationale }}
+                              </span>
+                            }
+                          </span>
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                </fieldset>
+              }
+
+              <div class="ceremony-edges__toolbar">
+                <span class="ceremony-edges__count" aria-live="polite">
+                  {{ selectedCount() }} / {{ selectionCap }}
+                  {{ 'familiar.ceremony.selected_suffix' | translate }}
+                </span>
+                @if (atCap()) {
+                  <span
+                    class="ceremony-edges__cap-hint"
+                    role="status"
+                    data-testid="ceremony-edges-cap-hint">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                    {{ 'familiar.ceremony.cap_hint' | translate }}
+                  </span>
+                }
+              </div>
+
+              @if (confirmState().status === 'error') {
+                <div
+                  class="ceremony-edges__error ceremony-edges__error--confirm"
+                  role="alert"
+                  data-testid="ceremony-edges-confirm-error">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  <p>{{ $any(confirmState()).error | translate }}</p>
+                </div>
+              }
+
+              <div class="ceremony-edges__actions">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  data-testid="ceremony-edges-confirm"
+                  [disabled]="selectedCount() === 0 || confirmInflight()"
+                  (click)="onConfirm()">
+                  @if (confirmInflight()) {
+                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                    {{ 'familiar.ceremony.confirm_inflight' | translate }}
+                  } @else {
+                    <i class="fa-solid fa-hexagon-nodes" aria-hidden="true"></i>
+                    {{ 'familiar.ceremony.confirm_cta' | translate }}
+                  }
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-testid="ceremony-edges-rescout"
+                  [disabled]="confirmInflight()"
+                  (click)="rescout()">
+                  <i class="fa-solid fa-binoculars" aria-hidden="true"></i>
+                  {{ 'familiar.ceremony.rescout' | translate }}
+                </button>
+              </div>
+            }
+          }
+        } @else {
+          <div
+            class="ceremony-edges__success"
+            data-testid="ceremony-edges-success">
+            <i class="fa-solid fa-sparkles ceremony-edges__success-glyph" aria-hidden="true"></i>
+            <p class="ceremony-edges__success-title">
+              {{ 'familiar.ceremony.success_title' | translate }}
+            </p>
+            <p class="ceremony-edges__success-sub">
+              {{ mintedCount() }}
+              {{ 'familiar.ceremony.success_minted_suffix' | translate }}
+            </p>
+
+            @if (memorySyncFailed()) {
+              <div
+                class="ceremony-edges__memory-warn"
+                role="status"
+                data-testid="ceremony-edges-memory-warn">
+                <i class="fa-solid fa-brain" aria-hidden="true"></i>
+                <p>{{ 'familiar.ceremony.memory_warn' | translate }}</p>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-testid="ceremony-edges-memory-retry"
+                  [disabled]="memoryRetrying()"
+                  (click)="retryMemorySync()">
+                  @if (memoryRetrying()) {
+                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                  } @else {
+                    <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                  }
+                  {{ 'familiar.ceremony.memory_retry' | translate }}
+                </button>
+              </div>
+            } @else {
+              <p class="ceremony-edges__memory-ok">
+                <i class="fa-solid fa-brain" aria-hidden="true"></i>
+                {{ 'familiar.ceremony.memory_synced' | translate }}
+              </p>
+            }
+
+            <div class="ceremony-edges__actions">
+              <a
+                class="btn btn-primary"
+                data-testid="ceremony-edges-map-link"
+                [routerLink]="['/a/knowledge', goalId()]">
+                <i class="fa-solid fa-map" aria-hidden="true"></i>
+                {{ 'familiar.ceremony.map_link' | translate }}
+              </a>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-testid="ceremony-edges-rescout"
+                (click)="rescout()">
+                <i class="fa-solid fa-binoculars" aria-hidden="true"></i>
+                {{ 'familiar.ceremony.rescout' | translate }}
+              </button>
+            </div>
+          </div>
+        }
+      }
+    }
+  </div>
+</section>
+
+@if (upsell(); as u) {
+  <chora-mana-topup-modal
+    data-testid="ceremony-edges-topup-modal"
+    [upsell]="u"
+    [actionCode]="'familiar_ceremony_edge_scout'"
+    [submitting]="manaTopupState().status === 'submitting'"
+    [errorMessage]="
+      manaTopupState().status === 'error' ? $any(manaTopupState()).error : null
+    "
+    (topupRequested)="onTopupRequested()"
+    (dismissed)="onTopupDismissed()" />
+}

@@ -1,0 +1,236 @@
+:host {
+  display: block;
+}
+
+// `.chora-sidebar` — deliberately NOT `.sidebar`: that class is a global
+// polyglass design-system primitive (`styles/_polyglass-components.scss`,
+// demoed in sidebar.stories.ts) with a fixed `width: var(--sidebar-width)`
+// and a `.collapsed` modifier. This app sidebar is grid-column-driven
+// (main-layout owns the width); squatting on `.sidebar` made the nav
+// render at 280px and overflow its collapsed 56px column.
+.chora-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+  padding: var(--chora-space-sm);
+  background: var(--chora-color-surface-1);
+  border-right: 1px solid var(--chora-color-border);
+  height: 100%;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    border-radius: var(--chora-radius-md);
+    color: var(--chora-color-text-secondary);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color var(--chora-transition-fast),
+                color var(--chora-transition-fast),
+                justify-content var(--chora-transition-fast),
+                padding var(--chora-transition-fast);
+
+    &:hover {
+      background: var(--chora-color-surface-2);
+      color: var(--chora-color-text-primary);
+    }
+
+    // Planned-but-not-live destination (e.g. the O+ A2A Console while the
+    // external edge is unwired, CHO-2358): grayed, no hover affordance, no
+    // pointer semantics. Rendered as a span so it never navigates; the note
+    // pill carries the coming-soon copy. `--chora-color-text-muted` is the
+    // canonical AA-safe muted token (text-token-contrast gate).
+    &--disabled {
+      color: var(--chora-color-text-muted);
+      opacity: 0.72;
+      cursor: default;
+
+      &:hover {
+        background: transparent;
+        color: var(--chora-color-text-muted);
+      }
+    }
+
+    &--active {
+      background: rgba(25, 118, 210, 0.08);
+      // a11y (axe 2026-05-17 color-contrast): the original pair
+      // var(--chora-color-primary)=#1976d2 on rgba(25,118,210,0.08)
+      // over white ≈ #edf4fb scored 4.14:1 — under WCAG AA 4.5:1
+      // for normal text. Fix: bind the active foreground to the
+      // dedicated `--chora-color-primary-strong` token (#0d47a1)
+      // which lifts the pair to ~7.35:1 on the same tinted ground.
+      // Token lives in src/styles/_tokens.scss so any surface that
+      // needs an AA-safe primary text override can reuse it.
+      color: var(--chora-color-primary-strong, #0d47a1);
+      font-weight: 600;
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    // FontAwesome <i> glyph — sized to fill the 24px slot comfortably.
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  // ── Nav bands (CHO-2243, R+ de-shadow R1) ─────────────────────────────
+  // A band groups related nav items under an uppercase header. Non-empty
+  // bands only; the ADMIN band's header is a toggle button that folds its
+  // items away.
+  &__band {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+
+    // Space each band from the one above; the first band hugs the top.
+    & + & {
+      margin-top: var(--chora-space-sm);
+    }
+  }
+
+  &__band-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs);
+  }
+
+  &__band-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-sm);
+    padding: var(--chora-space-xs) var(--chora-space-md);
+    // Uppercase section label — muted, small, tracked out.
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--chora-color-text-secondary);
+    white-space: nowrap;
+
+    // The toggle variant is a real <button>: strip chrome, keep it a focus
+    // stop with a visible focus ring for keyboard users (AC: WCAG AA).
+    &--toggle {
+      width: 100%;
+      border: 0;
+      margin: 0;
+      background: transparent;
+      cursor: pointer;
+      border-radius: var(--chora-radius-sm);
+      transition: background-color var(--chora-transition-fast),
+                  color var(--chora-transition-fast);
+
+      &:hover {
+        background: var(--chora-color-surface-2);
+        color: var(--chora-color-text-primary);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--chora-color-primary-strong, #0d47a1);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  &__band-caret {
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: 14px;
+    line-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    // Always in the DOM (for a11y + the hover-expand transition). When
+    // collapsed it animates to width:0/opacity:0 rather than unmounting.
+    transition: opacity var(--chora-transition-fast),
+                width var(--chora-transition-fast);
+  }
+
+  // Collapsed = icon-only rail. Hovering the sidebar reveals the labels;
+  // the grid column itself widens via main-layout's `:has()` rule so the
+  // revealed labels are never clipped.
+  &--collapsed {
+    overflow: hidden;
+
+    .chora-sidebar__item {
+      justify-content: center;
+      padding: var(--chora-space-sm);
+    }
+
+    .chora-sidebar__label {
+      width: 0;
+      opacity: 0;
+    }
+
+    // On the icon-only rail the band text + caret collapse away, leaving a
+    // thin divider role for the header; labels reappear on hover with the rest.
+    .chora-sidebar__band-label,
+    .chora-sidebar__band-caret {
+      width: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .chora-sidebar__band-header {
+      justify-content: center;
+      padding: var(--chora-space-xs);
+    }
+
+    &:hover {
+      .chora-sidebar__item {
+        justify-content: flex-start;
+        padding: var(--chora-space-sm) var(--chora-space-md);
+      }
+
+      .chora-sidebar__label {
+        width: auto;
+        opacity: 1;
+      }
+
+      .chora-sidebar__band-label,
+      .chora-sidebar__band-caret {
+        width: auto;
+        opacity: 1;
+      }
+
+      .chora-sidebar__band-header {
+        justify-content: space-between;
+        padding: var(--chora-space-xs) var(--chora-space-md);
+      }
+    }
+  }
+}
+
+.chora-sidebar__note {
+  margin-left: auto;
+  padding: 0 var(--chora-space-xs);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.16));
+  border-radius: var(--chora-radius-sm);
+  font-size: 0.68rem;
+  line-height: 1.6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--chora-color-text-muted);
+  white-space: nowrap;
+}
+
+// Collapsed rail hides labels, so the note pill goes with them.
+.chora-sidebar--collapsed .chora-sidebar__note {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chora-sidebar__item,
+  .chora-sidebar__label {
+    transition: none;
+  }
+}

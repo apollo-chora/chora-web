@@ -1,0 +1,149 @@
+<section
+  class="atom-bank"
+  role="main"
+  [attr.aria-label]="'community.atom_bank_title' | translate"
+  data-testid="atom-bank">
+
+  <!-- Page Header -->
+  <header class="atom-bank__header">
+    <h1 class="atom-bank__title" data-testid="atom-bank-title">
+      {{ 'community.atom_bank_title' | translate }}
+    </h1>
+    <p class="atom-bank__subtitle">
+      {{ 'community.atom_bank_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Filters -->
+  <div class="atom-bank__filters" data-testid="atom-bank-filters">
+    <div class="atom-bank__filter-group">
+      <label class="atom-bank__filter-label" for="atom-type-filter">
+        {{ 'community.filter_by_type' | translate }}
+      </label>
+      <select
+        id="atom-type-filter"
+        class="atom-bank__filter-select"
+        data-testid="filter-atom-type"
+        [value]="filterType()"
+        (change)="onFilterTypeChange($event)">
+        <option value="all">{{ 'community.all_types' | translate }}</option>
+        @for (type of allAtomTypes; track type) {
+          <option [value]="type">{{ atomTypeLabels[type] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="atom-bank__filter-group">
+      <label class="atom-bank__filter-label" for="atom-search">
+        {{ 'community.search_atoms' | translate }}
+      </label>
+      <input
+        id="atom-search"
+        type="search"
+        class="atom-bank__filter-input"
+        data-testid="filter-search"
+        [value]="searchTerm()"
+        (input)="onSearchChange($event)"
+        [attr.placeholder]="'community.search_placeholder' | translate" />
+    </div>
+
+    <span class="atom-bank__result-count" data-testid="result-count" aria-live="polite">
+      {{ atomCount() }} {{ 'community.atoms_found' | translate }}
+    </span>
+  </div>
+
+  <!-- Loading -->
+  @if (atomListState().status === 'loading') {
+    <div class="atom-bank__loading" data-testid="atom-bank-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="atom-bank__skeleton-card"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (atomListState().status === 'error') {
+    <div class="atom-bank__error" data-testid="atom-bank-error" role="alert">
+      <p class="atom-bank__error-text">
+        {{ 'community.atoms_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (atomListState().status === 'success' && filteredAtoms().length === 0) {
+    <div class="atom-bank__empty" data-testid="atom-bank-empty" role="status">
+      <p class="atom-bank__empty-text">
+        {{ 'community.no_atoms_found' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Atom List -->
+  @if (atomListState().status === 'success' && filteredAtoms().length > 0) {
+    <div class="atom-bank__list" data-testid="atom-bank-list">
+      @for (atom of filteredAtoms(); track atom.id) {
+        <article class="atom-bank__card" data-testid="atom-card">
+          <div class="atom-bank__card-header">
+            <h2 class="atom-bank__card-title" data-testid="atom-title">
+              {{ atom.title }}
+            </h2>
+            <span
+              class="atom-bank__type-badge"
+              data-testid="atom-type-badge">
+              {{ atomTypeLabels[atom.atom_type] | translate }}
+            </span>
+          </div>
+
+          <p class="atom-bank__card-content" data-testid="atom-content">
+            {{ atom.content }}
+          </p>
+
+          @if (atom.tags.length > 0) {
+            <div class="atom-bank__tags" data-testid="atom-tags">
+              @for (tag of atom.tags; track tag) {
+                <span class="atom-bank__tag">{{ tag }}</span>
+              }
+            </div>
+          }
+
+          <div class="atom-bank__card-footer">
+            <div class="atom-bank__voting" data-testid="atom-voting">
+              <button
+                type="button"
+                class="atom-bank__vote-btn atom-bank__vote-btn--up"
+                data-testid="btn-upvote"
+                [attr.aria-label]="'community.upvote' | translate"
+                (click)="vote(atom, 'up')">
+                &#9650;
+              </button>
+              <span class="atom-bank__vote-score" data-testid="vote-score">
+                {{ atom.vote_score }}
+              </span>
+              <button
+                type="button"
+                class="atom-bank__vote-btn atom-bank__vote-btn--down"
+                data-testid="btn-downvote"
+                [attr.aria-label]="'community.downvote' | translate"
+                (click)="vote(atom, 'down')">
+                &#9660;
+              </button>
+            </div>
+
+            <div class="atom-bank__card-meta">
+              <span
+                class="atom-bank__status"
+                [class]="statusClass(atom.status)"
+                data-testid="atom-status">
+                {{ statusLabels[atom.status] | translate }}
+              </span>
+              <span class="atom-bank__date" data-testid="atom-date">
+                {{ formatDate(atom.created_at) }}
+              </span>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

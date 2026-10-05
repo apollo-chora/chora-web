@@ -1,0 +1,416 @@
+<section
+  class="aplus-hatching surface-aplus"
+  [attr.data-step]="currentStep()"
+  [attr.data-breed]="rolledSpecies() || 'dragon'"
+  aria-labelledby="aplus-hatching-heading"
+  data-testid="aplus-familiar-hatching">
+  <header class="aplus-hatching__header glass-panel">
+    <h1 id="aplus-hatching-heading" class="aplus-hatching__title">
+      {{ 'aplus.familiar_hatching.heading' | translate }}
+    </h1>
+    <ol class="aplus-hatching__steps" data-testid="aplus-hatching-steps">
+      @for (s of steps; track s; let i = $index) {
+        <li
+          class="step-pill"
+          [class.is-active]="isStep(s)"
+          [class.is-done]="stepIndex() > i || committed()"
+          [attr.aria-current]="isStep(s) ? 'step' : null">
+          <span class="step-pill__num">{{ i + 1 }}</span>
+          <span class="step-pill__label">{{ stepLabel(s) | translate }}</span>
+        </li>
+      }
+    </ol>
+  </header>
+
+  <!-- ────────────────────────────────────────────────────────────── -->
+  <!-- STEP 1 — CRACK (the open tap IS the roll: POST /reveal, CHO-2229) -->
+  @if (isStep('crack')) {
+    <div class="step-canvas glass-panel" data-testid="aplus-hatching-step-crack">
+      <p class="step-canvas__narrative">
+        {{ 'aplus.familiar_hatching.crack_body' | translate }}
+      </p>
+      <div class="step-canvas__art">
+        <span class="egg-halo" aria-hidden="true"></span>
+        <img
+          class="egg-art is-cracking"
+          src="/assets/familiars/pods/pod-standard.png"
+          alt=""
+          aria-hidden="true"
+          width="240"
+          height="260" />
+        <span class="crack crack--1" aria-hidden="true"></span>
+        <span class="crack crack--2" aria-hidden="true"></span>
+        <span class="crack crack--3" aria-hidden="true"></span>
+      </div>
+      @if (revealError(); as err) {
+        <p class="step-canvas__error" role="alert" data-testid="aplus-hatching-reveal-error">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{ err | translate }}
+        </p>
+      }
+      <button
+        type="button"
+        class="step-canvas__cta"
+        [disabled]="revealing()"
+        (click)="revealPod()"
+        data-testid="aplus-hatching-crack-next">
+        @if (revealing()) {
+          <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+          {{ 'aplus.familiar_hatching.revealing' | translate }}
+        } @else {
+          <i class="fa-solid fa-hand-pointer" aria-hidden="true"></i>
+          {{ 'aplus.familiar_hatching.crack_cta' | translate }}
+        }
+      </button>
+    </div>
+  }
+
+  <!-- ────────────────────────────────────────────────────────────── -->
+  <!-- STEP 2 — REVEAL (pre-naming: the rolled breed, CHO-2229) -->
+  @if (isStep('reveal')) {
+    <div
+      class="step-canvas step-canvas--reveal glass-panel"
+      [attr.data-rarity]="rolledRarity()"
+      [attr.data-shiny]="rolledShiny() ? 'true' : null"
+      [attr.data-awakening-class]="awakeningClass()"
+      data-testid="aplus-hatching-step-reveal">
+      @if (rolledRarity() === 'legendary') {
+        <div class="reveal-light-wash" aria-hidden="true"></div>
+      }
+
+      <div class="reveal-art">
+        @if (rolledSpecies()) {
+          <!-- CHO-2235: the per-species birth-moment art, owner-generated.
+               BreedArt stage-1 carries the step until the image loads; a
+               load error drops it — never a broken img. -->
+          @if (!awakenArtFailed()) {
+            <img
+              class="reveal-awaken-art"
+              [hidden]="!awakenArtReady()"
+              [src]="awakenArtUrl()"
+              [alt]="revealLabel()"
+              (load)="onAwakenArtLoad()"
+              (error)="onAwakenArtError()"
+              data-testid="aplus-hatching-awaken-art" />
+          }
+          @if (!awakenArtReady()) {
+            <chora-breed-art
+              [species]="rolledSpecies()!"
+              [stage]="1"
+              [shiny]="rolledShiny()"
+              size="xl"
+              mood="celebrating"
+              [altText]="revealLabel()" />
+          }
+        }
+        @if (rolledRarity() === 'uncommon' || rolledRarity() === 'rare' || rolledRarity() === 'legendary') {
+          <span class="reveal-sparkle" aria-hidden="true">
+            <i class="fa-solid fa-sparkles"></i>
+            <i class="fa-solid fa-sparkles"></i>
+            <i class="fa-solid fa-sparkles"></i>
+          </span>
+        }
+      </div>
+
+      <div class="reveal-text">
+        <p class="reveal-tagline">
+          {{ revealTaglineKey() | translate }}
+        </p>
+        <h2 class="reveal-headline" data-testid="aplus-hatching-reveal-headline">
+          {{ 'aplus.familiar_hatching.reveal_its' | translate }}
+          {{ revealArticle() }}
+          <strong>{{ revealLabel() }}</strong>!
+        </h2>
+        <div class="reveal-badges">
+          @if (rolledRarity()) {
+            <span class="reveal-rarity-chip" [attr.data-rarity]="rolledRarity()" data-testid="aplus-hatching-rarity">
+              {{ ('aplus.familiar.rarity_' + rolledRarity()) | translate }}
+            </span>
+          }
+          @if (rolledShiny()) {
+            <span class="reveal-shiny-chip" data-testid="aplus-hatching-shiny">
+              <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+              {{ 'aplus.familiar.shiny' | translate }}
+            </span>
+          }
+          @if (rolledProbability() > 0) {
+            <span class="reveal-prob-chip" data-testid="aplus-hatching-probability">
+              {{ rolledProbability() }}% {{ 'aplus.familiar_hatching.reveal_chance' | translate }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="step-canvas__cta"
+        (click)="next()"
+        data-testid="aplus-hatching-reveal-continue">
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        {{ 'aplus.familiar_hatching.reveal_continue_cta' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- ────────────────────────────────────────────────────────────── -->
+  <!-- STEP 3 — IDENTITY (naming AGAINST the revealed art) -->
+  @if (isStep('identity')) {
+    <form
+      class="step-canvas glass-panel step-canvas--identity"
+      (submit)="$event.preventDefault(); canAdvanceFromIdentity() && next()"
+      data-testid="aplus-hatching-step-identity">
+      <h2 class="step-canvas__heading">
+        {{ 'aplus.familiar_hatching.identity_heading' | translate }}
+      </h2>
+
+      <!-- Companion preview (bug #17 + CHO-2229): name a VISIBLE companion.
+           The breed was revealed one step ago, so the preview renders the
+           REAL rolled art — never the breed-neutral Pod placeholder. -->
+      <div class="identity-preview" data-testid="aplus-hatching-identity-preview">
+        <div class="identity-preview__art">
+          <span class="egg-halo" aria-hidden="true"></span>
+          @if (rolledSpecies()) {
+            <chora-breed-art
+              [species]="rolledSpecies()!"
+              [stage]="1"
+              [shiny]="rolledShiny()"
+              size="sm"
+              mood="idle"
+              [altText]="revealLabel()" />
+          }
+        </div>
+        <div class="identity-preview__meta">
+          <p
+            class="identity-preview__name"
+            data-testid="aplus-hatching-identity-preview-name">
+            @if (displayName().trim(); as name) {
+              <strong>{{ name }}</strong>
+            } @else {
+              <span class="identity-preview__name--placeholder">
+                {{ 'aplus.familiar_hatching.preview_unnamed' | translate }}
+              </span>
+            }
+          </p>
+          <p class="identity-preview__traits">
+            <span class="identity-preview__chip">
+              {{ ('aplus.familiar_hatching.tone_' + tone()) | translate }}
+            </span>
+            <span class="identity-preview__chip">
+              {{ ('aplus.familiar_hatching.persona_' + learnerPersona()) | translate }}
+            </span>
+          </p>
+          <p class="identity-preview__mystery">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            {{ 'aplus.familiar_hatching.reveal_its' | translate }}
+            {{ revealArticle() }} <strong>{{ revealLabel() }}</strong>
+          </p>
+        </div>
+      </div>
+
+      <fieldset class="identity-field">
+        <legend>{{ 'aplus.familiar_hatching.name_label' | translate }}</legend>
+        <input
+          type="text"
+          class="identity-input"
+          maxlength="48"
+          minlength="2"
+          [value]="displayName()"
+          (input)="onNameInput(($any($event.target).value))"
+          [placeholder]="'aplus.familiar_hatching.name_placeholder' | translate"
+          [attr.aria-label]="'aplus.familiar_hatching.name_label' | translate"
+          data-testid="aplus-hatching-name-input"
+          />
+      </fieldset>
+
+      <fieldset class="identity-field">
+        <legend>{{ 'aplus.familiar_hatching.tone_label' | translate }}</legend>
+        <div class="identity-pill-grid" role="radiogroup" [attr.aria-label]="'aplus.familiar_hatching.tone_label' | translate">
+          @for (t of tones; track t) {
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="isTone(t)"
+              class="identity-pill"
+              [class.is-active]="isTone(t)"
+              (click)="setTone(t)"
+              [attr.data-testid]="'aplus-hatching-tone-' + t">
+              {{ ('aplus.familiar_hatching.tone_' + t) | translate }}
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="identity-field">
+        <legend>{{ 'aplus.familiar_hatching.persona_label' | translate }}</legend>
+        <div class="identity-pill-grid" role="radiogroup" [attr.aria-label]="'aplus.familiar_hatching.persona_label' | translate">
+          @for (p of personas; track p) {
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="isPersona(p)"
+              class="identity-pill"
+              [class.is-active]="isPersona(p)"
+              (click)="setPersona(p)"
+              [attr.data-testid]="'aplus-hatching-persona-' + p">
+              {{ ('aplus.familiar_hatching.persona_' + p) | translate }}
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      <div class="step-canvas__nav">
+        <button
+          type="button"
+          class="step-canvas__back"
+          (click)="prev()"
+          data-testid="aplus-hatching-identity-back">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          {{ 'aplus.familiar_hatching.back' | translate }}
+        </button>
+        <button
+          type="submit"
+          class="step-canvas__cta"
+          [disabled]="!canAdvanceFromIdentity()"
+          data-testid="aplus-hatching-identity-next">
+          <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          {{ 'aplus.familiar_hatching.identity_next' | translate }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- ────────────────────────────────────────────────────────────── -->
+  <!-- STEP 4 — COMMIT (the single hatch POST; commit-only per CHO-2229) -->
+  @if (isStep('commit') && !committed()) {
+    <div class="step-canvas glass-panel step-canvas--commit" data-testid="aplus-hatching-step-commit">
+      <h2 class="step-canvas__heading">
+        {{ 'aplus.familiar_hatching.commit_heading' | translate }}
+      </h2>
+
+      <dl class="commit-summary">
+        <div>
+          <dt>{{ 'aplus.familiar_hatching.name_label' | translate }}</dt>
+          <dd><strong>{{ displayName() }}</strong></dd>
+        </div>
+        <div>
+          <dt>{{ 'aplus.familiar_hatching.commit_breed_label' | translate }}</dt>
+          <dd data-testid="aplus-hatching-commit-breed">
+            {{ revealArticle() }} <strong>{{ revealLabel() }}</strong>
+            @if (rolledRarity()) {
+              <span class="reveal-rarity-chip" [attr.data-rarity]="rolledRarity()">
+                {{ ('aplus.familiar.rarity_' + rolledRarity()) | translate }}
+              </span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'aplus.familiar_hatching.tone_label' | translate }}</dt>
+          <dd>{{ ('aplus.familiar_hatching.tone_' + tone()) | translate }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'aplus.familiar_hatching.persona_label' | translate }}</dt>
+          <dd>{{ ('aplus.familiar_hatching.persona_' + learnerPersona()) | translate }}</dd>
+        </div>
+      </dl>
+
+      <p class="commit-note">
+        <i class="fa-solid fa-heart" aria-hidden="true"></i>
+        {{ 'aplus.familiar_hatching.commit_note' | translate }}
+      </p>
+
+      @if (commitError(); as err) {
+        <p class="step-canvas__error" role="alert" data-testid="aplus-hatching-commit-error">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{ err | translate }}
+        </p>
+      }
+
+      <div class="step-canvas__nav">
+        <button
+          type="button"
+          class="step-canvas__back"
+          [disabled]="committing()"
+          (click)="prev()"
+          data-testid="aplus-hatching-commit-back">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          {{ 'aplus.familiar_hatching.back' | translate }}
+        </button>
+        <button
+          type="button"
+          class="step-canvas__cta step-canvas__cta--commit"
+          [disabled]="committing()"
+          (click)="commit()"
+          data-testid="aplus-hatching-commit-cta">
+          @if (committing()) {
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            {{ 'aplus.familiar_hatching.committing' | translate }}
+          } @else {
+            <i class="fa-solid fa-egg" aria-hidden="true"></i>
+            {{ 'aplus.familiar_hatching.commit_cta' | translate }}
+          }
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ────────────────────────────────────────────────────────────── -->
+  <!-- WELCOME (post-commit; no way back) -->
+  @if (committed()) {
+    <div
+      class="step-canvas step-canvas--reveal glass-panel"
+      [attr.data-rarity]="rolledRarity()"
+      [attr.data-shiny]="rolledShiny() ? 'true' : null"
+      data-testid="aplus-hatching-welcome">
+      <div class="reveal-art">
+        @if (rolledSpecies()) {
+          <chora-breed-art
+            [species]="rolledSpecies()!"
+            [stage]="1"
+            [shiny]="rolledShiny()"
+            size="xl"
+            mood="celebrating"
+            [altText]="displayName()" />
+        }
+      </div>
+
+      <div class="reveal-text">
+        <p class="reveal-tagline">
+          {{ 'aplus.familiar_hatching.reveal_tagline' | translate }}
+        </p>
+        <p class="reveal-named" data-testid="aplus-hatching-reveal-named">
+          {{ 'aplus.familiar_hatching.reveal_named' | translate }}
+          <strong>{{ displayName() }}</strong>
+        </p>
+      </div>
+
+      <!-- F-I2 award moment (CHO-2089): the first Skill, auto-equipped at hatch. -->
+      @if (awardedSkillKey(); as skill) {
+        <div class="reveal-skill-award" data-testid="aplus-hatching-skill-award">
+          <span class="reveal-skill-award__badge" aria-hidden="true">
+            <i class="fa-solid fa-wand-sparkles"></i>
+          </span>
+          <div class="reveal-skill-award__body">
+            <p class="reveal-skill-award__eyebrow">
+              {{ 'aplus.familiar_hatching.award_eyebrow' | translate }}
+            </p>
+            <p class="reveal-skill-award__name">
+              {{ ('familiar_skill.' + skill) | translate }}
+            </p>
+            <p class="reveal-skill-award__sub">
+              {{ 'aplus.familiar_hatching.award_equipped' | translate }}
+            </p>
+          </div>
+        </div>
+      }
+
+      <button
+        type="button"
+        class="step-canvas__cta"
+        (click)="meetFamiliar()"
+        data-testid="aplus-hatching-meet-cta">
+        <i class="fa-solid fa-heart" aria-hidden="true"></i>
+        {{ 'aplus.familiar_hatching.reveal_meet_cta' | translate }} {{ displayName() }}
+      </button>
+    </div>
+  }
+</section>

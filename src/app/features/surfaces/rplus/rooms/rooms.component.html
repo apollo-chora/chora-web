@@ -1,0 +1,382 @@
+<section class="rooms surface-rplus" data-testid="rplus-rooms">
+  <!-- Header: breadcrumb back to Campus Operations (this screen is reached from
+       the campus card's Rooms button), title, count, create CTA. -->
+  <header class="rooms__head glass-panel">
+    <nav class="rooms__crumbs" [attr.aria-label]="'rplus.rooms.breadcrumb_aria' | translate">
+      <a class="rooms__crumb" routerLink="/r/campusops">
+        {{ 'rplus.rooms.breadcrumb_root' | translate }}
+      </a>
+      <span class="rooms__crumb-sep" aria-hidden="true">/</span>
+      <span class="rooms__crumb rooms__crumb--leaf">
+        {{ 'rplus.rooms.breadcrumb_leaf' | translate }}
+      </span>
+    </nav>
+
+    <div class="rooms__title-row">
+      <h1 class="rooms__title">{{ 'rplus.rooms.title' | translate }}</h1>
+      <button
+        type="button"
+        class="btn btn-primary rooms__create"
+        data-testid="rooms-create-cta"
+        [attr.aria-label]="'rplus.rooms.create_aria' | translate"
+        (click)="onCreateClicked()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{ 'rplus.rooms.create_cta' | translate }}
+      </button>
+    </div>
+
+    @if (state() === 'ready') {
+      <p class="rooms__count" data-testid="rooms-count">
+        <strong>{{ totalRooms() }}</strong>
+        {{ 'rplus.rooms.total_rooms' | translate }}
+      </p>
+    }
+  </header>
+
+  <!-- Create form -->
+  @if (createFormOpen()) {
+    <form
+      class="rooms__form glass-panel"
+      data-testid="rooms-form"
+      (ngSubmit)="onCreateSubmit()">
+      <h2 class="rooms__form-title">{{ 'rplus.rooms.form.title' | translate }}</h2>
+
+      @if (createError(); as err) {
+        <p class="rooms__error" role="alert" data-testid="rooms-form-error">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{ err }}
+        </p>
+      }
+
+      <div class="rooms__field">
+        <label class="rooms__label" for="rooms-name">
+          {{ 'rplus.rooms.form.name_label' | translate }}
+        </label>
+        <input
+          id="rooms-name"
+          class="rooms__input"
+          type="text"
+          data-testid="rooms-form-name"
+          [attr.placeholder]="'rplus.rooms.form.name_placeholder' | translate"
+          [ngModel]="formName()"
+          (ngModelChange)="formName.set($event)"
+          name="roomName" />
+      </div>
+
+      <div class="rooms__field">
+        <label class="rooms__label" for="rooms-capacity">
+          {{ 'rplus.rooms.form.capacity_label' | translate }}
+        </label>
+        <input
+          id="rooms-capacity"
+          class="rooms__input"
+          type="number"
+          min="1"
+          data-testid="rooms-form-capacity"
+          [attr.placeholder]="'rplus.rooms.form.capacity_placeholder' | translate"
+          [ngModel]="formCapacity()"
+          (ngModelChange)="formCapacity.set($event)"
+          name="roomCapacity" />
+      </div>
+
+      <div class="rooms__form-actions">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="rooms-form-cancel"
+          (click)="onCancelCreate()">
+          {{ 'rplus.rooms.form.cancel' | translate }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-testid="rooms-form-submit"
+          [disabled]="!canSubmit()">
+          @if (submitting()) {
+            {{ 'rplus.rooms.form.submitting' | translate }}
+          } @else {
+            {{ 'rplus.rooms.form.submit' | translate }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- Three DISTINCT states. A dead backend must never render as "no rooms". -->
+  @if (state() === 'loading') {
+    <p class="rooms__state" data-testid="rooms-loading" aria-live="polite">
+      {{ 'rplus.rooms.loading' | translate }}
+    </p>
+  } @else if (state() === 'error') {
+    <div class="rooms__state rooms__state--error glass-panel" role="alert" data-testid="rooms-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <span>{{ 'rplus.rooms.load_error' | translate }}</span>
+      <button type="button" class="btn btn-ghost" data-testid="rooms-retry" (click)="onRetry()">
+        {{ 'rplus.rooms.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    @if (rooms().length === 0) {
+      <p class="rooms__state" data-testid="rooms-empty">
+        {{ 'rplus.rooms.empty' | translate }}
+      </p>
+    } @else {
+      <!-- Find / organize toolbar: purely client-side over the fetched list;
+           issues NO extra request. Only offered for a ready, non-empty list. -->
+      <div class="rooms__toolbar glass-panel" data-testid="rooms-toolbar">
+        <div class="rooms__toolbar-group rooms__filter">
+          <label class="rooms__toolbar-label" for="rooms-filter">
+            {{ 'rplus.rooms.filter_label' | translate }}
+          </label>
+          <div class="rooms__filter-control">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input
+              id="rooms-filter"
+              class="rooms__input rooms__filter-input"
+              type="search"
+              data-testid="rooms-filter-input"
+              [attr.placeholder]="'rplus.rooms.filter_placeholder' | translate"
+              [ngModel]="filterQuery()"
+              (ngModelChange)="filterQuery.set($event)"
+              name="roomFilter" />
+            @if (filterActive()) {
+              <button
+                type="button"
+                class="btn btn-ghost rooms__filter-clear"
+                data-testid="rooms-filter-clear"
+                [attr.aria-label]="'rplus.rooms.filter_clear_aria' | translate"
+                (click)="onClearFilter()">
+                {{ 'rplus.rooms.filter_clear' | translate }}
+              </button>
+            }
+          </div>
+        </div>
+        <div class="rooms__toolbar-group rooms__sort">
+          <label class="rooms__toolbar-label" for="rooms-sort">
+            {{ 'rplus.rooms.sort_label' | translate }}
+          </label>
+          <select
+            id="rooms-sort"
+            class="rooms__input rooms__sort-select"
+            data-testid="rooms-sort-select"
+            [ngModel]="sortMode()"
+            (ngModelChange)="sortMode.set($event)"
+            name="roomSort">
+            <option value="default">
+              {{ 'rplus.rooms.sort_default' | translate }}
+            </option>
+            <option value="name">{{ 'rplus.rooms.sort_name' | translate }}</option>
+            <option value="capacity">
+              {{ 'rplus.rooms.sort_capacity' | translate }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      @if (filterActive()) {
+        <p
+          class="rooms__filtered-count"
+          data-testid="rooms-filtered-count"
+          aria-live="polite">
+          {{
+            'rplus.rooms.filtered_count'
+              | translate: { shown: visibleRooms().length, total: totalRooms() }
+          }}
+        </p>
+      }
+
+      <!-- DISTINCT from rooms-empty: rooms exist, the filter matched none. -->
+      @if (noMatches()) {
+        <div class="rooms__state rooms__no-match" data-testid="rooms-no-match">
+          <span>{{ 'rplus.rooms.no_match' | translate }}</span>
+          <button
+            type="button"
+            class="btn btn-ghost"
+            data-testid="rooms-no-match-clear"
+            (click)="onClearFilter()">
+            {{ 'rplus.rooms.filter_clear' | translate }}
+          </button>
+        </div>
+      } @else {
+        <ul class="rooms__list" data-testid="rooms-list">
+          @for (room of visibleRooms(); track room.id) {
+            <li class="rooms__row glass-panel" [attr.data-testid]="'rooms-row-' + room.id">
+              @if (editingRoomId() === room.id) {
+                <!-- Inline edit form, pre-filled. Only one row is ever in edit
+                     mode (editingRoomId is a single value), so these element ids
+                     are unique in the document. Reuses the create-form labels +
+                     the same validation gate (canSubmitEdit -> isValidRoomInput). -->
+                <form
+                  class="rooms__edit"
+                  data-testid="rooms-edit-form"
+                  (ngSubmit)="onEditSubmit()">
+                  <h3 class="rooms__edit-title">
+                    {{ 'rplus.rooms.edit.title' | translate }}
+                  </h3>
+
+                  @if (editError(); as eerr) {
+                    <p class="rooms__error" role="alert" data-testid="rooms-edit-error">
+                      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                      {{ eerr }}
+                    </p>
+                  }
+
+                  <div class="rooms__field">
+                    <label class="rooms__label" for="rooms-edit-name">
+                      {{ 'rplus.rooms.form.name_label' | translate }}
+                    </label>
+                    <input
+                      id="rooms-edit-name"
+                      class="rooms__input"
+                      type="text"
+                      data-testid="rooms-edit-name"
+                      [attr.placeholder]="'rplus.rooms.form.name_placeholder' | translate"
+                      [ngModel]="editName()"
+                      (ngModelChange)="editName.set($event)"
+                      name="editRoomName" />
+                  </div>
+
+                  <div class="rooms__field">
+                    <label class="rooms__label" for="rooms-edit-capacity">
+                      {{ 'rplus.rooms.form.capacity_label' | translate }}
+                    </label>
+                    <input
+                      id="rooms-edit-capacity"
+                      class="rooms__input"
+                      type="number"
+                      min="1"
+                      data-testid="rooms-edit-capacity"
+                      [attr.placeholder]="'rplus.rooms.form.capacity_placeholder' | translate"
+                      [ngModel]="editCapacity()"
+                      (ngModelChange)="editCapacity.set($event)"
+                      name="editRoomCapacity" />
+                  </div>
+
+                  <div class="rooms__form-actions">
+                    <button
+                      type="button"
+                      class="btn btn-ghost"
+                      data-testid="rooms-edit-cancel"
+                      (click)="onCancelEdit()">
+                      {{ 'rplus.rooms.edit.cancel' | translate }}
+                    </button>
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                      data-testid="rooms-edit-submit"
+                      [disabled]="!canSubmitEdit()">
+                      @if (editSubmitting()) {
+                        {{ 'rplus.rooms.edit.submitting' | translate }}
+                      } @else {
+                        {{ 'rplus.rooms.edit.submit' | translate }}
+                      }
+                    </button>
+                  </div>
+                </form>
+              } @else {
+                <div class="rooms__row-summary">
+                  <span class="rooms__row-name">{{ room.name }}</span>
+                  <span class="rooms__row-capacity">
+                    <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                    <span class="rooms__row-capacity-value">{{ room.capacity }}</span>
+                    <span class="rooms__row-capacity-label">
+                      {{ 'rplus.rooms.capacity_label' | translate }}
+                    </span>
+                  </span>
+                  @if (!room.campusId) {
+                    <span class="rooms__row-unassigned" data-testid="rooms-unassigned">
+                      {{ 'rplus.rooms.unassigned' | translate }}
+                    </span>
+                  }
+                </div>
+
+                <div class="rooms__row-actions">
+                  <button
+                    type="button"
+                    class="btn btn-ghost rooms__row-action"
+                    [attr.data-testid]="'rooms-edit-' + room.id"
+                    [attr.aria-label]="
+                      'rplus.rooms.edit_aria' | translate: { name: room.name }
+                    "
+                    (click)="onEditClicked(room)">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                    {{ 'rplus.rooms.edit_cta' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-ghost rooms__row-action"
+                    [attr.data-testid]="'rooms-delete-' + room.id"
+                    [attr.aria-label]="
+                      'rplus.rooms.delete_aria' | translate: { name: room.name }
+                    "
+                    (click)="onDeleteClicked(room)">
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                    {{ 'rplus.rooms.delete_cta' | translate }}
+                  </button>
+                </div>
+
+                <!-- In-app delete confirmation (NOT window.confirm): an accessible
+                     alertdialog, focus moved to Cancel on open, Esc to dismiss. -->
+                @if (deletingRoomId() === room.id) {
+                  <div
+                    #deleteConfirm
+                    class="rooms__confirm"
+                    role="alertdialog"
+                    aria-modal="true"
+                    [attr.aria-labelledby]="'rooms-confirm-title-' + room.id"
+                    [attr.aria-describedby]="'rooms-confirm-body-' + room.id"
+                    data-testid="rooms-delete-confirm"
+                    (keydown.escape)="onCancelDelete()">
+                    <h3
+                      class="rooms__confirm-title"
+                      [id]="'rooms-confirm-title-' + room.id">
+                      {{ 'rplus.rooms.delete.confirm_title' | translate }}
+                    </h3>
+                    <p
+                      class="rooms__confirm-body"
+                      [id]="'rooms-confirm-body-' + room.id">
+                      {{
+                        'rplus.rooms.delete.confirm_body'
+                          | translate: { name: room.name }
+                      }}
+                    </p>
+
+                    @if (deleteError(); as derr) {
+                      <p class="rooms__error" role="alert" data-testid="rooms-delete-error">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        {{ derr }}
+                      </p>
+                    }
+
+                    <div class="rooms__confirm-actions">
+                      <button
+                        type="button"
+                        class="btn btn-ghost"
+                        data-autofocus
+                        data-testid="rooms-delete-cancel"
+                        (click)="onCancelDelete()">
+                        {{ 'rplus.rooms.delete.cancel' | translate }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn rooms__btn-danger"
+                        data-testid="rooms-delete-confirm-btn"
+                        [disabled]="deleteSubmitting()"
+                        (click)="onConfirmDelete()">
+                        @if (deleteSubmitting()) {
+                          {{ 'rplus.rooms.delete.deleting' | translate }}
+                        } @else {
+                          {{ 'rplus.rooms.delete.confirm' | translate }}
+                        }
+                      </button>
+                    </div>
+                  </div>
+                }
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

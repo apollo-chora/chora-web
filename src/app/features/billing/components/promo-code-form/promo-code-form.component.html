@@ -1,0 +1,200 @@
+<div class="promo-code-form" data-testid="promo-code-form">
+  <div class="promo-code-form__card">
+    <h3 class="promo-code-form__heading">
+      {{ 'billing.create_promo_code' | translate }}
+    </h3>
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      class="promo-code-form__form"
+      novalidate>
+
+      <div class="promo-code-form__grid">
+        <!-- Code -->
+        <div class="promo-code-form__field">
+          <label for="promo-code-input" class="promo-code-form__label">
+            {{ 'billing.promo_code_label' | translate }}
+          </label>
+          <input
+            id="promo-code-input"
+            type="text"
+            class="promo-code-form__input promo-code-form__input--code"
+            formControlName="code"
+            data-testid="input-promo-code"
+            [attr.aria-label]="'billing.promo_code_label' | translate"
+            [attr.aria-invalid]="codeControl.touched && codeControl.invalid" />
+          @if (codeControl.touched && codeControl.errors) {
+            <div class="promo-code-form__error" role="alert" aria-live="polite">
+              @if (codeControl.errors['required']) {
+                <span>{{ 'billing.promo_code_required' | translate }}</span>
+              }
+              @if (codeControl.errors['minlength']) {
+                <span>{{ 'billing.promo_code_min_length' | translate }}</span>
+              }
+              @if (codeControl.errors['pattern']) {
+                <span>{{ 'billing.promo_code_pattern' | translate }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Discount Type -->
+        <div class="promo-code-form__field">
+          <label for="discount-type-select" class="promo-code-form__label">
+            {{ 'billing.discount_type_label' | translate }}
+          </label>
+          <select
+            id="discount-type-select"
+            class="promo-code-form__select"
+            formControlName="discount_type"
+            data-testid="select-discount-type"
+            [attr.aria-label]="'billing.discount_type_label' | translate">
+            <option value="percentage">{{ 'billing.discount_percentage' | translate }}</option>
+            <option value="fixed_amount">{{ 'billing.discount_fixed_amount' | translate }}</option>
+          </select>
+          @if (discountTypeControl.touched && discountTypeControl.errors) {
+            <div class="promo-code-form__error" role="alert" aria-live="polite">
+              @if (discountTypeControl.errors['required']) {
+                <span>{{ 'billing.discount_type_required' | translate }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Discount Value -->
+        <div class="promo-code-form__field">
+          <label for="discount-value-input" class="promo-code-form__label">
+            {{ 'billing.discount_value_label' | translate }}
+          </label>
+          <input
+            id="discount-value-input"
+            type="number"
+            class="promo-code-form__input"
+            formControlName="discount_value"
+            data-testid="input-discount-value"
+            [attr.aria-label]="'billing.discount_value_label' | translate"
+            [attr.aria-invalid]="discountValueControl.touched && (discountValueControl.invalid || hasPercentageMaxError())"
+            min="0"
+            [attr.max]="isPercentage() ? 100 : null"
+            step="0.01" />
+          @if (discountValueControl.touched && discountValueControl.errors) {
+            <div class="promo-code-form__error" role="alert" aria-live="polite">
+              @if (discountValueControl.errors['required']) {
+                <span>{{ 'billing.discount_value_required' | translate }}</span>
+              }
+              @if (discountValueControl.errors['min']) {
+                <span>{{ 'billing.discount_value_min' | translate }}</span>
+              }
+            </div>
+          }
+          @if (discountValueControl.touched && hasPercentageMaxError()) {
+            <div class="promo-code-form__error" role="alert" aria-live="polite">
+              <span>{{ 'billing.discount_value_max_percentage' | translate }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Max Redemptions -->
+        <div class="promo-code-form__field">
+          <label for="max-redemptions-input" class="promo-code-form__label">
+            {{ 'billing.max_redemptions_label' | translate }}
+          </label>
+          <input
+            id="max-redemptions-input"
+            type="number"
+            class="promo-code-form__input"
+            formControlName="max_redemptions"
+            data-testid="input-max-redemptions"
+            [attr.aria-label]="'billing.max_redemptions_label' | translate"
+            [attr.aria-invalid]="maxRedemptionsControl.touched && maxRedemptionsControl.invalid"
+            min="1"
+            step="1" />
+          @if (maxRedemptionsControl.touched && maxRedemptionsControl.errors) {
+            <div class="promo-code-form__error" role="alert" aria-live="polite">
+              @if (maxRedemptionsControl.errors['required']) {
+                <span>{{ 'billing.max_redemptions_required' | translate }}</span>
+              }
+              @if (maxRedemptionsControl.errors['min']) {
+                <span>{{ 'billing.max_redemptions_min' | translate }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Valid From -->
+        <div class="promo-code-form__field">
+          <label for="valid-from-input" class="promo-code-form__label">
+            {{ 'billing.valid_from_label' | translate }}
+          </label>
+          <input
+            id="valid-from-input"
+            type="date"
+            class="promo-code-form__input"
+            formControlName="valid_from"
+            data-testid="input-valid-from"
+            [attr.aria-label]="'billing.valid_from_label' | translate"
+            [attr.aria-invalid]="validFromControl.touched && validFromControl.invalid" />
+          @if (validFromControl.touched && validFromControl.errors) {
+            <div class="promo-code-form__error" role="alert" aria-live="polite">
+              @if (validFromControl.errors['required']) {
+                <span>{{ 'billing.valid_from_required' | translate }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Valid Until -->
+        <div class="promo-code-form__field">
+          <label for="valid-until-input" class="promo-code-form__label">
+            {{ 'billing.valid_until_label' | translate }}
+          </label>
+          <input
+            id="valid-until-input"
+            type="date"
+            class="promo-code-form__input"
+            formControlName="valid_until"
+            data-testid="input-valid-until"
+            [attr.aria-label]="'billing.valid_until_label' | translate"
+            [attr.aria-invalid]="validUntilControl.touched && (validUntilControl.invalid || hasDateRangeError())" />
+          @if (validUntilControl.touched && validUntilControl.errors) {
+            <div class="promo-code-form__error" role="alert" aria-live="polite">
+              @if (validUntilControl.errors['required']) {
+                <span>{{ 'billing.valid_until_required' | translate }}</span>
+              }
+            </div>
+          }
+          @if (validUntilControl.touched && hasDateRangeError()) {
+            <div class="promo-code-form__error" role="alert" aria-live="polite">
+              <span>{{ 'billing.valid_until_after_from' | translate }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Button Group -->
+      <div class="promo-code-form__actions">
+        <button
+          type="submit"
+          class="promo-code-form__btn promo-code-form__btn--primary"
+          data-testid="btn-submit-promo"
+          [disabled]="!isFormValid() || submitting()"
+          [attr.aria-label]="'billing.create_promo_code' | translate">
+          @if (submitting()) {
+            {{ 'billing.creating' | translate }}
+          } @else {
+            {{ 'billing.create_promo_code' | translate }}
+          }
+        </button>
+        <button
+          type="button"
+          class="promo-code-form__btn promo-code-form__btn--secondary"
+          data-testid="btn-cancel-promo"
+          (click)="onCancel()"
+          [attr.aria-label]="'billing.cancel' | translate">
+          {{ 'billing.cancel' | translate }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

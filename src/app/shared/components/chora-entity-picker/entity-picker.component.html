@@ -1,0 +1,188 @@
+<div
+  class="entity-picker"
+  [class.entity-picker--command]="variant() === 'command'"
+  [attr.data-variant]="variant()"
+  data-testid="entity-picker">
+  @if (label()) {
+    <label [id]="labelId" [attr.for]="inputId" class="entity-picker__label">
+      {{ label() }}
+    </label>
+  }
+
+  <!-- multi: chip set above the input (parent owns the canonical value list) -->
+  @if (variant() === 'multi' && displayValue().length > 0) {
+    <ul
+      class="entity-picker__chips"
+      data-testid="entity-picker-chips"
+      [attr.aria-label]="label() || 'Selected'">
+      @for (chip of displayValue(); track chip.id) {
+        <li
+          class="entity-picker__chip"
+          data-testid="entity-picker-chip"
+          [attr.data-id]="chip.id">
+          <span class="entity-picker__chip-label">{{ chip.label }}</span>
+          <button
+            type="button"
+            class="entity-picker__chip-remove"
+            data-testid="entity-picker-chip-remove"
+            [attr.aria-label]="'Remove ' + chip.label"
+            (click)="removeChip(chip.id)">
+            ×
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- single: selected line with a clear control -->
+  @if (variant() === 'single' && displayValue().length > 0) {
+    <div
+      class="entity-picker__selected"
+      data-testid="entity-picker-selected">
+      <span class="entity-picker__selected-label">{{ displayValue()[0].label }}</span>
+      <button
+        type="button"
+        class="entity-picker__selected-clear"
+        data-testid="entity-picker-selected-clear"
+        [attr.aria-label]="'Clear ' + displayValue()[0].label"
+        (click)="clearSelected()">
+        ×
+      </button>
+    </div>
+  }
+
+  <input
+    #inputEl
+    cdkOverlayOrigin
+    #pickerOrigin="cdkOverlayOrigin"
+    [id]="inputId"
+    class="entity-picker__input"
+    data-testid="entity-picker-input"
+    type="text"
+    role="combobox"
+    autocomplete="off"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-controls]="hasListbox() ? listboxId : null"
+    [attr.aria-activedescendant]="activeDescendantId()"
+    [attr.aria-label]="label() || placeholder() || 'Search'"
+    [attr.placeholder]="placeholder()"
+    [value]="query()"
+    (input)="onQueryInput($any($event.target).value)"
+    (focus)="onFocus()"
+    (keydown)="onKeydown($event)" />
+
+  <!-- Overlay panel (CHO-2291): every open state lives in one panel rendered
+       through a CDK connected overlay, i.e. in a body-level container, NOT in
+       this subtree. That is what makes it immune to the ancestor
+       `backdrop-filter` stacking context that otherwise painted the next card
+       over the dropdown, and it stops the dropdown growing the field. -->
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="pickerOrigin"
+    [cdkConnectedOverlayOpen]="panelOpen()"
+    [cdkConnectedOverlayPositions]="overlayPositions"
+    [cdkConnectedOverlayWidth]="triggerWidth()"
+    [cdkConnectedOverlayScrollStrategy]="scrollStrategy"
+    (overlayOutsideClick)="closePanel()">
+  <div
+    class="entity-picker__panel"
+    [class.entity-picker__panel--command]="variant() === 'command'"
+    data-testid="entity-picker-panel">
+  @if (isLoading()) {
+    <div
+      class="entity-picker__loading"
+      data-testid="entity-picker-loading"
+      role="status"
+      aria-live="polite"
+      aria-busy="true">
+      {{ loadingLabel() }}
+    </div>
+  } @else if (isError()) {
+    <div
+      class="entity-picker__error"
+      data-testid="entity-picker-error"
+      role="alert">
+      <span class="entity-picker__error-text">{{ errorLabel() }}</span>
+      <button
+        type="button"
+        class="entity-picker__retry"
+        data-testid="entity-picker-retry"
+        (click)="retry()">
+        {{ retryLabel() }}
+      </button>
+    </div>
+  } @else if (isEmpty()) {
+    <chora-empty-state
+      [icon]="emptyIcon()"
+      [heading]="emptyHeading()"
+      testId="entity-picker-empty" />
+  } @else if (hasListbox()) {
+    <ul
+      [id]="listboxId"
+      class="entity-picker__results"
+      data-testid="entity-picker-results"
+      role="listbox"
+      [attr.aria-label]="label() || 'Results'">
+      @for (row of results(); track row.id; let i = $index) {
+        <!--
+          The <li> IS the option. role=option must be a direct child of the
+          listbox: an intervening wrapper breaks aria-required-children (on the
+          listbox), aria-required-parent (on the option) and the listitem rule
+          (on a plain <li> whose parent is not role=list) all at once.
+          No inner <button>: this is a combobox + aria-activedescendant widget,
+          so the input owns focus and Enter (see onKeydown) and the option is
+          never tab-focusable. A button here would have been keyboard-dead
+          weight carrying tabindex="-1".
+        -->
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events --
+             The keyboard equivalent is NOT missing, it lives where the APG puts
+             it for a combobox + aria-activedescendant: the input owns focus and
+             handles ArrowUp/ArrowDown/Enter/Escape (see onKeydown), activating
+             whichever option aria-activedescendant points at. An option in this
+             pattern never receives DOM focus, so a keydown binding here would be
+             dead code. `click` is the mouse affordance only. -->
+        <li
+          role="option"
+          tabindex="-1"
+          [id]="optionId(i)"
+          class="entity-picker__option-row"
+          data-testid="entity-picker-option"
+          [attr.data-id]="row.id"
+          [attr.aria-selected]="isActive(i)"
+          [attr.aria-disabled]="isDisabled(row)"
+          (click)="onOptionClick(row, $event)"
+          (mouseenter)="onOptionHover(i)">
+          <span
+            class="entity-picker__option"
+            [class.entity-picker__option--active]="isActive(i)"
+            [class.entity-picker__option--disabled]="isDisabled(row)">
+            <span class="entity-picker__option-main">
+              <span class="entity-picker__option-label">{{ row.label }}</span>
+              @if (row.sublabel) {
+                <span class="entity-picker__option-sublabel">{{ row.sublabel }}</span>
+              }
+            </span>
+            @if (variant() === 'command' && badgeOf(row)) {
+              <span class="entity-picker__option-badge" data-testid="entity-picker-badge">
+                {{ badgeOf(row) }}
+              </span>
+            }
+          </span>
+        </li>
+      }
+    </ul>
+
+    @if (nextCursor()) {
+      <button
+        type="button"
+        class="entity-picker__load-more"
+        data-testid="entity-picker-load-more"
+        (click)="loadMore()">
+        {{ loadMoreLabel() }}
+      </button>
+    }
+  }
+  </div>
+  </ng-template>
+</div>

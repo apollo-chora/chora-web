@@ -1,0 +1,132 @@
+<section
+  class="quests"
+  aria-labelledby="home-quests-heading"
+  data-testid="home-quests">
+  <h2 id="home-quests-heading" class="quests__heading">
+    {{ 'home.quests.heading' | translate }}
+  </h2>
+
+  @if (state() === 'loading') {
+    <p class="quests__line" role="status" aria-live="polite" data-testid="home-quests-loading">
+      {{ 'home.quests.loading' | translate }}
+    </p>
+  } @else if (state() === 'unread') {
+    <!-- The whole read failed. Never an empty quest log. -->
+    <p class="quests__line quests__line--unread" role="status" data-testid="home-quests-unread">
+      {{ 'home.quests.unread' | translate }}
+    </p>
+  } @else if (isEmpty()) {
+    <p class="quests__line" data-testid="home-quests-empty">
+      {{ 'home.quests.empty' | translate }}
+    </p>
+  }
+
+  @for (q of ranked(); track q.card.cardId) {
+    @if (q.card.state === 'unread') {
+      <div class="quest quest--unread" data-testid="home-quest-unread-card">
+        <span class="quest__body">
+          <span class="quest__title">{{ 'home.quests.unread' | translate }}</span>
+          @if (q.errorCode) {
+            <span
+              class="quest__code"
+              [attr.data-code]="q.errorCode"
+              data-testid="home-quest-error-code">
+              {{ 'home.quests.error_code' | translate: { code: q.errorCode } }}
+            </span>
+          }
+        </span>
+      </div>
+    } @else if (q.mounted) {
+      <a
+        class="quest"
+        [routerLink]="q.card.route"
+        [attr.data-kind]="q.card.kind"
+        data-testid="home-quest-card">
+        <span class="quest__body">
+          <span
+            class="quest__title"
+            [attr.data-title-key]="q.titleKey"
+            [attr.data-title-params]="paramsAttr(q.titleParams)"
+            data-testid="home-quest-title">
+            {{ q.titleKey | translate: q.titleParams }}
+          </span>
+          @if (q.bandKey) {
+            <span
+              class="band"
+              [attr.data-band-key]="q.bandKey"
+              data-testid="home-quest-band">
+              {{ q.bandKey | translate }}
+            </span>
+          }
+        </span>
+        <span
+          class="quest__go"
+          [attr.data-go-key]="q.goKey"
+          data-testid="home-quest-go">
+          {{ q.goKey | translate }}
+        </span>
+      </a>
+    } @else {
+      <!-- The route IS the action, so a card the router cannot serve is
+           stated and never offered as a click. -->
+      <div
+        class="quest quest--dead"
+        [attr.data-kind]="q.card.kind"
+        data-testid="home-quest-card">
+        <span class="quest__body">
+          <span
+            class="quest__title"
+            [attr.data-title-key]="q.titleKey"
+            [attr.data-title-params]="paramsAttr(q.titleParams)"
+            data-testid="home-quest-title">
+            {{ q.titleKey | translate: q.titleParams }}
+          </span>
+          @if (q.bandKey) {
+            <span
+              class="band"
+              [attr.data-band-key]="q.bandKey"
+              data-testid="home-quest-band">
+              {{ q.bandKey | translate }}
+            </span>
+          }
+        </span>
+        <span class="quest__go quest__go--dead" data-testid="home-quest-no-route">
+          {{ 'home.quests.no_route' | translate }}
+        </span>
+      </div>
+    }
+  }
+
+  @for (q of unplaced(); track q.card.cardId) {
+    <div class="quest quest--unread" data-testid="home-quest-unread-card">
+      <span class="quest__body">
+        <span class="quest__title">{{ 'home.quests.unread' | translate }}</span>
+        @if (q.errorCode) {
+          <span
+            class="quest__code"
+            [attr.data-code]="q.errorCode"
+            data-testid="home-quest-error-code">
+            {{ 'home.quests.error_code' | translate: { code: q.errorCode } }}
+          </span>
+        }
+      </span>
+    </div>
+  }
+
+  @for (q of absent(); track q.card.cardId) {
+    <div
+      class="quest quest--absent"
+      [attr.data-kind]="q.card.kind"
+      data-testid="home-quest-absent-card">
+      <span class="quest__body">
+        <span
+          class="quest__title"
+          [attr.data-title-key]="q.titleKey"
+          data-testid="home-quest-absent-title">
+          {{ q.titleKey | translate: q.titleParams }}
+        </span>
+        <span class="quest__sub">{{ 'home.quests.absent' | translate }}</span>
+      </span>
+    </div>
+  }
+</section>

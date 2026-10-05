@@ -1,0 +1,100 @@
+<section class="live-session-dashboard" data-testid="live-session-dashboard">
+  @if (liveSessionState().status === 'loading' && !liveData()) {
+    <div class="live-session-dashboard__loading" data-testid="live-loading" role="status">
+      <p>{{ 'training.live-session.loading' | translate }}</p>
+    </div>
+  } @else if (liveSessionState().status === 'error') {
+    <div class="live-session-dashboard__error" data-testid="live-error" role="alert">
+      <h2>{{ 'training.live-session.error-title' | translate }}</h2>
+      <p>{{ liveError() }}</p>
+    </div>
+  } @else if (liveData()) {
+    <!-- Header -->
+    <header class="live-session-dashboard__header" data-testid="live-header">
+      <h1 class="live-session-dashboard__title">{{ session()!.title }}</h1>
+      <div class="live-session-dashboard__header-stats">
+        <span class="live-session-dashboard__attendance-counter" data-testid="live-attendance-count">
+          {{ attendanceCount() }}/{{ totalExpected() }} {{ 'training.live-session.present' | translate }}
+        </span>
+        <span
+          class="live-session-dashboard__engagement"
+          [class]="engagementClass()"
+          data-testid="live-engagement-score">
+          {{ 'training.live-session.engagement' | translate }}: {{ engagementScore() }}%
+        </span>
+      </div>
+    </header>
+
+    <!-- Three-panel layout -->
+    <div class="live-session-dashboard__panels" data-testid="live-panels">
+      <!-- Left: Agenda panel -->
+      <aside class="live-session-dashboard__agenda-panel" data-testid="agenda-panel" aria-label="Session agenda">
+        <h2 class="live-session-dashboard__panel-title">{{ 'training.live-session.agenda' | translate }}</h2>
+        <nav class="live-session-dashboard__agenda-list" aria-label="Agenda items">
+          @for (item of agenda(); track item.atom_id; let idx = $index) {
+            <div
+              class="live-session-dashboard__agenda-item"
+              [class.live-session-dashboard__agenda-item--current]="isCurrentItem(idx)"
+              [class.live-session-dashboard__agenda-item--completed]="isCompletedItem(idx)"
+              [attr.data-testid]="'agenda-item-' + idx"
+              [attr.aria-current]="isCurrentItem(idx) ? 'step' : null">
+              <span class="live-session-dashboard__agenda-index">{{ idx + 1 }}</span>
+              <div class="live-session-dashboard__agenda-info">
+                <span class="live-session-dashboard__agenda-name">{{ item.atom_title }}</span>
+                <span class="live-session-dashboard__agenda-duration">{{ item.duration_minutes }} {{ 'training.live-session.min' | translate }}</span>
+              </div>
+            </div>
+          }
+        </nav>
+      </aside>
+
+      <!-- Center: Current atom display -->
+      <main class="live-session-dashboard__current-panel" data-testid="current-panel">
+        <h2 class="live-session-dashboard__panel-title">{{ 'training.live-session.current-atom' | translate }}</h2>
+        @if (currentAtom()) {
+          <div class="live-session-dashboard__current-atom" data-testid="current-atom">
+            <h3 class="live-session-dashboard__atom-title">{{ currentAtom()!.atom_title }}</h3>
+            <span class="live-session-dashboard__atom-type">{{ currentAtom()!.atom_type }}</span>
+            <p class="live-session-dashboard__atom-duration">
+              {{ currentAtom()!.duration_minutes }} {{ 'training.live-session.minutes-allocated' | translate }}
+            </p>
+            @if (currentAtom()!.delivery_notes) {
+              <div class="live-session-dashboard__notes" data-testid="delivery-notes">
+                <h4 class="live-session-dashboard__notes-label">{{ 'training.live-session.notes' | translate }}</h4>
+                <p class="live-session-dashboard__notes-text">{{ currentAtom()!.delivery_notes }}</p>
+              </div>
+            }
+          </div>
+
+          <button
+            class="live-session-dashboard__advance-btn"
+            [disabled]="isLastItem()"
+            (click)="advanceAgenda()"
+            type="button"
+            data-testid="advance-btn">
+            @if (isLastItem()) {
+              {{ 'training.live-session.last-item' | translate }}
+            } @else {
+              {{ 'training.live-session.next-atom' | translate }}
+            }
+          </button>
+        } @else {
+          <p class="live-session-dashboard__completed" data-testid="session-completed">
+            {{ 'training.live-session.all-completed' | translate }}
+          </p>
+        }
+      </main>
+
+      <!-- Right: Attendance panel with QR -->
+      <aside class="live-session-dashboard__attendance-panel" data-testid="attendance-panel" aria-label="Attendance">
+        <h2 class="live-session-dashboard__panel-title">{{ 'training.live-session.attendance' | translate }}</h2>
+        <chora-qr-attendance
+          [sessionId]="sessionId()"
+          [showOverride]="true"
+          (attendanceChanged)="onAttendanceChanged($event)"
+          data-testid="qr-attendance-embed">
+        </chora-qr-attendance>
+      </aside>
+    </div>
+  }
+</section>

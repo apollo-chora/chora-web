@@ -1,0 +1,591 @@
+// O+ Dashboard — consolidated IMDA 4-dimension governance page.
+// Header (LIVE badge + Compliant/Review chip + Recent-decisions counter) +
+// per-dimension panels (traffic-light signal + rubric drill-down) merged in
+// from the retired /o/dimensions page (synthetic-tinkering-fox, 2026-06-22).
+// Tablet-first: ≥768px primary, ≥1280px desktop enhancement. No mobile breakpoints.
+
+:host {
+  display: block;
+}
+
+.oplus-dashboard {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    // Variant-driven colours (signal: live / stale / offline / loading).
+    color: var(--success, #10b981);
+    background: rgba(16, 185, 129, 0.1);
+
+    &[data-variant='live'] {
+      color: var(--success, #10b981);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    &[data-variant='stale'] {
+      color: #d97706;
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    &[data-variant='offline'] {
+      color: #dc2626;
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    &[data-variant='loading'] {
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  &__live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: oplusPulse 2s infinite;
+  }
+
+  &__gate,
+  &__error {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+
+    i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+  }
+
+  &__gate-title {
+    font-size: 1.2rem;
+    margin: 0 0 0.4rem;
+    color: var(--text-main);
+  }
+
+  &__gate-body {
+    margin: 0;
+  }
+
+  &__recent {
+    padding: 0.85rem 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    align-self: flex-start;
+
+    i {
+      color: var(--primary);
+    }
+  }
+
+  &__recent-num {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  &__recent-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  &__posture {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    &--ok {
+      color: var(--success, #10b981);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    &--review {
+      color: #f59e0b;
+      background: rgba(249, 115, 22, 0.1);
+    }
+  }
+
+  // Per-dimension IMDA panels: stacked at <1280px, two-column at ≥1280px.
+  &__panels {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 1280px) {
+    &__panels {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+.oplus-dim-panel {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  // Traffic-light status signal — the lamp housing (.oplus-traffic) + a label.
+  // position:relative anchors the hover/focus legend tooltip; cursor:help signals
+  // the affordance (mirrors the o-plus-dashboard reference Tooltip).
+  &__light {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: help;
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+  }
+
+  &__light-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    color: var(--text-muted);
+  }
+
+  &__light[data-status='achieved'] &__light-label {
+    color: #059669;
+  }
+
+  &__light[data-status='partial'] &__light-label {
+    color: #d97706;
+  }
+
+  &__light[data-status='attention'] &__light-label {
+    color: #dc2626;
+  }
+
+  &__description {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  &__principles {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  &__rubric-bar {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__rubric-summary {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+
+    strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+  }
+
+  &__rubric-total {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  &__rubric-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__rubric-region[hidden] {
+    display: none;
+  }
+
+  &__rubric-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+}
+
+// Vertical 3-lamp traffic signal (green top -> red bottom). The lamp matching
+// the dimension status (data-active=true) glows; inactive lamps stay dim.
+// RAG palette mirrors the reference o-plus-dashboard (#22c55e / #f59e0b / #ef4444).
+.oplus-traffic {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.14);
+  flex-shrink: 0;
+
+  &__lamp {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.1);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  &__lamp--green[data-active='true'] {
+    background: #22c55e;
+    box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.55), 0 0 2px 1px rgba(34, 197, 94, 0.4);
+  }
+
+  &__lamp--amber[data-active='true'] {
+    background: #f59e0b;
+    box-shadow: 0 0 8px 2px rgba(245, 158, 11, 0.55), 0 0 2px 1px rgba(245, 158, 11, 0.4);
+  }
+
+  &__lamp--red[data-active='true'] {
+    background: #ef4444;
+    box-shadow: 0 0 8px 2px rgba(239, 68, 68, 0.55), 0 0 2px 1px rgba(239, 68, 68, 0.4);
+  }
+}
+
+.oplus-rubric-item {
+  // Fixed ref / priority / status columns + flexible requirement / tool
+  // columns → every row shares identical column geometry so the cells line up
+  // vertically across rows (the badges no longer ragged-align per-row).
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1.5fr) minmax(0, 1fr) 40px 96px;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  font-size: 0.78rem;
+
+  &__ref {
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+
+  // Priority badge cell — always present (even when empty) so the column
+  // geometry stays constant and the rows stay aligned.
+  &__priority {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__req {
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  &__tool {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    white-space: nowrap;
+    gap: 0.3rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+
+    &[data-status='pass'] {
+      color: #059669;
+      background: rgba(16, 185, 129, 0.15);
+    }
+
+    &[data-status='partial'] {
+      color: #d97706;
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    &[data-status='fail'] {
+      color: #dc2626;
+      background: rgba(239, 68, 68, 0.15);
+    }
+  }
+
+  &__evidence {
+    grid-column: 1 / -1;
+    margin-top: 0.3rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 8px;
+    background: rgba(123, 45, 142, 0.08);
+    color: var(--primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    justify-self: start;
+
+    i {
+      font-size: 0.7rem;
+    }
+
+    &:hover {
+      background: rgba(123, 45, 142, 0.15);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.oplus-dim-panel__empty {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+// Per-item remediation priority badge. P1=critical(red) / P2=important(amber) /
+// P3=nice-to-have(neutral). Monospace token so the 40px column stays tidy.
+.oplus-priority-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 0.14rem 0.32rem;
+  border-radius: 6px;
+  font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  line-height: 1;
+
+  &[data-priority='P1'] {
+    color: #dc2626;
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  &[data-priority='P2'] {
+    color: #d97706;
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  &[data-priority='P3'] {
+    color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+}
+
+// Traffic-light legend tooltip — glassmorphism dark card ported from the
+// o-plus-dashboard reference Tooltip (rgba(24,22,38,.94) + blur + arrow + fade).
+// Shown on hover / keyboard focus of the traffic-light signal.
+.oplus-traffic-tip {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  width: max-content;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  font-weight: 500;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
+  color: #e2e0ee;
+  background: rgba(24, 22, 38, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    right: 16px;
+    border: 6px solid transparent;
+    border-bottom-color: rgba(24, 22, 38, 0.94);
+  }
+
+  &__title {
+    font-weight: 800;
+    font-size: 0.72rem;
+    color: #fff;
+    margin-bottom: 0.1rem;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__note {
+    margin-top: 0.12rem;
+    color: rgba(226, 224, 238, 0.7);
+    font-style: italic;
+  }
+}
+
+.oplus-traffic-tip__row[data-tone='red'] .oplus-traffic-tip__dot {
+  background: #ef4444;
+}
+.oplus-traffic-tip__row[data-tone='amber'] .oplus-traffic-tip__dot {
+  background: #f59e0b;
+}
+.oplus-traffic-tip__row[data-tone='green'] .oplus-traffic-tip__dot {
+  background: #22c55e;
+}
+
+// Reveal on hover or keyboard focus of the traffic-light signal.
+.oplus-dim-panel__light:hover .oplus-traffic-tip,
+.oplus-dim-panel__light:focus .oplus-traffic-tip,
+.oplus-dim-panel__light:focus-within .oplus-traffic-tip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes oplusPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oplus-dashboard__live-dot {
+    animation: none;
+  }
+
+  .oplus-traffic__lamp {
+    transition: none;
+  }
+}

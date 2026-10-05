@@ -1,0 +1,40 @@
+:host {
+  display: block;
+}
+
+.cplus-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-sm);
+
+  &__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--cplus-space-md);
+  }
+
+  // Flat title — solid colour, never gradient-clipped text (ADR-196 D1).
+  &__title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--cplus-text);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--cplus-space-sm);
+  }
+
+  &__description {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--cplus-text-secondary);
+    line-height: 1.5;
+  }
+}

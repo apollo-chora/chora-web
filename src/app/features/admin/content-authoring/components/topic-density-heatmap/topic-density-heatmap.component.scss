@@ -1,0 +1,275 @@
+:host {
+  display: block;
+}
+
+// ---------------------------------------------------------------------------
+// Density color scale using CSS custom properties
+// ---------------------------------------------------------------------------
+
+$density-empty: var(--chora-density-empty, #f9fafb);
+$density-sparse: var(--chora-density-sparse, #e0f2fe);
+$density-light: var(--chora-density-light, #93c5fd);
+$density-moderate: var(--chora-density-moderate, #3b82f6);
+$density-dense: var(--chora-density-dense, #1d4ed8);
+$density-very-dense: var(--chora-density-very-dense, #1e3a5f);
+
+.topic-density-heatmap {
+  padding: var(--chora-space-lg, 24px);
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: var(--chora-space-xs, 4px) 0 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Legend
+  // ---------------------------------------------------------------------------
+
+  &__legend {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    margin-block-end: var(--chora-space-lg, 24px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: var(--chora-color-surface-1, #fafafa);
+    border-radius: var(--chora-radius-md, 8px);
+  }
+
+  &__legend-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--chora-color-text-muted, #666);
+    white-space: nowrap;
+  }
+
+  &__legend-swatch {
+    width: 24px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+
+    &--empty {
+      background: $density-empty;
+    }
+
+    &--sparse {
+      background: $density-sparse;
+    }
+
+    &--light {
+      background: $density-light;
+    }
+
+    &--moderate {
+      background: $density-moderate;
+    }
+
+    &--dense {
+      background: $density-dense;
+    }
+
+    &--very-dense {
+      background: $density-very-dense;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tree structure
+  // ---------------------------------------------------------------------------
+
+  &__tree {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__subtree {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__node {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    border-radius: var(--chora-radius-sm, 4px);
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: var(--chora-color-surface-2, #f0f0f0);
+    }
+
+    &--level-1 {
+      padding-inline-start: calc(var(--chora-space-sm, 8px) + 24px);
+    }
+
+    &--level-2 {
+      padding-inline-start: calc(var(--chora-space-sm, 8px) + 48px);
+    }
+  }
+
+  &__expand-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--chora-color-text-secondary, #888);
+    font-size: 10px;
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+
+    &--expanded {
+      transform: rotate(90deg);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      border-radius: var(--chora-radius-sm, 4px);
+    }
+  }
+
+  &__leaf-spacer {
+    width: 20px;
+    flex-shrink: 0;
+  }
+
+  &__node-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  &__count-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--chora-color-text-muted, #666);
+    flex-shrink: 0;
+    min-width: 28px;
+    text-align: end;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Density bar
+  // ---------------------------------------------------------------------------
+
+  &__density-bar {
+    flex: 1;
+    height: 12px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: 6px;
+    overflow: hidden;
+    min-width: 60px;
+    max-width: 200px;
+  }
+
+  &__density-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+
+    &--empty {
+      background: $density-empty;
+    }
+
+    &--sparse {
+      background: $density-sparse;
+    }
+
+    &--light {
+      background: $density-light;
+    }
+
+    &--moderate {
+      background: $density-moderate;
+    }
+
+    &--dense {
+      background: $density-dense;
+    }
+
+    &--very-dense {
+      background: $density-very-dense;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Loading / Empty / Error
+  // ---------------------------------------------------------------------------
+
+  &__loading {
+    display: grid;
+    gap: var(--chora-space-md, 16px);
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__skeleton {
+    height: 36px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-sm, 4px);
+    animation: density-pulse 1.5s ease-in-out infinite;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+    color: var(--chora-color-text-muted, #666);
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+  }
+
+  &__error-text {
+    color: #991b1b;
+    margin: 0;
+  }
+}
+
+@keyframes density-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Desktop enhancement: wider density bars
+@media (min-width: 1280px) {
+  .topic-density-heatmap {
+    &__density-bar {
+      max-width: 300px;
+    }
+  }
+}

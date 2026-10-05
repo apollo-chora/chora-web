@@ -1,0 +1,158 @@
+:host {
+  display: block;
+}
+
+.reasoning-trace {
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0 0 var(--chora-space-sm, 8px);
+  }
+
+  &__summary {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0 0 var(--chora-space-md, 16px);
+    padding: var(--chora-space-sm, 8px);
+    background: var(--chora-color-surface-1, #f9fafb);
+    border-radius: var(--chora-radius-sm, 4px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Timeline
+  // -------------------------------------------------------------------------
+
+  &__timeline {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__step {
+    display: flex;
+    gap: var(--chora-space-md, 16px);
+    position: relative;
+  }
+
+  // -------------------------------------------------------------------------
+  // Step Marker (number + connector line)
+  // -------------------------------------------------------------------------
+
+  &__step-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 32px;
+  }
+
+  &__step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--chora-color-primary, #2563eb);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__step-connector {
+    width: 2px;
+    flex: 1;
+    background: var(--chora-color-border, #e5e5e5);
+    min-height: var(--chora-space-md, 16px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Step Content
+  // -------------------------------------------------------------------------
+
+  &__step-content {
+    flex: 1;
+    padding-block-end: var(--chora-space-md, 16px);
+  }
+
+  &__step-description {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0 0 var(--chora-space-xs, 4px);
+    line-height: 1.5;
+  }
+
+  &__evidence {
+    display: flex;
+    gap: var(--chora-space-xs, 4px);
+    margin-block-end: var(--chora-space-sm, 8px);
+    font-size: 0.8125rem;
+  }
+
+  &__evidence-label {
+    font-weight: 600;
+    color: var(--chora-color-text-muted, #666);
+    flex-shrink: 0;
+  }
+
+  &__evidence-text {
+    color: var(--chora-color-text, #333);
+  }
+
+  // -------------------------------------------------------------------------
+  // Confidence Bar
+  // -------------------------------------------------------------------------
+
+  &__confidence {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__confidence-track {
+    flex: 1;
+    height: 6px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: 3px;
+    overflow: hidden;
+    max-width: 200px;
+  }
+
+  &__confidence-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+
+    &--high {
+      background: #22c55e;
+    }
+
+    &--medium {
+      background: #eab308;
+    }
+
+    &--low {
+      background: #ef4444;
+    }
+  }
+
+  &__confidence-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    min-width: 36px;
+    text-align: end;
+  }
+
+  // -------------------------------------------------------------------------
+  // Empty
+  // -------------------------------------------------------------------------
+
+  &__empty {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+}

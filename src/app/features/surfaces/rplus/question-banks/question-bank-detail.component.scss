@@ -1,0 +1,324 @@
+// /r/question-banks/:id Detail page. Tablet-first (≥768px primary; ≥1280px enhanced).
+
+:host {
+  display: block;
+}
+
+.question-bank-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+  padding: var(--chora-space-lg);
+}
+
+.question-bank-detail__breadcrumb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  color: var(--chora-color-text-secondary);
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover {
+    color: var(--primary);
+  }
+}
+
+// ── Loading / error / empty ────────────────────────────────────────────────
+.question-bank-detail__loading {
+  padding: var(--chora-space-lg);
+  color: var(--chora-color-text-secondary);
+}
+
+.question-bank-detail__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-lg);
+  color: var(--danger);
+}
+
+.question-bank-detail__error-icon {
+  font-size: 1.5rem;
+}
+
+.question-bank-detail__error-detail {
+  margin: 0;
+}
+
+.question-bank-detail__inline-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  color: var(--danger);
+}
+
+.question-bank-detail__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-xl);
+}
+
+.question-bank-detail__empty-icon {
+  font-size: 2rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.question-bank-detail__empty-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.question-bank-detail__empty-body {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--chora-color-text-secondary);
+  font-size: 0.9rem;
+}
+
+// ── Bank head ──────────────────────────────────────────────────────────────
+.question-bank-detail__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+  padding: var(--chora-space-lg);
+}
+
+.question-bank-detail__head-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+  min-width: 0;
+}
+
+.question-bank-detail__name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.question-bank-detail__desc {
+  margin: 0;
+  color: var(--chora-color-text-secondary);
+}
+
+.question-bank-detail__tags {
+  list-style: none;
+  margin: var(--chora-space-xs) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-xs);
+}
+
+.question-bank-detail__tag {
+  padding: 0.1rem var(--chora-space-sm);
+  border-radius: var(--chora-radius-sm, 6px);
+  background: rgba(180, 83, 9, 0.1);
+  color: var(--chora-color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.question-bank-detail__sub {
+  margin: var(--chora-space-xs) 0 0;
+  font-size: 0.85rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.question-bank-detail__head-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--chora-space-sm);
+}
+
+.question-bank-detail__badge {
+  padding: 0.15rem var(--chora-space-sm);
+  border-radius: var(--chora-radius-sm, 6px);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--chora-color-text-secondary);
+  white-space: nowrap;
+}
+
+.question-bank-detail__head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-sm);
+}
+
+// ── Assemble dialog + add picker ───────────────────────────────────────────
+.question-bank-detail__assemble,
+.question-bank-detail__picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+  padding: var(--chora-space-lg);
+}
+
+.question-bank-detail__assemble-title,
+.question-bank-detail__picker-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.question-bank-detail__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.question-bank-detail__label {
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+.question-bank-detail__input {
+  padding: var(--chora-space-sm) var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+  font: inherit;
+  color: var(--chora-color-text-primary);
+  background: var(--chora-color-surface-0, #fff);
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+}
+
+.question-bank-detail__textarea {
+  resize: vertical;
+  min-height: 2.5rem;
+}
+
+.question-bank-detail__hint {
+  margin: 0;
+  color: var(--chora-color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.question-bank-detail__field-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+.question-bank-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-sm);
+  justify-content: flex-end;
+}
+
+// ── Questions list ─────────────────────────────────────────────────────────
+.question-bank-detail__questions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+.question-bank-detail__questions-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.question-bank-detail__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+}
+
+.question-bank-detail__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+  padding: var(--chora-space-md) var(--chora-space-lg);
+}
+
+.question-bank-detail__row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  min-width: 0;
+}
+
+.question-bank-detail__row-pos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: rgba(180, 83, 9, 0.12);
+  color: var(--chora-color-text-primary);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+// R6 D2: the stem, which the wire carries and the row used to drop. This is
+// the row's label; the id below is only the fallback.
+.question-bank-detail__row-prompt {
+  font-size: 0.9rem;
+  color: var(--chora-color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.question-bank-detail__row-id {
+  font-family: var(--chora-font-mono, ui-monospace, monospace);
+  font-size: 0.85rem;
+  color: var(--chora-color-text-secondary);
+  overflow-wrap: anywhere;
+
+  // Shown only when no stem resolved. Marked so it reads as an identifier
+  // rather than as the question's name.
+  &.is-unresolved {
+    font-style: italic;
+    opacity: 0.85;
+  }
+}
+
+.question-bank-detail__row-added {
+  font-size: 0.8rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.question-bank-detail__row-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  white-space: nowrap;
+}
+
+// ── Local ghost button (not in the global polyglass set) ───────────────────
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  color: var(--chora-color-text-primary);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+}

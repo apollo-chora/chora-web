@@ -1,0 +1,152 @@
+// A+ Study Lists — glassmorphism, tablet-first (≥768px primary, ≥1280px
+// enhanced). No max-width mobile breakpoint per the tablet-first mandate.
+
+:host {
+  display: block;
+}
+
+.study-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.study-lists__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.study-lists__header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  > i {
+    font-size: 22px;
+    color: var(--primary);
+  }
+}
+
+.study-lists__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.study-lists__subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.study-lists__loading,
+.study-lists__error,
+.study-lists__empty {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.5rem;
+}
+
+.study-lists__empty {
+  flex-direction: column;
+  text-align: center;
+
+  > i {
+    font-size: 28px;
+    color: var(--text-muted);
+  }
+}
+
+.study-lists__empty-heading {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.study-lists__empty-hint {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.study-lists__error-message {
+  margin: 0 0 0.75rem;
+  color: var(--text-main);
+}
+
+// Tablet-first grid: 2 columns at the ≥768px primary target, 3 at ≥1280px.
+.study-lists__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 1280px) {
+  .study-lists__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.study-lists__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.15rem 1.25rem;
+}
+
+.study-lists__card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.study-lists__card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.study-lists__atom-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.study-lists__dose-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+
+  > i {
+    color: var(--primary);
+  }
+}
+
+.study-lists__card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: auto;
+}

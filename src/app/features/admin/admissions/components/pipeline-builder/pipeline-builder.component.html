@@ -1,0 +1,375 @@
+<section
+  class="pipeline-builder"
+  role="main"
+  [attr.aria-label]="'admin.admissions.builder_title' | translate"
+  data-testid="pipeline-builder">
+
+  <!-- Header -->
+  <header class="pipeline-builder__header">
+    <h1 class="pipeline-builder__title" data-testid="builder-title">
+      @if (isEditing()) {
+        {{ 'admin.admissions.edit_template' | translate }}
+      } @else {
+        {{ 'admin.admissions.new_template' | translate }}
+      }
+    </h1>
+  </header>
+
+  @if (loading()) {
+    <div class="pipeline-builder__loading" aria-live="polite" data-testid="builder-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="pipeline-builder__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading()) {
+    <div class="pipeline-builder__layout">
+      <!-- Left: Template Settings + Stage List -->
+      <div class="pipeline-builder__main">
+        <!-- Template Info -->
+        <div class="pipeline-builder__section" data-testid="template-info">
+          <h2 class="pipeline-builder__section-title">
+            {{ 'admin.admissions.template_details' | translate }}
+          </h2>
+
+          <div class="pipeline-builder__field">
+            <label for="template-name" class="pipeline-builder__label">
+              {{ 'admin.admissions.template_name' | translate }}
+            </label>
+            <input
+              type="text"
+              id="template-name"
+              class="pipeline-builder__input"
+              [ngModel]="templateName()"
+              (ngModelChange)="templateName.set($event)"
+              [placeholder]="'admin.admissions.template_name_placeholder' | translate"
+              data-testid="template-name-input"
+              [attr.aria-label]="'admin.admissions.template_name' | translate" />
+          </div>
+
+          <div class="pipeline-builder__field">
+            <label for="template-desc" class="pipeline-builder__label">
+              {{ 'admin.admissions.template_description' | translate }}
+            </label>
+            <textarea
+              id="template-desc"
+              class="pipeline-builder__textarea"
+              [ngModel]="templateDescription()"
+              (ngModelChange)="templateDescription.set($event)"
+              [placeholder]="'admin.admissions.template_desc_placeholder' | translate"
+              rows="3"
+              data-testid="template-desc-input"
+              [attr.aria-label]="'admin.admissions.template_description' | translate"></textarea>
+          </div>
+
+          <div class="pipeline-builder__field-row">
+            <div class="pipeline-builder__field">
+              <label for="open-date" class="pipeline-builder__label">
+                {{ 'admin.admissions.open_date' | translate }}
+              </label>
+              <input
+                type="datetime-local"
+                id="open-date"
+                class="pipeline-builder__input"
+                [ngModel]="openDate()"
+                (ngModelChange)="openDate.set($event)"
+                data-testid="open-date-input"
+                [attr.aria-label]="'admin.admissions.open_date' | translate" />
+            </div>
+            <div class="pipeline-builder__field">
+              <label for="close-date" class="pipeline-builder__label">
+                {{ 'admin.admissions.close_date' | translate }}
+              </label>
+              <input
+                type="datetime-local"
+                id="close-date"
+                class="pipeline-builder__input"
+                [ngModel]="closeDate()"
+                (ngModelChange)="closeDate.set($event)"
+                data-testid="close-date-input"
+                [attr.aria-label]="'admin.admissions.close_date' | translate" />
+            </div>
+            <div class="pipeline-builder__field">
+              <label for="max-apps" class="pipeline-builder__label">
+                {{ 'admin.admissions.max_concurrent' | translate }}
+              </label>
+              <input
+                type="number"
+                id="max-apps"
+                class="pipeline-builder__input pipeline-builder__input--narrow"
+                [ngModel]="maxConcurrentApplications()"
+                (ngModelChange)="maxConcurrentApplications.set($event)"
+                min="1"
+                max="10"
+                data-testid="max-apps-input"
+                [attr.aria-label]="'admin.admissions.max_concurrent' | translate" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage Type Palette -->
+        <div class="pipeline-builder__palette" data-testid="stage-palette">
+          <h2 class="pipeline-builder__section-title">
+            {{ 'admin.admissions.add_stage' | translate }}
+          </h2>
+          <div class="pipeline-builder__palette-grid" role="toolbar"
+               [attr.aria-label]="'admin.admissions.stage_type_palette' | translate">
+            @for (type of allStageTypes; track trackByStageType($index, type)) {
+              <button
+                type="button"
+                class="pipeline-builder__palette-item"
+                (click)="addStage(type)"
+                [attr.data-testid]="'add-stage-' + type"
+                [attr.aria-label]="stageTypeLabels[type] | translate">
+                <span class="pipeline-builder__palette-icon" aria-hidden="true">
+                  {{ stageTypeIcons[type] }}
+                </span>
+                <span class="pipeline-builder__palette-label">
+                  {{ stageTypeLabels[type] | translate }}
+                </span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Stage List (Drag & Drop) -->
+        <div class="pipeline-builder__stages" data-testid="stage-list">
+          <h2 class="pipeline-builder__section-title">
+            {{ 'admin.admissions.stages' | translate }}
+            <span class="pipeline-builder__stage-count">({{ stages().length }})</span>
+          </h2>
+
+          @if (stages().length === 0) {
+            <div class="pipeline-builder__empty-stages" data-testid="empty-stages">
+              <p>{{ 'admin.admissions.no_stages_yet' | translate }}</p>
+            </div>
+          }
+
+          <div
+            cdkDropList
+            [cdkDropListData]="stages()"
+            (cdkDropListDropped)="onStageDrop($event)"
+            class="pipeline-builder__stage-list"
+            role="list"
+            [attr.aria-label]="'admin.admissions.stage_list' | translate">
+            @for (stage of stages(); track trackByIndex($index)) {
+              <div
+                cdkDrag
+                class="pipeline-builder__stage-item"
+                [class.pipeline-builder__stage-item--selected]="selectedStageIndex() === $index"
+                (click)="selectStage($index)"
+                (keydown.enter)="selectStage($index)"
+                (keydown.space)="selectStage($index); $event.preventDefault()"
+                role="listitem"
+                tabindex="0"
+                [attr.data-testid]="'stage-item-' + $index"
+                [attr.aria-label]="(stageTypeLabels[stage.type] | translate) + ': ' + (stage.name || ('admin.admissions.unnamed_stage' | translate))">
+                <div class="pipeline-builder__stage-drag-handle" cdkDragHandle
+                     [attr.aria-label]="'admin.admissions.drag_to_reorder' | translate">
+                  <span aria-hidden="true">&#9776;</span>
+                </div>
+                <div class="pipeline-builder__stage-info">
+                  <span class="pipeline-builder__stage-order">{{ $index + 1 }}</span>
+                  <span class="pipeline-builder__stage-type-badge">
+                    {{ stageTypeLabels[stage.type] | translate }}
+                  </span>
+                  <span class="pipeline-builder__stage-name">
+                    {{ stage.name || ('admin.admissions.unnamed_stage' | translate) }}
+                  </span>
+                </div>
+                <div class="pipeline-builder__stage-actions">
+                  @if (!stage.required) {
+                    <span class="pipeline-builder__stage-optional-badge">
+                      {{ 'admin.admissions.optional' | translate }}
+                    </span>
+                  }
+                  <button
+                    type="button"
+                    class="pipeline-builder__stage-remove"
+                    (click)="removeStage($index); $event.stopPropagation()"
+                    [attr.aria-label]="'admin.admissions.remove_stage' | translate"
+                    [attr.data-testid]="'remove-stage-' + $index">
+                    &times;
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Stage Configuration Panel -->
+      <aside class="pipeline-builder__config-panel" data-testid="config-panel"
+             [attr.aria-label]="'admin.admissions.stage_configuration' | translate">
+        @if (selectedStage(); as stage) {
+          <h2 class="pipeline-builder__section-title">
+            {{ 'admin.admissions.configure_stage' | translate }}
+          </h2>
+
+          <div class="pipeline-builder__field">
+            <label [for]="'stage-name-' + selectedStageIndex()" class="pipeline-builder__label">
+              {{ 'admin.admissions.stage_name' | translate }}
+            </label>
+            <input
+              type="text"
+              [id]="'stage-name-' + selectedStageIndex()"
+              class="pipeline-builder__input"
+              [ngModel]="stage.name"
+              (ngModelChange)="updateStageName(selectedStageIndex()!, $event)"
+              [placeholder]="'admin.admissions.stage_name_placeholder' | translate"
+              data-testid="stage-name-input"
+              [attr.aria-label]="'admin.admissions.stage_name' | translate" />
+          </div>
+
+          <div class="pipeline-builder__field">
+            <label class="pipeline-builder__checkbox-label">
+              <input
+                type="checkbox"
+                [ngModel]="stage.required"
+                (ngModelChange)="updateStageRequired(selectedStageIndex()!, $event)"
+                data-testid="stage-required-checkbox" />
+              {{ 'admin.admissions.stage_required' | translate }}
+            </label>
+          </div>
+
+          <div class="pipeline-builder__field">
+            <label [for]="'stage-timeout-' + selectedStageIndex()" class="pipeline-builder__label">
+              {{ 'admin.admissions.timeout_hours' | translate }}
+            </label>
+            <input
+              type="number"
+              [id]="'stage-timeout-' + selectedStageIndex()"
+              class="pipeline-builder__input pipeline-builder__input--narrow"
+              [ngModel]="stage.timeout_hours"
+              (ngModelChange)="updateStageTimeout(selectedStageIndex()!, $event)"
+              min="0"
+              data-testid="stage-timeout-input"
+              [attr.aria-label]="'admin.admissions.timeout_hours' | translate" />
+          </div>
+
+          <div class="pipeline-builder__field">
+            <label [for]="'stage-instructions-' + selectedStageIndex()" class="pipeline-builder__label">
+              {{ 'admin.admissions.instructions' | translate }}
+            </label>
+            <textarea
+              [id]="'stage-instructions-' + selectedStageIndex()"
+              class="pipeline-builder__textarea"
+              [ngModel]="stage.instructions"
+              (ngModelChange)="updateStageInstructions(selectedStageIndex()!, $event)"
+              rows="4"
+              data-testid="stage-instructions-input"
+              [attr.aria-label]="'admin.admissions.instructions' | translate"></textarea>
+          </div>
+
+          <!-- Type-specific config -->
+          @switch (stage.type) {
+            @case ('document_upload') {
+              <div class="pipeline-builder__type-config" data-testid="doc-upload-config">
+                <h3 class="pipeline-builder__config-subtitle">
+                  {{ 'admin.admissions.document_settings' | translate }}
+                </h3>
+                <div class="pipeline-builder__field">
+                  <label [for]="'accepted-types-' + selectedStageIndex()" class="pipeline-builder__label">
+                    {{ 'admin.admissions.accepted_file_types' | translate }}
+                  </label>
+                  <input
+                    type="text"
+                    [id]="'accepted-types-' + selectedStageIndex()"
+                    class="pipeline-builder__input"
+                    [ngModel]="stage.config.accepted_file_types?.join(', ') ?? ''"
+                    (ngModelChange)="updateAcceptedFileTypes(selectedStageIndex()!, $event)"
+                    [placeholder]="'admin.admissions.file_types_placeholder' | translate"
+                    data-testid="accepted-types-input"
+                    [attr.aria-label]="'admin.admissions.accepted_file_types' | translate" />
+                </div>
+                <div class="pipeline-builder__field">
+                  <label [for]="'max-file-size-' + selectedStageIndex()" class="pipeline-builder__label">
+                    {{ 'admin.admissions.max_file_size_mb' | translate }}
+                  </label>
+                  <input
+                    type="number"
+                    [id]="'max-file-size-' + selectedStageIndex()"
+                    class="pipeline-builder__input pipeline-builder__input--narrow"
+                    [ngModel]="stage.config.max_file_size_mb ?? 10"
+                    (ngModelChange)="updateMaxFileSize(selectedStageIndex()!, $event)"
+                    min="1"
+                    max="100"
+                    data-testid="max-file-size-input"
+                    [attr.aria-label]="'admin.admissions.max_file_size_mb' | translate" />
+                </div>
+              </div>
+            }
+            @case ('assessment') {
+              <div class="pipeline-builder__type-config" data-testid="assessment-config">
+                <h3 class="pipeline-builder__config-subtitle">
+                  {{ 'admin.admissions.assessment_settings' | translate }}
+                </h3>
+                <div class="pipeline-builder__field">
+                  <label [for]="'linked-assessment-' + selectedStageIndex()" class="pipeline-builder__label">
+                    {{ 'admin.admissions.linked_assessment_id' | translate }}
+                  </label>
+                  <input
+                    type="text"
+                    [id]="'linked-assessment-' + selectedStageIndex()"
+                    class="pipeline-builder__input"
+                    [ngModel]="stage.config.linked_assessment_id ?? ''"
+                    (ngModelChange)="updateLinkedAssessment(selectedStageIndex()!, $event)"
+                    [placeholder]="'admin.admissions.assessment_id_placeholder' | translate"
+                    data-testid="linked-assessment-input"
+                    [attr.aria-label]="'admin.admissions.linked_assessment_id' | translate" />
+                </div>
+              </div>
+            }
+            @case ('decision') {
+              <div class="pipeline-builder__type-config" data-testid="decision-config">
+                <h3 class="pipeline-builder__config-subtitle">
+                  {{ 'admin.admissions.decision_settings' | translate }}
+                </h3>
+                <p class="pipeline-builder__config-note">
+                  {{ 'admin.admissions.reviewer_assignment_note' | translate }}
+                </p>
+              </div>
+            }
+            @default {
+              <div class="pipeline-builder__type-config" data-testid="generic-config">
+                <p class="pipeline-builder__config-note">
+                  {{ 'admin.admissions.no_additional_config' | translate }}
+                </p>
+              </div>
+            }
+          }
+        } @else {
+          <div class="pipeline-builder__no-selection" data-testid="no-stage-selected">
+            <p>{{ 'admin.admissions.select_stage_to_configure' | translate }}</p>
+          </div>
+        }
+      </aside>
+    </div>
+
+    <!-- Footer Actions -->
+    <footer class="pipeline-builder__footer" data-testid="builder-footer">
+      <button
+        type="button"
+        class="pipeline-builder__btn pipeline-builder__btn--secondary"
+        (click)="router.navigate(['/admin/admissions'])"
+        data-testid="cancel-btn"
+        [attr.aria-label]="'common.cancel' | translate">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="pipeline-builder__btn pipeline-builder__btn--primary"
+        [disabled]="!canSave() || saving()"
+        (click)="save()"
+        data-testid="save-btn"
+        [attr.aria-label]="'common.save' | translate">
+        @if (saving()) {
+          {{ 'common.saving' | translate }}
+        } @else {
+          {{ 'common.save' | translate }}
+        }
+      </button>
+    </footer>
+  }
+</section>

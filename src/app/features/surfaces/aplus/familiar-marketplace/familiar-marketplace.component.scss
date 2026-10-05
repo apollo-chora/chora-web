@@ -1,0 +1,106 @@
+// A+ Familiar egg marketplace.
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.aplus-marketplace {
+  padding: 1.5rem clamp(1rem, 3vw, 2rem);
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.aplus-marketplace__header {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.aplus-marketplace__title {
+  margin: 0 0 0.2rem;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i { color: var(--primary); font-size: 20px; }
+}
+
+.aplus-marketplace__tagline {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.aplus-marketplace__grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  // Responsive equal-width columns that FILL the row (auto-fit collapses empty
+  // tracks) — 1 card per row on phones, up to ~4 on wide, with no dead 4th
+  // column for a 3-SKU catalog. Rows stretch so every card is equal height.
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+
+  // The li is a flex box so its <chora-egg-card> stretches to the row height —
+  // the chain that makes every card equal-height regardless of content length.
+  > li {
+    display: flex;
+    min-width: 0;
+  }
+}
+
+.aplus-marketplace__loading {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 2rem 1rem;
+}
+
+.aplus-marketplace__footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px dashed var(--glass-border);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.55;
+
+  i {
+    color: var(--info);
+    font-size: 14px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  p { margin: 0; }
+}
+
+.aplus-marketplace__policy-link {
+  color: var(--primary);
+  text-decoration: underline;
+  font-weight: 600;
+
+  &:hover { color: var(--primary-hover); }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+}

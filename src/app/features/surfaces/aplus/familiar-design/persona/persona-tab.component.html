@@ -1,0 +1,204 @@
+<section class="persona" aria-labelledby="persona-heading">
+  <header class="persona__intro">
+    <h2 id="persona-heading" class="persona__title">
+      {{ 'familiar_grimoire.persona.title' | translate }}
+    </h2>
+    <p class="persona__lede">{{ 'familiar_grimoire.persona.lede' | translate }}</p>
+  </header>
+
+  @if (loading()) {
+    <p class="persona__status" role="status">
+      {{ 'familiar_grimoire.persona.loading' | translate }}
+    </p>
+  } @else if (errored()) {
+    <div class="persona__error" role="alert">
+      <p>{{ 'familiar_grimoire.persona.error.generic' | translate }}</p>
+      <button type="button" class="btn btn-secondary" (click)="retry()">
+        {{ 'familiar_grimoire.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    <div class="persona__grid">
+      <!-- Tone -->
+      <label class="persona__field">
+        <span class="persona__label">{{ 'familiar_grimoire.persona.field.tone' | translate }}</span>
+        <select #toneSel class="persona__select" [value]="tone()" (change)="setTone(toneSel.value)">
+          @for (t of tones; track t) {
+            <option [value]="t" [selected]="t === tone()">{{ toneLabelKey(t) | translate }}</option>
+          }
+        </select>
+      </label>
+
+      <!-- Hint progression -->
+      <label class="persona__field">
+        <span class="persona__label">{{ 'familiar_grimoire.persona.field.hint' | translate }}</span>
+        <select #hintSel class="persona__select" [value]="hintProgression()" (change)="setHintProgression(hintSel.value)">
+          @for (h of hintProgressions; track h) {
+            <option [value]="h" [selected]="h === hintProgression()">{{ hintProgressionLabelKey(h) | translate }}</option>
+          }
+        </select>
+      </label>
+
+      <!-- Max hints before reveal -->
+      <label class="persona__field">
+        <span class="persona__label">
+          {{ 'familiar_grimoire.persona.field.max_hints' | translate }}
+          <strong class="persona__count">{{ maxHints() }}</strong>
+        </span>
+        <input
+          #hintsRange
+          type="range"
+          class="persona__range"
+          min="0"
+          [max]="hintCeiling"
+          step="1"
+          [value]="maxHints()"
+          (input)="setMaxHints(hintsRange.value)"
+          [attr.aria-valuenow]="maxHints()"
+        />
+      </label>
+
+      <!-- Difficulty cap -->
+      <label class="persona__field">
+        <span class="persona__label">{{ 'familiar_grimoire.persona.field.difficulty' | translate }}</span>
+        <select #diffSel class="persona__select" [value]="difficultyCap()" (change)="setDifficulty(diffSel.value)">
+          @for (d of difficulties; track d) {
+            <option [value]="d" [selected]="d === difficultyCap()">{{ difficultyLabelKey(d) | translate }}</option>
+          }
+        </select>
+      </label>
+
+      <!-- Citation strictness -->
+      <label class="persona__field">
+        <span class="persona__label">{{ 'familiar_grimoire.persona.field.citation' | translate }}</span>
+        <select #citeSel class="persona__select" [value]="citationStrictness()" (change)="setCitation(citeSel.value)">
+          @for (c of citations; track c) {
+            <option [value]="c" [selected]="c === citationStrictness()">{{ citationLabelKey(c) | translate }}</option>
+          }
+        </select>
+      </label>
+
+      <!-- Language -->
+      <label class="persona__field">
+        <span class="persona__label">{{ 'familiar_grimoire.persona.field.language' | translate }}</span>
+        <select #langSel class="persona__select" [value]="language()" (change)="setLanguage(langSel.value)">
+          @for (l of languages; track l) {
+            <option [value]="l" [selected]="l === language()">{{ languageLabelKey(l) | translate }}</option>
+          }
+        </select>
+      </label>
+
+      <!-- Address style -->
+      <label class="persona__field">
+        <span class="persona__label">{{ 'familiar_grimoire.persona.field.address' | translate }}</span>
+        <select #addrSel class="persona__select" [value]="addressStyle()" (change)="setAddressStyle(addrSel.value)">
+          @for (a of addressStyles; track a) {
+            <option [value]="a" [selected]="a === addressStyle()">{{ addressStyleLabelKey(a) | translate }}</option>
+          }
+        </select>
+      </label>
+
+      <!-- Archetype -->
+      <label class="persona__field">
+        <span class="persona__label">{{ 'familiar_grimoire.persona.field.archetype' | translate }}</span>
+        <input
+          #archInput
+          type="text"
+          class="persona__input"
+          [class.persona__input--invalid]="archetypeInvalid()"
+          [value]="archetype()"
+          [attr.maxlength]="archetypeMaxLen"
+          (input)="archetype.set(archInput.value)"
+          [attr.aria-invalid]="archetypeInvalid()"
+          [placeholder]="'familiar_grimoire.persona.archetype_placeholder' | translate"
+        />
+        @if (archetypeInvalid()) {
+          <span class="persona__hint persona__hint--err" role="alert">
+            {{ 'familiar_grimoire.persona.archetype_required' | translate }}
+          </span>
+        }
+      </label>
+    </div>
+
+    <!-- Interest chips -->
+    <fieldset class="persona__chips">
+      <legend class="persona__label">{{ 'familiar_grimoire.persona.field.interests' | translate }}</legend>
+      @if (interestChips().length > 0) {
+        <ul class="persona__chip-list">
+          @for (chip of interestChips(); track trackByChip($index, chip)) {
+            <li class="persona__chip">
+              <span>{{ chip }}</span>
+              <button
+                type="button"
+                class="persona__chip-x"
+                (click)="removeChip($index)"
+                [attr.aria-label]="('familiar_grimoire.persona.remove_chip' | translate) + ': ' + chip"
+              >
+                ×
+              </button>
+            </li>
+          }
+        </ul>
+      }
+      <div class="persona__chip-add">
+        <input
+          #chipInput
+          type="text"
+          class="persona__input"
+          [value]="newChip()"
+          [attr.maxlength]="chipMaxLen"
+          [disabled]="atChipCap()"
+          (input)="newChip.set(chipInput.value)"
+          (keyup.enter)="addChip()"
+          [placeholder]="(atChipCap() ? 'familiar_grimoire.persona.chip_cap' : 'familiar_grimoire.persona.chip_placeholder') | translate"
+        />
+        <button type="button" class="btn btn-secondary" (click)="addChip()" [disabled]="!canAddChip()">
+          {{ 'familiar_grimoire.persona.add_chip' | translate }}
+        </button>
+      </div>
+    </fieldset>
+
+    <!-- Guidance note (the one fenced free-text field; Armor-screened at save) -->
+    <label class="persona__field persona__note-field">
+      <span class="persona__label">{{ 'familiar_grimoire.persona.field.note' | translate }}</span>
+      <textarea
+        #noteArea
+        class="persona__note"
+        [class.persona__note--over]="noteOver()"
+        rows="3"
+        [value]="guidanceNote()"
+        (input)="guidanceNote.set(noteArea.value)"
+        [attr.aria-describedby]="'persona-note-help persona-note-count'"
+        [placeholder]="'familiar_grimoire.persona.note_placeholder' | translate"
+      ></textarea>
+      <div class="persona__note-foot">
+        <span id="persona-note-help" class="persona__hint">
+          {{ 'familiar_grimoire.persona.note_help' | translate }}
+        </span>
+        <span
+          id="persona-note-count"
+          class="persona__count"
+          [class.persona__count--over]="noteOver()"
+          aria-live="polite"
+        >{{ noteRemaining() }}</span>
+      </div>
+    </label>
+
+    <footer class="persona__actions">
+      <span class="persona__version">
+        {{ 'familiar_grimoire.persona.version' | translate: { n: version() } }}
+      </span>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="save()"
+        [disabled]="!canSave()"
+      >
+        {{
+          (saving() ? 'familiar_grimoire.persona.saving' : 'familiar_grimoire.persona.save')
+            | translate
+        }}
+      </button>
+    </footer>
+  }
+</section>

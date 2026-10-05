@@ -1,0 +1,389 @@
+// =====================================================================
+// CampaignPracticeComponent — WS-C7 hex-tap practice lane.
+// Calm/premium glass, tablet-first (>=768px), runtime theme vars (matches
+// the My-Knowledge map canvas). Easing cubic-bezier(0.165,0.84,0.44,1);
+// staggered reveals guarded by prefers-reduced-motion.
+// =====================================================================
+
+$cp-ease: cubic-bezier(0.165, 0.84, 0.44, 1);
+
+:host {
+  display: block;
+}
+
+.campaign-practice {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  color: var(--text-main);
+}
+
+.cp-panel {
+  padding: 1.5rem 1.75rem;
+
+  &__icon {
+    font-size: 1.75rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+  }
+
+  &__title {
+    margin: 0 0 0.5rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+  }
+}
+
+// ── Header ────────────────────────────────────────────────────────────
+.cp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+
+  &__concept {
+    margin: 0 0 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+}
+
+.cp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  &--rung {
+    color: var(--primary);
+  }
+
+  &--refresher {
+    color: var(--text-muted);
+  }
+}
+
+.cp-progress {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+// ── Question + options ────────────────────────────────────────────────
+.cp-question {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.cp-stem {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.cp-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cp-option {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  min-height: 48px; // >=44px tap target
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    border-color 0.2s $cp-ease,
+    background-color 0.2s $cp-ease,
+    transform 0.2s $cp-ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &.is-selected {
+    border-color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+  }
+
+  &.is-locked {
+    cursor: default;
+  }
+
+  // Post-grade reveal of the right choice after a wrong answer.
+  &.is-correct-reveal {
+    border-color: color-mix(in srgb, var(--success) 55%, var(--glass-border));
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+  }
+
+  &__marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  &__text {
+    flex: 1 1 auto;
+  }
+
+  &__chosen {
+    flex: 0 0 auto;
+    font-size: 1.15rem;
+  }
+
+  &__answer-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--success);
+    border: 1px solid color-mix(in srgb, var(--success) 45%, var(--glass-border));
+  }
+}
+
+// ── Verdict + explainer ───────────────────────────────────────────────
+.cp-verdict {
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--glass-border);
+  font-weight: 700;
+
+  &__line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &--correct {
+    color: var(--success);
+    border-color: color-mix(in srgb, var(--success) 45%, var(--glass-border));
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+  }
+
+  &--incorrect {
+    color: var(--warning);
+    border-color: color-mix(in srgb, var(--warning) 45%, var(--glass-border));
+    background: color-mix(in srgb, var(--warning) 10%, transparent);
+  }
+}
+
+.cp-explainer {
+  display: flex;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--text-main) 5%, transparent);
+  color: var(--text-muted);
+  line-height: 1.5;
+
+  i {
+    color: var(--primary);
+    margin-top: 0.15rem;
+  }
+}
+
+.cp-answer-error {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--warning);
+  font-weight: 600;
+}
+
+// ── Ladder outcome banners ────────────────────────────────────────────
+.cp-outcome {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+
+  &__icon {
+    font-size: 1.3rem;
+  }
+
+  &__progress {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  &__next {
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  &--counted {
+    border: 1px solid var(--glass-border);
+  }
+
+  &--cleared {
+    border: 1px solid color-mix(in srgb, var(--primary) 40%, var(--glass-border));
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
+    flex-wrap: wrap;
+  }
+
+  &--paced {
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+  }
+
+  // The win is the big moment — a staggered, eased rise (reduced-motion off).
+  &--won {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+    padding: 1.75rem 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--primary) 55%, var(--glass-border));
+    background: var(--surface-accent-fill, var(--primary));
+    color: #fff;
+    animation: cp-won-rise 0.5s $cp-ease both;
+  }
+
+  &--won &__icon {
+    font-size: 2.5rem;
+    animation: cp-won-pop 0.6s $cp-ease both;
+    animation-delay: 0.12s;
+  }
+
+  &__headline {
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+}
+
+@keyframes cp-won-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cp-won-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ── Actions + status panels ───────────────────────────────────────────
+.cp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.cp-status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 600;
+
+  &__detail {
+    margin: 0;
+    color: var(--text-muted);
+    font-weight: 400;
+    font-style: italic;
+  }
+}
+
+.cp-status-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+  text-align: left;
+}
+
+.cp-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+
+  &__score {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--primary);
+  }
+}
+
+// Tablet enhancement (>=1280px): a touch more breathing room.
+@media (min-width: 1280px) {
+  .campaign-practice {
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-option,
+  .cp-outcome--won,
+  .cp-outcome--won .cp-outcome__icon {
+    animation: none !important;
+    transition: none !important;
+  }
+}

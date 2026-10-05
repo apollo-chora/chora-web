@@ -1,0 +1,296 @@
+// CourseLearnComponent — A+ course-learn shell at /a/courses/:courseId/learn
+//
+// Glassmorphism per `chora-design-system` skill + chora-web CLAUDE.md §11.
+// Tablet-first (≥768px primary, ≥1280px desktop enhanced). No mobile-phone
+// layout — design tokens only, no hardcoded colours.
+
+:host {
+  display: block;
+  min-height: 60vh;
+  padding: 2rem 1rem;
+}
+
+.course-learn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.course-learn__crumbs {
+  margin-bottom: 0.25rem;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--text-muted, #64748b);
+    font-weight: 500;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--chora-color-primary, #1976d2);
+    }
+  }
+}
+
+// ── Status panels (polling / not_enrolled / timeout / error) ──────────
+
+.course-learn__status {
+  text-align: center;
+  padding: 2.25rem 2rem;
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.course-learn__icon-wrap,
+.course-learn__spinner-wrap {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+
+  &--ok i {
+    color: var(--chora-color-success, #3fbf6f);
+  }
+
+  &--warn i {
+    color: var(--chora-color-warning, #f0a23a);
+  }
+
+  &--err i {
+    color: var(--chora-color-danger, #d8434a);
+  }
+}
+
+.course-learn__spinner {
+  font-size: 2.25rem;
+  color: var(--chora-color-primary, #1976d2);
+}
+
+.course-learn__status-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.course-learn__status-body {
+  margin: 0 0 1rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.55;
+}
+
+.course-learn__attempt {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted, #94a3b8);
+  font-variant-numeric: tabular-nums;
+}
+
+.course-learn__actions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+// ── Ready state: hero header + atoms list ─────────────────────────────
+
+.course-learn__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.course-learn__hero {
+  padding: 1.75rem 2rem;
+}
+
+.course-learn__title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  color: var(--text-main, #1e293b);
+  line-height: 1.25;
+}
+
+.course-learn__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0;
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.course-learn__meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+
+  dt {
+    color: var(--chora-color-primary, #1976d2);
+    margin: 0;
+
+    i {
+      font-size: 1rem;
+    }
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text-muted, #64748b);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ── Atoms list ─────────────────────────────────────────────────────────
+
+.course-learn__atoms {
+  padding: 1.5rem 1.75rem 1.75rem;
+}
+
+.course-learn__atoms-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: var(--text-main, #1e293b);
+}
+
+.course-learn__atom-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.course-learn__atom {
+  display: grid;
+  grid-template-columns: 3rem 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--chora-radius-md, 12px);
+  background: rgba(30, 41, 59, 0.04);
+  border: 1px solid rgba(30, 41, 59, 0.12);
+  transition: background-color 160ms ease, border-color 160ms ease;
+
+  &:hover {
+    background: rgba(30, 41, 59, 0.07);
+  }
+
+  &--not-started {
+    opacity: 0.7;
+  }
+
+  &--in-progress {
+    border-color: var(--chora-color-primary, #1976d2);
+    background: rgba(25, 118, 210, 0.08);
+  }
+
+  &--completed {
+    .course-learn__atom-title {
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+      color: var(--text-muted, #64748b);
+    }
+  }
+}
+
+.course-learn__atom-order {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.06);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-main, #1e293b);
+
+  i {
+    color: var(--chora-color-success, #3fbf6f);
+    font-size: 1.5rem;
+  }
+}
+
+.course-learn__atom-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.course-learn__atom-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-main, #1e293b);
+  // Allow long titles to wrap rather than truncate.
+  overflow-wrap: anywhere;
+}
+
+.course-learn__atom-state-badge {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: rgba(30, 41, 59, 0.08);
+  color: var(--text-muted, #64748b);
+  letter-spacing: 0.02em;
+  width: fit-content;
+
+  &--completed {
+    background: rgba(63, 191, 111, 0.15);
+    color: var(--chora-color-success, #3fbf6f);
+  }
+
+  &--in-progress {
+    background: rgba(25, 118, 210, 0.2);
+    color: var(--chora-color-primary, #1976d2);
+  }
+
+  &--not-started {
+    background: rgba(30, 41, 59, 0.08);
+    color: var(--text-muted, #94a3b8);
+  }
+}
+
+.course-learn__atom-action {
+  display: flex;
+  align-items: center;
+
+  .btn {
+    white-space: nowrap;
+  }
+}
+
+.course-learn__atom-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+
+  i {
+    font-size: 0.875rem;
+  }
+}
+
+// ── Reduced motion ────────────────────────────────────────────────────
+
+@media (prefers-reduced-motion: reduce) {
+  .course-learn__atom {
+    transition: none;
+  }
+}

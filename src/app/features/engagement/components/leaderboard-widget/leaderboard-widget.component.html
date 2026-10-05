@@ -1,0 +1,47 @@
+<div
+  class="leaderboard-widget"
+  role="region"
+  aria-label="Leaderboard"
+  data-testid="leaderboard-widget">
+
+  <div class="leaderboard-widget__header">
+    <h3 class="leaderboard-widget__title">{{ 'engagement.leaderboard.title' | translate }}</h3>
+    <div class="leaderboard-widget__periods" data-testid="leaderboard-periods">
+      @for (period of periods; track period) {
+        <button
+          class="leaderboard-widget__period-btn"
+          [class.leaderboard-widget__period-btn--active]="period === leaderboard().period"
+          (click)="onPeriodChange(period)"
+          [attr.aria-pressed]="period === leaderboard().period"
+          data-testid="leaderboard-period-btn">
+          {{ 'engagement.leaderboard.' + period | translate }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <table class="leaderboard-widget__table" role="table" aria-label="Leaderboard rankings" data-testid="leaderboard-table">
+    <thead>
+      <tr>
+        <th aria-sort="ascending">{{ 'engagement.leaderboard.rank' | translate }}</th>
+        <th>{{ 'engagement.leaderboard.name' | translate }}</th>
+        <th>{{ 'engagement.leaderboard.xp-label' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (entry of leaderboard().entries; track entry.rank) {
+        <tr data-testid="leaderboard-row">
+          <td data-testid="leaderboard-rank">{{ entry.rank }}</td>
+          <td data-testid="leaderboard-name">{{ entry.display_name }}</td>
+          <td data-testid="leaderboard-xp">{{ entry.total_xp }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  @if (leaderboard().learner_rank; as learnerRank) {
+    <div class="leaderboard-widget__user-rank" data-testid="leaderboard-user-rank">
+      {{ 'engagement.leaderboard.your-rank' | translate }}: #{{ learnerRank.rank }}
+    </div>
+  }
+</div>

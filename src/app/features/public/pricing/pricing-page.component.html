@@ -1,0 +1,161 @@
+<section
+  class="pricing-page"
+  role="main"
+  [attr.aria-label]="'pricing.page_title' | translate"
+  data-testid="pricing-page">
+
+  <!-- Hero -->
+  <header class="pricing-page__hero">
+    <h1 class="pricing-page__title" data-testid="pricing-title">
+      {{ 'pricing.title' | translate }}
+    </h1>
+    <p class="pricing-page__subtitle">
+      {{ 'pricing.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Pricing Calculator -->
+  <div class="pricing-page__calculator" data-testid="pricing-calculator">
+    <div class="pricing-page__calculator-header">
+      <h2 class="pricing-page__section-title">
+        {{ 'pricing.build_your_plan' | translate }}
+      </h2>
+      <div class="pricing-page__total" data-testid="total-price">
+        <span class="pricing-page__total-label">{{ 'pricing.total_monthly' | translate }}</span>
+        <span class="pricing-page__total-amount">
+          ${{ totalMonthly() | number:'1.0-0' }}
+          <span class="pricing-page__total-period">{{ 'pricing.per_month' | translate }}</span>
+        </span>
+      </div>
+    </div>
+
+    <p class="pricing-page__base-note">
+      {{ 'pricing.base_included' | translate }}
+    </p>
+  </div>
+
+  <!-- Add-On Cards -->
+  <div class="pricing-page__catalog" data-testid="addon-catalog">
+    <h2 class="pricing-page__section-title">
+      {{ 'pricing.available_addons' | translate }}
+    </h2>
+    <div class="pricing-page__card-grid" role="list"
+         [attr.aria-label]="'pricing.addon_list' | translate">
+      @for (addOn of catalog; track trackByCode($index, addOn)) {
+        <div
+          class="pricing-page__card"
+          [class.pricing-page__card--selected]="isSelected(addOn.code)"
+          role="listitem"
+          [attr.data-testid]="'addon-card-' + addOn.code">
+          <div class="pricing-page__card-header">
+            <h3 class="pricing-page__card-name">{{ addOn.name | translate }}</h3>
+            <span class="pricing-page__card-category">{{ addOn.category | translate }}</span>
+          </div>
+
+          <p class="pricing-page__card-description">
+            {{ addOn.description | translate }}
+          </p>
+
+          <div class="pricing-page__card-price">
+            <span class="pricing-page__card-amount">${{ addOn.price_monthly }}</span>
+            <span class="pricing-page__card-period">{{ 'pricing.per_month' | translate }}</span>
+          </div>
+
+          <ul class="pricing-page__card-features" role="list">
+            @for (feature of addOn.features; track feature) {
+              <li class="pricing-page__card-feature">
+                <span class="pricing-page__check-icon" aria-hidden="true">&#10003;</span>
+                {{ feature | translate }}
+              </li>
+            }
+          </ul>
+
+          <button
+            type="button"
+            class="pricing-page__card-toggle"
+            [class.pricing-page__card-toggle--active]="isSelected(addOn.code)"
+            (click)="toggleAddOn(addOn.code)"
+            [attr.aria-pressed]="isSelected(addOn.code)"
+            [attr.aria-label]="(isSelected(addOn.code) ? ('pricing.remove_addon' | translate) : ('pricing.add_addon' | translate)) + ': ' + (addOn.name | translate)"
+            [attr.data-testid]="'toggle-addon-' + addOn.code">
+            @if (isSelected(addOn.code)) {
+              {{ 'pricing.selected' | translate }}
+            } @else {
+              {{ 'pricing.add_to_plan' | translate }}
+            }
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Feature Comparison Toggle -->
+  <div class="pricing-page__comparison-toggle">
+    <button
+      type="button"
+      class="pricing-page__btn pricing-page__btn--secondary"
+      (click)="toggleComparison()"
+      [attr.aria-expanded]="showComparison()"
+      data-testid="toggle-comparison-btn"
+      [attr.aria-label]="'pricing.compare_features' | translate">
+      {{ 'pricing.compare_features' | translate }}
+    </button>
+  </div>
+
+  <!-- Feature Comparison Matrix -->
+  @if (showComparison()) {
+    <div class="pricing-page__matrix" data-testid="comparison-matrix">
+      <h2 class="pricing-page__section-title">
+        {{ 'pricing.feature_comparison' | translate }}
+      </h2>
+      <div class="pricing-page__matrix-container">
+        <table class="pricing-page__matrix-table" role="table"
+               [attr.aria-label]="'pricing.feature_matrix' | translate">
+          <thead>
+            <tr>
+              <th class="pricing-page__matrix-th">{{ 'pricing.feature' | translate }}</th>
+              @for (addOn of catalog; track trackByCode($index, addOn)) {
+                <th class="pricing-page__matrix-th pricing-page__matrix-th--addon">
+                  {{ addOn.name | translate }}
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (feature of allFeatures(); track trackByFeature($index, feature)) {
+              <tr class="pricing-page__matrix-row">
+                <td class="pricing-page__matrix-td">{{ feature | translate }}</td>
+                @for (addOn of catalog; track trackByCode($index, addOn)) {
+                  <td class="pricing-page__matrix-td pricing-page__matrix-td--center">
+                    @if (hasFeature(addOn, feature)) {
+                      <span class="pricing-page__matrix-check" aria-hidden="true">&#10003;</span>
+                      <span class="pricing-page__sr-only">{{ 'pricing.included' | translate }}</span>
+                    } @else {
+                      <span class="pricing-page__matrix-dash" aria-hidden="true">-</span>
+                      <span class="pricing-page__sr-only">{{ 'pricing.not_included' | translate }}</span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- CTA -->
+  <div class="pricing-page__cta" data-testid="pricing-cta">
+    <button
+      type="button"
+      class="pricing-page__btn pricing-page__btn--primary pricing-page__btn--large"
+      (click)="getStarted()"
+      data-testid="get-started-btn"
+      [attr.aria-label]="'pricing.get_started' | translate">
+      {{ 'pricing.get_started' | translate }}
+    </button>
+    <p class="pricing-page__cta-note">
+      {{ 'pricing.free_trial_note' | translate }}
+    </p>
+  </div>
+</section>

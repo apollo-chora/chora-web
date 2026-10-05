@@ -1,0 +1,192 @@
+<section
+  class="surface-hplus tenant-overview"
+  data-testid="tenant-overview"
+  [attr.data-status]="tenant()?.status ?? 'loading'"
+  [style]="accentStyle(tenant())">
+  <main class="tenant-overview__main">
+    <nav
+      class="tenant-overview__breadcrumb"
+      [attr.aria-label]="'hplus.tenant.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.tenant.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="tenant-overview__crumb-active">
+        {{ 'hplus.tenant.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    @switch (state().status) {
+      @case ('loading') {
+        <div
+          class="glass-panel tenant-overview__loading"
+          role="status"
+          aria-busy="true"
+          data-testid="tenant-overview-loading">
+          {{ 'hplus.tenant.loading' | translate }}
+        </div>
+      }
+      @case ('error') {
+        <div
+          class="glass-panel tenant-overview__error"
+          role="alert"
+          data-testid="tenant-overview-error">
+          <p>{{ errorKey() | translate }}</p>
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-testid="tenant-overview-retry"
+            (click)="retry()">
+            {{ 'hplus.tenant.retry' | translate }}
+          </button>
+        </div>
+      }
+      @case ('success') {
+        @if (tenant(); as t) {
+          <!-- Hero panel: identity from the real /api/tenants/{id} DTO -->
+          <section
+            class="glass-panel tenant-overview__hero"
+            data-testid="tenant-overview-success">
+            <div class="tenant-overview__hero-left">
+              <div
+                class="tenant-overview__logo"
+                data-testid="tenant-logo"
+                aria-hidden="true">
+                {{ initials() }}
+              </div>
+              <div class="tenant-overview__identity">
+                <div class="tenant-overview__identity-row">
+                  <h1
+                    class="tenant-overview__title"
+                    data-testid="tenant-name">
+                    {{ t.display_name }}
+                  </h1>
+                  @if (isActive()) {
+                    <span
+                      class="badge badge-success tenant-overview__status-badge"
+                      data-testid="tenant-status-badge">
+                      {{ 'hplus.tenant.statusActive' | translate }}
+                    </span>
+                  } @else {
+                    <span
+                      class="badge badge-muted tenant-overview__status-badge"
+                      data-testid="tenant-status-badge">
+                      {{ t.status }}
+                    </span>
+                  }
+                </div>
+                @if (t.branding_config.tagline) {
+                  <p
+                    class="tenant-overview__tagline"
+                    data-testid="tenant-tagline">
+                    {{ t.branding_config.tagline }}
+                  </p>
+                }
+                <p
+                  class="tenant-overview__gcid"
+                  data-testid="tenant-gcid">
+                  <span>{{ 'hplus.tenant.gcidLabel' | translate }}:</span>
+                  <code>{{ t.id }}</code>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Real metadata strip: only fields actually in the DTO -->
+          <section
+            class="glass-panel tenant-overview__meta"
+            data-testid="tenant-meta">
+            <dl class="tenant-overview__meta-list">
+              <div>
+                <dt>{{ 'hplus.tenant.metaSelfHosted' | translate }}</dt>
+                <dd data-testid="tenant-self-hosted">
+                  @if (t.self_hosted) {
+                    {{ 'hplus.tenant.metaYes' | translate }}
+                  } @else {
+                    {{ 'hplus.tenant.metaNo' | translate }}
+                  }
+                </dd>
+              </div>
+              @if (t.parent_tenant_id) {
+                <div>
+                  <dt>{{ 'hplus.tenant.metaParent' | translate }}</dt>
+                  <dd data-testid="tenant-parent">
+                    <code>{{ t.parent_tenant_id }}</code>
+                  </dd>
+                </div>
+              }
+              <div>
+                <dt>{{ 'hplus.tenant.metaCreated' | translate }}</dt>
+                <dd data-testid="tenant-created-at">{{ t.created_at }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'hplus.tenant.metaUpdated' | translate }}</dt>
+                <dd data-testid="tenant-updated-at">{{ t.updated_at }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- Navigation tiles: each H+ concern lives on its own route.
+               No inline data — the dedicated sub-pages own that wiring.
+               Setup Wizard tile is FIRST when visible — operator-only per
+               auth-hardening Phase A §4.7d (CHO-1717 / ADR-181 ruling #5):
+               role-DRIVEN visibility, hidden for non-platform_operator. -->
+          <section
+            class="tenant-overview__tiles"
+            data-testid="tenant-overview-tiles"
+            aria-label="Manage tenant">
+            @if (canSeeSetupWizard()) {
+              <a
+                class="glass-panel tenant-overview__tile tenant-overview__tile--primary"
+                routerLink="/admin/tenant/settings/wizard"
+                data-testid="tile-setup-wizard">
+                <h3>{{ 'hplus.nav.setupWizard' | translate }}</h3>
+                <p>{{ 'hplus.tenant.tileSetupWizardHint' | translate }}</p>
+              </a>
+            }
+            <a
+              class="glass-panel tenant-overview__tile"
+              routerLink="/h/branding"
+              data-testid="tile-branding">
+              <h3>{{ 'hplus.nav.branding' | translate }}</h3>
+              <p>{{ 'hplus.tenant.tileBrandingHint' | translate }}</p>
+            </a>
+            <a
+              class="glass-panel tenant-overview__tile"
+              routerLink="/h/addons"
+              data-testid="tile-addons">
+              <h3>{{ 'hplus.nav.addons' | translate }}</h3>
+              <p>{{ 'hplus.tenant.tileAddonsHint' | translate }}</p>
+            </a>
+            <a
+              class="glass-panel tenant-overview__tile"
+              routerLink="/h/members"
+              data-testid="tile-members">
+              <h3>{{ 'hplus.nav.members' | translate }}</h3>
+              <p>{{ 'hplus.tenant.tileMembersHint' | translate }}</p>
+            </a>
+            <a
+              class="glass-panel tenant-overview__tile"
+              routerLink="/h/idp"
+              data-testid="tile-idp">
+              <h3>{{ 'hplus.nav.idp' | translate }}</h3>
+              <p>{{ 'hplus.tenant.tileIdpHint' | translate }}</p>
+            </a>
+            <a
+              class="glass-panel tenant-overview__tile"
+              routerLink="/h/billing"
+              data-testid="tile-billing">
+              <h3>{{ 'hplus.nav.billing' | translate }}</h3>
+              <p>{{ 'hplus.tenant.tileBillingHint' | translate }}</p>
+            </a>
+            <a
+              class="glass-panel tenant-overview__tile"
+              routerLink="/h/marketplace"
+              data-testid="tile-marketplace">
+              <h3>{{ 'hplus.nav.marketplace' | translate }}</h3>
+              <p>{{ 'hplus.tenant.tileMarketplaceHint' | translate }}</p>
+            </a>
+          </section>
+        }
+      }
+    }
+  </main>
+</section>

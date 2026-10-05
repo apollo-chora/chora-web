@@ -1,0 +1,83 @@
+// =====================================================================
+// IMDA dimension accent utilities (D1/D2/D3/D4)
+// Per CLAUDE.md §1 + ADR-141 — IMDA Model AI Governance Framework as
+// NorthStar. The 4 dimension labels (post-ADR-141 canonical):
+//   D1 accountability
+//   D2 transparency
+//   D3 safety_and_robustness
+//   D4 fairness_and_human_oversight
+//
+// Colour tokens already live in _polyglass-tokens.scss (--dim-1..4).
+// These classes are utility wrappers so templates can decorate panels,
+// chips, and badges without inlining colours.
+// =====================================================================
+
+// ─── Solid badge ──────────────────────────────────────────────────────
+.dim-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  flex-shrink: 0;
+
+  &.dim-d1 { background: var(--dim-1); }
+  &.dim-d2 { background: var(--dim-2); }
+  &.dim-d3 { background: var(--dim-3); }
+  &.dim-d4 { background: var(--dim-4); }
+}
+
+// ─── Soft chip (translucent fill + text) ──────────────────────────────
+.dim-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+
+  &.dim-d1 {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--dim-1);
+  }
+  &.dim-d2 {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--dim-2);
+  }
+  &.dim-d3 {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--dim-3);
+  }
+  &.dim-d4 {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--dim-4);
+  }
+}
+
+// ─── Panel accent (left border) ───────────────────────────────────────
+// For governance evidence panels — attach a 4px coloured rule to mark
+// the dimension owning the card.
+.dim-panel-accent {
+  position: relative;
+  padding-left: 1rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 4px;
+  }
+
+  &.dim-d1::before { background: var(--dim-1); }
+  &.dim-d2::before { background: var(--dim-2); }
+  &.dim-d3::before { background: var(--dim-3); }
+  &.dim-d4::before { background: var(--dim-4); }
+}

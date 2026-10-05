@@ -1,0 +1,201 @@
+<section
+  class="marketplace-detail"
+  role="main"
+  [attr.aria-label]="'billing.marketplace_detail_title' | translate"
+  data-testid="marketplace-detail">
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="marketplace-detail__loading" data-testid="marketplace-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="marketplace-detail__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (isError()) {
+    <div class="marketplace-detail__error" data-testid="marketplace-error" role="alert">
+      <p class="marketplace-detail__error-text">
+        {{ 'billing.marketplace_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (item(); as addon) {
+    <!-- Header -->
+    <header class="marketplace-detail__header">
+      <h1 class="marketplace-detail__title" data-testid="marketplace-title">
+        {{ addon.name }}
+      </h1>
+      <p class="marketplace-detail__description">
+        {{ addon.description }}
+      </p>
+    </header>
+
+    <!-- Pricing + CTA -->
+    <div class="marketplace-detail__pricing-section" data-testid="marketplace-pricing">
+      <span class="marketplace-detail__price">
+        {{ formatPrice(addon.price_cents, addon.currency) }}
+      </span>
+      <span class="marketplace-detail__interval">
+        / {{ addon.billing_interval }}
+      </span>
+      <button
+        type="button"
+        class="marketplace-detail__btn marketplace-detail__btn--primary"
+        data-testid="btn-activate"
+        [attr.aria-label]="'billing.activate_addon' | translate"
+        [disabled]="activating()"
+        (click)="activate()">
+        @if (activating()) {
+          {{ 'billing.activating' | translate }}
+        } @else {
+          {{ 'billing.activate_addon' | translate }}
+        }
+      </button>
+    </div>
+
+    <!-- Screenshots Carousel -->
+    @if (addon.screenshots.length > 0) {
+      <div class="marketplace-detail__carousel" data-testid="screenshot-carousel" role="region"
+           [attr.aria-label]="'billing.screenshots' | translate">
+        <button
+          type="button"
+          class="marketplace-detail__carousel-btn marketplace-detail__carousel-btn--prev"
+          [disabled]="!canScrollPrev()"
+          [attr.aria-label]="'billing.previous_screenshot' | translate"
+          (click)="scrollPrev()">
+          &#8249;
+        </button>
+
+        <div class="marketplace-detail__carousel-viewport">
+          @if (currentScreenshot(); as src) {
+            <img
+              class="marketplace-detail__carousel-img"
+              [src]="src"
+              [alt]="'billing.screenshot_alt' | translate"
+              data-testid="carousel-image" />
+          }
+        </div>
+
+        <button
+          type="button"
+          class="marketplace-detail__carousel-btn marketplace-detail__carousel-btn--next"
+          [disabled]="!canScrollNext()"
+          [attr.aria-label]="'billing.next_screenshot' | translate"
+          (click)="scrollNext()">
+          &#8250;
+        </button>
+
+        <!-- Carousel indicators -->
+        <div class="marketplace-detail__carousel-indicators" role="tablist"
+             [attr.aria-label]="'billing.screenshot_indicators' | translate">
+          @for (screenshot of addon.screenshots; track screenshot; let idx = $index) {
+            <span
+              class="marketplace-detail__carousel-dot"
+              [class.marketplace-detail__carousel-dot--active]="idx === carouselIndex()"
+              role="tab"
+              [attr.aria-selected]="idx === carouselIndex()"
+              [attr.aria-label]="('billing.screenshot_number' | translate) + ' ' + (idx + 1)">
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Features List -->
+    @if (addon.features.length > 0) {
+      <div class="marketplace-detail__features" data-testid="marketplace-features">
+        <h2 class="marketplace-detail__section-heading">
+          {{ 'billing.addon_features' | translate }}
+        </h2>
+        <ul class="marketplace-detail__features-list" role="list">
+          @for (feature of addon.features; track feature) {
+            <li class="marketplace-detail__feature-item" role="listitem">
+              {{ feature }}
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    <!-- Long Description -->
+    <div class="marketplace-detail__long-desc" data-testid="marketplace-long-desc">
+      <h2 class="marketplace-detail__section-heading">
+        {{ 'billing.addon_details' | translate }}
+      </h2>
+      <p class="marketplace-detail__long-desc-text">
+        {{ addon.long_description }}
+      </p>
+    </div>
+
+    <!-- Compatibility Matrix -->
+    @if (compatibility().length > 0) {
+      <div class="marketplace-detail__compatibility" data-testid="marketplace-compatibility">
+        <h2 class="marketplace-detail__section-heading">
+          {{ 'billing.compatibility_matrix' | translate }}
+        </h2>
+        <table class="marketplace-detail__compat-table" role="table"
+               [attr.aria-label]="'billing.compatibility_matrix' | translate">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'billing.addon_name' | translate }}</th>
+              <th scope="col">{{ 'billing.relationship' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of compatibility(); track entry.addon_id) {
+              <tr>
+                <td>{{ entry.addon_name }}</td>
+                <td>
+                  <span
+                    class="marketplace-detail__compat-badge"
+                    [class]="compatibilityClass(entry.relationship)">
+                    {{ entry.relationship }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Reviews -->
+    <div class="marketplace-detail__reviews" data-testid="marketplace-reviews">
+      <h2 class="marketplace-detail__section-heading">
+        {{ 'billing.reviews' | translate }}
+        <span class="marketplace-detail__review-summary">
+          ({{ averageRating().toFixed(1) }} / 5, {{ reviewCount() }} {{ 'billing.reviews_count' | translate }})
+        </span>
+      </h2>
+
+      @if (reviews().length === 0) {
+        <p class="marketplace-detail__no-reviews">
+          {{ 'billing.no_reviews' | translate }}
+        </p>
+      }
+
+      @for (review of reviews(); track review.id) {
+        <article class="marketplace-detail__review-card" data-testid="review-card">
+          <div class="marketplace-detail__review-header">
+            <span class="marketplace-detail__review-author">{{ review.reviewer_name }}</span>
+            <span class="marketplace-detail__review-date">{{ formatDate(review.created_at) }}</span>
+          </div>
+          <div class="marketplace-detail__review-stars" role="img"
+               [attr.aria-label]="review.rating + ' ' + ('billing.out_of_5' | translate)">
+            @for (filled of starArray(review.rating); track $index) {
+              <span class="marketplace-detail__star"
+                    [class.marketplace-detail__star--filled]="filled">
+                &#9733;
+              </span>
+            }
+          </div>
+          <p class="marketplace-detail__review-text">{{ review.comment }}</p>
+        </article>
+      }
+    </div>
+  }
+</section>

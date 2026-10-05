@@ -1,0 +1,104 @@
+<section
+  class="stat-allocation"
+  role="main"
+  [attr.aria-label]="'choraverse.stats.title' | translate"
+  data-testid="stat-allocation">
+
+  <!-- Header -->
+  <header class="stat-allocation__header">
+    <h1 class="stat-allocation__title" data-testid="stats-title">
+      {{ 'choraverse.stats.title' | translate }}
+    </h1>
+    <p class="stat-allocation__subtitle">
+      {{ 'choraverse.stats.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Budget counter -->
+  <div
+    class="stat-allocation__budget"
+    role="status"
+    aria-live="polite"
+    data-testid="budget-counter">
+    <span class="stat-allocation__budget-label">
+      {{ 'choraverse.stats.points_remaining' | translate }}
+    </span>
+    <span
+      class="stat-allocation__budget-value"
+      [class.stat-allocation__budget-value--zero]="isFullyAllocated()"
+      [class.stat-allocation__budget-value--available]="!isFullyAllocated()">
+      {{ pointsRemaining() }} / {{ totalBudget }}
+    </span>
+  </div>
+
+  <!-- Sliders -->
+  <div class="stat-allocation__sliders" role="group" [attr.aria-label]="'choraverse.stats.personality_sliders' | translate">
+    @for (slider of sliders(); track slider.key; let i = $index) {
+      <div class="stat-allocation__slider-row" [attr.data-testid]="'slider-' + slider.key">
+        <div class="stat-allocation__slider-header">
+          <label
+            class="stat-allocation__slider-label"
+            [attr.for]="'trait-slider-' + slider.key">
+            {{ slider.labelKey | translate }}
+          </label>
+          <span class="stat-allocation__slider-value" [attr.aria-label]="slider.value + ' points'">
+            {{ slider.value }}
+          </span>
+        </div>
+        <p class="stat-allocation__slider-desc">
+          {{ slider.descriptionKey | translate }}
+        </p>
+        <input
+          type="range"
+          class="stat-allocation__slider-input"
+          [id]="'trait-slider-' + slider.key"
+          [attr.data-testid]="'slider-input-' + slider.key"
+          [min]="minPerTrait"
+          [max]="sliderMax(i)"
+          [value]="slider.value"
+          step="1"
+          [attr.aria-valuemin]="minPerTrait"
+          [attr.aria-valuemax]="sliderMax(i)"
+          [attr.aria-valuenow]="slider.value"
+          [attr.aria-label]="slider.labelKey | translate"
+          (input)="onSliderChange(i, $event)" />
+      </div>
+    }
+  </div>
+
+  <!-- Response preview -->
+  <div class="stat-allocation__preview" data-testid="response-preview" aria-live="polite">
+    <h2 class="stat-allocation__preview-title">
+      {{ 'choraverse.stats.preview_title' | translate }}
+    </h2>
+    <div class="stat-allocation__preview-bubble">
+      <p class="stat-allocation__preview-text">
+        {{ previewKey() | translate }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="stat-allocation__actions">
+    <button
+      type="button"
+      class="stat-allocation__btn stat-allocation__btn--reset"
+      data-testid="reset-btn"
+      (click)="resetSliders()"
+      [disabled]="isSubmitting()">
+      {{ 'choraverse.stats.reset' | translate }}
+    </button>
+    <button
+      type="button"
+      class="stat-allocation__btn stat-allocation__btn--save"
+      data-testid="save-btn"
+      [disabled]="!isFullyAllocated() || isSubmitting()"
+      (click)="savePersonality()">
+      @if (isSubmitting()) {
+        {{ 'choraverse.stats.saving' | translate }}
+      } @else {
+        {{ 'choraverse.stats.save' | translate }}
+      }
+    </button>
+  </div>
+</section>

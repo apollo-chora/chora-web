@@ -1,0 +1,91 @@
+<section
+  class="familiar-persona-card"
+  [attr.aria-label]="'choraverse.familiar_persona.title' | translate"
+  data-testid="familiar-persona-card">
+
+  @if (personaState().status === 'loading') {
+    <div class="familiar-persona-card__loading" data-testid="persona-loading" aria-live="polite">
+      {{ 'choraverse.familiar_persona.loading' | translate }}
+    </div>
+  }
+
+  @if (personaState().status === 'error') {
+    <div class="familiar-persona-card__error" data-testid="persona-error" role="alert">
+      {{ 'choraverse.familiar_persona.error' | translate }}
+    </div>
+  }
+
+  @if (persona(); as p) {
+    <!-- Archetype Header -->
+    <div class="familiar-persona-card__header">
+      <div
+        class="familiar-persona-card__icon"
+        [attr.aria-label]="p.archetype"
+        data-testid="persona-icon">
+        {{ archetypeInitial() }}
+      </div>
+      <div class="familiar-persona-card__info">
+        <h3 class="familiar-persona-card__archetype" data-testid="persona-archetype">
+          {{ p.archetype }}
+        </h3>
+        <span class="familiar-persona-card__skin" data-testid="persona-skin">
+          {{ p.current_skin_name || ('choraverse.familiar_persona.default_skin' | translate) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Level Bar -->
+    <div class="familiar-persona-card__level-section">
+      <div class="familiar-persona-card__level-header">
+        <span class="familiar-persona-card__level-label">
+          {{ 'choraverse.familiar_persona.level' | translate }}
+        </span>
+        <span class="familiar-persona-card__level-value" data-testid="persona-level">
+          {{ p.level }}
+        </span>
+      </div>
+      <div
+        class="familiar-persona-card__level-bar"
+        role="progressbar"
+        [attr.aria-valuenow]="p.level"
+        [attr.aria-valuemin]="0"
+        [attr.aria-valuemax]="100"
+        data-testid="persona-level-bar">
+        <div
+          class="familiar-persona-card__level-fill"
+          [style.width.%]="p.level">
+        </div>
+      </div>
+    </div>
+
+    <!-- Trait Bars -->
+    <div class="familiar-persona-card__traits" data-testid="persona-traits">
+      <h4 class="familiar-persona-card__traits-title">
+        {{ 'choraverse.familiar_persona.traits' | translate }}
+      </h4>
+      @for (trait of traits(); track trait.key) {
+        <div class="familiar-persona-card__trait">
+          <div class="familiar-persona-card__trait-header">
+            <span class="familiar-persona-card__trait-label">
+              {{ 'choraverse.familiar_persona.trait_' + trait.key | translate }}
+            </span>
+            <span class="familiar-persona-card__trait-value">{{ trait.value }}</span>
+          </div>
+          <div
+            class="familiar-persona-card__trait-bar"
+            role="progressbar"
+            [attr.aria-valuenow]="trait.value"
+            [attr.aria-valuemin]="0"
+            [attr.aria-valuemax]="100"
+            [attr.aria-label]="trait.key"
+            [attr.data-testid]="'trait-bar-' + trait.key">
+            <div
+              class="familiar-persona-card__trait-fill"
+              [style.width.%]="trait.value">
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

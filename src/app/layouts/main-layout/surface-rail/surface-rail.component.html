@@ -1,0 +1,23 @@
+<nav
+  class="surface-rail"
+  [attr.aria-label]="'surface_rail.aria' | translate"
+  data-testid="surface-rail">
+  @for (entry of entries(); track entry.key) {
+    <a
+      class="surface-rail__chip"
+      [class]="'surface-rail__chip surface-rail__chip--' + entry.key"
+      [class.surface-rail__chip--active]="isActive(entry.key)"
+      [routerLink]="entry.landing"
+      [attr.aria-label]="entry.ariaKey | translate"
+      [attr.aria-current]="isActive(entry.key) ? 'page' : null"
+      [attr.data-testid]="'surface-rail-chip-' + entry.key">
+      <span
+        class="surface-rail__letter"
+        [attr.data-testid]="'surface-rail-letter-' + entry.key"
+        aria-hidden="true">
+        {{ entry.letter }}
+      </span>
+      <span class="surface-rail__short sr-only">{{ entry.shortName }}</span>
+    </a>
+  }
+</nav>

@@ -1,0 +1,64 @@
+<!--
+  CONDITIONAL ticker: the whole region is gated on `hasItems()`, so the host
+  collapses to nothing when there is no nudge to show (the shell ALSO wraps this
+  in `@if`, belt-and-braces). Each item leads with a decorative glyph, carries
+  its own text (the accessible name), and offers an in-memory dismiss control.
+-->
+@if (hasItems()) {
+  <section
+    class="ticker glass-panel"
+    [attr.aria-label]="'aplus.dashboard.ticker.aria_label' | translate"
+    data-testid="aplus-dashboard-ticker">
+    <ul class="ticker__list" role="list">
+      @for (item of items(); track item.id) {
+        <li class="ticker__item" data-testid="aplus-dashboard-ticker-item">
+          @switch (item.kind) {
+            @case ('celebration-edge') {
+              <span class="ticker__body ticker__body--celebrate" data-testid="aplus-dashboard-ticker-celebration-edge">
+                <span class="ticker__emoji" aria-hidden="true">🌱</span>
+                <span class="ticker__text">
+                  {{ 'aplus.dashboard.ticker.grew_edge' | translate }}
+                  <strong class="ticker__data">{{ item.conceptLabel }}</strong>
+                  @if (item.extraCount > 0) {
+                    <span class="ticker__more">+{{ item.extraCount }}&nbsp;{{ 'aplus.dashboard.ticker.grew_edge_more' | translate }}</span>
+                  }
+                </span>
+              </span>
+            }
+            @case ('celebration-goal') {
+              <span class="ticker__body ticker__body--celebrate" data-testid="aplus-dashboard-ticker-celebration-goal">
+                <span class="ticker__emoji" aria-hidden="true">🎓</span>
+                <span class="ticker__text">
+                  {{ 'aplus.dashboard.ticker.goal_graduated' | translate }}
+                  <strong class="ticker__data">{{ item.goalLabel }}</strong>
+                </span>
+              </span>
+            }
+            @case ('due') {
+              <!-- Actionable nudge → the Daily Dose, where the due atoms live. -->
+              <a
+                class="ticker__body ticker__body--link"
+                routerLink="/a/daily-dose"
+                data-testid="aplus-dashboard-ticker-due">
+                <i class="fa-solid fa-clock-rotate-left ticker__icon ticker__icon--due" aria-hidden="true"></i>
+                <span class="ticker__text">
+                  <strong class="ticker__data">{{ item.count }}</strong>&nbsp;{{ 'aplus.dashboard.ticker.concepts_due' | translate }}
+                </span>
+                <i class="fa-solid fa-arrow-right ticker__go" aria-hidden="true"></i>
+              </a>
+            }
+          }
+
+          <button
+            type="button"
+            class="ticker__dismiss"
+            data-testid="aplus-dashboard-ticker-dismiss"
+            [attr.aria-label]="'aplus.dashboard.ticker.dismiss' | translate"
+            (click)="dismiss(item.id)">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+}

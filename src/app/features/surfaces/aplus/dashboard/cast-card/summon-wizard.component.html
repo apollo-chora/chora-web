@@ -1,0 +1,190 @@
+<!--
+  Step-by-step summon modal. The backdrop closes; keydown (Escape + focus trap)
+  is bound on the PANEL (focus lives inside it). Three steps: pick a goal →
+  (conflict, only when the goal already holds a DIFFERENT Familiar) → confirm.
+-->
+<div
+  class="summon-backdrop"
+  role="presentation"
+  tabindex="-1"
+  data-testid="aplus-summon-backdrop"
+  (click)="onCancel()">
+  <div
+    #dialogPanel
+    class="summon glass-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="aplus-summon-title"
+    tabindex="-1"
+    data-testid="aplus-summon-wizard"
+    (click)="$event.stopPropagation()"
+    (keydown)="onKeydown($event)">
+    <header class="summon__head">
+      <h2 id="aplus-summon-title" class="summon__title">
+        <i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+        {{ 'aplus.dashboard.cast.summon.title' | translate }}
+        <span class="summon__title-name">{{ familiar().name }}</span>
+      </h2>
+      <button
+        type="button"
+        class="summon__close"
+        (click)="onCancel()"
+        [attr.aria-label]="'aplus.dashboard.cast.summon.close_aria' | translate"
+        data-testid="aplus-summon-close">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    @switch (step()) {
+      <!-- ── Step 1: pick a learning goal ── -->
+      @case ('pick') {
+        <p class="summon__lead">
+          {{ 'aplus.dashboard.cast.summon.pick_lead' | translate }}
+        </p>
+        @if (summonableGoals().length) {
+          <ul class="summon__goals" role="list">
+            @for (g of summonableGoals(); track g.goalId) {
+              <li>
+                <button
+                  type="button"
+                  class="summon__goal"
+                  (click)="pickGoal(g)"
+                  [attr.data-testid]="'aplus-summon-goal-' + g.goalId">
+                  <span class="summon__goal-name">
+                    @if (goalTitle(g)) {
+                      {{ goalTitle(g) }}
+                    } @else {
+                      {{ goalKindKey(g) | translate }}
+                    }
+                  </span>
+                  @if (g.attachedFamiliarId) {
+                    <span
+                      class="summon__goal-bound"
+                      [attr.aria-label]="'aplus.dashboard.cast.summon.bound_aria' | translate">
+                      <i class="fa-solid fa-link" aria-hidden="true"></i>
+                    </span>
+                  }
+                  <i class="fa-solid fa-chevron-right summon__goal-chevron" aria-hidden="true"></i>
+                </button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="summon__empty" data-testid="aplus-summon-empty">
+            {{ 'aplus.dashboard.cast.summon.empty' | translate }}
+          </p>
+        }
+      }
+
+      <!-- ── Step 2: conflict — the goal already holds a different Familiar ── -->
+      @case ('conflict') {
+        @if (selectedGoal(); as g) {
+          <p class="summon__conflict" data-testid="aplus-summon-conflict">
+            <strong class="summon__conflict-goal">
+              @if (goalTitle(g)) {
+                {{ goalTitle(g) }}
+              } @else {
+                {{ goalKindKey(g) | translate }}
+              }
+            </strong>
+            {{ 'aplus.dashboard.cast.summon.already_has' | translate }}
+            <strong class="summon__conflict-familiar">{{
+              conflictFamiliarName() ||
+                ('aplus.dashboard.cast.summon.a_familiar' | translate)
+            }}</strong>
+          </p>
+          <p class="summon__conflict-hint">
+            {{ 'aplus.dashboard.cast.summon.conflict_hint' | translate }}
+          </p>
+          <div class="summon__actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="chooseKeepBoth()"
+              data-testid="aplus-summon-keep-both">
+              {{ 'aplus.dashboard.cast.summon.keep_both' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="chooseReplace()"
+              data-testid="aplus-summon-replace">
+              {{ 'aplus.dashboard.cast.summon.replace' | translate }}
+            </button>
+          </div>
+        }
+      }
+
+      <!-- ── Step 3: confirm the summon ── -->
+      @case ('confirm') {
+        @if (selectedGoal(); as g) {
+          <p class="summon__confirm" data-testid="aplus-summon-confirm">
+            {{ 'aplus.dashboard.cast.summon.confirm_prompt' | translate }}
+          </p>
+          <p class="summon__pair">
+            <strong>{{ familiar().name }}</strong>
+            <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+            <strong>
+              @if (goalTitle(g)) {
+                {{ goalTitle(g) }}
+              } @else {
+                {{ goalKindKey(g) | translate }}
+              }
+            </strong>
+          </p>
+          @if (mode() === 'replace') {
+            <p class="summon__replace-note">
+              <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+              {{ 'aplus.dashboard.cast.summon.replace_note' | translate }}
+              <strong>{{
+                conflictFamiliarName() ||
+                  ('aplus.dashboard.cast.summon.a_familiar' | translate)
+              }}</strong>
+            </p>
+          }
+          @if (errorKey(); as ek) {
+            <p class="summon__error" role="alert" data-testid="aplus-summon-error">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ ek | translate }}
+            </p>
+          }
+          <div class="summon__actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="submitting()"
+              (click)="goBack()"
+              data-testid="aplus-summon-back">
+              {{ 'aplus.dashboard.cast.summon.back' | translate }}
+            </button>
+            @if (errorKey()) {
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="submitting()"
+                (click)="onConfirm()"
+                data-testid="aplus-summon-retry">
+                @if (submitting()) {
+                  <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                }
+                {{ 'aplus.dashboard.cast.summon.retry' | translate }}
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="submitting()"
+                (click)="onConfirm()"
+                data-testid="aplus-summon-confirm-btn">
+                @if (submitting()) {
+                  <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                }
+                {{ 'aplus.dashboard.cast.summon.confirm_cta' | translate }}
+              </button>
+            }
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

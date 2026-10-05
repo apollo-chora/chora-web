@@ -1,0 +1,377 @@
+<div
+  class="oplus-agent-eval surface-oplus"
+  data-testid="oplus-agent-eval-root"
+  [attr.data-state]="state().state"
+>
+  <!-- Header -->
+  <header class="oplus-agent-eval__header glass-panel">
+    <div class="oplus-agent-eval__title-row">
+      <h1
+        class="oplus-agent-eval__title surface-accent-text"
+        data-testid="oplus-agent-eval-title"
+      >
+        {{ 'oplus.agent_eval.title' | translate }}
+        <span
+          class="dim-badge dim-d2"
+          [attr.aria-label]="'oplus.agent_eval.d2_badge_aria' | translate"
+          >D2</span
+        >
+      </h1>
+      <span
+        class="oplus-agent-eval__live"
+        data-testid="oplus-agent-eval-live"
+        role="status"
+        [attr.data-variant]="badge()"
+        [attr.aria-label]="badgeKey() | translate"
+      >
+        <span class="oplus-agent-eval__live-dot" aria-hidden="true"></span>
+        {{ badgeKey() | translate }}
+      </span>
+    </div>
+    <p class="oplus-agent-eval__subtitle">
+      {{ 'oplus.agent_eval.subtitle' | translate }}
+    </p>
+  </header>
+
+  @if (isAuditorGated()) {
+    <section
+      class="glass-panel oplus-agent-eval__gate"
+      data-testid="oplus-agent-eval-auditor-gate"
+      role="alert"
+    >
+      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+      <h2>{{ 'oplus.errors.auditor_required_title' | translate }}</h2>
+      <p>{{ 'oplus.errors.auditor_required' | translate }}</p>
+    </section>
+  } @else if (hasErrorOnly()) {
+    <section
+      class="glass-panel oplus-agent-eval__error"
+      data-testid="oplus-agent-eval-error"
+      role="alert"
+    >
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p>{{ errorKey() | translate }}</p>
+    </section>
+  } @else if (runs().length === 0) {
+    <section
+      class="glass-panel oplus-agent-eval__empty"
+      data-testid="oplus-agent-eval-empty"
+    >
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      <p>{{ 'oplus.agent_eval.no_runs' | translate }}</p>
+    </section>
+  } @else {
+    <!-- Crew-run accordion (L1 = crew run, L2 = members + evidence) -->
+    <ul
+      class="oplus-agent-eval__run-list"
+      role="list"
+      [attr.aria-label]="'oplus.agent_eval.runs_aria' | translate"
+    >
+      @for (run of runs(); track run.candidate_label; let i = $index) {
+        @let isFirst = i === 0;
+        @let expanded = isExpanded(run.candidate_label, isFirst);
+        <li
+          class="oplus-eval-run"
+          [attr.data-testid]="'oplus-eval-run-' + run.candidate_label"
+          [attr.data-candidate-label]="run.candidate_label"
+        >
+          <!-- L1 — crew-run header -->
+          <div class="oplus-eval-run__header glass-panel">
+            <button
+              type="button"
+              class="oplus-eval-run__toggle"
+              [id]="runHeaderId(run.candidate_label)"
+              [attr.aria-expanded]="expanded"
+              [attr.aria-controls]="runPanelId(run.candidate_label)"
+              [attr.data-testid]="'oplus-eval-run-toggle-' + run.candidate_label"
+              (click)="toggleRun(run.candidate_label, isFirst)"
+            >
+              <i
+                class="fa-solid oplus-eval-run__chevron"
+                [class]="
+                  expanded
+                    ? 'fa-solid oplus-eval-run__chevron fa-chevron-down'
+                    : 'fa-solid oplus-eval-run__chevron fa-chevron-right'
+                "
+                aria-hidden="true"
+              ></i>
+              <i
+                class="fa-solid fa-flask-vial oplus-eval-run__icon"
+                aria-hidden="true"
+              ></i>
+              <div class="oplus-eval-run__title-block">
+                <span class="oplus-eval-run__label">{{ run.candidate_label }}</span>
+                <span class="oplus-eval-run__time">
+                  {{ 'oplus.agent_eval.recorded_label' | translate }}:
+                  {{ formatTime(run.last_recorded_at) }}
+                </span>
+              </div>
+              <span
+                class="oplus-eval-run__chip"
+                [attr.aria-label]="'oplus.agent_eval.members_aria' | translate"
+              >
+                {{ run.members.length }}
+                {{ 'oplus.agent_eval.members_label' | translate }}
+              </span>
+            </button>
+
+            @if (run.bigquery_url) {
+              <a
+                class="oplus-deep-link"
+                [href]="run.bigquery_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                [attr.data-testid]="'oplus-eval-run-bq-' + run.candidate_label"
+                [attr.aria-label]="'oplus.agent_eval.view_in_bigquery_aria' | translate"
+              >
+                <i class="fa-solid fa-table" aria-hidden="true"></i>
+                {{ 'oplus.agent_eval.view_in_bigquery' | translate }}
+                <i
+                  class="fa-solid fa-arrow-up-right-from-square oplus-deep-link__icon"
+                  aria-hidden="true"
+                ></i>
+              </a>
+            }
+          </div>
+
+          <!-- L2 — members + evidence -->
+          <div
+            class="oplus-eval-run__panel"
+            [id]="runPanelId(run.candidate_label)"
+            role="region"
+            [attr.aria-labelledby]="runHeaderId(run.candidate_label)"
+            [attr.hidden]="!expanded ? '' : null"
+          >
+            <ul
+              class="oplus-eval-members"
+              role="list"
+              [attr.aria-label]="'oplus.agent_eval.members_aria' | translate"
+            >
+              @for (member of run.members; track member.experiment) {
+                <li
+                  class="oplus-eval-member glass-panel"
+                  [attr.data-testid]="
+                    'oplus-eval-member-' +
+                    run.candidate_label +
+                    '-' +
+                    member.experiment
+                  "
+                >
+                  <div class="oplus-eval-member__head">
+                    <i
+                      class="fa-solid fa-robot oplus-eval-member__icon"
+                      aria-hidden="true"
+                    ></i>
+                    <div class="oplus-eval-member__title-block">
+                      <span class="oplus-eval-member__name">{{ member.member_label }}</span>
+                      <span class="oplus-eval-member__exp">{{ member.experiment }}</span>
+                    </div>
+                    @if (member.vertex_experiment_url) {
+                      <a
+                        class="oplus-deep-link"
+                        [href]="member.vertex_experiment_url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        [attr.data-testid]="
+                          'oplus-eval-member-vertex-' +
+                          run.candidate_label +
+                          '-' +
+                          member.experiment
+                        "
+                        [attr.aria-label]="'oplus.agent_eval.view_in_vertex_aria' | translate"
+                      >
+                        <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                        {{ 'oplus.agent_eval.view_in_vertex' | translate }}
+                        <i
+                          class="fa-solid fa-arrow-up-right-from-square oplus-deep-link__icon"
+                          aria-hidden="true"
+                        ></i>
+                      </a>
+                    }
+                  </div>
+
+                  <div class="oplus-eval-member__metrics">
+                    <!-- Functional autorater chips -->
+                    <div class="oplus-eval-metric-group">
+                      <span class="oplus-eval-metric-group__label">
+                        {{ 'oplus.agent_eval.autorater_heading' | translate }}
+                      </span>
+                      @if (member.autorater_metrics.length === 0) {
+                        <span class="oplus-eval-chip is-muted">
+                          {{ 'oplus.agent_eval.no_autorater' | translate }}
+                        </span>
+                      } @else {
+                        @for (metric of member.autorater_metrics; track metric.metric) {
+                          <span
+                            class="oplus-eval-chip"
+                            [attr.data-testid]="
+                              'oplus-eval-metric-' +
+                              member.experiment +
+                              '-' +
+                              metric.metric
+                            "
+                          >
+                            {{ metric.metric }}
+                            <strong>{{ formatScore(metric) }}</strong>
+                            <span class="oplus-eval-chip__n">n={{ metric.count }}</span>
+                          </span>
+                        }
+                      }
+                    </div>
+
+                    <!-- Adversarial summary chip -->
+                    @if (member.adversarial; as adv) {
+                      <div class="oplus-eval-metric-group">
+                        <span class="oplus-eval-metric-group__label">
+                          {{ 'oplus.agent_eval.adversarial_heading' | translate }}
+                        </span>
+                        <span
+                          class="oplus-eval-chip oplus-eval-chip--adv"
+                          [attr.data-leaked]="adv.leaked > 0 ? 'true' : null"
+                          [attr.data-testid]="
+                            'oplus-eval-adv-' + member.experiment
+                          "
+                        >
+                          <i
+                            class="fa-solid fa-shield-halved"
+                            aria-hidden="true"
+                          ></i>
+                          <strong>{{ blockRate(adv.blocked, adv.total) }}</strong>
+                          {{ 'oplus.agent_eval.blocked_label' | translate }}
+                          @if (adv.leaked > 0) {
+                            <span class="oplus-eval-chip__leaked">
+                              · {{ adv.leaked }}
+                              {{ 'oplus.agent_eval.leaked_label' | translate }}
+                            </span>
+                          }
+                        </span>
+                      </div>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+
+            <!-- Per-case evidence drill-down (lazy) -->
+            <div class="oplus-eval-evidence">
+              <button
+                type="button"
+                class="oplus-eval-evidence__toggle"
+                [attr.aria-expanded]="isEvidenceOpen(run.candidate_label)"
+                [attr.data-testid]="'oplus-eval-evidence-toggle-' + run.candidate_label"
+                (click)="toggleEvidence(run.candidate_label)"
+              >
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                {{
+                  (isEvidenceOpen(run.candidate_label)
+                    ? 'oplus.agent_eval.hide_evidence'
+                    : 'oplus.agent_eval.view_evidence'
+                  ) | translate
+                }}
+              </button>
+
+              @if (isEvidenceOpen(run.candidate_label)) {
+                @let cell = evidenceCell(run.candidate_label);
+                <div
+                  class="oplus-eval-evidence__body"
+                  [attr.data-testid]="'oplus-eval-evidence-' + run.candidate_label"
+                >
+                  @if (!cell || cell.status === 'loading') {
+                    <p class="oplus-eval-evidence__status" role="status">
+                      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                      {{ 'oplus.agent_eval.evidence_loading' | translate }}
+                    </p>
+                  } @else if (cell.status === 'error') {
+                    <p class="oplus-eval-evidence__status is-error" role="alert">
+                      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                      {{ 'oplus.agent_eval.evidence_error' | translate }}
+                    </p>
+                  } @else if (cell.rows.length === 0) {
+                    <p class="oplus-eval-evidence__status">
+                      {{ 'oplus.agent_eval.evidence_empty' | translate }}
+                    </p>
+                  } @else {
+                    <ul
+                      class="oplus-eval-rows"
+                      role="list"
+                      [attr.aria-label]="'oplus.agent_eval.evidence_aria' | translate"
+                    >
+                      @for (row of cell.rows; track $index) {
+                        <li
+                          class="oplus-eval-row"
+                          [attr.data-kind]="row.kind"
+                          [attr.data-testid]="
+                            'oplus-eval-row-' + run.candidate_label + '-' + $index
+                          "
+                        >
+                          <div class="oplus-eval-row__head">
+                            <span class="oplus-eval-row__member">{{ row.experiment }}</span>
+                            <span
+                              class="oplus-eval-kind"
+                              [attr.data-kind]="row.kind"
+                            >
+                              {{
+                                (row.kind === 'adversarial'
+                                  ? 'oplus.agent_eval.kind_adversarial'
+                                  : 'oplus.agent_eval.kind_autorater'
+                                ) | translate
+                              }}
+                            </span>
+                            <span class="oplus-eval-row__metric">{{ row.metric }}</span>
+                            <span class="oplus-eval-row__score">
+                              {{ 'oplus.agent_eval.score_label' | translate }}:
+                              <strong>{{ row.score }}</strong>
+                            </span>
+                            @if (row.kind === 'adversarial' && row.adversarial_verdict) {
+                              <span
+                                class="oplus-eval-verdict"
+                                [attr.data-pass]="
+                                  verdictIsPass(row.adversarial_verdict) ? 'true' : 'false'
+                                "
+                              >
+                                {{ row.adversarial_verdict }}
+                              </span>
+                            }
+                          </div>
+                          @if (row.prompt) {
+                            <div class="oplus-eval-row__field">
+                              <span class="oplus-eval-row__field-label">
+                                {{ 'oplus.agent_eval.prompt_label' | translate }}
+                              </span>
+                              <p class="oplus-eval-row__field-value">{{ row.prompt }}</p>
+                            </div>
+                          }
+                          @if (row.response) {
+                            <div class="oplus-eval-row__field">
+                              <span class="oplus-eval-row__field-label">
+                                {{ 'oplus.agent_eval.response_label' | translate }}
+                              </span>
+                              <p class="oplus-eval-row__field-value">{{ row.response }}</p>
+                            </div>
+                          }
+                          @if (row.explanation) {
+                            <div class="oplus-eval-row__field">
+                              <span class="oplus-eval-row__field-label">
+                                {{
+                                  (row.kind === 'adversarial'
+                                    ? 'oplus.agent_eval.reason_label'
+                                    : 'oplus.agent_eval.explanation_label'
+                                  ) | translate
+                                }}
+                              </span>
+                              <p class="oplus-eval-row__field-value">{{ row.explanation }}</p>
+                            </div>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -1,0 +1,178 @@
+/* Live map-preview tile — the map-dominant dashboard group (SP2.3). glass-panel
+   supplies the card surface; this handles the layout, the mini-fisheye window,
+   and the reveal-eased "zoom in" affordance. The whole card is one <a>. */
+:host {
+  display: block;
+}
+
+.map-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm, 8px);
+  padding: var(--chora-space-md, 16px) var(--chora-space-lg, 24px);
+  // The tile IS the link — neutralise anchor styling, keep it a calm surface.
+  text-decoration: none;
+  color: var(--text-main, #1f2430);
+  cursor: pointer;
+  position: relative;
+  // Progressive-reveal easing on the whole tile (Dale's FE design language).
+  transition:
+    transform 260ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)),
+    box-shadow 260ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 3px;
+  }
+}
+
+.map-preview__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-muted, #6b7280);
+
+  i {
+    color: var(--primary, #1976d2);
+    font-size: 0.9rem;
+  }
+}
+
+/* The mini fisheye window. `inert` (in the template) makes it decorative;
+   `pointer-events: none` guarantees clicks fall through to the tile link. The
+   reused lens's fixed-height scene + its make-root/lonely controls are resized /
+   hidden below so it reads as a compact preview, not the full canvas. */
+.map-preview__canvas {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--panel-radius, 16px);
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(241, 243, 247, 0.5),
+    rgba(247, 248, 251, 0.3)
+  );
+}
+
+// Shrink the reused lens into a mini tile + drop its interactive controls.
+// Scoped under :host so the pierce cannot leak past this card's own subtree.
+:host ::ng-deep .map-preview__canvas .concept-lens__scene {
+  height: clamp(200px, 30vh, 300px);
+  background: transparent; // the canvas already paints the calm stage
+  pointer-events: none;
+}
+:host ::ng-deep .map-preview__canvas .concept-lens__controls {
+  display: none; // no "make root" / "lonely" hint in a non-interactive preview
+}
+
+.map-preview__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(200px, 30vh, 300px);
+  color: var(--text-muted, #6b7280);
+  opacity: 0.5;
+
+  i {
+    font-size: 2.4rem;
+  }
+}
+
+/* Visible "Zoom in" affordance — a quiet pill that warms on hover/focus. */
+.map-preview__zoom {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--button-radius, 999px);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary, #1976d2);
+  background: color-mix(in srgb, var(--primary, #1976d2) 12%, transparent);
+  transition: background 200ms
+    var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  i {
+    font-size: 0.85rem;
+  }
+}
+
+.map-preview:hover .map-preview__zoom,
+.map-preview:focus-visible .map-preview__zoom {
+  background: color-mix(in srgb, var(--primary, #1976d2) 20%, transparent);
+}
+
+/* Empty / first-run state — a calm compass + a "start a map" nudge. */
+.map-preview--empty {
+  align-items: center;
+  text-align: center;
+}
+
+.map-preview__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--chora-space-sm, 8px);
+  padding: var(--chora-space-lg, 24px) 0;
+}
+
+.map-preview__empty-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary, #1976d2) 10%, transparent);
+  color: var(--primary, #1976d2);
+
+  i {
+    font-size: 1.5rem;
+  }
+}
+
+.map-preview__empty-prompt {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.95rem;
+}
+
+.map-preview__empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--primary, #1976d2);
+}
+
+/* Tablet-first: give the mini map more room on wide desktop. */
+@media (min-width: 1280px) {
+  :host ::ng-deep .map-preview__canvas .concept-lens__scene {
+    height: clamp(240px, 32vh, 340px);
+  }
+
+  .map-preview__placeholder {
+    height: clamp(240px, 32vh, 340px);
+  }
+}
+
+/* Respect reduced-motion — no lift/tween. */
+@media (prefers-reduced-motion: reduce) {
+  .map-preview {
+    transition: none;
+  }
+  .map-preview:hover,
+  .map-preview:focus-visible {
+    transform: none;
+  }
+  .map-preview__zoom {
+    transition: none;
+  }
+}

@@ -1,0 +1,35 @@
+<div class="image-regen" [attr.data-testid]="testIdPrefix() + 'image-regen'">
+  <div class="image-regen__row">
+    <input
+      type="text"
+      class="image-regen__input"
+      [attr.data-testid]="testIdPrefix() + 'image-regen-input'"
+      [value]="prompt()"
+      (input)="onPromptInput($any($event.target).value)"
+      [disabled]="regenerating()"
+      [attr.aria-label]="'image_regen.label' | translate"
+      [attr.placeholder]="'image_regen.placeholder' | translate" />
+    <button
+      type="button"
+      class="btn btn-secondary image-regen__button"
+      [attr.data-testid]="testIdPrefix() + 'image-regen-button'"
+      [disabled]="regenerating()"
+      (click)="submit()">
+      @if (regenerating()) {
+        <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        {{ 'image_regen.regenerating' | translate }}
+      } @else {
+        <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+        {{ 'image_regen.button' | translate }}
+      }
+    </button>
+  </div>
+  @if (error(); as err) {
+    <p
+      class="image-regen__error"
+      role="alert"
+      [attr.data-testid]="testIdPrefix() + 'image-regen-error'">
+      {{ err | translate }}
+    </p>
+  }
+</div>

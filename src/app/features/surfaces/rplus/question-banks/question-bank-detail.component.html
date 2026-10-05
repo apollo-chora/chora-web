@@ -1,0 +1,239 @@
+<section
+  class="surface-rplus question-bank-detail"
+  data-testid="rplus-question-bank-detail"
+  role="region"
+  aria-labelledby="qb-detail-heading">
+  <header class="question-bank-detail__breadcrumb-bar">
+    <nav
+      class="question-bank-detail__breadcrumb"
+      [attr.aria-label]="'rplus.question_banks.detail.breadcrumb_aria' | translate">
+      <a
+        class="question-bank-detail__breadcrumb-link"
+        data-testid="qb-detail-back"
+        routerLink="/r/question-banks">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        {{ 'rplus.question_banks.detail.back' | translate }}
+      </a>
+    </nav>
+  </header>
+
+  @if (isLoading()) {
+    <p class="question-bank-detail__loading glass-panel" data-testid="qb-detail-loading" aria-busy="true">
+      {{ 'rplus.question_banks.detail.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div class="question-bank-detail__error glass-panel" data-testid="qb-detail-error" role="alert">
+      <i class="fa-solid fa-triangle-exclamation question-bank-detail__error-icon" aria-hidden="true"></i>
+      <p class="question-bank-detail__error-detail">{{ errorKey() | translate }}</p>
+      @if (isNotFound()) {
+        <a class="btn btn-primary" data-testid="qb-detail-notfound-back" routerLink="/r/question-banks">
+          {{ 'rplus.question_banks.detail.back_to_list' | translate }}
+        </a>
+      } @else {
+        <button type="button" class="btn btn-ghost" data-testid="qb-detail-retry" (click)="retry()">
+          {{ 'rplus.common.retry' | translate }}
+        </button>
+      }
+    </div>
+  } @else if (bank(); as b) {
+    <!-- ── Bank metadata ─────────────────────────────────────────────── -->
+    <header class="question-bank-detail__head glass-panel">
+      <div class="question-bank-detail__head-main">
+        <h1 id="qb-detail-heading" class="question-bank-detail__name" data-testid="qb-detail-name">
+          {{ b.name }}
+        </h1>
+        @if (b.description) {
+          <p class="question-bank-detail__desc" data-testid="qb-detail-description">{{ b.description }}</p>
+        }
+        @if (b.tags.length > 0) {
+          <ul class="question-bank-detail__tags" data-testid="qb-detail-tags" role="list">
+            @for (tag of b.tags; track tag) {
+              <li class="question-bank-detail__tag">{{ tag }}</li>
+            }
+          </ul>
+        }
+        <p class="question-bank-detail__sub">
+          {{ 'rplus.question_banks.detail.created_label' | translate }}
+          <time [attr.datetime]="b.createdAt">{{ b.createdAt | date: 'mediumDate' }}</time>
+        </p>
+      </div>
+      <div class="question-bank-detail__head-meta">
+        <span class="question-bank-detail__badge" data-testid="qb-detail-visibility">
+          {{ visibilityLabelKey(b.visibility) | translate }}
+        </span>
+        <div class="question-bank-detail__head-actions">
+          <button
+            type="button"
+            class="btn btn-ghost"
+            data-testid="qb-add-toggle"
+            [attr.aria-expanded]="showPicker()"
+            (click)="toggleAddPicker()">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            {{ 'rplus.question_banks.detail.add_questions' | translate }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-testid="qb-assemble-toggle"
+            (click)="openAssemble()">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            {{ 'rplus.question_banks.detail.assemble.cta' | translate }}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Assemble test-set dialog ──────────────────────────────────── -->
+    @if (showAssemble()) {
+      <form
+        class="question-bank-detail__assemble glass-panel"
+        data-testid="qb-assemble-form"
+        (submit)="onAssembleSubmit($event)">
+        <h2 class="question-bank-detail__assemble-title">
+          {{ 'rplus.question_banks.detail.assemble.title' | translate }}
+        </h2>
+        <p class="question-bank-detail__hint">
+          {{ 'rplus.question_banks.detail.assemble.help' | translate }}
+        </p>
+
+        @if (assembleError(); as msg) {
+          <div class="question-bank-detail__inline-error" data-testid="qb-assemble-error" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span>{{ msg }}</span>
+          </div>
+        }
+
+        <div class="question-bank-detail__field">
+          <label for="qb-assemble-title" class="question-bank-detail__label">
+            {{ 'rplus.question_banks.detail.assemble.title_label' | translate }}
+          </label>
+          <input
+            id="qb-assemble-title"
+            type="text"
+            class="question-bank-detail__input"
+            data-testid="qb-assemble-title"
+            maxlength="200"
+            [attr.placeholder]="'rplus.question_banks.detail.assemble.title_placeholder' | translate"
+            (input)="onAssembleTitleInput($event)" />
+          @if (assembleAttempted() && !assembleTitleValid()) {
+            <p class="question-bank-detail__field-error" data-testid="qb-assemble-error-title" role="alert">
+              {{ 'rplus.question_banks.detail.assemble.title_required' | translate }}
+            </p>
+          }
+        </div>
+
+        <div class="question-bank-detail__field">
+          <label for="qb-assemble-description" class="question-bank-detail__label">
+            {{ 'rplus.question_banks.detail.assemble.description_label' | translate }}
+          </label>
+          <textarea
+            id="qb-assemble-description"
+            class="question-bank-detail__input question-bank-detail__textarea"
+            data-testid="qb-assemble-description"
+            rows="2"
+            maxlength="500"
+            [attr.placeholder]="'rplus.question_banks.detail.assemble.description_placeholder' | translate"
+            (input)="onAssembleDescriptionInput($event)"></textarea>
+        </div>
+
+        <div class="question-bank-detail__actions">
+          <button type="button" class="btn btn-ghost" data-testid="qb-assemble-cancel" (click)="closeAssemble()">
+            {{ 'rplus.question_banks.detail.assemble.cancel' | translate }}
+          </button>
+          <button type="submit" class="btn btn-primary" data-testid="qb-assemble-submit" [disabled]="assembling()">
+            @if (assembling()) {
+              {{ 'rplus.question_banks.detail.assemble.submitting' | translate }}
+            } @else {
+              {{ 'rplus.question_banks.detail.assemble.submit' | translate }}
+            }
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- ── Add-questions picker (REUSED widget; emits QuestionRef) ────── -->
+    @if (showPicker()) {
+      <div class="question-bank-detail__picker glass-panel" data-testid="qb-picker">
+        <h2 class="question-bank-detail__picker-title">
+          {{ 'rplus.question_banks.detail.picker_title' | translate }}
+        </h2>
+        <chora-aplus-atom-question-picker
+          (pickedQuestion)="onQuestionPicked($event)"
+          (pickedQuestions)="onQuestionsPicked($event)" />
+      </div>
+    }
+
+    <!-- ── Questions list ────────────────────────────────────────────── -->
+    <section class="question-bank-detail__questions" aria-labelledby="qb-questions-heading">
+      <h2 id="qb-questions-heading" class="question-bank-detail__questions-title">
+        {{ 'rplus.question_banks.detail.questions_heading' | translate }}
+      </h2>
+
+      @if (isQuestionsLoading()) {
+        <p class="question-bank-detail__loading glass-panel" data-testid="qb-questions-loading" aria-busy="true">
+          {{ 'rplus.question_banks.detail.questions_loading' | translate }}
+        </p>
+      } @else if (isQuestionsError()) {
+        <div class="question-bank-detail__error glass-panel" data-testid="qb-questions-error" role="alert">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <span>{{ 'rplus.question_banks.detail.questions_error' | translate }}</span>
+          <button type="button" class="btn btn-ghost" data-testid="qb-questions-retry" (click)="retryQuestions()">
+            {{ 'rplus.common.retry' | translate }}
+          </button>
+        </div>
+      } @else if (isQuestionsEmpty()) {
+        <div class="question-bank-detail__empty glass-panel" data-testid="qb-questions-empty" role="status">
+          <i class="fa-solid fa-inbox question-bank-detail__empty-icon" aria-hidden="true"></i>
+          <p class="question-bank-detail__empty-title">
+            {{ 'rplus.question_banks.detail.questions_empty_title' | translate }}
+          </p>
+          <p class="question-bank-detail__empty-body">
+            {{ 'rplus.question_banks.detail.questions_empty_body' | translate }}
+          </p>
+        </div>
+      } @else {
+        <!--
+          R6 D2: the stem IS on the wire. `listQuestions` resolves it by an
+          intra-DB JOIN for exactly this reason, and the FE was dropping it at
+          the type boundary and rendering the opaque id. Render the stem when
+          there is one; when there is not, still show the id but MARKED as an
+          id, so it never reads as the question's name.
+        -->
+        <ul class="question-bank-detail__rows" data-testid="qb-questions" role="list">
+          @for (q of questions(); track q.questionId) {
+            <li class="question-bank-detail__row glass-panel" [attr.data-testid]="'qb-question-' + q.questionId">
+              <div class="question-bank-detail__row-main">
+                <span class="question-bank-detail__row-pos">{{ q.position + 1 }}</span>
+                @if (q.prompt) {
+                  <span
+                    class="question-bank-detail__row-prompt"
+                    [attr.data-testid]="'qb-question-prompt-' + q.questionId">
+                    {{ q.prompt }}
+                  </span>
+                } @else {
+                  <code class="question-bank-detail__row-id is-unresolved">{{ q.questionId }}</code>
+                }
+                @if (q.addedAt) {
+                  <span class="question-bank-detail__row-added">
+                    {{ 'rplus.question_banks.detail.added_label' | translate }}
+                    <time [attr.datetime]="q.addedAt">{{ q.addedAt | date: 'mediumDate' }}</time>
+                  </span>
+                }
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost question-bank-detail__row-remove"
+                [attr.data-testid]="'qb-question-remove-' + q.questionId"
+                [attr.aria-label]="'rplus.question_banks.detail.remove_aria' | translate"
+                [disabled]="removingId() === q.questionId"
+                (click)="removeQuestion(q.questionId)">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                {{ 'rplus.question_banks.detail.remove' | translate }}
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</section>

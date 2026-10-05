@@ -1,0 +1,146 @@
+<section class="dose-prefs" aria-labelledby="dose-prefs-title">
+  <header class="dose-prefs__head">
+    <h1 id="dose-prefs-title" class="dose-prefs__title">
+      {{ 'aplus.dosePrefs.title' | translate }}
+    </h1>
+    <p class="dose-prefs__subtitle">
+      {{ 'aplus.dosePrefs.subtitle' | translate }}
+    </p>
+  </header>
+
+  @if (mapsState().status === 'error' || prefsStatus() === 'error') {
+    <div class="dose-prefs__error" role="alert">
+      <span>{{ 'aplus.dosePrefs.loadError' | translate }}</span>
+      <button type="button" class="dose-prefs__retry" (click)="retry()">
+        {{ 'common.retry' | translate }}
+      </button>
+    </div>
+  } @else if (mapsState().status === 'loading') {
+    <div class="dose-prefs__loading" aria-live="polite">
+      {{ 'common.loading' | translate }}
+    </div>
+  } @else {
+    <!-- Controls: search + filter tabs -->
+    <div class="dose-prefs__controls">
+      <label class="dose-prefs__search">
+        <span class="dose-prefs__search-icon" aria-hidden="true">🔍</span>
+        <input
+          type="search"
+          data-testid="dose-prefs-search"
+          [attr.aria-label]="'aplus.dosePrefs.searchLabel' | translate"
+          [placeholder]="'aplus.dosePrefs.searchPlaceholder' | translate"
+          [value]="query()"
+          (input)="setQuery($any($event.target).value)"
+        />
+      </label>
+
+      <div
+        class="dose-prefs__tabs"
+        role="tablist"
+        [attr.aria-label]="'aplus.dosePrefs.filterLabel' | translate"
+      >
+        @for (tab of ['all', 'in', 'out']; track tab) {
+          <button
+            type="button"
+            role="tab"
+            class="dose-prefs__tab"
+            [class.dose-prefs__tab--active]="filter() === tab"
+            [attr.aria-selected]="filter() === tab"
+            [attr.data-testid]="'dose-prefs-tab-' + tab"
+            (click)="setFilter($any(tab))"
+          >
+            {{ 'aplus.dosePrefs.filter.' + tab | translate }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <p class="dose-prefs__summary" aria-live="polite">
+      {{
+        'aplus.dosePrefs.summary'
+          | translate: { total: roster().length, excluded: excludedCount() }
+      }}
+    </p>
+
+    @if (saveError()) {
+      <p class="dose-prefs__save-error" role="alert">
+        {{ saveError()! | translate }}
+      </p>
+    }
+
+    <!-- Roster -->
+    @if (paged().length === 0) {
+      <p class="dose-prefs__empty">{{ 'aplus.dosePrefs.empty' | translate }}</p>
+    } @else {
+      <ul class="dose-prefs__list" role="list">
+        @for (row of paged(); track row.goalId) {
+          <li class="dose-prefs__row" [class.dose-prefs__row--out]="!row.included">
+            <span class="dose-prefs__map-title">
+              {{ row.title || ('aplus.dosePrefs.untitled' | translate) }}
+            </span>
+            <span
+              class="dose-prefs__state"
+              [class.dose-prefs__state--in]="row.included"
+            >
+              {{
+                (row.included
+                  ? 'aplus.dosePrefs.inDose'
+                  : 'aplus.dosePrefs.excluded'
+                ) | translate
+              }}
+            </span>
+            <button
+              type="button"
+              role="switch"
+              class="dose-prefs__switch"
+              [class.dose-prefs__switch--on]="row.included"
+              [attr.aria-checked]="row.included"
+              [attr.aria-label]="
+                'aplus.dosePrefs.toggleAria'
+                  | translate: { map: row.title || ('aplus.dosePrefs.untitled' | translate) }
+              "
+              [attr.data-testid]="'dose-prefs-toggle-' + row.goalId"
+              [disabled]="savingId() === row.goalId"
+              (click)="toggle(row)"
+            >
+              <span class="dose-prefs__knob" aria-hidden="true"></span>
+            </button>
+          </li>
+        }
+      </ul>
+
+      <!-- Pagination -->
+      @if (pageCount() > 1) {
+        <nav
+          class="dose-prefs__pager"
+          [attr.aria-label]="'aplus.dosePrefs.pagerLabel' | translate"
+        >
+          <button
+            type="button"
+            class="dose-prefs__page-btn"
+            data-testid="dose-prefs-prev"
+            [disabled]="page() === 0"
+            (click)="prevPage()"
+          >
+            ‹ {{ 'common.prev' | translate }}
+          </button>
+          <span class="dose-prefs__page-info">
+            {{
+              'aplus.dosePrefs.pageOf'
+                | translate: { page: page() + 1, count: pageCount() }
+            }}
+          </span>
+          <button
+            type="button"
+            class="dose-prefs__page-btn"
+            data-testid="dose-prefs-next"
+            [disabled]="page() >= pageCount() - 1"
+            (click)="nextPage()"
+          >
+            {{ 'common.next' | translate }} ›
+          </button>
+        </nav>
+      }
+    }
+  }
+</section>

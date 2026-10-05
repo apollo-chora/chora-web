@@ -1,0 +1,638 @@
+<section
+  class="surface-aplus question-bank-detail"
+  data-testid="aplus-question-bank-detail"
+  role="region"
+  aria-labelledby="qb-detail-heading">
+  <header class="question-bank-detail__breadcrumb-bar">
+    <nav
+      class="question-bank-detail__breadcrumb"
+      [attr.aria-label]="'aplus.question_banks.detail.breadcrumb_aria' | translate">
+      <a
+        class="question-bank-detail__breadcrumb-link"
+        data-testid="qb-detail-back"
+        routerLink="/a/studio/question-banks">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        {{ 'aplus.question_banks.detail.back' | translate }}
+      </a>
+    </nav>
+  </header>
+
+  @if (isLoading()) {
+    <p class="question-bank-detail__loading glass-panel" data-testid="qb-detail-loading" aria-busy="true">
+      {{ 'aplus.question_banks.detail.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div class="question-bank-detail__error glass-panel" data-testid="qb-detail-error" role="alert">
+      <i class="fa-solid fa-triangle-exclamation question-bank-detail__error-icon" aria-hidden="true"></i>
+      <p class="question-bank-detail__error-detail">{{ errorKey() | translate }}</p>
+      @if (isNotFound()) {
+        <a class="btn btn-primary" data-testid="qb-detail-notfound-back" routerLink="/a/studio/question-banks">
+          {{ 'aplus.question_banks.detail.back_to_list' | translate }}
+        </a>
+      } @else {
+        <button type="button" class="btn btn-ghost" data-testid="qb-detail-retry" (click)="retry()">
+          {{ 'common.retry' | translate }}
+        </button>
+      }
+    </div>
+  } @else if (bank(); as b) {
+    <!-- ── Bank metadata ─────────────────────────────────────────────── -->
+    <header class="question-bank-detail__head glass-panel">
+      <div class="question-bank-detail__head-main">
+        <h1 id="qb-detail-heading" class="question-bank-detail__name" data-testid="qb-detail-name">
+          {{ b.name }}
+        </h1>
+        @if (b.description) {
+          <p class="question-bank-detail__desc" data-testid="qb-detail-description">{{ b.description }}</p>
+        }
+        @if (b.tags.length > 0) {
+          <ul class="question-bank-detail__tags" data-testid="qb-detail-tags" role="list">
+            @for (tag of b.tags; track tag) {
+              <li class="question-bank-detail__tag">{{ tag }}</li>
+            }
+          </ul>
+        }
+        <p class="question-bank-detail__sub">
+          {{ 'aplus.question_banks.detail.created_label' | translate }}
+          <time [attr.datetime]="b.createdAt">{{ b.createdAt | date: 'mediumDate' }}</time>
+        </p>
+      </div>
+      <div class="question-bank-detail__head-meta">
+        <span class="question-bank-detail__badge" data-testid="qb-detail-visibility">
+          {{ visibilityLabelKey(b.visibility) | translate }}
+        </span>
+        <div class="question-bank-detail__head-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-testid="qb-add-toggle"
+            [attr.aria-expanded]="showPicker()"
+            (click)="toggleAddPicker()">
+            @if (showPicker()) {
+              <i class="fa-solid fa-list-ul" aria-hidden="true"></i>
+              {{ 'aplus.question_banks.detail.see_bank' | translate }}
+            } @else {
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{ 'aplus.question_banks.detail.add_questions' | translate }}
+            }
+          </button>
+          <!-- Hand off to the standalone test-set builder, seeded from this bank
+               (CHO-1980). NOT the R+ inline delivery-assembly form. -->
+          <button
+            type="button"
+            class="btn btn-ghost"
+            data-testid="qb-assemble-into-test-set"
+            (click)="assembleIntoTestSet()">
+            <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+            {{ 'aplus.question_banks.detail.assemble_into_test_set' | translate }}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Add-questions picker (REUSED widget; emits QuestionRef) ────── -->
+    @if (showPicker()) {
+      <div class="question-bank-detail__picker glass-panel" data-testid="qb-picker">
+        <h2 class="question-bank-detail__picker-title">
+          {{ 'aplus.question_banks.detail.picker_title' | translate }}
+        </h2>
+        <chora-aplus-atom-question-picker
+          (pickedQuestion)="onQuestionPicked($event)"
+          (pickedQuestions)="onQuestionsPicked($event)" />
+      </div>
+    }
+
+    <!-- ── Questions list ────────────────────────────────────────────── -->
+    <section class="question-bank-detail__questions" aria-labelledby="qb-questions-heading">
+      <h2 id="qb-questions-heading" class="question-bank-detail__questions-title">
+        {{ 'aplus.question_banks.detail.questions_heading' | translate }}
+      </h2>
+
+      <!-- ── Search / type-filter / sort / page-size (ALL server-side) ──── -->
+      @if (totalQuestions() > 0 || hasActiveFilters()) {
+        <div
+          class="question-bank-detail__controls glass-panel"
+          data-testid="qb-controls"
+          role="group"
+          [attr.aria-label]="'aplus.question_banks.detail.controls_aria' | translate">
+          <div class="question-bank-detail__search">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input
+              type="search"
+              class="question-bank-detail__search-input"
+              data-testid="qb-search"
+              [value]="searchDraft()"
+              [attr.placeholder]="'aplus.question_banks.detail.search_placeholder' | translate"
+              [attr.aria-label]="'aplus.question_banks.detail.search_aria' | translate"
+              (input)="onSearchInput($event)" />
+          </div>
+          <div
+            class="question-bank-detail__type-filters"
+            role="group"
+            [attr.aria-label]="'aplus.question_banks.detail.type_filter_aria' | translate">
+            <button
+              type="button"
+              class="question-bank-detail__type-btn"
+              data-testid="qb-type-mcq"
+              [class.is-active]="isTypeActive('mcq')"
+              [attr.aria-pressed]="isTypeActive('mcq')"
+              (click)="toggleType('mcq')">
+              MCQ
+            </button>
+            <button
+              type="button"
+              class="question-bank-detail__type-btn"
+              data-testid="qb-type-oe"
+              [class.is-active]="isTypeActive('oe')"
+              [attr.aria-pressed]="isTypeActive('oe')"
+              (click)="toggleType('oe')">
+              OE
+            </button>
+          </div>
+          <label class="question-bank-detail__control-field">
+            <span class="question-bank-detail__control-label">
+              {{ 'aplus.question_banks.detail.sort.label' | translate }}
+            </span>
+            <select
+              class="question-bank-detail__select"
+              data-testid="qb-sort"
+              [value]="sortValue()"
+              (change)="onSortChange($event)">
+              @for (opt of sortOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+              }
+            </select>
+          </label>
+          <label class="question-bank-detail__control-field">
+            <span class="question-bank-detail__control-label">
+              {{ 'aplus.question_banks.detail.page_size_label' | translate }}
+            </span>
+            <select
+              class="question-bank-detail__select"
+              data-testid="qb-page-size"
+              [value]="pageSize()"
+              (change)="onPageSizeChange($event)">
+              @for (n of pageSizeOptions; track n) {
+                <option [value]="n">{{ n }}</option>
+              }
+            </select>
+          </label>
+          @if (hasActiveFilters()) {
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="qb-clear-filters"
+              (click)="clearFilters()">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              {{ 'aplus.question_banks.detail.clear_filters' | translate }}
+            </button>
+          }
+          <span class="question-bank-detail__result-count" data-testid="qb-result-count">
+            {{ totalQuestions() }} {{ 'aplus.question_banks.detail.results_label' | translate }}
+          </span>
+        </div>
+      }
+
+      @if (isQuestionsLoading()) {
+        <p class="question-bank-detail__loading glass-panel" data-testid="qb-questions-loading" aria-busy="true">
+          {{ 'aplus.question_banks.detail.questions_loading' | translate }}
+        </p>
+      } @else if (isQuestionsError()) {
+        <div class="question-bank-detail__error glass-panel" data-testid="qb-questions-error" role="alert">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <span>{{ 'aplus.question_banks.detail.questions_error' | translate }}</span>
+          <button type="button" class="btn btn-ghost" data-testid="qb-questions-retry" (click)="retryQuestions()">
+            {{ 'common.retry' | translate }}
+          </button>
+        </div>
+      } @else if (isQuestionsEmpty()) {
+        <div class="question-bank-detail__empty glass-panel" data-testid="qb-questions-empty" role="status">
+          <i class="fa-solid fa-inbox question-bank-detail__empty-icon" aria-hidden="true"></i>
+          @if (isFilteredEmpty()) {
+            <p class="question-bank-detail__empty-title" data-testid="qb-no-matches">
+              {{ 'aplus.question_banks.detail.no_matches_title' | translate }}
+            </p>
+            <p class="question-bank-detail__empty-body">
+              {{ 'aplus.question_banks.detail.no_matches_body' | translate }}
+            </p>
+            <button type="button" class="btn btn-ghost" data-testid="qb-no-matches-clear" (click)="clearFilters()">
+              {{ 'aplus.question_banks.detail.clear_filters' | translate }}
+            </button>
+          } @else {
+            <p class="question-bank-detail__empty-title">
+              {{ 'aplus.question_banks.detail.questions_empty_title' | translate }}
+            </p>
+            <p class="question-bank-detail__empty-body">
+              {{ 'aplus.question_banks.detail.questions_empty_body' | translate }}
+            </p>
+          }
+        </div>
+      } @else {
+        <!--
+          BE membership rows carry only refs ({question_id, position, added_at})
+          — no title/stem on the wire. We render the ref honestly (no fabricated
+          title); BE enrichment of /questions would let this show titles later.
+        -->
+        @if (selectedCount() > 0) {
+          <div
+            class="question-bank-detail__bulk-bar glass-panel"
+            data-testid="qb-bulk-bar"
+            role="group"
+            [attr.aria-label]="'aplus.question_banks.detail.bulk_aria' | translate">
+            <span class="question-bank-detail__bulk-count" data-testid="qb-bulk-count">
+              {{ selectedCount() }} {{ 'aplus.question_banks.detail.bulk_selected' | translate }}
+            </span>
+            <div class="question-bank-detail__bulk-actions">
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="qb-bulk-clear"
+                [disabled]="bulkRemoving()"
+                (click)="clearSelection()">
+                {{ 'aplus.question_banks.detail.bulk_clear' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn question-bank-detail__bulk-remove"
+                data-testid="qb-bulk-remove"
+                [disabled]="bulkRemoving()"
+                (click)="bulkRemove()">
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                {{ 'aplus.question_banks.detail.bulk_remove_cta' | translate }}
+              </button>
+            </div>
+          </div>
+        }
+        <ul
+          class="question-bank-detail__rows"
+          data-testid="qb-questions"
+          role="list"
+          cdkDropList
+          (cdkDropListDropped)="drop($event)">
+          @for (q of questions(); track q.questionId; let i = $index) {
+            <li
+              class="question-bank-detail__row glass-panel"
+              [attr.data-testid]="'qb-question-' + q.questionId"
+              cdkDrag
+              [cdkDragDisabled]="!canReorder() || reordering()">
+              <div class="question-bank-detail__row-head">
+                <div class="question-bank-detail__row-main">
+                  @if (canReorder()) {
+                    <button
+                      type="button"
+                      class="question-bank-detail__drag-handle"
+                      cdkDragHandle
+                      [attr.data-testid]="'qb-question-drag-' + q.questionId"
+                      [attr.aria-label]="'aplus.question_banks.detail.reorder.drag_aria' | translate">
+                      <i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>
+                    </button>
+                  }
+                  <input
+                    type="checkbox"
+                    class="question-bank-detail__row-check"
+                    [attr.data-testid]="'qb-question-select-' + q.questionId"
+                    [attr.aria-label]="'aplus.question_banks.detail.select_aria' | translate"
+                    [checked]="isQuestionSelected(q.questionId)"
+                    [disabled]="bulkRemoving()"
+                    (change)="toggleQuestionSelected(q.questionId)" />
+                  <span class="question-bank-detail__row-pos">{{ rowOffset() + i + 1 }}</span>
+                  @if (q.questionType) {
+                    <span
+                      class="question-bank-detail__row-type"
+                      [attr.data-question-type]="q.questionType"
+                      [attr.data-testid]="'qb-question-type-' + q.questionId">
+                      {{ q.questionType }}
+                    </span>
+                  }
+                  <span
+                    class="question-bank-detail__row-prompt"
+                    [attr.data-testid]="'qb-question-prompt-' + q.questionId"
+                    [title]="q.prompt || q.questionId">
+                    {{ q.prompt || q.questionId }}
+                  </span>
+                  @if (q.addedAt) {
+                    <span class="question-bank-detail__row-added">
+                      {{ 'aplus.question_banks.detail.added_label' | translate }}
+                      <time [attr.datetime]="q.addedAt">{{ q.addedAt | date: 'mediumDate' }}</time>
+                    </span>
+                  }
+                </div>
+                <div class="question-bank-detail__row-actions">
+                  @if (canReorder()) {
+                    <button
+                      type="button"
+                      class="question-bank-detail__icon-btn"
+                      [attr.data-testid]="'qb-question-up-' + q.questionId"
+                      [attr.aria-label]="'aplus.question_banks.detail.reorder.up_aria' | translate"
+                      [disabled]="!canMoveUp(i)"
+                      (click)="moveUp(i)">
+                      <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="question-bank-detail__icon-btn"
+                      [attr.data-testid]="'qb-question-down-' + q.questionId"
+                      [attr.aria-label]="'aplus.question_banks.detail.reorder.down_aria' | translate"
+                      [disabled]="!canMoveDown(i)"
+                      (click)="moveDown(i)">
+                      <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="btn btn-ghost"
+                    [attr.data-testid]="'qb-question-preview-' + q.questionId"
+                    [attr.aria-expanded]="isPanelOpen(q.atomId, 'preview')"
+                    (click)="openPreview(q.atomId)">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    {{ 'aplus.question_banks.detail.preview.cta' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-ghost"
+                    [attr.data-testid]="'qb-question-edit-' + q.questionId"
+                    [attr.aria-expanded]="isPanelOpen(q.atomId, 'edit')"
+                    (click)="openEdit(q.atomId)">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                    {{ 'aplus.question_banks.detail.edit.cta' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-ghost"
+                    [attr.data-testid]="'qb-question-tags-' + q.questionId"
+                    [attr.aria-expanded]="isPanelOpen(q.atomId, 'tags')"
+                    (click)="openTags(q.atomId)">
+                    <i class="fa-solid fa-tags" aria-hidden="true"></i>
+                    {{ 'aplus.question_banks.detail.tags.cta' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-ghost"
+                    [attr.data-testid]="'qb-question-clone-' + q.questionId"
+                    [disabled]="cloningId() === q.atomId"
+                    (click)="cloneAtom(q.atomId)">
+                    <i class="fa-solid fa-clone" aria-hidden="true"></i>
+                    {{ 'aplus.question_banks.detail.clone.cta' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-ghost question-bank-detail__row-remove"
+                    [attr.data-testid]="'qb-question-remove-' + q.questionId"
+                    [attr.aria-label]="'aplus.question_banks.detail.remove_aria' | translate"
+                    [disabled]="removingId() === q.questionId"
+                    (click)="removeQuestion(q.questionId)">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    {{ 'aplus.question_banks.detail.remove' | translate }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- ── Inline preview panel (W2.B; AUTHOR review — answer key) ── -->
+              @if (isPanelOpen(q.atomId, 'preview')) {
+                <div class="question-bank-detail__panel" data-testid="qb-preview-panel">
+                  @if (previewState() === 'loading') {
+                    <p class="question-bank-detail__panel-loading" data-testid="qb-preview-loading" aria-busy="true">
+                      {{ 'aplus.question_banks.detail.preview.loading' | translate }}
+                    </p>
+                  } @else if (previewState() === 'error') {
+                    <p class="question-bank-detail__panel-error" data-testid="qb-preview-error" role="alert">
+                      {{ 'aplus.question_banks.detail.preview.error' | translate }}
+                    </p>
+                  } @else if (previewReview(); as review) {
+                    <div data-testid="qb-preview-content">
+                      <!-- Full question stem (untruncated) — the review component
+                           renders options/answers but not the prompt. -->
+                      @if (q.prompt) {
+                        <p class="question-bank-detail__preview-prompt" data-testid="qb-preview-prompt">
+                          {{ q.prompt }}
+                        </p>
+                      }
+                      <chora-question-review [review]="review" testIdPrefix="qb-preview" />
+                    </div>
+                  }
+                  <div class="question-bank-detail__panel-actions">
+                    <button type="button" class="btn btn-ghost" data-testid="qb-preview-close" (click)="closePanel()">
+                      {{ 'aplus.question_banks.detail.panel_close' | translate }}
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- ── Inline quick-edit panel (W2.C; mints a new revision) ── -->
+              @if (isPanelOpen(q.atomId, 'edit')) {
+                <div class="question-bank-detail__panel" data-testid="qb-edit-panel">
+                  @if (editState() === 'loading') {
+                    <p class="question-bank-detail__panel-loading" data-testid="qb-edit-loading" aria-busy="true">
+                      {{ 'aplus.question_banks.detail.edit.loading' | translate }}
+                    </p>
+                  } @else if (editState() === 'error') {
+                    <p class="question-bank-detail__panel-error" data-testid="qb-edit-error" role="alert">
+                      {{ 'aplus.question_banks.detail.edit.error' | translate }}
+                    </p>
+                  } @else if (editModel(); as m) {
+                    <p class="question-bank-detail__revision-note" data-testid="qb-edit-revision-note">
+                      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                      {{ 'aplus.question_banks.detail.edit.revision_note' | translate }}
+                    </p>
+                    <chora-question-editor
+                      [question]="m"
+                      (questionChange)="editModel.set($event)"
+                      testIdPrefix="qb-edit">
+                      <!-- Stem illustration projected so the author SEES the
+                           image while quick-editing (parity with batch edit),
+                           with a Remove affordance — staged here, cleared on
+                           Save (CHO-1974). -->
+                      @if (showEditQuestionImage() || editQuestionImageRemoved()) {
+                        <div stemMedia class="question-bank-detail__edit-media" data-testid="qb-edit-stem-media">
+                          @if (showEditQuestionImage()) {
+                            <chora-question-image
+                              [src]="editQuestionImageUrl()"
+                              alt="Question illustration"
+                              testIdPrefix="qb-edit-image" />
+                            <button
+                              type="button"
+                              class="btn btn-ghost question-bank-detail__edit-media-remove"
+                              data-testid="qb-edit-remove-image"
+                              (click)="removeEditQuestionImage()">
+                              <i class="fa-solid fa-image-slash" aria-hidden="true"></i>
+                              {{ 'aplus.question_banks.detail.edit.remove_image' | translate }}
+                            </button>
+                          } @else {
+                            <p class="question-bank-detail__edit-media-note" data-testid="qb-edit-image-removed-note">
+                              {{ 'aplus.question_banks.detail.edit.image_removed' | translate }}
+                              <button
+                                type="button"
+                                class="btn btn-ghost question-bank-detail__edit-media-undo"
+                                data-testid="qb-edit-undo-remove-image"
+                                (click)="undoRemoveEditQuestionImage()">
+                                {{ 'aplus.question_banks.detail.edit.undo_remove' | translate }}
+                              </button>
+                            </p>
+                          }
+                        </div>
+                      }
+                      <!-- Model-answer illustration + its Remove (answerMedia slot). -->
+                      @if (showEditAnswerImage() || editAnswerImageRemoved()) {
+                        <div answerMedia class="question-bank-detail__edit-media" data-testid="qb-edit-answer-media">
+                          @if (showEditAnswerImage()) {
+                            <chora-question-image
+                              [src]="editAnswerImageUrl()"
+                              alt="Model answer illustration"
+                              testIdPrefix="qb-edit-answer-image" />
+                            <button
+                              type="button"
+                              class="btn btn-ghost question-bank-detail__edit-media-remove"
+                              data-testid="qb-edit-remove-answer-image"
+                              (click)="removeEditAnswerImage()">
+                              <i class="fa-solid fa-image-slash" aria-hidden="true"></i>
+                              {{ 'aplus.question_banks.detail.edit.remove_answer_image' | translate }}
+                            </button>
+                          } @else {
+                            <p class="question-bank-detail__edit-media-note" data-testid="qb-edit-answer-image-removed-note">
+                              {{ 'aplus.question_banks.detail.edit.answer_image_removed' | translate }}
+                              <button
+                                type="button"
+                                class="btn btn-ghost question-bank-detail__edit-media-undo"
+                                data-testid="qb-edit-undo-remove-answer-image"
+                                (click)="undoRemoveEditAnswerImage()">
+                                {{ 'aplus.question_banks.detail.edit.undo_remove' | translate }}
+                              </button>
+                            </p>
+                          }
+                        </div>
+                      }
+                    </chora-question-editor>
+                    <div class="question-bank-detail__panel-actions">
+                      <button type="button" class="btn btn-ghost" data-testid="qb-edit-cancel" (click)="closePanel()">
+                        {{ 'aplus.question_banks.detail.edit.cancel' | translate }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        data-testid="qb-edit-save"
+                        [disabled]="!editValid() || editSaving()"
+                        (click)="saveEdit()">
+                        @if (editSaving()) {
+                          {{ 'aplus.question_banks.detail.edit.saving' | translate }}
+                        } @else {
+                          {{ 'aplus.question_banks.detail.edit.save' | translate }}
+                        }
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- ── Inline tags/subject panel (W2.D; ADR-156 atom meta) ── -->
+              @if (isPanelOpen(q.atomId, 'tags')) {
+                <div class="question-bank-detail__panel" data-testid="qb-tags-panel">
+                  @if (metaState() === 'loading') {
+                    <p class="question-bank-detail__panel-loading" data-testid="qb-tags-loading" aria-busy="true">
+                      {{ 'aplus.question_banks.detail.tags.loading' | translate }}
+                    </p>
+                  } @else if (metaState() === 'error') {
+                    <p class="question-bank-detail__panel-error" data-testid="qb-tags-error" role="alert">
+                      {{ 'aplus.question_banks.detail.tags.error' | translate }}
+                    </p>
+                  } @else {
+                    <div class="question-bank-detail__field">
+                      <label for="qb-tags-subject" class="question-bank-detail__label">
+                        {{ 'aplus.question_banks.detail.tags.subject_label' | translate }}
+                      </label>
+                      <input
+                        id="qb-tags-subject"
+                        type="text"
+                        class="question-bank-detail__input"
+                        data-testid="qb-tags-subject"
+                        maxlength="64"
+                        [value]="metaSubject()"
+                        [attr.placeholder]="'aplus.question_banks.detail.tags.subject_placeholder' | translate"
+                        (input)="onMetaSubjectInput($event)" />
+                    </div>
+                    <div class="question-bank-detail__field">
+                      <label for="qb-tags-input" class="question-bank-detail__label">
+                        {{ 'aplus.question_banks.detail.tags.tags_label' | translate }}
+                      </label>
+                      @if (metaTags().length > 0) {
+                        <ul class="question-bank-detail__chips" data-testid="qb-tags-chips" role="list">
+                          @for (tag of metaTags(); track tag) {
+                            <li class="question-bank-detail__chip">
+                              <span>{{ tag }}</span>
+                              <button
+                                type="button"
+                                class="question-bank-detail__chip-x"
+                                [attr.data-testid]="'qb-tags-chip-remove-' + tag"
+                                [attr.aria-label]="'aplus.question_banks.detail.tags.remove_tag_aria' | translate"
+                                (click)="removeMetaTag(tag)">
+                                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                              </button>
+                            </li>
+                          }
+                        </ul>
+                      }
+                      <input
+                        id="qb-tags-input"
+                        type="text"
+                        class="question-bank-detail__input"
+                        data-testid="qb-tags-input"
+                        [value]="metaTagDraft()"
+                        [attr.placeholder]="'aplus.question_banks.detail.tags.tags_placeholder' | translate"
+                        (input)="onMetaTagDraftInput($event)"
+                        (keydown)="onMetaTagKeydown($event)" />
+                    </div>
+                    <div class="question-bank-detail__panel-actions">
+                      <button type="button" class="btn btn-ghost" data-testid="qb-tags-cancel" (click)="closePanel()">
+                        {{ 'aplus.question_banks.detail.tags.cancel' | translate }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        data-testid="qb-tags-save"
+                        [disabled]="metaSaving()"
+                        (click)="saveMeta()">
+                        @if (metaSaving()) {
+                          {{ 'aplus.question_banks.detail.tags.saving' | translate }}
+                        } @else {
+                          {{ 'aplus.question_banks.detail.tags.save' | translate }}
+                        }
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </li>
+          }
+        </ul>
+
+        @if (totalPages() > 1) {
+          <nav
+            class="question-bank-detail__pagination"
+            data-testid="qb-pagination"
+            [attr.aria-label]="'aplus.question_banks.detail.pagination.aria' | translate">
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="qb-page-prev"
+              [disabled]="!hasPrevPage() || reloadingQuestions()"
+              (click)="prevPage()">
+              <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              {{ 'aplus.question_banks.detail.pagination.prev' | translate }}
+            </button>
+            <span class="question-bank-detail__pagination-status" data-testid="qb-page-status">
+              {{ pageStatus() }}
+            </span>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="qb-page-next"
+              [disabled]="!hasNextPage() || reloadingQuestions()"
+              (click)="nextPage()">
+              {{ 'aplus.question_banks.detail.pagination.next' | translate }}
+              <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            </button>
+          </nav>
+        }
+      }
+    </section>
+  }
+</section>

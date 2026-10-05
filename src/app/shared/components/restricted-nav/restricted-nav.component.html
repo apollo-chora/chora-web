@@ -1,0 +1,32 @@
+<nav
+  class="restricted-nav"
+  role="navigation"
+  [attr.aria-label]="'navigation.main_nav' | translate"
+  data-testid="restricted-nav">
+  <ul class="restricted-nav__list" role="list">
+    @for (item of visibleItems(); track item.route) {
+      <li
+        [class]="itemClass(item.route)"
+        role="listitem"
+        data-testid="nav-item">
+        <button
+          type="button"
+          class="restricted-nav__button"
+          [class.restricted-nav__button--disabled]="isRestricted(item.route)"
+          [disabled]="isRestricted(item.route)"
+          [attr.aria-label]="(item.label_key | translate) + (isRestricted(item.route) ? ' - ' + ('governance.restricted' | translate) : '')"
+          [attr.title]="isRestricted(item.route) ? getRestrictionReason(item.route) : null"
+          (click)="onNavigate(item.route)">
+          <span class="restricted-nav__icon" aria-hidden="true">{{ item.icon }}</span>
+          <span class="restricted-nav__label">{{ item.label_key | translate }}</span>
+          @if (isRestricted(item.route)) {
+            <span class="restricted-nav__lock" aria-hidden="true">&#128274;</span>
+            <span class="restricted-nav__tooltip" role="tooltip">
+              {{ getRestrictionReason(item.route) }}
+            </span>
+          }
+        </button>
+      </li>
+    }
+  </ul>
+</nav>

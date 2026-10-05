@@ -1,0 +1,126 @@
+<section
+  class="atom-editor-split-pane"
+  [attr.aria-label]="'admin.editor.title' | translate"
+  data-testid="atom-editor-split-pane">
+
+  <!-- Header -->
+  <header class="atom-editor-split-pane__header">
+    <h1 class="atom-editor-split-pane__title" data-testid="editor-title">
+      {{ 'admin.editor.title' | translate }}
+    </h1>
+    <div class="atom-editor-split-pane__header-actions">
+      @if (isDirty()) {
+        <span class="atom-editor-split-pane__dirty-badge" role="status" aria-live="polite" data-testid="dirty-badge">
+          {{ 'admin.editor.unsaved-changes' | translate }}
+        </span>
+      }
+      <button
+        type="button"
+        class="atom-editor-split-pane__save-btn"
+        [disabled]="!isDirty() || saveState().status === 'saving'"
+        (click)="onSave()"
+        data-testid="save-btn"
+        [attr.aria-label]="'admin.editor.save' | translate">
+        @if (saveState().status === 'saving') {
+          {{ 'admin.editor.saving' | translate }}
+        } @else {
+          {{ 'admin.editor.save' | translate }}
+        }
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  @if (editorState().status === 'loading') {
+    <div class="atom-editor-split-pane__loading" data-testid="editor-loading" role="status" aria-live="polite">
+      <div class="atom-editor-split-pane__skeleton atom-editor-split-pane__skeleton--tall"></div>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (editorState().status === 'error') {
+    <div class="atom-editor-split-pane__error" data-testid="editor-error" role="alert">
+      <p class="atom-editor-split-pane__error-text">
+        {{ 'admin.editor.load-error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Editor content -->
+  @if (editorState().status === 'success') {
+    <!-- Toolbar -->
+    <div class="atom-editor-split-pane__toolbar" role="toolbar" [attr.aria-label]="'admin.editor.toolbar' | translate">
+      <div class="atom-editor-split-pane__tab-group" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          class="atom-editor-split-pane__tab"
+          [class.atom-editor-split-pane__tab--active]="activeTab() === 'edit'"
+          [attr.aria-selected]="activeTab() === 'edit'"
+          (click)="setActiveTab('edit')"
+          data-testid="tab-edit">
+          {{ 'admin.editor.tab-edit' | translate }}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="atom-editor-split-pane__tab"
+          [class.atom-editor-split-pane__tab--active]="activeTab() === 'preview'"
+          [attr.aria-selected]="activeTab() === 'preview'"
+          (click)="setActiveTab('preview')"
+          data-testid="tab-preview">
+          {{ 'admin.editor.tab-preview' | translate }}
+        </button>
+      </div>
+      <div class="atom-editor-split-pane__insert-actions">
+        <button
+          type="button"
+          class="atom-editor-split-pane__insert-btn"
+          (click)="onInsertLatex()"
+          [attr.aria-label]="'admin.editor.insert-latex' | translate"
+          data-testid="insert-latex-btn">
+          {{ 'admin.editor.latex' | translate }}
+        </button>
+        <button
+          type="button"
+          class="atom-editor-split-pane__insert-btn"
+          (click)="onInsertCode()"
+          [attr.aria-label]="'admin.editor.insert-code' | translate"
+          data-testid="insert-code-btn">
+          {{ 'admin.editor.code' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Split pane -->
+    <div class="atom-editor-split-pane__panes">
+      <!-- Editor pane -->
+      <div class="atom-editor-split-pane__editor-pane"
+        [class.atom-editor-split-pane__editor-pane--hidden]="activeTab() === 'preview'"
+        role="tabpanel">
+        <label for="atom-content-editor" class="atom-editor-split-pane__editor-label">
+          {{ 'admin.editor.content-label' | translate }}
+        </label>
+        <textarea
+          id="atom-content-editor"
+          class="atom-editor-split-pane__textarea"
+          [value]="editorContent()"
+          (input)="onContentInput($event)"
+          [attr.placeholder]="'admin.editor.content-placeholder' | translate"
+          data-testid="content-textarea"
+          spellcheck="true"
+          rows="20">
+        </textarea>
+      </div>
+
+      <!-- Preview pane -->
+      <div class="atom-editor-split-pane__preview-pane"
+        [class.atom-editor-split-pane__preview-pane--hidden]="activeTab() === 'edit'"
+        role="tabpanel"
+        aria-label="Content preview"
+        data-testid="preview-pane">
+        <div class="atom-editor-split-pane__preview-content" [innerHTML]="previewHtml()"></div>
+      </div>
+    </div>
+  }
+</section>

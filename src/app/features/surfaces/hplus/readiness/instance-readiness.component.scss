@@ -1,0 +1,162 @@
+// =====================================================================
+// H+ S1, instance readiness (/h/ready). UX refactor Phase E, package E2.
+// Tablet-first (>=768px primary, >=1280px desktop enhanced).
+// Polyglassmorphism tokens; .surface-hplus accent applied on the root.
+//
+// The three status treatments are the design point. `attention` is the only
+// one that reads as work to do; `unknown` is deliberately NEUTRAL, not a
+// second red, because it means the check could not run and an operator has
+// nothing to act on. Giving it a warning colour would send someone to fix
+// billing when the truth is that nobody can look at it.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.instance-readiness {
+  display: block;
+  padding: 1.5rem;
+  min-height: 100%;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1280px;
+    margin-inline: auto;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__crumb-active {
+    color: var(--chora-color-text-primary);
+  }
+
+  &__header h1 {
+    margin: 0;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__tagline {
+    margin: 0.25rem 0 0;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__loading,
+  &__partial,
+  &__next {
+    padding: 1rem;
+  }
+
+  &__error {
+    padding: 1rem;
+    border-left: 4px solid var(--chora-color-danger);
+  }
+
+  &__next h2 {
+    margin: 0 0 0.4rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__next-text {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__tally {
+    margin: 0;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__parts {
+    margin: 0.4rem 0 0;
+    padding-inline-start: 1.1rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__row {
+    padding: 0.9rem 1rem;
+    border-left: 4px solid var(--glass-border);
+
+    &.is-ok {
+      border-left-color: var(--chora-color-success);
+    }
+
+    // The only treatment that reads as work to do.
+    &.is-attention {
+      border-left-color: var(--chora-color-accent-coral-fill);
+    }
+
+    // Neutral on purpose. See the header note.
+    &.is-unknown {
+      border-left-color: var(--chora-color-text-muted);
+    }
+  }
+
+  &__row-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+
+  &__row-label {
+    font-weight: 600;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__row-count {
+    font-variant-numeric: tabular-nums;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__row-verdict {
+    margin-inline-start: auto;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__row-detail {
+    margin: 0.35rem 0 0;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__row-reason,
+  &__row-gap {
+    margin: 0.35rem 0 0;
+    font-size: 0.85rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__links {
+    display: flex;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .instance-readiness {
+    padding: 2rem;
+  }
+}

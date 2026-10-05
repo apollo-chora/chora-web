@@ -1,0 +1,156 @@
+<section class="surface-hplus go-live" data-testid="go-live-check">
+  <main class="go-live__main">
+    <nav class="go-live__breadcrumb" [attr.aria-label]="'hplus.golive.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.golive.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="go-live__crumb-active">{{ 'hplus.golive.breadcrumbCurrent' | translate }}</span>
+    </nav>
+
+    <header class="go-live__header">
+      <h1>{{ 'hplus.golive.heading' | translate }}</h1>
+      <p class="go-live__tagline">{{ 'hplus.golive.tagline' | translate }}</p>
+    </header>
+
+    @switch (state().status) {
+      @case ('loading') {
+        <div class="glass-panel go-live__loading" role="status" aria-busy="true" data-loading>
+          {{ 'hplus.golive.loading' | translate }}
+        </div>
+      }
+      @case ('error') {
+        <div class="glass-panel go-live__error" role="alert" data-error>
+          <p>{{ errorKey() | translate }}</p>
+          <button type="button" class="btn btn-primary" data-retry (click)="retry()">
+            {{ 'hplus.golive.retry' | translate }}
+          </button>
+        </div>
+      }
+      @case ('success') {
+        <!--
+          The tally. Unknown rows are outside the fraction on purpose: the
+          denominator is the number of checks that could actually run.
+        -->
+        <div class="glass-panel go-live__tally">
+          <p class="go-live__tally-line">
+            <strong data-pass-count>{{ passCount() }}</strong>
+            {{ 'hplus.golive.ofChecks' | translate }}
+            <strong data-checkable-count>{{ checkableCount() }}</strong>
+            {{ 'hplus.golive.checksPass' | translate }}
+          </p>
+          @if (unknownCount() > 0) {
+            <p class="go-live__tally-unknown">
+              <strong data-unknown-count>{{ unknownCount() }}</strong>
+              {{ 'hplus.golive.cannotBeChecked' | translate }}
+            </p>
+          }
+
+          <!--
+            All clear needs nothing blocking AND nothing unchecked. An
+            instance with a permanently uncheckable row never reaches it,
+            which is correct: there is no basis to vouch for that row.
+          -->
+          @if (allClear()) {
+            <p class="go-live__verdict is-clear" data-all-clear>
+              {{ 'hplus.golive.allClear' | translate }}
+            </p>
+          }
+          @if (clearExceptUnchecked()) {
+            <p class="go-live__verdict is-caveated" data-clear-except-unchecked>
+              {{ 'hplus.golive.clearExceptUnchecked' | translate }}
+            </p>
+          }
+        </div>
+
+        @if (nextAction()) {
+          <div class="glass-panel go-live__next" data-next-action>
+            <h2>{{ 'hplus.golive.nextActionHeading' | translate }}</h2>
+            <p class="go-live__next-text">{{ nextAction() }}</p>
+          </div>
+        }
+
+        @if (partial()) {
+          <div class="glass-panel go-live__partial" role="status" data-partial-banner>
+            <p>{{ 'hplus.golive.partial' | translate }}</p>
+            <ul class="go-live__parts">
+              @for (part of failedParts(); track part) {
+                <li>{{ part }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (blockers().length > 0) {
+          <section class="go-live__group" data-blockers>
+            <h2>{{ 'hplus.golive.blockersHeading' | translate }}</h2>
+            <ul class="go-live__rows">
+              @for (r of blockers(); track r.key) {
+                <li
+                  class="glass-panel go-live__row is-attention"
+                  [attr.data-row]="r.key"
+                  [attr.data-status]="r.status">
+                  <span class="go-live__row-label">{{ r.label }}</span>
+                  @if (hasCount(r)) {
+                    <span class="go-live__row-count" data-count>{{ r.count }}</span>
+                  }
+                  @if (r.detail) {
+                    <p class="go-live__row-detail">{{ r.detail }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        <!--
+          Not a second red. These rows carry a reason instead of a verdict,
+          and they are scored in neither direction.
+        -->
+        @if (uncheckable().length > 0) {
+          <section class="go-live__group" data-uncheckable>
+            <h2>{{ 'hplus.golive.uncheckableHeading' | translate }}</h2>
+            <ul class="go-live__rows">
+              @for (r of uncheckable(); track r.key) {
+                <li
+                  class="glass-panel go-live__row is-unknown"
+                  [attr.data-row]="r.key"
+                  [attr.data-status]="r.status">
+                  <span class="go-live__row-label">{{ r.label }}</span>
+                  @if (r.reason) {
+                    <p class="go-live__row-reason">{{ r.reason }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (cleared().length > 0) {
+          <section class="go-live__group" data-cleared>
+            <h2>{{ 'hplus.golive.clearedHeading' | translate }}</h2>
+            <ul class="go-live__rows">
+              @for (r of cleared(); track r.key) {
+                <li
+                  class="glass-panel go-live__row is-ok"
+                  [attr.data-row]="r.key"
+                  [attr.data-status]="r.status">
+                  <span class="go-live__row-label">{{ r.label }}</span>
+                  @if (hasCount(r)) {
+                    <span class="go-live__row-count" data-count>{{ r.count }}</span>
+                  }
+                  @if (r.detail) {
+                    <p class="go-live__row-detail">{{ r.detail }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        <nav class="go-live__links" aria-label="Related screens">
+          <a routerLink="/h/ready">{{ 'hplus.golive.readyLink' | translate }}</a>
+          <a routerLink="/h/tenant">{{ 'hplus.golive.tenantLink' | translate }}</a>
+        </nav>
+      }
+    }
+  </main>
+</section>

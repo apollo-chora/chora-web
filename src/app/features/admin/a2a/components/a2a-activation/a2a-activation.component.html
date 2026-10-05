@@ -1,0 +1,165 @@
+<section class="a2a-activation" data-testid="a2a-activation" aria-labelledby="a2a-activation-title">
+  <!-- Header -->
+  <header class="a2a-activation__header">
+    <h2 id="a2a-activation-title" class="a2a-activation__title">
+      {{ 'a2a.activation.title' | translate }}
+    </h2>
+    <p class="a2a-activation__subtitle">
+      {{ 'a2a.activation.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Feature description card -->
+  <div class="a2a-activation__feature-card" role="region" aria-labelledby="a2a-feature-heading">
+    <div class="a2a-activation__feature-icon" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    </div>
+    <div class="a2a-activation__feature-content">
+      <h3 id="a2a-feature-heading" class="a2a-activation__feature-title">
+        {{ 'a2a.activation.feature_title' | translate }}
+      </h3>
+      <p class="a2a-activation__feature-desc">
+        {{ 'a2a.activation.feature_description' | translate }}
+      </p>
+      <ul class="a2a-activation__feature-list" role="list">
+        <li>{{ 'a2a.activation.feature_cross_org' | translate }}</li>
+        <li>{{ 'a2a.activation.feature_consent' | translate }}</li>
+        <li>{{ 'a2a.activation.feature_dns' | translate }}</li>
+        <li>{{ 'a2a.activation.feature_rate_limit' | translate }}</li>
+      </ul>
+    </div>
+    <div class="a2a-activation__pricing">
+      <span class="a2a-activation__pricing-label">{{ 'a2a.activation.pricing_label' | translate }}</span>
+      <span class="a2a-activation__pricing-value">{{ 'a2a.activation.pricing_value' | translate }}</span>
+    </div>
+  </div>
+
+  <!-- Toggle -->
+  <div class="a2a-activation__toggle-row">
+    <label class="a2a-activation__toggle-label" for="a2a-toggle">
+      {{ 'a2a.activation.enable_label' | translate }}
+    </label>
+    <button
+      id="a2a-toggle"
+      type="button"
+      role="switch"
+      class="a2a-activation__toggle"
+      [class.a2a-activation__toggle--active]="isEnabled()"
+      [attr.aria-checked]="isEnabled()"
+      [attr.aria-label]="'a2a.activation.toggle_aria' | translate"
+      [disabled]="isSaving()"
+      (click)="toggleAddOn()"
+      (keydown.enter)="toggleAddOn()"
+      (keydown.space)="$event.preventDefault(); toggleAddOn()">
+      <span class="a2a-activation__toggle-knob"></span>
+    </button>
+    @if (isSaving()) {
+      <span class="a2a-activation__saving" role="status" aria-live="polite">
+        {{ 'a2a.activation.saving' | translate }}
+      </span>
+    }
+  </div>
+
+  <!-- Partner allow-list configuration (only when enabled) -->
+  @if (isEnabled()) {
+    <div class="a2a-activation__allow-list" role="region" aria-labelledby="allow-list-heading">
+      <h3 id="allow-list-heading" class="a2a-activation__section-title">
+        {{ 'a2a.activation.allow_list_title' | translate }}
+      </h3>
+      <p class="a2a-activation__section-desc">
+        {{ 'a2a.activation.allow_list_desc' | translate }}
+      </p>
+
+      <!-- Mode selection -->
+      <fieldset class="a2a-activation__mode-fieldset">
+        <legend class="a2a-activation__mode-legend">
+          {{ 'a2a.activation.mode_legend' | translate }}
+        </legend>
+        <label class="a2a-activation__mode-option">
+          <input
+            type="radio"
+            name="allowListMode"
+            value="all_verified"
+            class="a2a-activation__mode-radio"
+            [checked]="allowListMode() === 'all_verified'"
+            (change)="setAllowListMode('all_verified')" />
+          <span class="a2a-activation__mode-text">
+            {{ 'a2a.activation.mode_all_verified' | translate }}
+          </span>
+        </label>
+        <label class="a2a-activation__mode-option">
+          <input
+            type="radio"
+            name="allowListMode"
+            value="select_specific"
+            class="a2a-activation__mode-radio"
+            [checked]="allowListMode() === 'select_specific'"
+            (change)="setAllowListMode('select_specific')" />
+          <span class="a2a-activation__mode-text">
+            {{ 'a2a.activation.mode_select_specific' | translate }}
+          </span>
+        </label>
+      </fieldset>
+
+      <!-- Partner picker (only when select_specific mode) -->
+      @if (allowListMode() === 'select_specific') {
+        <div class="a2a-activation__partner-picker" role="group" aria-labelledby="partner-picker-label">
+          <span id="partner-picker-label" class="a2a-activation__picker-label">
+            {{ 'a2a.activation.select_partners' | translate }}
+          </span>
+
+          @if (verifiedPartners().length === 0) {
+            <p class="a2a-activation__no-partners" role="status">
+              {{ 'a2a.activation.no_verified_partners' | translate }}
+            </p>
+          } @else {
+            <ul class="a2a-activation__partner-list" role="listbox" aria-multiselectable="true"
+              [attr.aria-labelledby]="'partner-picker-label'">
+              @for (partner of verifiedPartners(); track partner.id) {
+                <li
+                  class="a2a-activation__partner-item"
+                  [class.a2a-activation__partner-item--selected]="isPartnerSelected(partner.id)"
+                  role="option"
+                  [attr.aria-selected]="isPartnerSelected(partner.id)"
+                  tabindex="0"
+                  (click)="togglePartnerSelection(partner.id)"
+                  (keydown.enter)="togglePartnerSelection(partner.id)"
+                  (keydown.space)="$event.preventDefault(); togglePartnerSelection(partner.id)">
+                  <input
+                    type="checkbox"
+                    class="a2a-activation__partner-checkbox"
+                    [checked]="isPartnerSelected(partner.id)"
+                    [attr.aria-label]="partner.orgName"
+                    tabindex="-1"
+                    (change)="togglePartnerSelection(partner.id)" />
+                  <div class="a2a-activation__partner-info">
+                    <span class="a2a-activation__partner-name">{{ partner.orgName }}</span>
+                    <span class="a2a-activation__partner-domain">{{ partner.orgDomain }}</span>
+                  </div>
+                  <span class="a2a-activation__badge" [class]="statusBadgeClass(partner.status)">
+                    {{ partnerStatusLabels[partner.status] | translate }}
+                  </span>
+                </li>
+              }
+            </ul>
+
+            <button
+              type="button"
+              class="a2a-activation__save-btn"
+              [disabled]="isSaving()"
+              [attr.aria-label]="'a2a.activation.save_selection_aria' | translate"
+              (click)="savePartnerSelection()">
+              {{ 'a2a.activation.save_selection' | translate }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

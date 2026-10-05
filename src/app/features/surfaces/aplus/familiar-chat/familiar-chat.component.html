@@ -1,0 +1,254 @@
+<!--
+  WS-2: In-chat stage-up overlay slot.
+  Renders the celebration modal over the chat UI when a stage_up SSE event
+  arrives during an active chat session. Dismissed by the user clicking
+  continue or pressing Escape.
+-->
+@if (chatStageUpOverlay(); as t) {
+  <chora-aplus-familiar-stage-up-overlay
+    [transition]="t"
+    (closed)="dismissChatStageUp()"
+    data-testid="familiar-chat-stage-up-overlay-slot" />
+}
+
+<!--
+  ADR-225: one-time first-interaction AI-transparency NOTICE. Self-gates on
+  `mustAcknowledge` — the learner's first Familiar chat is the first AI
+  interaction. Acknowledgement only (single "Got it", no decline branch).
+-->
+<chora-ai-transparency-notice surface="familiar" scope="familiar_chat" />
+
+<section
+  class="familiar-chat"
+  data-testid="familiar-chat-region"
+  aria-labelledby="familiar-chat-heading">
+  <header class="familiar-chat__header">
+    @if (identity(); as f) {
+      <!-- CHO-2095: identity header — this chat belongs to a NAMED familiar;
+           back leads to its profile (the familiar's front door). -->
+      <div class="familiar-chat__identity" data-testid="familiar-chat-identity">
+        <a
+          [routerLink]="['/a/companion', f.familiarId]"
+          class="familiar-chat__back"
+          data-testid="familiar-chat-back"
+          [attr.aria-label]="'aplus.familiar_chat.back_to_profile' | translate">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        </a>
+        <chora-breed-art
+          [species]="f.species"
+          [stage]="f.growthStage"
+          [shiny]="f.shinyVariant"
+          size="sm"
+          mood="curious"
+          [bare]="true"
+          [altText]="f.displayName" />
+        <h1 id="familiar-chat-heading" class="familiar-chat__heading">
+          {{ f.displayName }}
+          <span
+            class="familiar-chat__identity-stage"
+            data-testid="familiar-chat-identity-stage">
+            {{ identityStage() }}
+          </span>
+          <!-- ADR-225: persistent "AI companion" disclosure badge. -->
+          <chora-ai-companion-badge />
+        </h1>
+      </div>
+    } @else {
+      <h1 id="familiar-chat-heading" class="familiar-chat__heading">
+        <i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+        {{ 'aplus.familiar_chat.heading' | translate }}
+        <!-- ADR-225: persistent "AI companion" disclosure badge. -->
+        <chora-ai-companion-badge />
+      </h1>
+    }
+    <span
+      class="familiar-chat__mana-pill"
+      data-testid="familiar-chat-mana-pill"
+      [attr.aria-label]="'core.mana.balance_aria' | translate">
+      <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+      {{ manaBalance() }} {{ 'core.mana.unit' | translate }}
+    </span>
+  </header>
+
+  <p class="familiar-chat__cost-hint">
+    {{ 'aplus.familiar_chat.cost_hint' | translate }}
+  </p>
+
+  @if (errorBanner(); as key) {
+    <p
+      class="familiar-chat__error-banner"
+      data-testid="familiar-chat-error-banner"
+      role="alert">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      {{ key | translate }}
+    </p>
+  }
+
+  <div
+    class="familiar-chat__transcript"
+    role="log"
+    aria-live="polite"
+    aria-atomic="false">
+    @if (messages().length === 0) {
+      <p
+        class="familiar-chat__empty"
+        data-testid="familiar-chat-empty">
+        {{ 'aplus.familiar_chat.empty_state' | translate }}
+      </p>
+    }
+
+    @for (msg of messages(); track trackMessageById($index, msg); let i = $index) {
+      <article
+        class="familiar-chat__msg"
+        [class.familiar-chat__msg--user]="msg.role === 'user'"
+        [class.familiar-chat__msg--familiar]="msg.role === 'familiar'"
+        [attr.data-testid]="'familiar-chat-msg-' + msg.role + '-' + turnOrdinal(i)">
+        <header class="familiar-chat__msg-role">
+          @if (msg.role === 'user') {
+            {{ 'aplus.familiar_chat.role_user' | translate }}
+          } @else {
+            {{ 'aplus.familiar_chat.role_familiar' | translate }}
+          }
+        </header>
+
+        @if (msg.tool_calls && msg.tool_calls.length > 0) {
+          <ul class="familiar-chat__tool-pills">
+            @for (tc of msg.tool_calls; track trackToolCall($index, tc); let ti = $index) {
+              <li
+                class="familiar-chat__tool-pill"
+                [attr.data-testid]="'familiar-chat-tool-pill-' + ti">
+                <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
+                {{
+                  'aplus.familiar_chat.tool_call_' + tc.tool | translate
+                }}
+                <span class="familiar-chat__tool-pill-name">{{ tc.tool }}</span>
+              </li>
+            }
+          </ul>
+        }
+
+        <p class="familiar-chat__msg-text">{{ msg.text }}</p>
+
+        <!--
+          CHO-2192 — where this answer came from, when it leans on a research note
+          the Companion looked up weeks ago (ADR-231 D4/D5, IMDA D2).
+
+          It sits OUTSIDE the answer paragraph, deliberately: this is transparency
+          metadata, never knowledge. A learner must be able to tell at a glance
+          what the Companion SAID from what it CONSULTED — the moment "cdc.gov"
+          reads as part of the answer, the disclosure has become the claim.
+
+          Absent on every turn that recalled no grounded note, which is most of
+          them. That absence is load-bearing: an empty attribution block would
+          imply a web search that never happened.
+        -->
+        @if (msg.grounded; as g) {
+          <div class="familiar-chat__grounded" data-testid="familiar-chat-grounded">
+            @if (g.hasProvenance) {
+              <!--
+                The ONE shared attribution component (its bypassSecurityTrustHtml
+                exception lives there, once). searchEntryPointHtml is deliberately
+                EMPTY: no Google chip. A chip replayed from a persisted note would
+                be a wall of links that expired ~30 days after it was written —
+                worse than none, because a dead link still looks live.
+              -->
+              <chora-grounded-attribution
+                [citations]="g.citations"
+                [webSearchQueries]="g.webSearchQueries"
+                searchEntryPointHtml="" />
+            }
+            @if (g.unrecordedNotes > 0) {
+              <!--
+                The note predates mig 0094. Its sources are genuinely unrecoverable
+                and we will not invent them — but we will not stay silent either:
+                silence is indistinguishable from "no web search happened", which
+                is the untraceable assertion this ticket exists to kill. Unknown IS
+                a state (ADR-207), and it gets said out loud.
+              -->
+              <p
+                class="familiar-chat__grounded-unrecorded"
+                data-testid="chat-grounded-unrecorded">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                {{ 'aplus.familiar_chat.grounded_unrecorded' | translate }}
+              </p>
+            }
+          </div>
+        }
+
+        @if (msg.error_frame; as ef) {
+          <p
+            class="familiar-chat__frame-error"
+            [attr.data-testid]="'familiar-chat-frame-error-' + turnOrdinal(i)"
+            role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span class="familiar-chat__frame-error-code">{{ ef.code }}</span>
+            <span class="familiar-chat__frame-error-message">{{ ef.message }}</span>
+          </p>
+        }
+
+        @if (msg.streaming) {
+          <p
+            class="familiar-chat__streaming"
+            data-testid="familiar-chat-streaming">
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            {{ 'aplus.familiar_chat.streaming' | translate }}
+          </p>
+        }
+
+        @if (msg.completion; as c) {
+          <footer
+            class="familiar-chat__completion"
+            [attr.data-testid]="'familiar-chat-completion-' + turnOrdinal(i)">
+            <span>
+              {{ 'aplus.familiar_chat.completion_mana' | translate }}: {{ c.mana_charged }}
+              {{ 'core.mana.unit' | translate }}
+            </span>
+            <span>{{ 'aplus.familiar_chat.completion_model' | translate }}: {{ c.model }}</span>
+          </footer>
+        }
+      </article>
+    }
+  </div>
+
+  <form
+    class="familiar-chat__composer"
+    (submit)="$event.preventDefault(); send()">
+    <label for="familiar-chat-input" class="visually-hidden">
+      {{ 'aplus.familiar_chat.input_aria' | translate }}
+    </label>
+    <textarea
+      id="familiar-chat-input"
+      data-testid="familiar-chat-input"
+      class="familiar-chat__input"
+      rows="2"
+      [value]="draft()"
+      [placeholder]="'aplus.familiar_chat.input_placeholder' | translate"
+      [disabled]="composerLocked()"
+      (input)="onDraftInput($event)"></textarea>
+    <button
+      type="submit"
+      class="familiar-chat__send"
+      data-testid="familiar-chat-send"
+      [disabled]="!canSend()">
+      @if (turnState().status === 'sending' || turnState().status === 'streaming') {
+        <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+      } @else {
+        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+      }
+      {{ 'aplus.familiar_chat.send' | translate }}
+    </button>
+  </form>
+
+  @if (topupUpsell(); as upsell) {
+    <chora-mana-topup-modal
+      data-testid="familiar-chat-topup-modal-mount"
+      [upsell]="upsell"
+      [actionCode]="'familiar_chat_turn'"
+      [submitting]="manaTopupState().status === 'submitting'"
+      [errorMessage]="
+        manaTopupState().status === 'error' ? $any(manaTopupState()).error : null
+      "
+      (topupRequested)="onTopupRequested()"
+      (dismissed)="onTopupDismissed()" />
+  }
+</section>

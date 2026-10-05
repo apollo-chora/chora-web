@@ -1,0 +1,12 @@
+<div class="cplus-empty-state" role="status">
+  @if (icon(); as ic) {
+    <span class="cplus-empty-state__icon" [attr.data-icon]="ic" aria-hidden="true"></span>
+  }
+  <h2 class="cplus-empty-state__heading">{{ heading() }}</h2>
+  @if (helper(); as h) {
+    <p class="cplus-empty-state__helper">{{ h }}</p>
+  }
+  <div class="cplus-empty-state__action">
+    <ng-content />
+  </div>
+</div>

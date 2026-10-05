@@ -1,0 +1,295 @@
+<section class="surface-hplus mana" data-testid="hplus-mana">
+  <main class="mana__main">
+    <nav
+      class="mana__breadcrumb"
+      [attr.aria-label]="'hplus.mana.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.mana.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="mana__crumb-active">
+        {{ 'hplus.mana.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    <header class="mana__hero">
+      <div>
+        <h1 class="mana__title">{{ 'hplus.mana.title' | translate }}</h1>
+        <p class="mana__subtitle">{{ 'hplus.mana.subtitle' | translate }}</p>
+      </div>
+    </header>
+
+    @if (topupReturn(); as returned) {
+      <div
+        class="glass-panel mana__return"
+        [class.mana__return--success]="returned === 'success'"
+        [class.mana__return--cancelled]="returned === 'cancelled'"
+        data-testid="mana-return-notice"
+        [attr.data-variant]="returned"
+        role="status"
+        aria-live="polite">
+        <i
+          class="fa-solid"
+          [class.fa-circle-check]="returned === 'success'"
+          [class.fa-circle-xmark]="returned === 'cancelled'"
+          aria-hidden="true"></i>
+        <span>
+          @if (returned === 'success') {
+            {{ 'hplus.mana.returnSuccess' | translate }}
+          } @else {
+            {{ 'hplus.mana.returnCancelled' | translate }}
+          }
+        </span>
+        <button
+          type="button"
+          class="mana__return-dismiss"
+          data-testid="mana-return-dismiss"
+          [attr.aria-label]="'hplus.mana.returnDismiss' | translate"
+          (click)="dismissReturnNotice()">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+    }
+
+    @if (state() === 'loading') {
+      <div
+        class="glass-panel mana__panel mana__loading"
+        data-testid="mana-loading"
+        role="status"
+        aria-live="polite">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        {{ 'hplus.mana.loading' | translate }}
+        <div class="mana__skeleton" aria-hidden="true">
+          <div class="mana__skeleton-bar mana__skeleton-bar--wide"></div>
+          <div class="mana__skeleton-bar"></div>
+          <div class="mana__skeleton-bar mana__skeleton-bar--short"></div>
+        </div>
+      </div>
+    } @else if (state() === 'error') {
+      <div
+        class="glass-panel mana__panel mana__error"
+        data-testid="mana-error"
+        role="alert">
+        <p>
+          {{ 'hplus.mana.loadError' | translate }}
+          <span class="mana__error-code">
+            {{ 'hplus.mana.errorCodeLabel' | translate }}
+            <code>{{ errorCode() }}</code>
+          </span>
+        </p>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-testid="mana-retry"
+          (click)="load()">
+          {{ 'hplus.mana.retry' | translate }}
+        </button>
+      </div>
+    } @else if (state() === 'no-pool') {
+      <div
+        class="glass-panel mana__panel mana__create"
+        data-testid="mana-create-state">
+        <h2 class="mana__section-title">
+          {{ 'hplus.mana.noPoolTitle' | translate }}
+        </h2>
+        <p class="mana__create-body">{{ 'hplus.mana.noPoolBody' | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary mana__create-cta"
+          data-testid="mana-create-cta"
+          [disabled]="createBusy()"
+          (click)="createPool()">
+          @if (createBusy()) {
+            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+            {{ 'hplus.mana.creating' | translate }}
+          } @else {
+            <i class="fa-solid fa-droplet" aria-hidden="true"></i>
+            {{ 'hplus.mana.createCta' | translate }}
+          }
+        </button>
+        @if (createErrorCode(); as code) {
+          <p
+            class="mana__inline-error"
+            data-testid="mana-create-error"
+            role="alert"
+            aria-live="polite">
+            {{ 'hplus.mana.createError' | translate }}
+            <code>{{ code }}</code>
+          </p>
+        }
+      </div>
+    } @else if (pool(); as p) {
+      <!-- ── Pool card ─────────────────────────────────────────────── -->
+      <div class="glass-panel mana__panel mana__card" data-testid="mana-pool-card">
+        <div class="mana__balance-row">
+          <div>
+            <span class="mana__balance-label">
+              {{ 'hplus.mana.balanceLabel' | translate }}
+            </span>
+            <p class="mana__balance" data-testid="mana-balance">
+              {{ p.balance_units | number }}
+              <span class="mana__balance-units">
+                {{ 'hplus.mana.unitsSuffix' | translate }}
+              </span>
+            </p>
+          </div>
+          @if (p.is_low_balance) {
+            <span
+              class="mana__low-chip"
+              data-testid="mana-low-chip"
+              role="status">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'hplus.mana.lowBalance' | translate }}
+            </span>
+          }
+        </div>
+        @if (p.is_low_balance) {
+          <p class="mana__low-hint">{{ 'hplus.mana.lowBalanceHint' | translate }}</p>
+        }
+
+        <dl class="mana__stats">
+          <div class="mana__stat" data-testid="mana-stat-monthly">
+            <dt>{{ 'hplus.mana.statMonthly' | translate }}</dt>
+            <dd>
+              @if (p.monthly_topup_units > 0) {
+                {{ p.monthly_topup_units | number }}
+                {{ 'hplus.mana.unitsSuffix' | translate }}
+              } @else {
+                {{ 'hplus.mana.statMonthlyOff' | translate }}
+              }
+            </dd>
+          </div>
+          <div class="mana__stat" data-testid="mana-stat-topped-up">
+            <dt>{{ 'hplus.mana.statLifetimeToppedUp' | translate }}</dt>
+            <dd>{{ p.lifetime_topped_up_units | number }}</dd>
+          </div>
+          <div class="mana__stat" data-testid="mana-stat-allocated">
+            <dt>{{ 'hplus.mana.statLifetimeAllocated' | translate }}</dt>
+            <dd>{{ p.lifetime_allocated_units | number }}</dd>
+          </div>
+          <div class="mana__stat" data-testid="mana-stat-last-topped">
+            <dt>{{ 'hplus.mana.statLastToppedUp' | translate }}</dt>
+            <dd>
+              @if (p.last_topped_up_at) {
+                {{ p.last_topped_up_at | date: 'medium' }}
+              } @else {
+                {{ 'hplus.mana.neverToppedUp' | translate }}
+              }
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- ── Monthly auto-renew quota ──────────────────────────────── -->
+      <div class="glass-panel mana__panel mana__quota">
+        <h2 class="mana__section-title">
+          {{ 'hplus.mana.quotaTitle' | translate }}
+        </h2>
+        <div class="mana__quota-form">
+          <label class="mana__field" for="mana-quota-input">
+            <span class="mana__field-label">
+              {{ 'hplus.mana.quotaLabel' | translate }}
+            </span>
+            <input
+              id="mana-quota-input"
+              type="number"
+              class="form-control mana__quota-field"
+              data-testid="mana-quota-input"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              autocomplete="off"
+              [attr.aria-describedby]="'mana-quota-hint'"
+              [value]="quotaInput()"
+              (input)="onQuotaInput($event)" />
+          </label>
+          <button
+            type="button"
+            class="btn btn-primary mana__quota-submit"
+            data-testid="mana-quota-submit"
+            [disabled]="!canSubmitQuota()"
+            (click)="submitQuota()">
+            @if (quotaBusy()) {
+              <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+              {{ 'hplus.mana.quotaSaving' | translate }}
+            } @else {
+              {{ 'hplus.mana.quotaSubmit' | translate }}
+            }
+          </button>
+        </div>
+        <p id="mana-quota-hint" class="mana__hint">
+          {{ 'hplus.mana.quotaHint' | translate }}
+        </p>
+        @if (quotaSaved()) {
+          <p
+            class="mana__inline-success"
+            data-testid="mana-quota-success"
+            role="status"
+            aria-live="polite">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'hplus.mana.quotaSuccess' | translate }}
+          </p>
+        }
+        @if (quotaErrorCode(); as code) {
+          <p
+            class="mana__inline-error"
+            data-testid="mana-quota-error"
+            role="alert"
+            aria-live="polite">
+            {{ 'hplus.mana.quotaError' | translate }}
+            <code>{{ code }}</code>
+          </p>
+        }
+      </div>
+
+      <!-- ── Top-up packs → Stripe checkout ────────────────────────── -->
+      <div class="glass-panel mana__panel mana__topup">
+        <h2 class="mana__section-title">
+          {{ 'hplus.mana.topupTitle' | translate }}
+        </h2>
+        <p class="mana__hint">{{ 'hplus.mana.topupHint' | translate }}</p>
+        <ul class="mana__packs" role="list">
+          @for (pack of packs; track pack.sku) {
+            <li
+              class="mana__pack"
+              [attr.data-testid]="'mana-pack-' + pack.sku">
+              <span class="mana__pack-units">
+                {{ pack.mana_units | number }}
+                <span class="mana__pack-units-suffix">
+                  {{ 'hplus.mana.packUnitsSuffix' | translate }}
+                </span>
+              </span>
+              <span class="mana__pack-price">{{ packPrice(pack) }}</span>
+              <button
+                type="button"
+                class="btn btn-primary mana__pack-buy"
+                [attr.data-testid]="'mana-pack-buy-' + pack.sku"
+                [attr.aria-label]="
+                  ('hplus.mana.packBuyAriaPrefix' | translate) +
+                  ' ' + pack.mana_units + ', ' + packPrice(pack)
+                "
+                [disabled]="topupBusySku() !== null"
+                (click)="topUp(pack)">
+                @if (topupBusySku() === pack.sku) {
+                  <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+                  {{ 'hplus.mana.packRedirecting' | translate }}
+                } @else {
+                  <i class="fa-brands fa-stripe-s" aria-hidden="true"></i>
+                  {{ 'hplus.mana.packBuy' | translate }}
+                }
+              </button>
+            </li>
+          }
+        </ul>
+        @if (topupErrorCode(); as code) {
+          <p
+            class="mana__inline-error"
+            data-testid="mana-topup-error"
+            role="alert"
+            aria-live="polite">
+            {{ 'hplus.mana.topupError' | translate }}
+            <code>{{ code }}</code>
+          </p>
+        }
+      </div>
+    }
+  </main>
+</section>

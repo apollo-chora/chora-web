@@ -1,0 +1,118 @@
+<section
+  class="hplus-kg-config surface-hplus"
+  aria-labelledby="hplus-kg-config-heading"
+  data-testid="hplus-kg-config">
+  <header class="hplus-kg-config__header glass-panel">
+    <h1 id="hplus-kg-config-heading" class="hplus-kg-config__title">
+      <i class="fa-solid fa-circle-nodes" aria-hidden="true"></i>
+      {{ 'hplus.knowledge_graph.config_heading' | translate }}
+    </h1>
+    <p class="hplus-kg-config__sub">
+      {{ 'hplus.knowledge_graph.config_sub' | translate }}
+    </p>
+  </header>
+
+  @if (current(); as cfg) {
+    <form
+      class="hplus-kg-config__form glass-panel"
+      (submit)="$event.preventDefault(); save()">
+      <fieldset class="hplus-kg-config__field">
+        <legend>{{ 'hplus.knowledge_graph.config_cap_label' | translate }}</legend>
+        <p class="hplus-kg-config__hint">
+          {{ 'hplus.knowledge_graph.config_cap_hint' | translate }}
+        </p>
+        <div class="hplus-kg-config__row">
+          <input
+            type="number"
+            class="hplus-kg-config__input"
+            [min]="minCap"
+            [max]="maxCap"
+            step="1"
+            [value]="capDraft()"
+            (input)="onCapInput(($any($event.target).value))"
+            [attr.aria-label]="'hplus.knowledge_graph.config_cap_label' | translate"
+            data-testid="hplus-kg-cap-input" />
+          <span class="hplus-kg-config__bounds">
+            {{ minCap }} – {{ maxCap }}
+          </span>
+        </div>
+      </fieldset>
+
+      <fieldset class="hplus-kg-config__field">
+        <legend>{{ 'hplus.knowledge_graph.config_grace_label' | translate }}</legend>
+        <p class="hplus-kg-config__hint">
+          {{ 'hplus.knowledge_graph.config_grace_hint' | translate }}
+        </p>
+        <div class="hplus-kg-config__row">
+          <input
+            type="number"
+            class="hplus-kg-config__input"
+            [min]="minGrace"
+            [max]="maxGrace"
+            step="60"
+            [value]="graceDraft()"
+            (input)="onGraceInput(($any($event.target).value))"
+            [attr.aria-label]="'hplus.knowledge_graph.config_grace_label' | translate"
+            data-testid="hplus-kg-grace-input" />
+          <span class="hplus-kg-config__bounds">
+            {{ minGrace }}s – {{ maxGrace }}s
+          </span>
+        </div>
+      </fieldset>
+
+      <footer class="hplus-kg-config__footer">
+        <div class="hplus-kg-config__audit">
+          <strong>{{ 'hplus.knowledge_graph.config_updated_at' | translate }}:</strong>
+          <span>{{ cfg.updatedAt }}</span>
+          @if (cfg.updatedByDisplayName) {
+            <span> · {{ cfg.updatedByDisplayName }}</span>
+          }
+        </div>
+        <div class="hplus-kg-config__actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [disabled]="!isDirty() || saving()"
+            (click)="cancel()"
+            data-testid="hplus-kg-cancel">
+            {{ 'hplus.knowledge_graph.config_cancel' | translate }}
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!canSave()"
+            data-testid="hplus-kg-save">
+            @if (saving()) {
+              <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+              {{ 'hplus.knowledge_graph.config_saving' | translate }}
+            } @else {
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+              {{ 'hplus.knowledge_graph.config_save' | translate }}
+            }
+          </button>
+        </div>
+      </footer>
+
+      @if (saved()) {
+        <p class="hplus-kg-config__status hplus-kg-config__status--ok"
+           role="status"
+           data-testid="hplus-kg-saved">
+          <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+          {{ 'hplus.knowledge_graph.config_saved' | translate }}
+        </p>
+      }
+      @if (saveError(); as err) {
+        <p class="hplus-kg-config__status hplus-kg-config__status--err"
+           role="alert"
+           data-testid="hplus-kg-error">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{ err | translate }}
+        </p>
+      }
+    </form>
+  } @else {
+    <p class="hplus-kg-config__loading" role="status" aria-live="polite">
+      {{ 'hplus.knowledge_graph.config_loading' | translate }}
+    </p>
+  }
+</section>

@@ -1,0 +1,152 @@
+/* Notifications ticker — the CONDITIONAL nudge strip between the dashboard
+   header and the draggable groups (SP2.7). glass-panel supplies the surface;
+   this lays the items out as a calm, wrapping row of pills. The host collapses
+   entirely when there are no items (the template renders nothing). */
+:host {
+  display: block;
+}
+
+.ticker {
+  padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+}
+
+.ticker__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm, 8px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One pill per nudge — a quiet chip that warms on hover/focus. */
+.ticker__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 14px;
+  border-radius: var(--button-radius, 999px);
+  background: color-mix(in srgb, var(--primary, #1976d2) 8%, transparent);
+  font-size: 0.9rem;
+  color: var(--text-main, #1f2430);
+}
+
+.ticker__body {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The due nudge is a link — neutralise anchor styling, add reveal-eased lift. */
+.ticker__body--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--button-radius, 999px);
+  transition: transform 200ms
+    var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover,
+  &:focus-visible {
+    transform: translateX(2px);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 3px;
+  }
+}
+
+.ticker__emoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.ticker__icon {
+  font-size: 0.9rem;
+
+  &--streak {
+    color: var(--chora-color-warning, #f59e0b);
+  }
+  &--due {
+    color: var(--primary, #1976d2);
+  }
+}
+
+.ticker__text {
+  color: var(--text-muted, #6b7280);
+}
+
+.ticker__data {
+  color: var(--text-main, #1f2430);
+  font-weight: 700;
+}
+
+.ticker__more {
+  margin-inline-start: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.ticker__go {
+  font-size: 0.75rem;
+  color: var(--primary, #1976d2);
+  opacity: 0.7;
+}
+
+/* Celebration pills lean into the accent for a beat of delight. */
+.ticker__body--celebrate .ticker__text {
+  color: var(--text-main, #1f2430);
+}
+
+/* Small ghost dismiss control — keeps the ticker non-persistent per item. */
+.ticker__dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted, #6b7280);
+  cursor: pointer;
+  transition: background 160ms
+    var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-muted, #6b7280) 18%, transparent);
+    color: var(--text-main, #1f2430);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+
+  i {
+    font-size: 0.8rem;
+  }
+}
+
+/* Tablet-first: roomier chips on wide desktop. */
+@media (min-width: 1280px) {
+  .ticker__list {
+    gap: var(--chora-space-md, 16px);
+  }
+  .ticker__item {
+    font-size: 0.95rem;
+  }
+}
+
+/* Respect reduced-motion — no tween on the link/dismiss. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker__body--link,
+  .ticker__dismiss {
+    transition: none;
+  }
+  .ticker__body--link:hover,
+  .ticker__body--link:focus-visible {
+    transform: none;
+  }
+}

@@ -1,0 +1,268 @@
+<section
+  class="appeal"
+  role="main"
+  [attr.aria-label]="'appeal.title' | translate"
+  data-testid="appeal-page">
+
+  <!-- Page Header -->
+  <header class="appeal__header">
+    <a routerLink="/settings" class="appeal__back-link" data-testid="btn-back">
+      &larr; {{ 'appeal.back_to_settings' | translate }}
+    </a>
+    <h1 class="appeal__title" data-testid="appeal-title">
+      {{ 'appeal.title' | translate }}
+    </h1>
+    <p class="appeal__subtitle">
+      {{ 'appeal.subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="appeal__loading" data-testid="appeal-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="appeal__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading()) {
+    <!-- ===================================================================== -->
+    <!-- Existing Appeal: Show Status Timeline                                  -->
+    <!-- ===================================================================== -->
+    @if (hasExistingAppeal()) {
+      <div class="appeal__existing" data-testid="existing-appeal" role="region"
+        [attr.aria-label]="'appeal.existing_appeal' | translate">
+
+        <div class="appeal__status-card">
+          <h2 class="appeal__section-title">
+            {{ 'appeal.current_status' | translate }}
+          </h2>
+
+          <!-- Status Badge -->
+          <div class="appeal__status-badge-wrapper">
+            <span
+              class="appeal__status-badge"
+              [class.appeal__status-badge--submitted]="existingAppeal()?.status === 'submitted'"
+              [class.appeal__status-badge--under_review]="existingAppeal()?.status === 'under_review'"
+              [class.appeal__status-badge--approved]="existingAppeal()?.status === 'approved'"
+              [class.appeal__status-badge--denied]="existingAppeal()?.status === 'denied'"
+              data-testid="appeal-status-badge">
+              <span class="material-icons-outlined appeal__status-icon" aria-hidden="true">
+                {{ statusIcon(existingAppeal()!.status) }}
+              </span>
+              {{ 'appeal.status_' + existingAppeal()?.status | translate }}
+            </span>
+          </div>
+
+          <!-- Reason -->
+          <div class="appeal__detail-block">
+            <span class="appeal__detail-label">{{ 'appeal.reason_label' | translate }}</span>
+            <p class="appeal__detail-value" data-testid="appeal-reason">
+              {{ existingAppeal()?.reason }}
+            </p>
+          </div>
+
+          <!-- Reviewer Notes (if resolved) -->
+          @if (existingAppeal()?.reviewer_notes) {
+            <div class="appeal__detail-block">
+              <span class="appeal__detail-label">{{ 'appeal.reviewer_notes' | translate }}</span>
+              <p class="appeal__detail-value appeal__detail-value--notes" data-testid="appeal-reviewer-notes">
+                {{ existingAppeal()?.reviewer_notes }}
+              </p>
+            </div>
+          }
+        </div>
+
+        <!-- Timeline -->
+        <div class="appeal__timeline" data-testid="appeal-timeline"
+          role="list"
+          [attr.aria-label]="'appeal.timeline' | translate">
+          @for (step of timelineSteps(); track step.key) {
+            <div
+              class="appeal__timeline-step"
+              [class.appeal__timeline-step--completed]="step.completed"
+              [class.appeal__timeline-step--current]="step.current"
+              [class.appeal__timeline-step--denied]="step.key === 'denied' && step.completed"
+              role="listitem"
+              [attr.data-testid]="'timeline-step-' + step.key"
+              [attr.aria-current]="step.current ? 'step' : null">
+              <div class="appeal__timeline-marker">
+                <span class="material-icons-outlined" aria-hidden="true">
+                  {{ step.icon }}
+                </span>
+              </div>
+              <div class="appeal__timeline-content">
+                <span class="appeal__timeline-label">
+                  {{ step.label | translate }}
+                </span>
+                @if (step.timestamp) {
+                  <span class="appeal__timeline-timestamp">
+                    {{ formatDateTime(step.timestamp) }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ===================================================================== -->
+    <!-- No Existing Appeal: Show Form                                          -->
+    <!-- ===================================================================== -->
+    @if (!hasExistingAppeal()) {
+      <form
+        class="appeal__form"
+        data-testid="appeal-form"
+        (submit)="$event.preventDefault(); submitAppeal()"
+        role="form"
+        [attr.aria-label]="'appeal.form_label' | translate">
+
+        <!-- Reason Textarea -->
+        <div class="appeal__form-group">
+          <label for="appeal-reason" class="appeal__label">
+            {{ 'appeal.reason_label' | translate }}
+            <span class="appeal__required" aria-hidden="true">*</span>
+          </label>
+          <p class="appeal__hint" id="appeal-reason-hint">
+            {{ 'appeal.reason_hint' | translate }}
+          </p>
+          <textarea
+            id="appeal-reason"
+            class="appeal__textarea"
+            [class.appeal__textarea--error]="charCount() > 0 && !isReasonValid()"
+            rows="6"
+            [value]="reason()"
+            (input)="onReasonInput($any($event.target).value)"
+            [attr.maxlength]="maxReasonLength"
+            [attr.minlength]="minReasonLength"
+            aria-describedby="appeal-reason-hint appeal-reason-counter"
+            data-testid="appeal-reason-input"
+            [placeholder]="'appeal.reason_placeholder' | translate"
+            required></textarea>
+          <div class="appeal__char-counter" id="appeal-reason-counter" aria-live="polite">
+            <span
+              [class.appeal__char-counter--warning]="charsRemaining() < 100 && charsRemaining() >= 0"
+              [class.appeal__char-counter--error]="charCount() > 0 && charCount() < minReasonLength">
+              {{ charCount() }} / {{ maxReasonLength }}
+            </span>
+            @if (charCount() > 0 && charCount() < minReasonLength) {
+              <span class="appeal__char-min" role="alert">
+                {{ 'appeal.min_chars_remaining' | translate }} ({{ minReasonLength - charCount() }})
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- Evidence File Upload -->
+        <div class="appeal__form-group">
+          <span class="appeal__label">
+            {{ 'appeal.evidence_label' | translate }}
+          </span>
+          <p class="appeal__hint">
+            {{ 'appeal.evidence_hint' | translate }}
+          </p>
+
+          <!-- Drop Zone -->
+          <div
+            class="appeal__dropzone"
+            [class.appeal__dropzone--active]="dragOver()"
+            [class.appeal__dropzone--disabled]="files().length >= maxFiles"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            data-testid="appeal-dropzone"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="fileInput.click()"
+            (keydown.space)="$event.preventDefault(); fileInput.click()"
+            [attr.aria-label]="'appeal.dropzone_label' | translate">
+            <span class="material-icons-outlined appeal__dropzone-icon" aria-hidden="true">
+              cloud_upload
+            </span>
+            <span class="appeal__dropzone-text">
+              {{ 'appeal.dropzone_text' | translate }}
+            </span>
+            <span class="appeal__dropzone-subtext">
+              {{ 'appeal.dropzone_subtext' | translate }}
+            </span>
+            <input
+              #fileInput
+              type="file"
+              class="appeal__file-input"
+              [accept]="acceptedExtensions"
+              multiple
+              (change)="onFileSelect($event)"
+              data-testid="appeal-file-input"
+              tabindex="-1"
+              [attr.aria-label]="'appeal.file_input_label' | translate" />
+          </div>
+
+          <!-- File Errors -->
+          @if (fileErrors().length > 0) {
+            <div class="appeal__file-errors" role="alert" data-testid="file-errors">
+              @for (err of fileErrors(); track err) {
+                <p class="appeal__file-error">{{ err | translate }}</p>
+              }
+            </div>
+          }
+
+          <!-- File List -->
+          @if (files().length > 0) {
+            <ul class="appeal__file-list" data-testid="appeal-file-list" role="list">
+              @for (file of files(); track file.name; let i = $index) {
+                <li class="appeal__file-item" role="listitem"
+                  [attr.data-testid]="'file-item-' + i">
+                  <div class="appeal__file-info">
+                    <span class="material-icons-outlined appeal__file-icon" aria-hidden="true">
+                      @if (file.type === 'application/pdf') {
+                        picture_as_pdf
+                      } @else {
+                        image
+                      }
+                    </span>
+                    <span class="appeal__file-name">{{ file.name }}</span>
+                    <span class="appeal__file-size">{{ formatFileSize(file.size) }}</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="appeal__file-remove"
+                    (click)="removeFile(i)"
+                    [attr.data-testid]="'btn-remove-file-' + i"
+                    [attr.aria-label]="'appeal.remove_file' | translate">
+                    <span class="material-icons-outlined" aria-hidden="true">close</span>
+                  </button>
+                </li>
+              }
+            </ul>
+            <p class="appeal__file-count" aria-live="polite" data-testid="file-count">
+              {{ files().length }} / {{ maxFiles }} {{ 'appeal.files_attached' | translate }}
+            </p>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="appeal__actions">
+          <a
+            routerLink="/settings"
+            class="appeal__btn appeal__btn--secondary"
+            data-testid="btn-cancel">
+            {{ 'appeal.cancel' | translate }}
+          </a>
+          <button
+            type="submit"
+            class="appeal__btn appeal__btn--primary"
+            [disabled]="!canSubmit()"
+            data-testid="btn-submit-appeal">
+            @if (submitting()) {
+              {{ 'appeal.submitting' | translate }}
+            } @else {
+              {{ 'appeal.submit' | translate }}
+            }
+          </button>
+        </div>
+      </form>
+    }
+  }
+</section>

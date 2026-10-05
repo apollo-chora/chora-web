@@ -1,0 +1,245 @@
+<section
+  class="aplus-catalog aplus-hub-page surface-aplus"
+  aria-labelledby="aplus-catalog-heading"
+  data-testid="aplus-catalog">
+  <chora-courses-sub-nav />
+  <header class="catalog-header glass-panel">
+    <div class="catalog-header__search">
+      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+      <label for="aplus-catalog-search" class="sr-only">
+        {{ 'aplus.catalog.search_label' | translate }}
+      </label>
+      <input
+        id="aplus-catalog-search"
+        class="form-control catalog-header__search-input"
+        type="search"
+        autocomplete="off"
+        [attr.placeholder]="'aplus.catalog.search_placeholder' | translate"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        (keyup.enter)="onSearchSubmit()"
+        data-testid="aplus-catalog-search" />
+    </div>
+  </header>
+
+  <h1 id="aplus-catalog-heading" class="catalog-title">
+    {{ 'aplus.catalog.heading' | translate }}
+  </h1>
+  <p class="catalog-tagline">{{ 'aplus.catalog.tagline' | translate }}</p>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div
+        class="glass-panel catalog-status"
+        role="status"
+        aria-busy="true"
+        data-testid="aplus-catalog-loading">
+        <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+        <p>{{ 'aplus.catalog.loading' | translate }}</p>
+      </div>
+    }
+    @case ('error') {
+      <div
+        class="glass-panel catalog-status catalog-status--error"
+        role="alert"
+        data-testid="aplus-catalog-error">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <p>{{ errorKey() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="retry()"
+          data-testid="aplus-catalog-retry">
+          {{ 'aplus.catalog.retry' | translate }}
+        </button>
+      </div>
+    }
+    @case ('success') {
+      <div class="catalog-body">
+        <aside class="catalog-filters" aria-labelledby="catalog-filters-heading">
+          <h2 id="catalog-filters-heading" class="sr-only">
+            {{ 'aplus.catalog.filters_heading' | translate }}
+          </h2>
+
+          <section class="glass-panel filter-card">
+            <h3 class="filter-card__title">
+              {{ 'aplus.catalog.filters_heading' | translate }}
+            </h3>
+            <div class="filter-options">
+              <label class="filter-row">
+                <input
+                  type="checkbox"
+                  [ngModel]="freeOnly()"
+                  (ngModelChange)="freeOnly.set($event)"
+                  data-testid="filter-free" />
+                <span>{{ 'aplus.catalog.filter_free' | translate }}</span>
+              </label>
+              <label class="filter-row">
+                <input
+                  type="checkbox"
+                  [ngModel]="sfEligibleOnly()"
+                  (ngModelChange)="sfEligibleOnly.set($event)"
+                  data-testid="filter-sf-eligible" />
+                <span>{{ 'aplus.catalog.filter_sf_eligible' | translate }}</span>
+              </label>
+            </div>
+          </section>
+
+          <button
+            type="button"
+            class="btn btn-secondary clear-filters"
+            (click)="clearFilters()"
+            data-testid="aplus-catalog-clear-filters">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            {{ 'aplus.catalog.clear_filters' | translate }}
+          </button>
+        </aside>
+
+        <div class="catalog-results">
+          <div class="catalog-results__pagination-controls">
+            <label for="aplus-catalog-page-size-select" class="sr-only">
+              {{ 'aplus.catalog.page_size_label' | translate }}
+            </label>
+            <select
+              id="aplus-catalog-page-size-select"
+              data-testid="aplus-catalog-page-size"
+              [value]="pageSize()"
+              (change)="onPageSizeChange(+($any($event.target).value))"
+              aria-label="{{ 'aplus.catalog.page_size_label' | translate }}">
+              @for (opt of CATALOG_PAGE_SIZE_OPTIONS; track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </select>
+          </div>
+          <p
+            class="catalog-results__summary"
+            aria-live="polite"
+            data-testid="aplus-catalog-result-summary">
+            {{ 'aplus.catalog.showing' | translate }}
+            <strong>{{ filteredCourses().length }}</strong>
+            {{ 'aplus.catalog.of' | translate }}
+            <strong>{{ total() }}</strong>
+            {{ 'aplus.catalog.courses' | translate }}
+          </p>
+
+          @if (hasResults()) {
+            <ul class="course-grid" role="list" data-testid="aplus-catalog-grid">
+              @for (course of filteredCourses(); track course.id) {
+                <li
+                  class="course-card glass-panel"
+                  [attr.data-testid]="'course-card-' + course.id">
+                  <h3 class="course-card__title">{{ course.title }}</h3>
+
+                  @if (course.instructor_name) {
+                    <p class="course-card__instructor">
+                      <span class="course-card__instructor-label">
+                        {{ 'aplus.catalog.by' | translate }}
+                      </span>
+                      <strong [attr.data-testid]="'course-instructor-' + course.id">
+                        {{ course.instructor_name }}
+                      </strong>
+                    </p>
+                  }
+
+                  <div class="course-card__badges">
+                    @if (course.is_free) {
+                      <span
+                        class="badge badge-success"
+                        [attr.data-testid]="'course-free-' + course.id">
+                        {{ 'aplus.catalog.badge_free' | translate }}
+                      </span>
+                    }
+                    @if (course.sf_eligible) {
+                      <span
+                        class="badge badge-info"
+                        [attr.data-testid]="'course-sf-' + course.id">
+                        {{ 'aplus.catalog.badge_sf_eligible' | translate }}
+                      </span>
+                    }
+                  </div>
+
+                  <dl class="course-card__meta">
+                    <div class="course-card__meta-row">
+                      <dt>
+                        <i class="fa-solid fa-users" aria-hidden="true"></i>
+                      </dt>
+                      <dd [attr.data-testid]="'course-enrolled-' + course.id">
+                        {{ course.enrolled_count }}
+                        {{ 'aplus.catalog.enrolled' | translate }}
+                      </dd>
+                    </div>
+                    @if (course.syllabus_outline_count > 0) {
+                      <div class="course-card__meta-row">
+                        <dt>
+                          <i class="fa-solid fa-list-ul" aria-hidden="true"></i>
+                        </dt>
+                        <dd [attr.data-testid]="'course-modules-' + course.id">
+                          {{ course.syllabus_outline_count }}
+                          {{ 'aplus.catalog.modules' | translate }}
+                        </dd>
+                      </div>
+                    }
+                  </dl>
+
+                  @if (course.tags.length) {
+                    <ul
+                      class="course-card__tags"
+                      [attr.data-testid]="'course-tags-' + course.id">
+                      @for (tag of course.tags; track tag) {
+                        <li class="course-card__tag">{{ tag }}</li>
+                      }
+                    </ul>
+                  }
+
+                  <div class="course-card__footer">
+                    <span
+                      class="course-card__price"
+                      [attr.data-testid]="'course-price-' + course.id">
+                      {{ priceLabel(course) }}
+                    </span>
+                    <a
+                      class="btn btn-primary"
+                      [routerLink]="['/a/courses', course.id]"
+                      [attr.aria-label]="
+                        ('aplus.catalog.cta_aria_prefix' | translate) +
+                        ' ' +
+                        course.title
+                      "
+                      [attr.data-testid]="'course-cta-' + course.id">
+                      {{ 'aplus.catalog.cta_view_details' | translate }}
+                      <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                  </div>
+                </li>
+              }
+            </ul>
+          } @else {
+            <div
+              class="glass-panel catalog-empty"
+              role="status"
+              data-testid="aplus-catalog-empty">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              <p>{{ 'aplus.catalog.no_results' | translate }}</p>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="clearFilters()"
+                data-testid="aplus-catalog-empty-clear">
+                {{ 'aplus.catalog.clear_filters' | translate }}
+              </button>
+            </div>
+          }
+          @if (hasNextPage()) {
+            <button
+              type="button"
+              class="btn btn-secondary catalog-results__load-more"
+              data-testid="aplus-catalog-load-more"
+              (click)="loadMore()">
+              {{ 'aplus.catalog.load_more' | translate }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,79 @@
+<section class="grimoire" [attr.data-breed]="species()">
+  @if (state().status === 'loading') {
+    <p class="grimoire__status" role="status">
+      {{ 'familiar_grimoire.loading' | translate }}
+    </p>
+  } @else if (state().status === 'error') {
+    <div class="grimoire__error" role="alert">
+      <p>{{ 'familiar_grimoire.load_error' | translate }}</p>
+      <button type="button" class="btn btn-secondary" (click)="retry()">
+        {{ 'familiar_grimoire.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    <header class="grimoire__header">
+      <chora-breed-art
+        [species]="species()"
+        [stage]="stage()"
+        size="sm"
+        [altText]="displayName()"
+      />
+      <div class="grimoire__titles">
+        <p class="grimoire__eyebrow">{{ 'familiar_grimoire.eyebrow' | translate }}</p>
+        <h1 class="grimoire__title">
+          {{ 'familiar_grimoire.title' | translate: { name: displayName() } }}
+        </h1>
+      </div>
+    </header>
+
+    <div
+      class="grimoire__tabs"
+      role="tablist"
+      [attr.aria-label]="'familiar_grimoire.tablist' | translate"
+    >
+      @for (tab of tabs; track tab.key) {
+        <button
+          type="button"
+          role="tab"
+          class="grimoire__tab"
+          [class.grimoire__tab--active]="activeTab() === tab.key && isUnlocked(tab)"
+          [class.grimoire__tab--locked]="!isUnlocked(tab)"
+          [attr.aria-selected]="activeTab() === tab.key && isUnlocked(tab)"
+          [attr.aria-disabled]="!isUnlocked(tab)"
+          (click)="selectTab(tab)"
+        >
+          <span class="grimoire__tab-label">{{ tab.labelKey | translate }}</span>
+          @if (!isUnlocked(tab)) {
+            <span class="grimoire__tab-lock" aria-hidden="true">🔒</span>
+          }
+        </button>
+      }
+    </div>
+
+    <div class="grimoire__panel" role="tabpanel">
+      @if (!activeTabUnlocked()) {
+        <div class="grimoire__tease">
+          <p class="grimoire__tease-lock" aria-hidden="true">🔒</p>
+          <p class="grimoire__tease-copy">
+            {{
+              'familiar_grimoire.tease'
+                | translate: { stage: (unlockStageNameKey(activeTabModel()) | translate) }
+            }}
+          </p>
+        </div>
+      } @else {
+        @switch (activeTab()) {
+          @case ('persona') {
+            <chora-persona-tab [familiarId]="familiarId()" />
+          }
+          @case ('loadout') {
+            <chora-familiar-loadout [familiarId]="familiarId()" />
+          }
+          @case ('routines') {
+            <chora-routines-tab [familiarId]="familiarId()" />
+          }
+        }
+      }
+    </div>
+  }
+</section>

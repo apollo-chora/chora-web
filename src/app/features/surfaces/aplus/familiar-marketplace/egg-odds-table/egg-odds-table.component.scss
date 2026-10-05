@@ -1,0 +1,183 @@
+// IMDA D2 odds-disclosure table — sortable, transparent, no fluff.
+
+@use '../../../../../../styles/breed-accents';
+
+:host { display: block; }
+
+.odds-table {
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.odds-table__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.odds-table__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  i { color: var(--primary); font-size: 12px; }
+}
+
+.odds-table__sort {
+  display: inline-flex;
+  gap: 0.25rem;
+  background: rgba(15, 23, 42, 0.05);
+  padding: 0.18rem;
+  border-radius: 999px;
+}
+
+.sort-chip {
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  font-family: inherit;
+  cursor: pointer;
+
+  &.is-active {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+.odds-table__loading {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.odds-table__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.odds-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.5fr) minmax(100px, 3fr) 56px;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid transparent;
+  transition: background 0.15s ease;
+
+  &:hover { background: rgba(255, 255, 255, 0.78); }
+}
+
+.odds-row__species {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.odds-row__species-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: capitalize;
+}
+
+.odds-row__rarity-chip {
+  align-self: flex-start;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.08rem 0.45rem;
+  border-radius: 8px;
+
+  &[data-rarity='common']    { background: rgba(148, 163, 184, 0.18); color: #475569; }
+  &[data-rarity='uncommon']  { background: rgba(16, 185, 129, 0.18); color: #047857; }
+  &[data-rarity='rare']      { background: rgba(59, 130, 246, 0.18); color: #1e40af; }
+  &[data-rarity='legendary'] { background: linear-gradient(135deg, #fde68a, #f472b6); color: #7c2d12; }
+}
+
+.odds-row__bar {
+  height: 10px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.odds-row__bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--breed-accent, var(--primary)), var(--secondary));
+  border-radius: 999px;
+}
+
+.odds-row[data-species='dragon']  .odds-row__bar-fill { background: linear-gradient(90deg, #4f86c4, #1976d2); }
+.odds-row[data-species='phoenix'] .odds-row__bar-fill { background: linear-gradient(90deg, #e07a3a, #ef4444); }
+.odds-row[data-species='owl']     .odds-row__bar-fill { background: linear-gradient(90deg, #6b8e6b, #10b981); }
+.odds-row[data-species='fox']     .odds-row__bar-fill { background: linear-gradient(90deg, #d97a4a, #f59e0b); }
+.odds-row[data-species='cat']     .odds-row__bar-fill { background: linear-gradient(90deg, #ea580c, #ea580c); }
+.odds-row[data-species='turtle']  .odds-row__bar-fill { background: linear-gradient(90deg, #4a8576, #14b8a6); }
+.odds-row[data-species='wolf']    .odds-row__bar-fill { background: linear-gradient(90deg, #4f5b6e, #64748b); }
+.odds-row[data-species='raven']   .odds-row__bar-fill { background: linear-gradient(90deg, #c2410c, #1976d2); }
+
+.odds-row__pct {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.odds-table__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.odds-table__total,
+.odds-table__updated {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+
+  strong { color: var(--text-main); font-weight: 700; }
+}
+
+.odds-table__compliance {
+  margin: 0.35rem 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+
+  i { color: var(--info); flex-shrink: 0; margin-top: 2px; }
+}

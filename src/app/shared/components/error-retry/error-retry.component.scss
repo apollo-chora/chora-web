@@ -1,0 +1,99 @@
+:host {
+  display: block;
+}
+
+.error-retry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--chora-space-md, 16px);
+  padding: var(--chora-space-lg, 24px);
+  border-radius: var(--chora-radius-md, 8px);
+  background-color: var(--chora-color-surface-1, #f8f9fa);
+  border: 1px solid var(--chora-color-border-error, #dc3545);
+  text-align: center;
+
+  &__message {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--chora-color-error, #dc3545);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    margin: 0;
+    color: var(--chora-color-text-primary, #212529);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--chora-space-sm, 8px);
+    align-items: center;
+  }
+
+  &__countdown {
+    margin: 0;
+    color: var(--chora-color-text-secondary, #6c757d);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s ease-in-out;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-focus, #0d6efd);
+      outline-offset: 2px;
+    }
+
+    &--retry {
+      background-color: var(--chora-color-primary, #0d6efd);
+      color: #fff;
+      border: none;
+
+      &:hover {
+        background-color: var(--chora-color-primary-hover, #0b5ed7);
+      }
+    }
+
+    &--support {
+      background-color: transparent;
+      color: var(--chora-color-primary, #0d6efd);
+      border: 1px solid var(--chora-color-primary, #0d6efd);
+
+      &:hover {
+        background-color: var(--chora-color-primary-subtle, #e7f1ff);
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-retry__button {
+    transition: none;
+  }
+}

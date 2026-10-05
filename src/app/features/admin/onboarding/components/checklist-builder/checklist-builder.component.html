@@ -1,0 +1,319 @@
+<section
+  class="checklist-builder"
+  role="main"
+  [attr.aria-label]="'admin.onboarding.builder_title' | translate"
+  data-testid="checklist-builder">
+
+  <!-- Header -->
+  <header class="checklist-builder__header">
+    <h1 class="checklist-builder__title" data-testid="builder-title">
+      @if (isEditing()) {
+        {{ 'admin.onboarding.edit_template' | translate }}
+      } @else {
+        {{ 'admin.onboarding.new_template' | translate }}
+      }
+    </h1>
+  </header>
+
+  @if (loading()) {
+    <div class="checklist-builder__loading" aria-live="polite" data-testid="builder-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="checklist-builder__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading()) {
+    <div class="checklist-builder__layout">
+      <!-- Left: Template Settings + Item List -->
+      <div class="checklist-builder__main">
+        <!-- Template Info -->
+        <div class="checklist-builder__section" data-testid="template-info">
+          <h2 class="checklist-builder__section-title">
+            {{ 'admin.onboarding.template_details' | translate }}
+          </h2>
+
+          <div class="checklist-builder__field">
+            <label for="template-name" class="checklist-builder__label">
+              {{ 'admin.onboarding.template_name' | translate }}
+            </label>
+            <input
+              type="text"
+              id="template-name"
+              class="checklist-builder__input"
+              [ngModel]="templateName()"
+              (ngModelChange)="templateName.set($event)"
+              [placeholder]="'admin.onboarding.template_name_placeholder' | translate"
+              data-testid="template-name-input"
+              [attr.aria-label]="'admin.onboarding.template_name' | translate" />
+          </div>
+
+          <div class="checklist-builder__field">
+            <label for="template-desc" class="checklist-builder__label">
+              {{ 'admin.onboarding.template_description' | translate }}
+            </label>
+            <textarea
+              id="template-desc"
+              class="checklist-builder__textarea"
+              [ngModel]="templateDescription()"
+              (ngModelChange)="templateDescription.set($event)"
+              [placeholder]="'admin.onboarding.template_desc_placeholder' | translate"
+              rows="3"
+              data-testid="template-desc-input"
+              [attr.aria-label]="'admin.onboarding.template_description' | translate"></textarea>
+          </div>
+
+          <!-- Target Roles -->
+          <div class="checklist-builder__field">
+            <label for="role-input" class="checklist-builder__label">
+              {{ 'admin.onboarding.target_roles' | translate }}
+            </label>
+            <div class="checklist-builder__role-input-row">
+              <input
+                type="text"
+                id="role-input"
+                class="checklist-builder__input"
+                [ngModel]="roleInput()"
+                (ngModelChange)="roleInput.set($event)"
+                (keydown.enter)="addRole(); $event.preventDefault()"
+                [placeholder]="'admin.onboarding.role_placeholder' | translate"
+                data-testid="role-input"
+                [attr.aria-label]="'admin.onboarding.target_roles' | translate" />
+              <button
+                type="button"
+                class="checklist-builder__btn checklist-builder__btn--small"
+                (click)="addRole()"
+                data-testid="add-role-btn"
+                [attr.aria-label]="'admin.onboarding.add_role' | translate">
+                {{ 'common.add' | translate }}
+              </button>
+            </div>
+            @if (targetRoles().length > 0) {
+              <div class="checklist-builder__role-tags" data-testid="role-tags" role="list"
+                   [attr.aria-label]="'admin.onboarding.selected_roles' | translate">
+                @for (role of targetRoles(); track role) {
+                  <span class="checklist-builder__role-tag" role="listitem">
+                    {{ role }}
+                    <button
+                      type="button"
+                      class="checklist-builder__role-remove"
+                      (click)="removeRole(role)"
+                      [attr.aria-label]="('admin.onboarding.remove_role' | translate) + ': ' + role">
+                      &times;
+                    </button>
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Item Type Palette -->
+        <div class="checklist-builder__palette" data-testid="item-palette">
+          <h2 class="checklist-builder__section-title">
+            {{ 'admin.onboarding.add_item' | translate }}
+          </h2>
+          <div class="checklist-builder__palette-grid" role="toolbar"
+               [attr.aria-label]="'admin.onboarding.item_type_palette' | translate">
+            @for (type of allItemTypes; track trackByItemType($index, type)) {
+              <button
+                type="button"
+                class="checklist-builder__palette-item"
+                (click)="addItem(type)"
+                [attr.data-testid]="'add-item-' + type"
+                [attr.aria-label]="itemTypeLabels[type] | translate">
+                <span class="checklist-builder__palette-icon" aria-hidden="true">
+                  {{ itemTypeIcons[type] }}
+                </span>
+                <span class="checklist-builder__palette-label">
+                  {{ itemTypeLabels[type] | translate }}
+                </span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Item List (Drag & Drop) -->
+        <div class="checklist-builder__items" data-testid="item-list">
+          <h2 class="checklist-builder__section-title">
+            {{ 'admin.onboarding.items' | translate }}
+            <span class="checklist-builder__item-count">({{ items().length }})</span>
+          </h2>
+
+          @if (items().length === 0) {
+            <div class="checklist-builder__empty-items" data-testid="empty-items">
+              <p>{{ 'admin.onboarding.no_items_yet' | translate }}</p>
+            </div>
+          }
+
+          <div
+            cdkDropList
+            [cdkDropListData]="items()"
+            (cdkDropListDropped)="onItemDrop($event)"
+            class="checklist-builder__item-list"
+            role="list"
+            [attr.aria-label]="'admin.onboarding.item_list' | translate">
+            @for (item of items(); track trackByIndex($index)) {
+              <div
+                cdkDrag
+                class="checklist-builder__item-row"
+                [class.checklist-builder__item-row--selected]="selectedItemIndex() === $index"
+                (click)="selectItem($index)"
+                (keydown.enter)="selectItem($index)"
+                (keydown.space)="selectItem($index); $event.preventDefault()"
+                role="listitem"
+                tabindex="0"
+                [attr.data-testid]="'item-row-' + $index"
+                [attr.aria-label]="(itemTypeLabels[item.type] | translate) + ': ' + (item.name || ('admin.onboarding.unnamed_item' | translate))">
+                <div class="checklist-builder__item-drag-handle" cdkDragHandle
+                     [attr.aria-label]="'admin.onboarding.drag_to_reorder' | translate">
+                  <span aria-hidden="true">&#9776;</span>
+                </div>
+                <div class="checklist-builder__item-info">
+                  <span class="checklist-builder__item-order">{{ $index + 1 }}</span>
+                  <span class="checklist-builder__item-type-badge">
+                    {{ itemTypeLabels[item.type] | translate }}
+                  </span>
+                  <span class="checklist-builder__item-name">
+                    {{ item.name || ('admin.onboarding.unnamed_item' | translate) }}
+                  </span>
+                </div>
+                <div class="checklist-builder__item-actions">
+                  @if (!item.required) {
+                    <span class="checklist-builder__item-optional-badge">
+                      {{ 'admin.onboarding.optional' | translate }}
+                    </span>
+                  }
+                  <button
+                    type="button"
+                    class="checklist-builder__item-remove"
+                    (click)="removeItem($index); $event.stopPropagation()"
+                    [attr.aria-label]="'admin.onboarding.remove_item' | translate"
+                    [attr.data-testid]="'remove-item-' + $index">
+                    &times;
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Item Configuration Panel -->
+      <aside class="checklist-builder__config-panel" data-testid="config-panel"
+             [attr.aria-label]="'admin.onboarding.item_configuration' | translate">
+        @if (selectedItem(); as item) {
+          <h2 class="checklist-builder__section-title">
+            {{ 'admin.onboarding.configure_item' | translate }}
+          </h2>
+
+          <div class="checklist-builder__field">
+            <label [for]="'item-name-' + selectedItemIndex()" class="checklist-builder__label">
+              {{ 'admin.onboarding.item_name' | translate }}
+            </label>
+            <input
+              type="text"
+              [id]="'item-name-' + selectedItemIndex()"
+              class="checklist-builder__input"
+              [ngModel]="item.name"
+              (ngModelChange)="updateItemName(selectedItemIndex()!, $event)"
+              [placeholder]="'admin.onboarding.item_name_placeholder' | translate"
+              data-testid="item-name-input"
+              [attr.aria-label]="'admin.onboarding.item_name' | translate" />
+          </div>
+
+          <div class="checklist-builder__field">
+            <label [for]="'item-desc-' + selectedItemIndex()" class="checklist-builder__label">
+              {{ 'admin.onboarding.item_description' | translate }}
+            </label>
+            <textarea
+              [id]="'item-desc-' + selectedItemIndex()"
+              class="checklist-builder__textarea"
+              [ngModel]="item.description"
+              (ngModelChange)="updateItemDescription(selectedItemIndex()!, $event)"
+              [placeholder]="'admin.onboarding.item_desc_placeholder' | translate"
+              rows="3"
+              data-testid="item-desc-input"
+              [attr.aria-label]="'admin.onboarding.item_description' | translate"></textarea>
+          </div>
+
+          <div class="checklist-builder__field">
+            <label class="checklist-builder__checkbox-label">
+              <input
+                type="checkbox"
+                [ngModel]="item.required"
+                (ngModelChange)="updateItemRequired(selectedItemIndex()!, $event)"
+                data-testid="item-required-checkbox" />
+              {{ 'admin.onboarding.item_required' | translate }}
+            </label>
+          </div>
+
+          <div class="checklist-builder__field">
+            <label [for]="'item-due-offset-' + selectedItemIndex()" class="checklist-builder__label">
+              {{ 'admin.onboarding.due_date_offset_days' | translate }}
+            </label>
+            <input
+              type="number"
+              [id]="'item-due-offset-' + selectedItemIndex()"
+              class="checklist-builder__input checklist-builder__input--narrow"
+              [ngModel]="item.due_date_offset_days"
+              (ngModelChange)="updateItemDueDateOffset(selectedItemIndex()!, $event)"
+              min="0"
+              data-testid="item-due-offset-input"
+              [attr.aria-label]="'admin.onboarding.due_date_offset_days' | translate" />
+          </div>
+
+          <div class="checklist-builder__field">
+            <label [for]="'item-url-' + selectedItemIndex()" class="checklist-builder__label">
+              {{ 'admin.onboarding.linked_resource_url' | translate }}
+            </label>
+            <input
+              type="url"
+              [id]="'item-url-' + selectedItemIndex()"
+              class="checklist-builder__input"
+              [ngModel]="item.linked_resource_url ?? ''"
+              (ngModelChange)="updateItemLinkedUrl(selectedItemIndex()!, $event)"
+              [placeholder]="'admin.onboarding.url_placeholder' | translate"
+              data-testid="item-url-input"
+              [attr.aria-label]="'admin.onboarding.linked_resource_url' | translate" />
+          </div>
+
+          <div class="checklist-builder__item-type-info">
+            <span class="checklist-builder__config-note">
+              {{ 'admin.onboarding.item_type' | translate }}: {{ itemTypeLabels[item.type] | translate }}
+            </span>
+          </div>
+        } @else {
+          <div class="checklist-builder__no-selection" data-testid="no-item-selected">
+            <p>{{ 'admin.onboarding.select_item_to_configure' | translate }}</p>
+          </div>
+        }
+      </aside>
+    </div>
+
+    <!-- Footer Actions -->
+    <footer class="checklist-builder__footer" data-testid="builder-footer">
+      <button
+        type="button"
+        class="checklist-builder__btn checklist-builder__btn--secondary"
+        (click)="cancel()"
+        data-testid="cancel-btn"
+        [attr.aria-label]="'common.cancel' | translate">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="checklist-builder__btn checklist-builder__btn--primary"
+        [disabled]="!canSave() || saving()"
+        (click)="save()"
+        data-testid="save-btn"
+        [attr.aria-label]="'common.save' | translate">
+        @if (saving()) {
+          {{ 'common.saving' | translate }}
+        } @else {
+          {{ 'common.save' | translate }}
+        }
+      </button>
+    </footer>
+  }
+</section>

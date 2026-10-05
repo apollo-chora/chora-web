@@ -1,0 +1,292 @@
+// F-I2 incubation card — pre-hatch egg on the A+ roster/profile.
+// Design language per feedback_dale_ux_design_language: glass surface,
+// staggered progressive reveal, easing cubic-bezier(.165,.84,.44,1),
+// translate3d slide-ins, hover micro-interactions, reduced-motion guard.
+
+$ease-glass: cubic-bezier(0.165, 0.84, 0.44, 1);
+
+:host {
+  display: block;
+}
+
+.incubation-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1.25rem;
+  border-radius: 18px;
+  overflow: hidden;
+  text-align: center;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: incubation-rise 420ms $ease-glass both;
+  }
+
+  // Progressive staggered reveal of the tiers (tier-1 canvas → tier-4 CTA).
+  @media (prefers-reduced-motion: no-preference) {
+    > * {
+      animation: incubation-tier 480ms $ease-glass both;
+    }
+    .incubation-card__head { animation-delay: 80ms; }
+    .incubation-card__warmth { animation-delay: 160ms; }
+    .incubation-card__hatch-cta,
+    .incubation-card__hint { animation-delay: 240ms; }
+  }
+}
+
+@keyframes incubation-rise {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes incubation-tier {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+// ── Tier 1: egg canvas ──────────────────────────────────────────────
+.incubation-card__canvas {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.incubation-card__halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(165, 180, 252, 0.42) 0%, transparent 62%);
+  filter: blur(18px);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: incubation-halo 4.6s ease-in-out infinite;
+  }
+}
+
+.incubation-card--stirring .incubation-card__halo {
+  // Warm amber glow once the egg is stirring — reaction to "ready".
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.5) 0%, transparent 62%);
+}
+
+@keyframes incubation-halo {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
+  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.05); }
+}
+
+.incubation-card__egg {
+  position: relative;
+  z-index: 1;
+  width: 160px;
+  height: auto;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: incubation-wobble 3.8s ease-in-out infinite;
+  }
+}
+
+.incubation-card--stirring .incubation-card__egg {
+  @media (prefers-reduced-motion: no-preference) {
+    // Faster, eager wobble when stirring.
+    animation-duration: 1.4s;
+  }
+}
+
+@keyframes incubation-wobble {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  25%      { transform: rotate(-3deg) translateY(-2px); }
+  60%      { transform: rotate(2deg) translateY(0); }
+  80%      { transform: rotate(-1deg) translateY(-1px); }
+}
+
+.incubation-card__mystery {
+  position: absolute;
+  z-index: 2;
+  right: 8%;
+  bottom: 4%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+
+  i { color: var(--primary); font-size: 12px; }
+}
+
+.incubation-card__mystery-mark {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.incubation-card__mystery-sub {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+// ── Tier 2: head ────────────────────────────────────────────────────
+.incubation-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.incubation-card__eyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--primary);
+}
+
+.incubation-card__title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.incubation-card__goal {
+  margin: 0.15rem 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: center;
+
+  i { color: var(--primary); font-size: 11px; }
+  strong { color: var(--text-main); font-weight: 700; }
+}
+
+// ── Tier 3: warming bar ─────────────────────────────────────────────
+.incubation-card__warmth {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.incubation-card__warmth-labels {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.incubation-card__warmth-tag {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.incubation-card__warmth-value {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+}
+
+.incubation-card__warmth-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.28);
+  overflow: hidden;
+}
+
+.incubation-card__warmth-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width 600ms $ease-glass;
+}
+
+.incubation-card--stirring .incubation-card__warmth-fill {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+// ── Tier 4: CTA / hint ──────────────────────────────────────────────
+.incubation-card__hatch-cta {
+  margin-top: 0.15rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+  color: #3b2600;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 200ms $ease-glass, box-shadow 200ms $ease-glass;
+
+  &:hover {
+    transform: translate3d(0, -1px, 0);
+    box-shadow: 0 10px 24px rgba(245, 158, 11, 0.34);
+  }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+}
+
+.incubation-card__hint {
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--glass-border);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  i { color: var(--primary); font-size: 11px; }
+}
+
+// ── Error state ─────────────────────────────────────────────────────
+.incubation-card--error {
+  gap: 0.6rem;
+  padding: 1.25rem 1.5rem;
+
+  i { color: var(--danger, #dc2626); font-size: 18px; }
+  p { margin: 0; font-size: 13px; color: var(--text-muted); }
+}
+
+.incubation-card__retry {
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+
+  &:hover { background: rgba(255, 255, 255, 0.9); }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}

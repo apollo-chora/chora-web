@@ -1,0 +1,139 @@
+<fieldset class="qbg" data-testid="question-batch-generator">
+  <legend class="qbg__legend">{{ 'shared.question_batch_generator.heading' | translate }}</legend>
+
+  <div class="qbg__rows" role="list">
+    @for (row of rows(); track row.question_type; let i = $index) {
+      <div class="qbg__row" role="listitem" [attr.data-testid]="'qbg-row-' + row.question_type">
+        <div class="qbg__row-type">
+          <label class="qbg__field-label" [attr.for]="'qbg-type-' + i">
+            {{ 'shared.question_batch_generator.type_label' | translate }}
+          </label>
+          <select
+            class="qbg__select"
+            [id]="'qbg-type-' + i"
+            [attr.data-testid]="'qbg-type-' + i"
+            [value]="row.question_type"
+            (change)="setRowType(i, $any($event.target).value)">
+            @for (opt of typeOptionsFor(i); track opt) {
+              <option [value]="opt">{{ typeLabel[opt] }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="qbg__row-count">
+          <label class="qbg__field-label" [attr.for]="'qbg-count-' + i">
+            {{ 'shared.question_batch_generator.count_label' | translate }}
+          </label>
+          <input
+            class="qbg__input"
+            type="number"
+            min="1"
+            [max]="maxTotal()"
+            [id]="'qbg-count-' + i"
+            [attr.data-testid]="'qbg-count-' + i"
+            [value]="row.count"
+            (input)="setRowCount(i, $any($event.target).value)" />
+        </div>
+
+        <div class="qbg__row-forced">
+          <span class="qbg__field-label">
+            {{ 'shared.question_batch_generator.force_images_label' | translate }}
+          </span>
+          <div class="qbg__forced-checks">
+            <label class="qbg__forced-check">
+              <input
+                type="checkbox"
+                [attr.data-testid]="'qbg-force-stem-' + i"
+                [checked]="!!row.image_for_stem"
+                (change)="toggleRowImageStem(i, $any($event.target).checked)" />
+              <span>{{ 'shared.question_batch_generator.force_stem_image' | translate }}</span>
+            </label>
+            <label class="qbg__forced-check">
+              <input
+                type="checkbox"
+                [attr.data-testid]="'qbg-force-answer-' + i"
+                [checked]="!!row.image_for_answer"
+                (change)="toggleRowImageAnswer(i, $any($event.target).checked)" />
+              <span>{{ 'shared.question_batch_generator.force_answer_image' | translate }}</span>
+            </label>
+          </div>
+        </div>
+
+        @if (allowImages()) {
+          <div class="qbg__row-images">
+            <label class="qbg__field-label" [attr.for]="'qbg-images-' + i">
+              {{ 'shared.question_batch_generator.images_label' | translate }}
+            </label>
+            <div class="qbg__images-input">
+              <input
+                class="qbg__input qbg__input--narrow"
+                type="number"
+                min="0"
+                [max]="row.count"
+                [id]="'qbg-images-' + i"
+                [attr.data-testid]="'qbg-images-' + i"
+                [value]="row.max_images"
+                (input)="setRowMaxImages(i, $any($event.target).value)" />
+              <span class="qbg__images-of">
+                {{ 'shared.question_batch_generator.of' | translate }} {{ row.count }}
+              </span>
+            </div>
+          </div>
+        }
+
+        @if (rows().length > 1) {
+          <button
+            type="button"
+            class="qbg__remove"
+            [attr.data-testid]="'qbg-remove-' + i"
+            [attr.aria-label]="'shared.question_batch_generator.remove_aria' | translate"
+            (click)="removeRow(i)">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="qbg__footer">
+    @if (canAddRow()) {
+      <button
+        type="button"
+        class="qbg__add"
+        data-testid="qbg-add-type"
+        (click)="addRow()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{ 'shared.question_batch_generator.add_type' | translate }}
+      </button>
+    } @else {
+      <span></span>
+    }
+    <span
+      class="qbg__total"
+      [class.qbg__total--invalid]="!valid()"
+      data-testid="qbg-total"
+      aria-live="polite">
+      {{ 'shared.question_batch_generator.total_label' | translate }}: {{ total() }} / {{ maxTotal() }}
+    </span>
+  </div>
+
+  <label class="qbg__images-toggle" data-testid="qbg-allow-images">
+    <input
+      type="checkbox"
+      [checked]="allowImages()"
+      (change)="toggleAllowImages($any($event.target).checked)" />
+    <span>{{ 'shared.question_batch_generator.allow_images' | translate }}</span>
+  </label>
+  @if (allowImages()) {
+    <p class="qbg__images-hint">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      {{ 'shared.question_batch_generator.images_hint' | translate }}
+    </p>
+  }
+
+  @if (!valid()) {
+    <p class="qbg__error" role="alert" data-testid="qbg-error">
+      {{ 'shared.question_batch_generator.invalid' | translate }}
+    </p>
+  }
+</fieldset>

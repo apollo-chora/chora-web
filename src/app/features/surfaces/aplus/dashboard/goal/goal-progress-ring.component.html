@@ -1,0 +1,28 @@
+<span class="goal-progress-ring__wrap">
+  <svg
+    class="goal-progress-ring__svg"
+    viewBox="0 0 36 36"
+    aria-hidden="true"
+    focusable="false">
+    <circle
+      class="goal-progress-ring__track"
+      cx="18"
+      cy="18"
+      [attr.r]="radius"
+      fill="none" />
+    <circle
+      class="goal-progress-ring__arc"
+      data-testid="goal-progress-ring-arc"
+      cx="18"
+      cy="18"
+      [attr.r]="radius"
+      fill="none"
+      stroke-linecap="round"
+      [attr.stroke-dasharray]="dashArray()"
+      stroke-dashoffset="0"
+      transform="rotate(-90 18 18)" />
+  </svg>
+  <span class="goal-progress-ring__percent" data-testid="goal-progress-ring-percent">
+    {{ displayPercent() }}%
+  </span>
+</span>

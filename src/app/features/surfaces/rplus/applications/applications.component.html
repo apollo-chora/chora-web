@@ -1,0 +1,194 @@
+<section
+  class="applications surface-rplus"
+  data-testid="rplus-applications-admin"
+  role="region"
+  aria-labelledby="rplus-applications-admin-heading"
+>
+  <header class="applications__header">
+    <div class="applications__header-text">
+      <h1
+        id="rplus-applications-admin-heading"
+        class="applications__title"
+      >
+        {{ 'rplus.applicationsAdmin.title' | translate }}
+      </h1>
+      <p class="applications__subtitle">
+        {{ 'rplus.applicationsAdmin.subtitle' | translate }}
+      </p>
+    </div>
+    <span class="applications__total-pill" data-testid="applications-admin-total">
+      <strong>{{ total() }}</strong>
+      {{ 'rplus.applicationsAdmin.totalLabel' | translate }}
+    </span>
+  </header>
+
+  <!-- Status filter: a set of toggle buttons, NOT a tablist. These chips
+       re-filter the list in place, own no tabpanel, and implement neither
+       roving tabindex nor arrow-key navigation, so tab semantics would be a
+       lie to a screen reader. `aria-pressed` carries the on/off state
+       (role=tab would demand aria-selected instead - carrying BOTH is what axe
+       flagged as aria-allowed-attr, CRITICAL x3). The element is a <div>, not
+       a <nav>: dropping role="tablist" from a <nav> would expose its implicit
+       navigation landmark, and in-place filters are not navigation. Mirrors
+       the assessment-list fix in bf973edda. -->
+  <div
+    class="applications__tabs"
+    role="group"
+    [attr.aria-label]="'rplus.applicationsAdmin.tabsAria' | translate"
+  >
+    @for (tab of tabs; track tab) {
+      <button
+        type="button"
+        class="applications__tab"
+        [class.applications__tab--active]="activeTab() === tab"
+        [attr.data-testid]="'applications-admin-tab-' + tab"
+        [attr.data-tab]="tab"
+        [attr.aria-pressed]="activeTab() === tab"
+        (click)="selectTab(tab)"
+      >
+        {{ 'rplus.applicationsAdmin.tab.' + tab | translate }}
+      </button>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div
+      class="applications__loading"
+      data-testid="applications-admin-loading"
+      role="status"
+      aria-busy="true"
+    >
+      {{ 'rplus.applicationsAdmin.loading' | translate }}
+    </div>
+  } @else if (isError()) {
+    <div
+      class="applications__error"
+      data-testid="applications-admin-error"
+      role="alert"
+    >
+      <p class="applications__error-message">
+        {{ errorKey() | translate }}
+      </p>
+      <button
+        type="button"
+        class="applications__retry"
+        data-testid="applications-admin-retry"
+        (click)="retry()"
+      >
+        {{ 'rplus.applicationsAdmin.retry' | translate }}
+      </button>
+    </div>
+  } @else if (isEmpty()) {
+    <div
+      class="applications__empty"
+      data-testid="applications-admin-empty"
+    >
+      <p class="applications__empty-title">
+        {{ 'rplus.applicationsAdmin.empty.title' | translate }}
+      </p>
+      <p class="applications__empty-body">
+        {{ 'rplus.applicationsAdmin.empty.body' | translate }}
+      </p>
+    </div>
+  } @else {
+    <!-- Tablet-first stacked-card layout; promotes to table at >=1280px. -->
+    <ul
+      class="applications__list"
+      data-testid="applications-admin-list"
+      role="list"
+    >
+      @for (row of applications(); track row.id) {
+        <li
+          class="applications__row"
+          [attr.data-testid]="'applications-admin-row-' + row.id"
+        >
+          <div class="applications__row-main">
+            <div class="applications__row-header">
+              <span
+                class="applications__row-id"
+                [attr.data-testid]="'applications-admin-row-id-' + row.id"
+              >
+                {{ row.id }}
+              </span>
+              <span
+                class="badge applications__row-badge"
+                [class]="'badge applications__row-badge ' + badge(row.state)"
+                [attr.data-testid]="'applications-admin-row-state-' + row.id"
+                [attr.data-state]="row.state"
+              >
+                {{ 'rplus.applicationsAdmin.state.' + row.state | translate }}
+              </span>
+            </div>
+
+            <dl class="applications__row-meta">
+              <div class="applications__row-meta-item">
+                <dt>{{ 'rplus.applicationsAdmin.field.applicant' | translate }}</dt>
+                <dd [attr.data-testid]="'applications-admin-row-gcid-' + row.id">
+                  {{ row.gcid }}
+                </dd>
+              </div>
+              <div class="applications__row-meta-item">
+                <dt>{{ 'rplus.applicationsAdmin.field.course' | translate }}</dt>
+                <dd [attr.data-testid]="'applications-admin-row-course-' + row.id">
+                  {{ row.courseId }}
+                </dd>
+              </div>
+              @if (row.classId) {
+                <div class="applications__row-meta-item">
+                  <dt>{{ 'rplus.applicationsAdmin.field.class' | translate }}</dt>
+                  <dd>{{ row.classId }}</dd>
+                </div>
+              }
+              <div class="applications__row-meta-item">
+                <dt>{{ 'rplus.applicationsAdmin.field.submittedAt' | translate }}</dt>
+                <dd>{{ row.createdAt }}</dd>
+              </div>
+              <div class="applications__row-meta-item">
+                <dt>{{ 'rplus.applicationsAdmin.field.updatedAt' | translate }}</dt>
+                <dd>{{ row.updatedAt }}</dd>
+              </div>
+              @if (row.offerExpiresAt) {
+                <div class="applications__row-meta-item">
+                  <dt>{{ 'rplus.applicationsAdmin.field.offerExpiresAt' | translate }}</dt>
+                  <dd>{{ row.offerExpiresAt }}</dd>
+                </div>
+              }
+              @if (row.invoiceId) {
+                <div class="applications__row-meta-item">
+                  <dt>{{ 'rplus.applicationsAdmin.field.invoiceId' | translate }}</dt>
+                  <dd>{{ row.invoiceId }}</dd>
+                </div>
+              }
+              @if (row.rejectedReason) {
+                <div class="applications__row-meta-item">
+                  <dt>{{ 'rplus.applicationsAdmin.field.rejectedReason' | translate }}</dt>
+                  <dd>{{ row.rejectedReason }}</dd>
+                </div>
+              }
+              @if (row.withdrawnReason) {
+                <div class="applications__row-meta-item">
+                  <dt>{{ 'rplus.applicationsAdmin.field.withdrawnReason' | translate }}</dt>
+                  <dd>{{ row.withdrawnReason }}</dd>
+                </div>
+              }
+            </dl>
+          </div>
+
+          <div class="applications__row-actions">
+            <a
+              class="applications__detail-cta"
+              [attr.data-testid]="'applications-admin-detail-link-' + row.id"
+              [routerLink]="['/r', 'applications-admin', row.id]"
+              [attr.aria-label]="
+                ('rplus.applicationsAdmin.detail.aria' | translate) + ' ' + row.id
+              "
+            >
+              {{ 'rplus.applicationsAdmin.detail.cta' | translate }}
+              <span aria-hidden="true">&rsaquo;</span>
+            </a>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

@@ -1,0 +1,152 @@
+<section
+  class="hplus-eggs-edit surface-hplus"
+  aria-labelledby="hplus-eggs-edit-heading"
+  data-testid="hplus-familiar-eggs-edit">
+  <header class="hplus-eggs-edit__header glass-panel">
+    <div>
+      <h1 id="hplus-eggs-edit-heading" class="hplus-eggs-edit__title">
+        <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+        {{ 'hplus.familiar_eggs_edit.heading' | translate }}
+      </h1>
+      <p class="hplus-eggs-edit__sub">
+        <code>{{ sku() }}</code>
+      </p>
+    </div>
+    <a routerLink="/h/marketplace/companion-eggs"
+       class="hplus-eggs-edit__back"
+       data-testid="hplus-eggs-edit-back">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      {{ 'hplus.familiar_eggs_edit.back' | translate }}
+    </a>
+  </header>
+
+  <form
+    class="hplus-eggs-edit__form glass-panel"
+    (submit)="$event.preventDefault(); save()"
+    data-testid="hplus-eggs-edit-form">
+    <fieldset class="hplus-eggs-edit__fieldset">
+      <legend>{{ 'hplus.familiar_eggs_edit.distribution_legend' | translate }}</legend>
+      <p class="hplus-eggs-edit__hint">
+        {{ 'hplus.familiar_eggs_edit.distribution_hint' | translate }}
+      </p>
+
+      <ol class="hplus-eggs-edit__sliders" data-testid="hplus-eggs-edit-sliders">
+        @for (b of breeds; track b) {
+          <li class="slider-row" [attr.data-breed]="b" [attr.data-rarity]="rarityFor(b)">
+            <div class="slider-row__head">
+              <span class="slider-row__name">
+                {{ ('aplus.familiar_marketplace.breed_' + b) | translate }}
+              </span>
+              <span class="slider-row__rarity" [attr.data-rarity]="rarityFor(b)">
+                {{ ('aplus.familiar.rarity_' + rarityFor(b)) | translate }}
+              </span>
+            </div>
+            <div class="slider-row__controls">
+              <input
+                type="range"
+                class="slider-row__range"
+                min="0"
+                max="100"
+                step="1"
+                [value]="weight(b)"
+                (input)="onWeightInput(b, ($any($event.target).value))"
+                [attr.aria-label]="('aplus.familiar_marketplace.breed_' + b) | translate"
+                [attr.data-testid]="'hplus-eggs-edit-range-' + b" />
+              <input
+                type="number"
+                class="slider-row__numeric"
+                min="0"
+                max="100"
+                step="1"
+                [value]="weight(b)"
+                (input)="onWeightInput(b, ($any($event.target).value))"
+                [attr.data-testid]="'hplus-eggs-edit-num-' + b" />
+              <span class="slider-row__pct">%</span>
+            </div>
+          </li>
+        }
+      </ol>
+    </fieldset>
+
+    <aside
+      class="hplus-eggs-edit__total"
+      [class.is-balanced]="isBalanced()"
+      data-testid="hplus-eggs-edit-total">
+      <div>
+        <p class="hplus-eggs-edit__total-label">
+          {{ 'hplus.familiar_eggs_edit.total_label' | translate }}
+        </p>
+        <p class="hplus-eggs-edit__total-value">
+          {{ totalWeight() }} / 100
+        </p>
+      </div>
+      <div class="hplus-eggs-edit__total-state">
+        @if (isBalanced()) {
+          <span class="hplus-eggs-edit__balanced">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'hplus.familiar_eggs_edit.balanced' | translate }}
+          </span>
+        } @else {
+          <button
+            type="button"
+            class="hplus-eggs-edit__rebalance"
+            (click)="rebalanceToHundred()"
+            data-testid="hplus-eggs-edit-rebalance">
+            <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+            {{ 'hplus.familiar_eggs_edit.rebalance' | translate }}
+          </button>
+        }
+      </div>
+    </aside>
+
+    <footer class="hplus-eggs-edit__footer">
+      <p class="hplus-eggs-edit__audit-line">
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        <strong>{{ 'hplus.familiar_eggs_edit.audit_label' | translate }}:</strong>
+        {{ 'hplus.familiar_eggs_edit.audit_body' | translate }}
+        @if (distributionUpdatedAt()) {
+          <span class="hplus-eggs-edit__updated">
+            {{ 'hplus.familiar_eggs_edit.last_updated' | translate }}:
+            <time [attr.dateTime]="distributionUpdatedAt()">
+              {{ distributionUpdatedAt() }}
+            </time>
+          </span>
+        }
+      </p>
+
+      <div class="hplus-eggs-edit__actions">
+        <!-- A refusal renders instead of a success pill, never beside one. The
+             message is chora-tenancy's own (an unknown species, a total that is
+             not 100), so the admin is told WHY rather than just "failed". -->
+        @if (saveError(); as err) {
+          <span
+            class="hplus-eggs-edit__error"
+            role="alert"
+            data-testid="hplus-eggs-edit-error">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ err | translate }}
+          </span>
+        }
+        @if (savedAt()) {
+          <span class="hplus-eggs-edit__saved" data-testid="hplus-eggs-edit-saved">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'hplus.familiar_eggs_edit.saved' | translate }}
+          </span>
+        }
+        <button
+          type="submit"
+          class="hplus-eggs-edit__save"
+          [disabled]="!isBalanced() || saving()"
+          data-testid="hplus-eggs-edit-save">
+          @if (saving()) {
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            {{ 'hplus.familiar_eggs_edit.saving' | translate }}
+          } @else {
+            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+            {{ 'hplus.familiar_eggs_edit.save_cta' | translate }}
+          }
+        </button>
+      </div>
+    </footer>
+  </form>
+</section>

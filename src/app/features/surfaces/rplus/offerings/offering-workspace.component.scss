@@ -1,0 +1,1268 @@
+// /r/offerings/:id workspace. Object-derived tab shell + Overview detail.
+// Tablet-first (≥768px primary; ≥1280px enhanced). No mobile breakpoints.
+
+:host {
+  display: block;
+}
+
+.offering-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+  padding: var(--chora-space-lg);
+}
+
+// ── Header ────────────────────────────────────────────────────────────────
+.offering-workspace__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-lg);
+}
+
+.offering-workspace__breadcrumb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  color: var(--chora-color-text-secondary);
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover {
+    color: var(--primary);
+  }
+}
+
+.offering-workspace__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__id {
+  font-family: var(--chora-font-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--chora-color-text-secondary);
+}
+
+// ── Loading / error ───────────────────────────────────────────────────────
+.offering-workspace__loading {
+  margin: 0;
+  padding: var(--chora-space-lg);
+  color: var(--chora-color-text-secondary);
+}
+
+.offering-workspace__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+  padding: var(--chora-space-lg);
+}
+
+.offering-workspace__error-message {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  color: var(--danger);
+}
+
+// ── Tabs (object-derived; ARIA tablist + roving tabindex) ──────────────────
+.offering-workspace__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-xs);
+  border-bottom: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.1));
+}
+
+.offering-workspace__tab {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: var(--chora-space-sm) var(--chora-space-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--chora-color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--chora-color-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &--active {
+    // AA-safe active-tab label — brand --primary (#1976d2) is only ~4.4:1 on
+    // the tab surface (below WCAG AA 4.5:1 for normal text). Mirrors the
+    // sidebar active-label fix (--chora-color-primary-strong, 2026-05-17).
+    // The 3px underline stays brand --primary (non-text, ≥3:1 is sufficient).
+    color: var(--chora-color-primary-strong);
+    border-bottom-color: var(--primary);
+  }
+}
+
+// ── Panels ────────────────────────────────────────────────────────────────
+.offering-workspace__panel {
+  padding: var(--chora-space-lg);
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.offering-workspace__overview-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-sm);
+  margin-bottom: var(--chora-space-lg);
+}
+
+.offering-workspace__fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--chora-space-md);
+  margin: 0;
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.offering-workspace__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+
+  dt {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-secondary);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--chora-color-text-primary);
+  }
+
+  code {
+    font-family: var(--chora-font-mono, monospace);
+    font-size: 0.85rem;
+  }
+}
+
+// The Overview course ref — no title projection on the offering read-model
+// yet, so it stays an honest id fallback; muted so it reads as a secondary,
+// copyable reference rather than the field's primary value.
+.offering-workspace__course-ref-muted {
+  color: var(--chora-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+// ── Lifecycle (admin-only, state-derived) ──────────────────────────────────
+.offering-workspace__lifecycle {
+  margin-top: var(--chora-space-xl);
+  padding-top: var(--chora-space-lg);
+  border-top: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.1));
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+.offering-workspace__lifecycle-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__conflict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+  padding: var(--chora-space-md);
+  border-radius: var(--chora-radius-md);
+  background: var(--danger-bg);
+
+  p {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+    color: var(--danger);
+  }
+}
+
+.offering-workspace__action-error {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  color: var(--danger);
+}
+
+.offering-workspace__terminal {
+  margin: 0;
+  color: var(--chora-color-text-secondary);
+}
+
+// ── Placeholder (honest "coming soon") ─────────────────────────────────────
+.offering-workspace__panel--placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--chora-space-sm);
+  padding-block: var(--chora-space-xl);
+}
+
+.offering-workspace__coming-soon-icon {
+  font-size: 2rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.offering-workspace__coming-soon-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__coming-soon-body {
+  margin: 0;
+  color: var(--chora-color-text-secondary);
+}
+
+// ── Assessments panel (W3.A) ───────────────────────────────────────────────
+.offering-workspace__assessments-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+  margin-bottom: var(--chora-space-lg);
+}
+
+.offering-workspace__assessments-intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+// Assessment front-door (CHO-2123): assemble (primary) · attach · author
+// (secondary), laid out as a wrapping row so they reflow on the ≥768px tablet
+// breakpoint without stacking awkwardly.
+.offering-workspace__assessments-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__assessments-subtitle {
+  margin: 0;
+  color: var(--chora-color-text-secondary);
+}
+
+// "You can add more than one" helper, shown once an offering has >= 1 assessment.
+.offering-workspace__assessments-hint {
+  margin: 0 0 var(--chora-space-md);
+  font-size: 0.85rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.offering-workspace__assessments-success {
+  margin: 0 0 var(--chora-space-md);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  color: var(--success);
+}
+
+.offering-workspace__picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+  margin-bottom: var(--chora-space-lg);
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+.offering-workspace__picker-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__picker-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offering-workspace__picker-option {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+  padding: var(--chora-space-sm) var(--chora-space-md);
+  background: transparent;
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-sm);
+  cursor: pointer;
+  color: var(--chora-color-text-primary);
+
+  &:hover:not([disabled]) {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: var(--primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.offering-workspace__picker-option-title {
+  font-weight: 600;
+}
+
+.offering-workspace__picker-option-meta {
+  font-size: 0.8rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.offering-workspace__assessments-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    border-bottom: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.08));
+  }
+
+  th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-secondary);
+  }
+}
+
+.offering-workspace__assessments-title {
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+// ── Curriculum panel (W2.D, read-only attached-course outline) ─────────────
+.offering-workspace__curriculum-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+.offering-workspace__curriculum-course {
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+// Course-card header row: title + admin "Add item" button (S1 editor).
+.offering-workspace__curriculum-course-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-sm);
+  margin-bottom: var(--chora-space-sm);
+}
+
+.offering-workspace__curriculum-course-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+// Heading cluster: course title + "used by N offerings" blast-radius badge,
+// kept together on the left while the admin "Add item" button sits on the right.
+.offering-workspace__curriculum-course-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  min-width: 0;
+}
+
+// Blast-radius badge — subtle glass; the .badge / .badge-neutral / .badge-warning
+// tokens carry the padding + colour, this adds the frosted blur + compact icon.
+.offering-workspace__curriculum-usage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  font-size: 0.75rem;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.08));
+
+  i {
+    font-size: 0.7em;
+    opacity: 0.75;
+  }
+}
+
+.offering-workspace__curriculum-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offering-workspace__curriculum-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-xs) 0;
+  border-bottom: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.06));
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.offering-workspace__curriculum-kind {
+  flex: 0 0 auto;
+  text-transform: capitalize;
+}
+
+.offering-workspace__curriculum-item-title {
+  flex: 1 1 auto;
+  color: var(--chora-color-text-primary);
+}
+
+// The item's ref (UUID or URL) — muted, monospaced, wraps rather than overflows.
+.offering-workspace__curriculum-item-ref {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--chora-font-mono, monospace);
+  font-size: 0.78rem;
+  color: var(--chora-color-text-secondary);
+}
+
+// Reorder + remove controls (admin-only), pushed to the row's trailing edge.
+.offering-workspace__curriculum-item-actions {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+}
+
+// Compact square icon button for the move up/down controls.
+.offering-workspace__icon-btn {
+  padding: var(--chora-space-xs) var(--chora-space-sm);
+  line-height: 1;
+}
+
+// Kind-aware ref hint under the ref field (small, muted).
+.offering-workspace__curriculum-ref-hint {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--chora-color-text-secondary);
+}
+
+// ── Certification panel (W2.D, read-only attached-course cert config) ───────
+.offering-workspace__certification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+.offering-workspace__certification-course {
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+.offering-workspace__certification-course-title {
+  margin: 0 0 var(--chora-space-sm);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__certification-configs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offering-workspace__certification-config {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-xs) 0;
+  border-bottom: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.06));
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.offering-workspace__certification-type {
+  flex: 0 0 auto;
+  text-transform: capitalize;
+}
+
+.offering-workspace__certification-detail {
+  color: var(--chora-color-text-primary);
+}
+
+// ── Sections panel (W7, intra-cohort sub-groups; list + create) ────────────
+.offering-workspace__section-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+  margin-bottom: var(--chora-space-lg);
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+.offering-workspace__section-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--chora-space-md);
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.offering-workspace__section-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+
+  span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--chora-color-text-secondary);
+  }
+
+  input {
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.16));
+    border-radius: var(--chora-radius-sm);
+    font: inherit;
+    color: var(--chora-color-text-primary);
+    background: var(--chora-color-surface, #fff);
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.offering-workspace__sections-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+.offering-workspace__section-card {
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+.offering-workspace__section-name {
+  margin: 0 0 var(--chora-space-sm);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__section-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--chora-space-md);
+  margin: 0;
+}
+
+.offering-workspace__section-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  dt {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-secondary);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--chora-color-text-primary);
+
+    // Opaque GCID fallback (lead instructor / session instructor) when no
+    // display name is available yet — muted, never fabricated (fail-loud
+    // honest; mirrors .offering-workspace__curriculum-item-ref).
+    code {
+      font-family: var(--chora-font-mono, monospace);
+      font-size: 0.8rem;
+      color: var(--chora-color-text-secondary);
+    }
+  }
+}
+
+// ── Roster panel (W7, read-only per-course learner roster) ─────────────────
+.offering-workspace__roster-summary {
+  margin: 0 0 var(--chora-space-md);
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__roster-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+.offering-workspace__roster-course {
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+.offering-workspace__roster-course-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  margin: 0 0 var(--chora-space-sm);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__roster-count {
+  flex: 0 0 auto;
+}
+
+.offering-workspace__roster-learners {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offering-workspace__roster-learner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-xs) 0;
+  border-bottom: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.06));
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.offering-workspace__roster-learner-name {
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__roster-detail {
+  color: var(--chora-color-text-secondary, var(--chora-color-text-primary));
+}
+
+// ── WS-B: per-learner unenrol control (manager-only, two-step confirm) ──────
+// Push the control(s) to the row's trailing edge; the confirm pair sits inline.
+.offering-workspace__roster-unenrol {
+  margin-inline-start: auto;
+  display: inline-flex;
+  gap: var(--chora-space-xs);
+}
+
+// Compact button sizing so the control fits a dense roster row.
+.btn-inline {
+  padding: var(--chora-space-xs) var(--chora-space-sm);
+  font-size: 0.8125rem;
+}
+
+// The inline error wraps to its own line under the learner (flex-wrap row).
+.offering-workspace__roster-unenrol-error {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  color: var(--chora-color-danger, #b42318);
+  font-size: 0.8125rem;
+}
+
+// ── Analytics panel (W7, read-only delivery-local roll-up) ─────────────────
+.offering-workspace__analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--chora-space-md);
+  margin: 0 0 var(--chora-space-lg);
+}
+
+.offering-workspace__analytics-stat {
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+
+  dt {
+    margin: 0 0 var(--chora-space-xs);
+    font-size: 0.8rem;
+    color: var(--chora-color-text-secondary, var(--chora-color-text-primary));
+  }
+
+  dd {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text-primary);
+  }
+}
+
+.offering-workspace__analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 var(--chora-space-md);
+
+  caption {
+    text-align: left;
+    font-weight: 600;
+    margin-bottom: var(--chora-space-sm);
+    color: var(--chora-color-text-primary);
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--chora-space-xs) var(--chora-space-sm);
+    border-bottom: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.08));
+  }
+
+  th {
+    font-size: 0.8rem;
+    color: var(--chora-color-text-secondary, var(--chora-color-text-primary));
+  }
+}
+
+.offering-workspace__analytics-deferred {
+  font-size: 0.85rem;
+  color: var(--chora-color-text-secondary, var(--chora-color-text-primary));
+}
+
+// ── Schedule panel (CHO-1985, delivery sessions; list + create) ────────────
+.offering-workspace__sessions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+.offering-workspace__session-card {
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+.offering-workspace__session-title {
+  margin: 0 0 var(--chora-space-sm);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+// ── Native <select> styling (every section-field select) ───────────────────
+// Style the native <select> the same way `section-field input` is styled, and
+// de-OS-chrome the CLOSED control (roster course, curriculum/prereq kind,
+// schedule room, attendance session + status) so it reads as one of our fields.
+// `appearance: none` drops the native arrow, so we draw our own caret; the OPEN
+// option list stays OS-native, which is acceptable this pass.
+.offering-workspace__section-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--chora-space-sm) var(--chora-space-md);
+  padding-inline-end: calc(var(--chora-space-md) + var(--chora-space-lg));
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.16));
+  border-radius: var(--chora-radius-sm);
+  font: inherit;
+  color: var(--chora-color-text-primary);
+  background-color: var(--chora-color-surface, #fff);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%235f6368' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--chora-space-md) center;
+  background-size: 0.75rem auto;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+}
+
+// ── Completion-policy editor (S2) ──────────────────────────────────────────
+.offering-workspace__policy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+  margin-bottom: var(--chora-space-lg);
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+.offering-workspace__policy-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  cursor: pointer;
+
+  input {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+    accent-color: var(--primary);
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  span {
+    color: var(--chora-color-text-primary);
+  }
+}
+
+// ── Section card head (S4 — name + inline Edit affordance) ──────────────────
+.offering-workspace__section-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-sm);
+  margin-bottom: var(--chora-space-sm);
+
+  .offering-workspace__section-name {
+    margin: 0;
+  }
+}
+
+.offering-workspace__attendance-picker {
+  max-width: 28rem;
+  margin-bottom: var(--chora-space-lg);
+}
+
+.offering-workspace__attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    border-bottom: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.08));
+  }
+
+  th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-secondary);
+  }
+
+  // Opaque GCID fallback (attendance record) when no display name is
+  // available yet — muted, never fabricated (fail-loud honest; mirrors
+  // .offering-workspace__curriculum-item-ref).
+  code {
+    font-family: var(--chora-font-mono, monospace);
+    font-size: 0.85rem;
+    color: var(--chora-color-text-secondary);
+  }
+}
+
+// ── Publish panel (CHO-1987, catalog handoff read + action) ────────────────
+.offering-workspace__publish-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__publish-course {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-md);
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+.offering-workspace__publish-course-title {
+  flex: 1 1 auto;
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__publish-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+  color: var(--chora-color-text-secondary);
+}
+
+// ── Prerequisites panel (ADR-226, structured course→course DAG + notes) ────
+.offering-workspace__prereq-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md);
+}
+
+.offering-workspace__prereq-course {
+  padding: var(--chora-space-md);
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--chora-radius-md);
+}
+
+// Course-card header row: title + admin "Add prerequisite" button.
+.offering-workspace__prereq-course-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-sm);
+  margin-bottom: var(--chora-space-sm);
+}
+
+.offering-workspace__prereq-course-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__prereq-edges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offering-workspace__prereq-edge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+  padding: var(--chora-space-xs) 0;
+  border-bottom: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.06));
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.offering-workspace__prereq-kind {
+  flex: 0 0 auto;
+}
+
+.offering-workspace__prereq-edge-title {
+  flex: 1 1 auto;
+  color: var(--chora-color-text-primary);
+}
+
+// Remove control (admin-only), pushed to the row's trailing edge.
+.offering-workspace__prereq-edge-actions {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+}
+
+// Read-only free-text PrerequisiteNotes (non-lossy legacy field, ADR-226 §1).
+.offering-workspace__prereq-notes {
+  margin-top: var(--chora-space-sm);
+}
+
+.offering-workspace__prereq-notes-list {
+  margin: var(--chora-space-xs) 0 0;
+  padding-inline-start: var(--chora-space-lg);
+  color: var(--chora-color-text-secondary);
+  font-size: 0.9rem;
+}
+
+// ── Local button / badge variants (not in the global polyglass set) ────────
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  color: var(--chora-color-text-primary);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.btn-danger {
+  background: var(--danger);
+  border: 1px solid var(--danger);
+  color: #fff;
+
+  &:hover {
+    filter: brightness(0.95);
+  }
+}
+
+.badge-neutral {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--chora-color-text-secondary);
+}
+
+// ── R+ Phase-2 W7 (WS-A) — Module structure section ─────────────────────────
+// Nested under a course card, below its flat content-item list. Groups items
+// into ordered modules; reuses the .glass-panel / .badge / .btn tokens.
+.offering-workspace__modules {
+  margin-top: var(--chora-space-md);
+  padding-top: var(--chora-space-md);
+  border-top: 1px dashed var(--chora-color-border, rgba(0, 0, 0, 0.12));
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__modules-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__modules-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--chora-color-text-secondary, var(--chora-color-text-primary));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.offering-workspace__module-create {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__module-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__module {
+  padding: var(--chora-space-sm) var(--chora-space-md);
+  border-radius: var(--chora-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__module-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__module-title {
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__module-items {
+  list-style: disc;
+  margin: 0;
+  padding-left: var(--chora-space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.offering-workspace__module-item {
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-sm);
+}
+
+.offering-workspace__module-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--chora-space-md);
+}
+
+.offering-workspace__module-add,
+.offering-workspace__module-req {
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+}
+
+.offering-workspace__module-req-n {
+  width: 4rem;
+}
+
+// ── Transcript panel (W6, per-offering gradebook join) ──────────────────────
+
+// Horizontal scroll container — a graduate cohort can have many attached
+// assessments, so the matrix's column count is unbounded; the page itself
+// must never scroll sideways (tablet-first), only this table does.
+.offering-workspace__transcript-scroll {
+  overflow-x: auto;
+}
+
+.offering-workspace__transcript-table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    border-bottom: 1px solid var(--chora-color-border, rgba(0, 0, 0, 0.08));
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chora-color-text-secondary);
+  }
+
+  tfoot th,
+  tfoot td {
+    border-bottom: none;
+    border-top: 2px solid var(--chora-color-border, rgba(0, 0, 0, 0.12));
+    font-weight: 600;
+  }
+}
+
+.offering-workspace__transcript-learner {
+  font-weight: 600;
+  color: var(--chora-color-text-primary);
+}
+
+.offering-workspace__transcript-score {
+  font-weight: 600;
+  margin-inline-end: var(--chora-space-xs);
+}
+
+.offering-workspace__transcript-ungraded {
+  color: var(--chora-color-text-secondary);
+}
+
+.offering-workspace__transcript-overall {
+  font-weight: 600;
+}

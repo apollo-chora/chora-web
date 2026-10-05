@@ -1,0 +1,161 @@
+<section
+  class="search-page"
+  role="main"
+  [attr.aria-label]="'search.page_title' | translate"
+  data-testid="search-page">
+
+  <!-- Page Header -->
+  <header class="search-page__header">
+    <h1 class="search-page__title" data-testid="search-page-title">
+      {{ 'search.page_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Search Input -->
+  <div class="search-page__search-bar" data-testid="search-bar">
+    <label class="search-page__search-label" for="search-input">
+      {{ 'search.search_label' | translate }}
+    </label>
+    <input
+      id="search-input"
+      type="search"
+      class="search-page__search-input"
+      data-testid="search-input"
+      [attr.placeholder]="'search.placeholder' | translate"
+      (input)="onSearchInput($event)" />
+  </div>
+
+  <!-- Category Tabs -->
+  <nav class="search-page__categories" data-testid="category-tabs" role="tablist">
+    @for (cat of allCategories; track cat) {
+      <button
+        type="button"
+        class="search-page__category-tab"
+        [class.search-page__category-tab--active]="category() === cat"
+        role="tab"
+        [attr.aria-selected]="category() === cat"
+        [attr.data-testid]="'tab-' + cat"
+        (click)="onCategoryChange(cat)">
+        {{ categoryLabels[cat] | translate }}
+      </button>
+    }
+  </nav>
+
+  <!-- Content Area -->
+  @if (hasQuery()) {
+    <div class="search-page__content">
+      <!-- Filters Sidebar -->
+      <aside class="search-page__filters-panel" data-testid="filters-panel">
+        <chora-search-filters
+          [facets]="atomFacets()"
+          [activeFilters]="activeFilters()"
+          (filtersChanged)="onFiltersChanged($event)"
+          (filtersCleared)="onFiltersCleared()">
+        </chora-search-filters>
+      </aside>
+
+      <!-- Results Area -->
+      <div class="search-page__results-area">
+        <!-- Sort + Result Count -->
+        <div class="search-page__toolbar" data-testid="search-toolbar">
+          <span class="search-page__result-count" data-testid="result-count" aria-live="polite">
+            {{ totalHits() }} {{ 'search.results_found' | translate }}
+          </span>
+
+          <div class="search-page__sort-group">
+            <label class="search-page__sort-label" for="sort-select">
+              {{ 'search.sort_by' | translate }}
+            </label>
+            <select
+              id="sort-select"
+              class="search-page__sort-select"
+              data-testid="sort-select"
+              [value]="sort()"
+              (change)="onSortChange($event)">
+              <option value="relevance">{{ 'search.sort_relevance' | translate }}</option>
+              <option value="difficulty:asc">{{ 'search.sort_difficulty_asc' | translate }}</option>
+              <option value="difficulty:desc">{{ 'search.sort_difficulty_desc' | translate }}</option>
+              <option value="title:asc">{{ 'search.sort_title_asc' | translate }}</option>
+              <option value="title:desc">{{ 'search.sort_title_desc' | translate }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        @if (isLoading()) {
+          <div class="search-page__loading" data-testid="search-loading" aria-live="polite">
+            @for (i of [1, 2, 3]; track i) {
+              <div class="search-page__skeleton-card"></div>
+            }
+          </div>
+        }
+
+        <!-- Error -->
+        @if (atomSearchState().status === 'error') {
+          <div class="search-page__error" data-testid="search-error" role="alert">
+            <p class="search-page__error-text">
+              {{ 'search.error_message' | translate }}
+            </p>
+          </div>
+        }
+
+        <!-- Empty Results -->
+        @if (atomSearchState().status === 'success' && !hasResults()) {
+          <div class="search-page__empty" data-testid="search-empty" role="status">
+            <p class="search-page__empty-text">
+              {{ 'search.no_results' | translate }}
+            </p>
+          </div>
+        }
+
+        <!-- Results List -->
+        @if (atomSearchState().status === 'success' && hasResults()) {
+          <div class="search-page__results-list" data-testid="search-results">
+            @for (hit of atomHits(); track hit.id) {
+              <chora-search-result-card
+                [hit]="hit"
+                [attr.data-testid]="'result-card-' + hit.id">
+              </chora-search-result-card>
+            }
+          </div>
+
+          <!-- Pagination -->
+          @if (showPagination()) {
+            <nav class="search-page__pagination" data-testid="pagination" aria-label="Search results pagination">
+              <button
+                type="button"
+                class="search-page__pagination-btn"
+                data-testid="btn-prev-page"
+                [disabled]="!canGoBack()"
+                [attr.aria-label]="'search.previous_page' | translate"
+                (click)="previousPage()">
+                &laquo; {{ 'search.previous' | translate }}
+              </button>
+              <span class="search-page__pagination-info" data-testid="pagination-info">
+                {{ 'search.page' | translate }} {{ currentPage() }} / {{ totalPages() }}
+              </span>
+              <button
+                type="button"
+                class="search-page__pagination-btn"
+                data-testid="btn-next-page"
+                [disabled]="!canGoForward()"
+                [attr.aria-label]="'search.next_page' | translate"
+                (click)="nextPage()">
+                {{ 'search.next' | translate }} &raquo;
+              </button>
+            </nav>
+          }
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Initial State (no query) -->
+  @if (!hasQuery()) {
+    <div class="search-page__initial" data-testid="search-initial" role="status">
+      <p class="search-page__initial-text">
+        {{ 'search.initial_message' | translate }}
+      </p>
+    </div>
+  }
+</section>

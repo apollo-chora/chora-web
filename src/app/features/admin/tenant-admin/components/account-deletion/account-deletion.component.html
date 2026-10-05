@@ -1,0 +1,442 @@
+<section
+  class="account-deletion"
+  role="main"
+  [attr.aria-label]="'account_deletion.title' | translate"
+  data-testid="account-deletion">
+
+  <!-- Page Header -->
+  <header class="account-deletion__header">
+    <button
+      type="button"
+      class="account-deletion__back-btn"
+      (click)="goBack()"
+      data-testid="btn-back"
+      [attr.aria-label]="'account_deletion.back' | translate">
+      &larr; {{ 'account_deletion.back_to_settings' | translate }}
+    </button>
+    <h1 class="account-deletion__title" data-testid="account-deletion-title">
+      {{ 'account_deletion.title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Step Indicator -->
+  <nav
+    class="account-deletion__steps"
+    [attr.aria-label]="'account_deletion.step_indicator' | translate"
+    data-testid="step-indicator">
+    @for (step of steps; track step; let i = $index) {
+      <div
+        class="account-deletion__step-item"
+        [class.account-deletion__step-item--active]="i === currentStepIndex()"
+        [class.account-deletion__step-item--completed]="i < currentStepIndex()"
+        [attr.data-testid]="'step-' + step"
+        [attr.aria-current]="i === currentStepIndex() ? 'step' : null">
+        <span class="account-deletion__step-number">{{ i + 1 }}</span>
+        <span class="account-deletion__step-label">
+          {{ 'account_deletion.step_' + step | translate }}
+        </span>
+      </div>
+    }
+  </nav>
+
+  <!-- ===================================================================== -->
+  <!-- Step 1: Warning                                                        -->
+  <!-- ===================================================================== -->
+  @if (currentStep() === 'warning') {
+    <div class="account-deletion__panel" data-testid="step-warning-panel" role="region">
+      <div class="account-deletion__warning-icon" aria-hidden="true">&#9888;</div>
+      <h2 class="account-deletion__panel-title">
+        {{ 'account_deletion.warning_title' | translate }}
+      </h2>
+
+      <div class="account-deletion__consequences" data-testid="consequences-list">
+        <ul class="account-deletion__list" role="list">
+          <li>{{ 'account_deletion.consequence_data_loss' | translate }}</li>
+          <li>{{ 'account_deletion.consequence_memberships' | translate }}</li>
+          <li>{{ 'account_deletion.consequence_progress' | translate }}</li>
+          <li>{{ 'account_deletion.consequence_digital_skins' | translate }}</li>
+          <li>{{ 'account_deletion.consequence_familiar' | translate }}</li>
+        </ul>
+      </div>
+
+      <!-- Impact Summary -->
+      @if (impactLoading()) {
+        <div class="account-deletion__impact-loading" data-testid="impact-loading" aria-live="polite">
+          {{ 'account_deletion.impact_loading' | translate }}
+        </div>
+      }
+
+      @if (impactSummary(); as impact) {
+        <div class="account-deletion__impact-summary" data-testid="impact-summary" role="region"
+          [attr.aria-label]="'account_deletion.impact_summary_title' | translate">
+          <h3 class="account-deletion__impact-title">
+            {{ 'account_deletion.impact_summary_title' | translate }}
+          </h3>
+          <div class="account-deletion__impact-grid">
+            <div class="account-deletion__impact-card" data-testid="impact-authored-atoms">
+              <span class="account-deletion__impact-icon" aria-hidden="true">&#9997;</span>
+              <span class="account-deletion__impact-count">{{ impact.authored_atoms }}</span>
+              <span class="account-deletion__impact-label">
+                {{ 'account_deletion.impact_authored_atoms' | translate }}
+              </span>
+            </div>
+            <div class="account-deletion__impact-card" data-testid="impact-enrollments">
+              <span class="account-deletion__impact-icon" aria-hidden="true">&#128218;</span>
+              <span class="account-deletion__impact-count">{{ impact.active_enrollments }}</span>
+              <span class="account-deletion__impact-label">
+                {{ 'account_deletion.impact_active_enrollments' | translate }}
+              </span>
+            </div>
+            <div class="account-deletion__impact-card" data-testid="impact-assessments">
+              <span class="account-deletion__impact-icon" aria-hidden="true">&#128203;</span>
+              <span class="account-deletion__impact-count">{{ impact.assessment_records }}</span>
+              <span class="account-deletion__impact-label">
+                {{ 'account_deletion.impact_assessment_records' | translate }}
+              </span>
+            </div>
+            <div class="account-deletion__impact-card"
+              [class.account-deletion__impact-card--warning]="impact.has_familiar"
+              data-testid="impact-familiar">
+              <span class="account-deletion__impact-icon" aria-hidden="true">&#128054;</span>
+              <span class="account-deletion__impact-count">
+                @if (impact.has_familiar) {
+                  {{ 'account_deletion.impact_familiar_active' | translate }}
+                } @else {
+                  {{ 'account_deletion.impact_familiar_none' | translate }}
+                }
+              </span>
+              <span class="account-deletion__impact-label">
+                {{ 'account_deletion.impact_familiar_label' | translate }}
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div class="account-deletion__grace-info" data-testid="grace-period-info">
+        <p>
+          <strong>{{ 'account_deletion.grace_period_label' | translate }}</strong>
+          {{ 'account_deletion.grace_period_description' | translate }}
+          {{ gracePeriodDays }}
+          {{ 'account_deletion.grace_period_days' | translate }}
+        </p>
+      </div>
+
+      <div class="account-deletion__actions">
+        <button
+          type="button"
+          class="account-deletion__btn account-deletion__btn--secondary"
+          (click)="goBack()"
+          data-testid="btn-cancel">
+          {{ 'account_deletion.cancel' | translate }}
+        </button>
+        <button
+          type="button"
+          class="account-deletion__btn account-deletion__btn--danger"
+          (click)="nextStep()"
+          data-testid="btn-next-warning">
+          {{ 'account_deletion.continue' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ===================================================================== -->
+  <!-- Step 2: Data Export                                                     -->
+  <!-- ===================================================================== -->
+  @if (currentStep() === 'export') {
+    <div class="account-deletion__panel" data-testid="step-export-panel" role="region">
+      <h2 class="account-deletion__panel-title">
+        {{ 'account_deletion.export_title' | translate }}
+      </h2>
+      <p class="account-deletion__description">
+        {{ 'account_deletion.export_description' | translate }}
+      </p>
+
+      <div class="account-deletion__export-section" data-testid="export-section">
+        @if (!exportRequested()) {
+          <!-- Export format selector -->
+          <div class="account-deletion__form-group">
+            <label for="export-format" class="account-deletion__label">
+              {{ 'account_deletion.export_format_label' | translate }}
+            </label>
+            <div class="account-deletion__radio-group" data-testid="export-format-selector">
+              <label class="account-deletion__radio-label">
+                <input
+                  type="radio"
+                  name="export-format"
+                  value="json"
+                  [checked]="exportFormat() === 'json'"
+                  (change)="onExportFormatChange('json')"
+                  data-testid="export-format-json" />
+                <span>JSON</span>
+              </label>
+              <label class="account-deletion__radio-label">
+                <input
+                  type="radio"
+                  name="export-format"
+                  value="csv"
+                  [checked]="exportFormat() === 'csv'"
+                  (change)="onExportFormatChange('csv')"
+                  data-testid="export-format-csv" />
+                <span>CSV</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Export scope selector -->
+          <div class="account-deletion__form-group">
+            <label for="export-scope" class="account-deletion__label">
+              {{ 'account_deletion.export_scope_label' | translate }}
+            </label>
+            <select
+              id="export-scope"
+              class="account-deletion__select"
+              (change)="onExportScopeChange($any($event.target).value)"
+              data-testid="export-scope-selector">
+              <option value="full" [selected]="exportScope() === 'full'">
+                {{ 'account_deletion.export_scope_full' | translate }}
+              </option>
+              <option value="gcid_scoped" [selected]="exportScope() === 'gcid_scoped'">
+                {{ 'account_deletion.export_scope_gcid' | translate }}
+              </option>
+              <option value="tenant_scoped" [selected]="exportScope() === 'tenant_scoped'">
+                {{ 'account_deletion.export_scope_tenant' | translate }}
+              </option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            class="account-deletion__btn account-deletion__btn--primary"
+            (click)="requestExport()"
+            data-testid="btn-request-export">
+            {{ 'account_deletion.request_export' | translate }}
+          </button>
+        } @else {
+          <div class="account-deletion__export-status" data-testid="export-status">
+            @if (exportRequest(); as req) {
+              <div class="account-deletion__export-progress">
+                <p>
+                  {{ 'account_deletion.export_status' | translate }}:
+                  <strong class="account-deletion__export-status-badge"
+                    [class.account-deletion__export-status-badge--ready]="req.status === 'ready'"
+                    [class.account-deletion__export-status-badge--processing]="req.status === 'pending' || req.status === 'processing'"
+                    [class.account-deletion__export-status-badge--failed]="req.status === 'failed'"
+                    data-testid="export-status-badge">
+                    {{ req.status }}
+                  </strong>
+                </p>
+                @if (exportPolling()) {
+                  <p class="account-deletion__export-polling" data-testid="export-polling-indicator" aria-live="polite">
+                    {{ 'account_deletion.export_polling' | translate }}
+                  </p>
+                }
+              </div>
+              @if (req.download_url) {
+                <a
+                  [href]="req.download_url"
+                  class="account-deletion__download-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="export-download-link">
+                  {{ 'account_deletion.download_export' | translate }}
+                </a>
+              }
+            } @else {
+              <p>{{ 'account_deletion.export_processing' | translate }}</p>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="account-deletion__actions">
+        <button
+          type="button"
+          class="account-deletion__btn account-deletion__btn--secondary"
+          (click)="previousStep()"
+          data-testid="btn-prev-export">
+          {{ 'account_deletion.back' | translate }}
+        </button>
+        <button
+          type="button"
+          class="account-deletion__btn account-deletion__btn--outline"
+          (click)="skipExport()"
+          data-testid="btn-skip-export">
+          {{ 'account_deletion.skip_export' | translate }}
+        </button>
+        @if (exportRequest()?.status === 'ready') {
+          <button
+            type="button"
+            class="account-deletion__btn account-deletion__btn--danger"
+            (click)="nextStep()"
+            data-testid="btn-next-export">
+            {{ 'account_deletion.continue' | translate }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ===================================================================== -->
+  <!-- Step 3: Confirmation                                                    -->
+  <!-- ===================================================================== -->
+  @if (currentStep() === 'confirm') {
+    <div class="account-deletion__panel" data-testid="step-confirm-panel" role="region">
+      <h2 class="account-deletion__panel-title">
+        {{ 'account_deletion.confirm_title' | translate }}
+      </h2>
+      <p class="account-deletion__description">
+        {{ 'account_deletion.confirm_description' | translate }}
+      </p>
+
+      <!-- Grace period explainer callout -->
+      <div class="account-deletion__grace-callout" data-testid="grace-period-callout" role="note">
+        <span class="account-deletion__grace-callout-icon" aria-hidden="true">&#128197;</span>
+        <div class="account-deletion__grace-callout-content">
+          <p class="account-deletion__grace-callout-title">
+            {{ 'account_deletion.grace_callout_title' | translate }}
+          </p>
+          <p class="account-deletion__grace-callout-text">
+            {{ 'account_deletion.grace_callout_description' | translate }}
+          </p>
+          <p class="account-deletion__grace-callout-reassurance">
+            {{ 'account_deletion.grace_callout_cancel_anytime' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <div class="account-deletion__confirm-form">
+        <!-- Type DELETE (case-sensitive) -->
+        <div class="account-deletion__form-group">
+          <label
+            for="delete-confirm-input"
+            class="account-deletion__label">
+            {{ 'account_deletion.type_delete' | translate }}
+          </label>
+          <input
+            id="delete-confirm-input"
+            type="text"
+            class="account-deletion__input"
+            [value]="confirmText()"
+            (input)="onConfirmTextChange($any($event.target).value)"
+            autocomplete="off"
+            data-testid="confirm-text-input"
+            [attr.aria-describedby]="'delete-confirm-hint'" />
+          <span id="delete-confirm-hint" class="account-deletion__hint">
+            {{ 'account_deletion.type_delete_hint_case_sensitive' | translate }}
+          </span>
+        </div>
+
+        <!-- Acknowledgment checkbox -->
+        <div class="account-deletion__form-group">
+          <label class="account-deletion__checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="confirmChecked()"
+              (change)="onConfirmCheckedChange($any($event.target).checked)"
+              data-testid="confirm-checkbox" />
+            <span>{{ 'account_deletion.acknowledge_irreversible' | translate }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="account-deletion__actions">
+        <button
+          type="button"
+          class="account-deletion__btn account-deletion__btn--secondary"
+          (click)="previousStep()"
+          data-testid="btn-prev-confirm">
+          {{ 'account_deletion.back' | translate }}
+        </button>
+        <button
+          type="button"
+          class="account-deletion__btn account-deletion__btn--danger"
+          [disabled]="!isConfirmValid() || submitting()"
+          (click)="submitDeletion()"
+          data-testid="btn-submit-deletion">
+          @if (submitting()) {
+            {{ 'account_deletion.submitting' | translate }}
+          } @else {
+            {{ 'account_deletion.delete_my_account' | translate }}
+          }
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ===================================================================== -->
+  <!-- Step 4: Submitted                                                       -->
+  <!-- ===================================================================== -->
+  @if (currentStep() === 'submitted') {
+    <div class="account-deletion__panel account-deletion__panel--success" data-testid="step-submitted-panel" role="status">
+      @if (deletionCancelled()) {
+        <!-- Cancellation confirmed -->
+        <div class="account-deletion__cancelled" data-testid="deletion-cancelled">
+          <div class="account-deletion__success-icon" aria-hidden="true">&#10003;</div>
+          <h2 class="account-deletion__panel-title">
+            {{ 'account_deletion.cancelled_title' | translate }}
+          </h2>
+          <p class="account-deletion__description">
+            {{ 'account_deletion.cancelled_description' | translate }}
+          </p>
+          <div class="account-deletion__actions account-deletion__actions--centered">
+            <button
+              type="button"
+              class="account-deletion__btn account-deletion__btn--primary"
+              (click)="goBack()"
+              data-testid="btn-back-to-settings">
+              {{ 'account_deletion.back_to_settings' | translate }}
+            </button>
+          </div>
+        </div>
+      } @else {
+        <!-- Deletion submitted -->
+        <div class="account-deletion__submitted-icon" aria-hidden="true">&#9203;</div>
+        <h2 class="account-deletion__panel-title">
+          {{ 'account_deletion.submitted_title' | translate }}
+        </h2>
+
+        <!-- Countdown -->
+        <div class="account-deletion__countdown" data-testid="grace-period-countdown">
+          <div class="account-deletion__countdown-days">
+            <span class="account-deletion__countdown-number">{{ gracePeriodDaysRemaining() }}</span>
+            <span class="account-deletion__countdown-label">
+              {{ 'account_deletion.days_remaining' | translate }}
+            </span>
+          </div>
+          <p class="account-deletion__countdown-date">
+            {{ 'account_deletion.final_deletion_date' | translate }}:
+            <strong>{{ formatDate(gracePeriodEndDate()) }}</strong>
+          </p>
+        </div>
+
+        <p class="account-deletion__description">
+          {{ 'account_deletion.submitted_description' | translate }}
+          {{ gracePeriodDays }}
+          {{ 'account_deletion.submitted_days' | translate }}
+        </p>
+
+        <!-- Cancel deletion button -->
+        <div class="account-deletion__actions account-deletion__actions--centered">
+          <button
+            type="button"
+            class="account-deletion__btn account-deletion__btn--primary"
+            [disabled]="cancelling()"
+            (click)="cancelDeletion()"
+            data-testid="btn-cancel-deletion">
+            @if (cancelling()) {
+              {{ 'account_deletion.cancelling' | translate }}
+            } @else {
+              {{ 'account_deletion.cancel_deletion' | translate }}
+            }
+          </button>
+        </div>
+
+        <p class="account-deletion__description account-deletion__logout-notice">
+          {{ 'account_deletion.logout_notice' | translate }}
+        </p>
+      }
+    </div>
+  }
+</section>

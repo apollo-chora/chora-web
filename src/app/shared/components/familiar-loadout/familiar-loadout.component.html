@@ -1,0 +1,196 @@
+<section class="familiar-loadout" aria-labelledby="familiar-loadout-heading">
+  <h3 id="familiar-loadout-heading" class="familiar-loadout__heading">
+    <i class="fa-solid fa-book-sparkles" aria-hidden="true"></i>
+    {{ 'familiar_loadout.heading' | translate }}
+  </h3>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div class="familiar-loadout__loading" data-testid="familiar-loadout-loading">
+        <span class="familiar-loadout__spinner" aria-hidden="true"></span>
+        {{ 'familiar_loadout.loading' | translate }}
+      </div>
+    }
+    @case ('error') {
+      <div
+        class="familiar-loadout__error"
+        role="alert"
+        data-testid="familiar-loadout-error">
+        <p>{{ $any(state()).error | translate }}</p>
+        <button
+          type="button"
+          class="familiar-loadout__retry"
+          data-testid="familiar-loadout-retry"
+          (click)="reload()">
+          {{ 'familiar_loadout.retry' | translate }}
+        </button>
+      </div>
+    }
+    @case ('success') {
+      @let v = view();
+      @if (v) {
+        <!--
+          The counter names TWO different quantities: a count of active Skills
+          and a sum of slot costs. They diverge the moment a 2-cost Skill is
+          equipped, and the old line put the slot sum under a "Skills active"
+          label, so it reported the wrong quantity under a confident name.
+
+          Both numbers are interpolation PARAMS of one keyed sentence, never
+          template fragments stitched around spans: word order differs by
+          locale and ar-SA is right-to-left, so an assembled sentence
+          mistranslates by construction.
+        -->
+        <p
+          class="familiar-loadout__slots"
+          data-testid="familiar-loadout-slots"
+          [title]="'familiar_loadout.slots_hint' | translate">
+          <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+          {{
+            (skillsActive() === 1
+              ? 'familiar_loadout.slots_summary_one'
+              : 'familiar_loadout.slots_summary_other'
+            ) | translate: { skills: skillsActive(), used: slotsUsed(), cap: slotCap() }
+          }}
+          <!--
+            The slot sum once more, as the stable hook D1 shipped in S2. It is
+            `hidden`, so it stays out of the page and out of the accessibility
+            tree and a learner hears the sentence once. It exists only to keep
+            that cross-package hook working and should go when D1 no longer
+            reads it.
+          -->
+          <span data-testid="familiar-loadout-slots-used" hidden>{{ slotsUsed() }}</span>
+        </p>
+
+        @if (isEmpty()) {
+          <p class="familiar-loadout__empty" data-testid="familiar-loadout-empty">
+            {{ 'familiar_loadout.empty' | translate }}
+          </p>
+        } @else {
+          <ul class="familiar-loadout__grants">
+            @for (g of orderedGrants(); track g.skillKey) {
+              <li
+                class="familiar-loadout__grant"
+                [class.is-equipped]="g.equipped"
+                [class.is-dormant]="isDormant(g)"
+                [attr.data-testid]="'familiar-loadout-grant-' + g.skillKey">
+                <div class="familiar-loadout__grant-main">
+                  <span
+                    class="familiar-loadout__grant-name"
+                    [choraInfo]="'skill.' + g.skillKey">
+                    {{ ('familiar_skill.' + g.skillKey) | translate }}
+                  </span>
+                  @if (isDormant(g)) {
+                    <span
+                      class="familiar-loadout__dormant"
+                      [attr.data-testid]="'familiar-loadout-dormant-' + g.skillKey">
+                      <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                      {{ 'familiar_loadout.dormant' | translate }}
+                    </span>
+                  } @else {
+                    <span
+                      class="familiar-loadout__kind"
+                      [attr.data-kind]="g.skillKind">
+                      {{ ('familiar_loadout.kind_' + g.skillKind) | translate }}
+                      @if (g.slotCost > 1) {
+                        · {{ g.slotCost }}
+                      }
+                    </span>
+                  }
+                </div>
+
+                <div class="familiar-loadout__grant-actions">
+                  @if (isDormant(g)) {
+                    <!-- R3-9: named, never fake-usable — no actions while dark. -->
+                  } @else if (g.skillKind === 'craft') {
+                    <span class="familiar-loadout__always-on">
+                      {{ 'familiar_loadout.always_on' | translate }}
+                    </span>
+                  } @else if (g.equipped) {
+                    @if (canInvoke(g)) {
+                      <button
+                        type="button"
+                        class="familiar-loadout__use"
+                        [attr.data-testid]="'familiar-loadout-use-' + g.skillKey"
+                        [disabled]="invokeDisabled(g)"
+                        [attr.title]="
+                          invokeDisabled(g)
+                            ? ('familiar_loadout.use_needs_target' | translate)
+                            : null
+                        "
+                        (click)="invoke(g)">
+                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                        {{ 'familiar_loadout.use' | translate }}
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="familiar-loadout__unequip"
+                      [attr.data-testid]="'familiar-loadout-unequip-' + g.skillKey"
+                      [disabled]="busyKey() !== null"
+                      (click)="unequip(g)">
+                      {{ 'familiar_loadout.unequip' | translate }}
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="familiar-loadout__equip"
+                      [attr.data-testid]="'familiar-loadout-equip-' + g.skillKey"
+                      [disabled]="busyKey() !== null"
+                      (click)="equip(g)">
+                      {{ 'familiar_loadout.equip' | translate }}
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (result(); as r) {
+          <div class="familiar-loadout__result" data-testid="familiar-loadout-result">
+            @if (r.resultKind === 'answerable') {
+              <chora-familiar-answerable-widget
+                [reply]="r.reply"
+                [items]="r.items" />
+            } @else {
+              <p class="familiar-loadout__result-reply">{{ r.reply }}</p>
+            }
+
+            <!--
+              CHO-2179 — this component renders ANY SkillInvokeResult, and it was
+              silently DISCARDING the grounded channels (citations + the Google
+              chip) that a Seeker result carries. That is a latent breach of the
+              ToS display obligation (ADR-231 D5) and the IMDA D2 citation
+              mandate: today no Seeker sits in INVOKABLE_P1, so nothing grounded
+              reaches here — but the moment one does, the chip would vanish with
+              no code change on either side.
+
+              Renders nothing at all when the three channels are empty (every
+              skill invokable here today), so this is inert now and correct by
+              construction later.
+            -->
+            <chora-grounded-attribution
+              [citations]="r.citations"
+              [searchEntryPointHtml]="r.searchEntryPointHtml"
+              [webSearchQueries]="r.webSearchQueries" />
+
+            <p class="familiar-loadout__result-meta">
+              @if (r.recorded) {
+                <span class="familiar-loadout__badge">
+                  <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+                  {{ 'familiar_loadout.recorded' | translate }}
+                </span>
+              }
+              @if (r.manaCharged > 0) {
+                <span class="familiar-loadout__badge">
+                  <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                  {{ r.manaCharged }} {{ 'familiar_loadout.mana' | translate }}
+                </span>
+              }
+            </p>
+          </div>
+        }
+      }
+    }
+  }
+</section>

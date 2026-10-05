@@ -1,0 +1,66 @@
+<div
+  class="trend-explanation"
+  data-testid="trend-explanation"
+  [attr.aria-label]="insight().title">
+
+  <!-- Header -->
+  <header class="trend-explanation__header">
+    <span
+      class="trend-explanation__trend-icon"
+      [class]="trendClass()"
+      [attr.aria-label]="insight().trend_direction">
+      {{ trendIcon() }}
+    </span>
+    <h3 class="trend-explanation__title">{{ insight().title }}</h3>
+    <button
+      type="button"
+      class="trend-explanation__close-btn"
+      data-testid="btn-close-detail"
+      [attr.aria-label]="'admin.insights.close_detail' | translate"
+      (click)="onClose()">
+      &times;
+    </button>
+  </header>
+
+  <!-- Narrative -->
+  <div class="trend-explanation__narrative" data-testid="insight-narrative-text">
+    <p>{{ insight().narrative }}</p>
+  </div>
+
+  <!-- Confidence Bar -->
+  <div class="trend-explanation__confidence-section">
+    <span class="trend-explanation__confidence-label">
+      {{ 'admin.insights.confidence' | translate }}
+    </span>
+    <div
+      class="trend-explanation__confidence-track"
+      role="progressbar"
+      [attr.aria-valuenow]="confidencePercent()"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      data-testid="confidence-bar">
+      <div
+        class="trend-explanation__confidence-bar"
+        [class]="confidenceClass()"
+        [style.width.%]="confidencePercent()">
+      </div>
+    </div>
+    <span class="trend-explanation__confidence-value">{{ confidencePercent() }}%</span>
+  </div>
+
+  <!-- Metric References -->
+  @if (insight().metric_references.length > 0) {
+    <div class="trend-explanation__metrics">
+      <h4 class="trend-explanation__metrics-title">
+        {{ 'admin.insights.metric_references' | translate }}
+      </h4>
+      <div class="trend-explanation__metric-list" role="list">
+        @for (metric of insight().metric_references; track metric) {
+          <span class="trend-explanation__metric-tag" role="listitem">
+            {{ metric }}
+          </span>
+        }
+      </div>
+    </div>
+  }
+</div>

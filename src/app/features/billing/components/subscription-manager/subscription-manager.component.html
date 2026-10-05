@@ -1,0 +1,137 @@
+<section
+  class="subscription-manager"
+  role="main"
+  [attr.aria-label]="'billing.subscription_title' | translate"
+  data-testid="subscription-manager">
+
+  <!-- Page Header -->
+  <header class="subscription-manager__header">
+    <h1 class="subscription-manager__title" data-testid="subscription-title">
+      {{ 'billing.subscription_title' | translate }}
+    </h1>
+  </header>
+
+  <!-- Loading -->
+  @if (subscriptionState().status === 'loading') {
+    <div class="subscription-manager__loading" data-testid="subscription-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="subscription-manager__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (subscriptionState().status === 'error') {
+    <div class="subscription-manager__error" data-testid="subscription-error" role="alert">
+      <p class="subscription-manager__error-text">
+        {{ 'billing.subscription_load_error' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- No Subscription -->
+  @if (subscriptionState().status === 'success' && !subscription()) {
+    <div class="subscription-manager__empty" data-testid="subscription-empty" role="status">
+      <p class="subscription-manager__empty-text">
+        {{ 'billing.no_active_subscription' | translate }}
+      </p>
+      <button
+        type="button"
+        class="subscription-manager__btn subscription-manager__btn--primary"
+        data-testid="btn-choose-plan"
+        [attr.aria-label]="'billing.choose_plan' | translate">
+        {{ 'billing.choose_plan' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Active Subscription -->
+  @if (subscriptionState().status === 'success' && subscription()) {
+    <div class="subscription-manager__plan-card" data-testid="plan-card">
+      <!-- Plan Header -->
+      <div class="subscription-manager__plan-header">
+        <div class="subscription-manager__plan-info">
+          <h2 class="subscription-manager__plan-name" data-testid="plan-name">
+            {{ subscription()!.plan_name }}
+          </h2>
+          <span
+            class="subscription-manager__status"
+            [class]="statusClass(subscription()!.status)"
+            data-testid="subscription-status">
+            {{ statusLabels[subscription()!.status] | translate }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Price Display -->
+      <!--
+        The subscription payload carries no price field — the real source is
+        SubscriptionPlan.price_cents (keyed by plan_id), which this endpoint
+        does not embed. Show an honest unavailable state rather than a fake
+        placeholder price (fail-loud, no fabrication).
+      -->
+      <div class="subscription-manager__price-section">
+        <span
+          class="subscription-manager__price subscription-manager__price--unavailable"
+          data-testid="subscription-price">
+          {{ 'billing.price_unavailable' | translate }}
+        </span>
+      </div>
+
+      <!-- Billing Period -->
+      <div class="subscription-manager__period" data-testid="billing-period">
+        <span class="subscription-manager__period-label">
+          {{ 'billing.current_period' | translate }}
+        </span>
+        <span class="subscription-manager__period-dates">
+          {{ formatDate(subscription()!.current_period_start) }}
+          &ndash;
+          {{ formatDate(subscription()!.current_period_end) }}
+        </span>
+      </div>
+
+      <!-- Cancel at Period End Notice -->
+      @if (subscription()!.cancel_at_period_end) {
+        <div
+          class="subscription-manager__cancel-notice"
+          data-testid="cancel-notice"
+          role="alert"
+          aria-live="polite">
+          <p class="subscription-manager__cancel-notice-text">
+            {{ 'billing.cancels_at_period_end' | translate }}
+          </p>
+        </div>
+      }
+
+      <!-- Features List -->
+      @if (planFeatures().length > 0) {
+        <div class="subscription-manager__features" data-testid="plan-features">
+          <h3 class="subscription-manager__features-heading">
+            {{ 'billing.plan_features' | translate }}
+          </h3>
+          <ul class="subscription-manager__features-list" role="list">
+            @for (feature of planFeatures(); track feature) {
+              <li class="subscription-manager__feature-item" role="listitem">
+                {{ feature }}
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      <!-- Actions -->
+      <div class="subscription-manager__actions">
+        @if (canCancel()) {
+          <button
+            type="button"
+            class="subscription-manager__btn subscription-manager__btn--danger"
+            data-testid="btn-cancel-subscription"
+            [attr.aria-label]="'billing.cancel_subscription' | translate"
+            (click)="cancelSubscription()">
+            {{ 'billing.cancel_subscription' | translate }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+</section>

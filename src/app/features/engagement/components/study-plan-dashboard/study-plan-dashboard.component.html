@@ -1,0 +1,124 @@
+<section class="study-plan-dashboard" data-testid="study-plan-dashboard">
+  @if (planState().status === 'loading') {
+    <div class="study-plan-dashboard__loading" data-testid="study-plan-loading" role="status">
+      <p>{{ 'engagement.study-plan.loading' | translate }}</p>
+    </div>
+  } @else if (planState().status === 'error') {
+    <div class="study-plan-dashboard__error" data-testid="study-plan-error" role="alert">
+      <h2>{{ 'engagement.study-plan.error-title' | translate }}</h2>
+      <p>{{ planError() }}</p>
+    </div>
+  } @else if (plan()) {
+    <!-- Header: Exam info + countdown -->
+    <header class="study-plan-dashboard__header" data-testid="study-plan-header">
+      <div class="study-plan-dashboard__exam-info">
+        <h1 class="study-plan-dashboard__title">{{ plan()!.exam_title }}</h1>
+        <p class="study-plan-dashboard__exam-date">
+          {{ 'engagement.study-plan.exam-date' | translate }}: {{ formatDate(plan()!.exam_date) }}
+        </p>
+      </div>
+      <div class="study-plan-dashboard__countdown" [class]="countdownClass()" data-testid="study-plan-countdown">
+        <span class="study-plan-dashboard__countdown-number">{{ daysRemaining() }}</span>
+        <span class="study-plan-dashboard__countdown-label">{{ 'engagement.study-plan.days-remaining' | translate }}</span>
+      </div>
+    </header>
+
+    <!-- Overall progress bar -->
+    <div class="study-plan-dashboard__progress" data-testid="study-plan-progress"
+         role="progressbar"
+         [attr.aria-valuenow]="overallProgress()"
+         aria-valuemin="0"
+         aria-valuemax="100"
+         [attr.aria-label]="'engagement.study-plan.overall-progress' | translate">
+      <div class="study-plan-dashboard__progress-bar">
+        <div class="study-plan-dashboard__progress-fill" [style.width]="progressBarWidth()"></div>
+      </div>
+      <span class="study-plan-dashboard__progress-label">{{ overallProgress() }}%</span>
+    </div>
+
+    <!-- Pace adjustment controls -->
+    <fieldset class="study-plan-dashboard__pace" data-testid="study-plan-pace">
+      <legend class="study-plan-dashboard__pace-legend">{{ 'engagement.study-plan.pace' | translate }}</legend>
+      <div class="study-plan-dashboard__pace-options" role="radiogroup" aria-label="Study pace">
+        @for (pace of paceOptions; track pace) {
+          <button
+            class="study-plan-dashboard__pace-btn"
+            [class.study-plan-dashboard__pace-btn--active]="selectedPace() === pace"
+            [attr.aria-pressed]="selectedPace() === pace"
+            (click)="onPaceChange(pace)"
+            [attr.data-testid]="'study-plan-pace-' + pace"
+            type="button">
+            {{ 'engagement.study-plan.pace-' + pace | translate }}
+          </button>
+        }
+      </div>
+      <p class="study-plan-dashboard__pace-target" data-testid="study-plan-daily-target">
+        {{ 'engagement.study-plan.daily-target' | translate }}: {{ plan()!.daily_atom_target }} {{ 'engagement.study-plan.atoms-per-day' | translate }}
+      </p>
+    </fieldset>
+
+    <!-- Week-by-week schedule -->
+    <div class="study-plan-dashboard__weeks" data-testid="study-plan-weeks">
+      <h2 class="study-plan-dashboard__section-title">{{ 'engagement.study-plan.weekly-schedule' | translate }}</h2>
+      @for (week of plan()!.weeks; track week.week_number) {
+        <article
+          class="study-plan-dashboard__week"
+          [class.study-plan-dashboard__week--current]="week.is_current"
+          [class.study-plan-dashboard__week--expanded]="expandedWeek() === week.week_number"
+          [attr.data-testid]="'study-plan-week-' + week.week_number">
+          <button
+            class="study-plan-dashboard__week-header"
+            (click)="toggleWeek(week.week_number)"
+            [attr.aria-expanded]="expandedWeek() === week.week_number"
+            [attr.aria-controls]="'week-content-' + week.week_number"
+            type="button">
+            <div class="study-plan-dashboard__week-title-row">
+              <span class="study-plan-dashboard__week-label">
+                {{ 'engagement.study-plan.week' | translate }} {{ week.week_number }}
+                @if (week.is_current) {
+                  <span class="study-plan-dashboard__week-badge" aria-label="Current week">{{ 'engagement.study-plan.current' | translate }}</span>
+                }
+              </span>
+              <span class="study-plan-dashboard__week-dates">
+                {{ formatDate(week.start_date) }} - {{ formatDate(week.end_date) }}
+              </span>
+            </div>
+            <div class="study-plan-dashboard__week-progress-row">
+              <div class="study-plan-dashboard__week-bar">
+                <div
+                  class="study-plan-dashboard__week-bar-fill"
+                  [style.width.%]="weekProgressPct(week)">
+                </div>
+              </div>
+              <span class="study-plan-dashboard__week-pct">{{ weekProgressPct(week) }}%</span>
+            </div>
+          </button>
+
+          @if (expandedWeek() === week.week_number) {
+            <div class="study-plan-dashboard__week-content" [id]="'week-content-' + week.week_number">
+              <p class="study-plan-dashboard__week-target">
+                {{ 'engagement.study-plan.daily-atoms' | translate }}: {{ week.daily_atom_target }}
+              </p>
+              <ul class="study-plan-dashboard__topic-list" role="list">
+                @for (topic of week.topics; track topic.topic_id) {
+                  <li class="study-plan-dashboard__topic"
+                      [class.study-plan-dashboard__topic--high]="topic.priority === 'high'"
+                      [class.study-plan-dashboard__topic--medium]="topic.priority === 'medium'"
+                      [class.study-plan-dashboard__topic--low]="topic.priority === 'low'">
+                    <span class="study-plan-dashboard__topic-name">{{ topic.topic_name }}</span>
+                    <span class="study-plan-dashboard__topic-count">
+                      {{ topic.completed_count }}/{{ topic.atom_count }}
+                    </span>
+                    <span class="study-plan-dashboard__topic-priority" [attr.aria-label]="topic.priority + ' priority'">
+                      {{ topic.priority }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

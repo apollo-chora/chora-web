@@ -1,0 +1,167 @@
+// BootstrapTenantFormComponent — H+ Setup-Tenant Phase 4 MVP (CHO-1642).
+// Embedded inside NoTenantComponent's glass card; inherits the card's
+// outer padding and typography. Tablet-first (>=768px); no mobile
+// breakpoint per chora-web/CLAUDE.md §11.
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.bootstrap-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md, 16px);
+
+  &__heading {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--chora-color-surface-on, #111827);
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--chora-color-text-muted, #4b5563);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+    text-align: left;
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--chora-color-surface-on, #111827);
+  }
+
+  &__input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--chora-color-border, #d1d5db);
+    border-radius: var(--chora-radius-sm, 6px);
+    font-size: 1rem;
+    color: var(--chora-color-surface-on, #111827);
+    background: var(--chora-color-surface-0, #ffffff);
+    transition: border-color 120ms ease-in-out, box-shadow 120ms ease-in-out;
+
+    &:focus {
+      outline: 2px solid var(--chora-color-primary, #0d9488);
+      outline-offset: 2px;
+      border-color: var(--chora-color-primary, #0d9488);
+    }
+
+    &[aria-invalid='true'] {
+      border-color: var(--chora-color-danger, #dc2626);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__help {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #6b7280);
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--chora-color-danger, #dc2626);
+
+    &--inline {
+      font-weight: 500;
+    }
+  }
+
+  &__banner {
+    padding: 12px 16px;
+    border-radius: var(--chora-radius-md, 8px);
+    font-size: 0.9375rem;
+    text-align: left;
+
+    &--error {
+      background: var(--chora-color-danger-soft, rgba(220, 38, 38, 0.08));
+      color: var(--chora-color-danger, #b91c1c);
+      border: 1px solid var(--chora-color-danger, #dc2626);
+    }
+
+    &--info {
+      background: var(--chora-color-info-soft, rgba(13, 148, 136, 0.08));
+      color: var(--chora-color-info, #0f766e);
+      border: 1px solid var(--chora-color-info, #0d9488);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--chora-space-sm, 8px);
+    }
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--chora-space-xs, 4px);
+    min-height: 44px;
+    padding: 10px 20px;
+    border-radius: var(--chora-radius-md, 8px);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 120ms ease-in-out,
+      transform 120ms ease-in-out;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #0d9488);
+      outline-offset: 2px;
+    }
+
+    &--primary {
+      background: var(--accent-hplus, var(--chora-color-primary, #0d9488));
+      color: #ffffff;
+      border: none;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: bootstrap-form-spin 600ms linear infinite;
+  }
+}
+
+@keyframes bootstrap-form-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bootstrap-form__spinner {
+    animation: none;
+  }
+
+  .bootstrap-form__btn--primary:hover {
+    transform: none;
+  }
+}

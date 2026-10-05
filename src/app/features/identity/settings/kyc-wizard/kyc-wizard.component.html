@@ -1,0 +1,240 @@
+<section
+  class="kyc-wizard"
+  role="main"
+  [attr.aria-label]="'governance.kyc_verification' | translate"
+  data-testid="kyc-wizard">
+
+  <header class="kyc-wizard__header">
+    <h1 class="kyc-wizard__title" data-testid="kyc-title">
+      {{ 'governance.kyc_verification' | translate }}
+    </h1>
+  </header>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="kyc-wizard__loading" aria-live="polite" data-testid="kyc-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="kyc-wizard__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (isError()) {
+    <div class="kyc-wizard__error" role="alert" data-testid="kyc-error">
+      <p class="kyc-wizard__error-text">{{ 'governance.kyc_load_error' | translate }}</p>
+    </div>
+  }
+
+  <!-- Existing Verification Status -->
+  @if (hasExistingVerification() && verification(); as ver) {
+    <div class="kyc-wizard__status-section" data-testid="kyc-status">
+      <h2 class="kyc-wizard__section-heading">{{ 'governance.verification_status' | translate }}</h2>
+
+      <div class="kyc-wizard__status-card">
+        <span
+          class="kyc-wizard__verification-status"
+          [class]="statusClass(ver.status)"
+          data-testid="verification-status">
+          {{ statusLabels[ver.status] | translate }}
+        </span>
+
+        @if (ver.status === 'rejected' && rejectionReason()) {
+          <div class="kyc-wizard__rejection" role="alert" data-testid="rejection-reason">
+            <span class="kyc-wizard__rejection-label">{{ 'governance.rejection_reason' | translate }}:</span>
+            <span class="kyc-wizard__rejection-text">{{ rejectionReason() }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Timeline -->
+      @if (timeline().length > 0) {
+        <div class="kyc-wizard__timeline" data-testid="kyc-timeline" role="list"
+             [attr.aria-label]="'governance.verification_timeline' | translate">
+          @for (entry of timeline(); track entry.label_key) {
+            <div
+              class="kyc-wizard__timeline-stage"
+              [class]="timelineStageClass(entry.status)"
+              role="listitem">
+              <span class="kyc-wizard__timeline-marker"></span>
+              <div class="kyc-wizard__timeline-content">
+                <span class="kyc-wizard__timeline-label">{{ entry.label_key | translate }}</span>
+                <span class="kyc-wizard__timeline-date">{{ formatDate(entry.date) }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Wizard (show only if no existing pending/verified verification) -->
+  @if (!hasExistingVerification() || verificationStatus() === 'rejected') {
+    <!-- Step Indicators -->
+    <div class="kyc-wizard__steps" role="list"
+         [attr.aria-label]="'governance.wizard_steps' | translate">
+      @for (step of wizardSteps; track step; let idx = $index) {
+        <div
+          class="kyc-wizard__step-indicator"
+          [class.kyc-wizard__step-indicator--active]="wizardStep() === step"
+          [class.kyc-wizard__step-indicator--completed]="idx < wizardStepIndex()"
+          role="listitem"
+          [attr.aria-current]="wizardStep() === step ? 'step' : null">
+          <span class="kyc-wizard__step-number">{{ idx + 1 }}</span>
+          <span class="kyc-wizard__step-label">
+            {{ 'governance.kyc_step_' + step | translate }}
+          </span>
+        </div>
+      }
+    </div>
+
+    <!-- Step 1: Document Type + Upload -->
+    @if (wizardStep() === 'document') {
+      <div class="kyc-wizard__wizard-content" data-testid="wizard-step-document">
+        <div class="kyc-wizard__form-group">
+          <span class="kyc-wizard__label">{{ 'governance.document_type' | translate }}</span>
+          <div class="kyc-wizard__radio-group" role="radiogroup"
+               [attr.aria-label]="'governance.document_type' | translate">
+            @for (doc of docTypes; track doc.value) {
+              <label class="kyc-wizard__radio-label">
+                <input
+                  type="radio"
+                  name="doc-type"
+                  class="kyc-wizard__radio"
+                  [value]="doc.value"
+                  [checked]="selectedDocType() === doc.value"
+                  (change)="selectedDocType.set(doc.value)" />
+                {{ doc.label_key | translate }}
+              </label>
+            }
+          </div>
+        </div>
+
+        <div class="kyc-wizard__form-group">
+          <label for="kyc-doc-upload" class="kyc-wizard__label">
+            {{ 'governance.upload_document' | translate }}
+          </label>
+          <input
+            id="kyc-doc-upload"
+            type="file"
+            class="kyc-wizard__file-input"
+            [accept]="acceptedFormats"
+            (change)="onDocumentFileChange($event)"
+            data-testid="doc-upload" />
+          <span class="kyc-wizard__file-hint">
+            {{ 'governance.accepted_formats' | translate }} ({{ 'governance.max_size' | translate }}: {{ maxFileSizeMb }}MB)
+          </span>
+          @if (fileError()) {
+            <span class="kyc-wizard__file-error" role="alert">
+              {{ fileError()! | translate }}
+            </span>
+          }
+          @if (documentFileName()) {
+            <span class="kyc-wizard__file-name" data-testid="doc-filename">
+              {{ documentFileName() }}
+            </span>
+          }
+        </div>
+
+        <div class="kyc-wizard__nav">
+          <button
+            type="button"
+            class="kyc-wizard__btn kyc-wizard__btn--primary"
+            [disabled]="!selectedDocType() || !documentFile()"
+            [attr.aria-label]="'governance.next_step' | translate"
+            (click)="nextStep()">
+            {{ 'governance.next_step' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Liveness / Selfie -->
+    @if (wizardStep() === 'selfie') {
+      <div class="kyc-wizard__wizard-content" data-testid="wizard-step-selfie">
+        <div class="kyc-wizard__selfie-section">
+          <h3 class="kyc-wizard__section-heading">{{ 'governance.selfie_capture' | translate }}</h3>
+          <p class="kyc-wizard__selfie-instructions">
+            {{ 'governance.selfie_instructions' | translate }}
+          </p>
+
+          <div class="kyc-wizard__selfie-placeholder" data-testid="selfie-placeholder">
+            <span class="kyc-wizard__selfie-icon" aria-hidden="true">&#128247;</span>
+            <button
+              type="button"
+              class="kyc-wizard__btn kyc-wizard__btn--secondary"
+              [attr.aria-label]="'governance.capture_selfie' | translate"
+              (click)="onSelfieCapture()">
+              {{ 'governance.capture_selfie' | translate }}
+            </button>
+          </div>
+
+          @if (selfieFileName()) {
+            <span class="kyc-wizard__file-name" data-testid="selfie-filename">
+              {{ selfieFileName() }}
+            </span>
+          }
+        </div>
+
+        <div class="kyc-wizard__nav">
+          <button
+            type="button"
+            class="kyc-wizard__btn kyc-wizard__btn--secondary"
+            [attr.aria-label]="'governance.prev_step' | translate"
+            (click)="prevStep()">
+            {{ 'governance.prev_step' | translate }}
+          </button>
+          <button
+            type="button"
+            class="kyc-wizard__btn kyc-wizard__btn--primary"
+            [attr.aria-label]="'governance.next_step' | translate"
+            (click)="nextStep()">
+            {{ 'governance.next_step' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 3: Review + Submit -->
+    @if (wizardStep() === 'review') {
+      <div class="kyc-wizard__wizard-content" data-testid="wizard-step-review">
+        <div class="kyc-wizard__review-section">
+          <h3 class="kyc-wizard__section-heading">{{ 'governance.review_submission' | translate }}</h3>
+          <dl class="kyc-wizard__review-list">
+            <dt>{{ 'governance.document_type' | translate }}</dt>
+            <dd data-testid="review-doc-type">{{ selectedDocType() }}</dd>
+
+            <dt>{{ 'governance.document_file' | translate }}</dt>
+            <dd>{{ documentFileName() ?? '-' }}</dd>
+
+            <dt>{{ 'governance.selfie' | translate }}</dt>
+            <dd>{{ selfieFileName() ?? '-' }}</dd>
+          </dl>
+        </div>
+
+        <div class="kyc-wizard__nav">
+          <button
+            type="button"
+            class="kyc-wizard__btn kyc-wizard__btn--secondary"
+            [attr.aria-label]="'governance.prev_step' | translate"
+            (click)="prevStep()">
+            {{ 'governance.prev_step' | translate }}
+          </button>
+          <button
+            type="button"
+            class="kyc-wizard__btn kyc-wizard__btn--primary"
+            data-testid="btn-submit-kyc"
+            [disabled]="submitting()"
+            [attr.aria-label]="'governance.submit_verification' | translate"
+            (click)="submit()">
+            @if (submitting()) {
+              {{ 'governance.submitting' | translate }}
+            } @else {
+              {{ 'governance.submit_verification' | translate }}
+            }
+          </button>
+        </div>
+      </div>
+    }
+  }
+</section>

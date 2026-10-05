@@ -1,0 +1,101 @@
+:host {
+  display: block;
+  padding: var(--cplus-space-lg);
+}
+
+.cplus-leaderboards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-lg);
+}
+
+.cplus-leaderboards__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-md);
+}
+
+.cplus-leaderboards__filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-xs);
+}
+
+.cplus-leaderboards__filter-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cplus-text-secondary);
+}
+
+.cplus-leaderboards__status {
+  color: var(--cplus-text-secondary);
+  font-size: 0.95rem;
+  padding: var(--cplus-space-md);
+}
+
+.cplus-leaderboards__status--error {
+  color: var(--cplus-danger);
+  background: var(--cplus-surface-muted);
+  border-radius: var(--cplus-radius-control);
+}
+
+.cplus-leaderboards__podium {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--cplus-space-md);
+}
+
+.cplus-leaderboards__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-sm);
+}
+
+.cplus-leaderboards-row {
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-md);
+  padding: var(--cplus-space-sm) 0;
+}
+
+.cplus-leaderboards-row__rank {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--cplus-text-secondary);
+  min-width: 80px;
+}
+
+.cplus-leaderboards-row__name {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--cplus-text);
+  display: flex;
+  align-items: center;
+  gap: var(--cplus-space-xs);
+}
+
+.cplus-leaderboards-row__you-badge {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #fff;
+  background: var(--cplus-accent-strong, #10b981);
+  border-radius: var(--cplus-radius-sm, 4px);
+}
+
+.cplus-leaderboards-row--me {
+  background: var(--cplus-accent-tint, rgba(16, 185, 129, 0.08));
+  border-radius: var(--cplus-radius-md, 8px);
+  padding-left: var(--cplus-space-sm);
+  padding-right: var(--cplus-space-sm);
+}
+
+.cplus-leaderboards-row__score {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--cplus-accent-strong);
+  font-variant-numeric: tabular-nums;
+}

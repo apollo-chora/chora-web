@@ -1,0 +1,289 @@
+// O+ AI cost / usage dashboard — token + LLM spend rollups.
+// Tablet-first: ≥768px primary, ≥1280px desktop enhancement. No mobile breakpoints.
+
+:host {
+  display: block;
+}
+
+.oplus-costs {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    // Variant-driven colours (signal: live / stale / offline / loading).
+    color: var(--success, #10b981);
+    background: rgba(16, 185, 129, 0.1);
+
+    &[data-variant='live'] {
+      color: var(--success, #10b981);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    &[data-variant='stale'] {
+      color: #d97706;
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    &[data-variant='offline'] {
+      color: #dc2626;
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    &[data-variant='loading'] {
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  &__live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: oplusPulse 2s infinite;
+  }
+
+  // ── Time-window filter (segmented buttons) ────────────────────────
+  &__filter {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+    padding: 0.25rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.04);
+    align-self: flex-start;
+  }
+
+  &__filter-btn {
+    font: inherit;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0.3rem 0.85rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    &--active {
+      color: #fff;
+      background: var(--primary);
+
+      &:hover {
+        color: #fff;
+        background: var(--primary);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__gate,
+  &__error {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+
+    i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+  }
+
+  &__gate-title {
+    font-size: 1.2rem;
+    margin: 0 0 0.4rem;
+    color: var(--text-main);
+  }
+
+  &__gate-body {
+    margin: 0;
+  }
+
+  // ── Cumulative cost headline ──────────────────────────────────────
+  &__cumulative {
+    padding: 1.25rem 1.5rem;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    align-self: flex-start;
+    flex-wrap: wrap;
+
+    i {
+      color: var(--primary);
+      font-size: 1.4rem;
+      align-self: center;
+    }
+  }
+
+  &__cumulative-num {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  }
+
+  &__cumulative-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__fx-note {
+    width: 100%;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  // ── Panels ────────────────────────────────────────────────────────
+  &__panel {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__section-heading {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  &__empty {
+    margin: 0.5rem 0;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  // ── Tables ────────────────────────────────────────────────────────
+  &__table-wrap {
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.82rem;
+  }
+
+  &__caption {
+    caption-side: top;
+    text-align: start;
+    padding-bottom: 0.6rem;
+    color: var(--text-muted);
+    font-size: 0.74rem;
+  }
+
+  thead th {
+    text-align: start;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    font-weight: 700;
+  }
+
+  &__row,
+  tbody tr {
+    background: rgba(255, 255, 255, 0.4);
+
+    &:nth-child(even) {
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    td {
+      padding: 0.55rem 0.7rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+      vertical-align: middle;
+    }
+  }
+
+  &__cell-mono {
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    font-size: 0.74rem;
+  }
+
+  &__cell-num {
+    font-family: 'SF Mono', 'Cascadia Code', Menlo, monospace;
+    font-weight: 700;
+    text-align: end;
+  }
+}
+
+@keyframes oplusPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oplus-costs__live-dot {
+    animation: none;
+  }
+}

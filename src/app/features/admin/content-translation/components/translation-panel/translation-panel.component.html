@@ -1,0 +1,165 @@
+<section
+  class="translation-panel"
+  role="main"
+  [attr.aria-label]="'admin.translation.panel_title' | translate"
+  data-testid="translation-panel">
+
+  <!-- Page Header -->
+  <header class="translation-panel__header">
+    <h1 class="translation-panel__title" data-testid="panel-title">
+      {{ 'admin.translation.panel_title' | translate }}
+    </h1>
+  </header>
+
+  <div class="translation-panel__grid">
+    <!-- Single Translation Form -->
+    <section
+      class="translation-panel__section"
+      data-testid="single-translate-section"
+      [attr.aria-label]="'admin.translation.single_title' | translate">
+      <h2 class="translation-panel__section-title">
+        {{ 'admin.translation.single_title' | translate }}
+      </h2>
+
+      <div class="translation-panel__form">
+        <!-- Content ID -->
+        <div class="translation-panel__field">
+          <label for="content-id" class="translation-panel__label">
+            {{ 'admin.translation.content_id' | translate }}
+          </label>
+          <input
+            id="content-id"
+            type="text"
+            class="translation-panel__input"
+            data-testid="input-content-id"
+            [placeholder]="'admin.translation.content_id_placeholder' | translate"
+            [attr.aria-label]="'admin.translation.content_id' | translate"
+            (input)="onContentIdInput($event)" />
+        </div>
+
+        <!-- Language Selectors -->
+        <div class="translation-panel__language-row">
+          <div class="translation-panel__field">
+            <label for="source-lang" class="translation-panel__label">
+              {{ 'admin.translation.source_language' | translate }}
+            </label>
+            <select
+              id="source-lang"
+              class="translation-panel__select"
+              data-testid="select-source-lang"
+              (change)="onSourceLanguageChange($event)">
+              @for (lang of languages; track lang.code) {
+                <option [value]="lang.code" [selected]="lang.code === sourceLanguage()">
+                  {{ lang.label | translate }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="translation-panel__field">
+            <label for="target-lang" class="translation-panel__label">
+              {{ 'admin.translation.target_language' | translate }}
+            </label>
+            <select
+              id="target-lang"
+              class="translation-panel__select"
+              data-testid="select-target-lang"
+              (change)="onTargetLanguageChange($event)">
+              @for (lang of languages; track lang.code) {
+                <option [value]="lang.code" [selected]="lang.code === targetLanguage()">
+                  {{ lang.label | translate }}
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Translate Button -->
+        <button
+          type="button"
+          class="translation-panel__btn translation-panel__btn--primary"
+          data-testid="btn-translate"
+          [disabled]="translationState().status === 'loading'"
+          [attr.aria-label]="'admin.translation.translate' | translate"
+          (click)="translate()">
+          @if (translationState().status === 'loading') {
+            {{ 'admin.translation.translating' | translate }}
+          } @else {
+            {{ 'admin.translation.translate' | translate }}
+          }
+        </button>
+      </div>
+
+      <!-- Translation Error -->
+      @if (translationState().status === 'error') {
+        <div class="translation-panel__error" role="alert" data-testid="translate-error">
+          {{ 'admin.translation.translate_error' | translate }}
+        </div>
+      }
+    </section>
+
+    <!-- Batch Translation Form -->
+    <section
+      class="translation-panel__section"
+      data-testid="batch-translate-section"
+      [attr.aria-label]="'admin.translation.batch_title' | translate">
+      <h2 class="translation-panel__section-title">
+        {{ 'admin.translation.batch_title' | translate }}
+      </h2>
+
+      <div class="translation-panel__form">
+        <div class="translation-panel__field">
+          <label for="batch-ids" class="translation-panel__label">
+            {{ 'admin.translation.batch_content_ids' | translate }}
+          </label>
+          <textarea
+            id="batch-ids"
+            class="translation-panel__textarea"
+            data-testid="textarea-batch-ids"
+            rows="4"
+            [placeholder]="'admin.translation.batch_ids_placeholder' | translate"
+            [attr.aria-label]="'admin.translation.batch_content_ids' | translate"
+            (input)="onBatchContentIdsInput($event)"></textarea>
+        </div>
+
+        <button
+          type="button"
+          class="translation-panel__btn translation-panel__btn--primary"
+          data-testid="btn-batch-translate"
+          [disabled]="batchState().status === 'loading'"
+          [attr.aria-label]="'admin.translation.batch_translate' | translate"
+          (click)="batchTranslate()">
+          @if (batchState().status === 'loading') {
+            {{ 'admin.translation.batch_translating' | translate }}
+          } @else {
+            {{ 'admin.translation.batch_translate' | translate }}
+          }
+        </button>
+      </div>
+
+      <!-- Batch Error -->
+      @if (batchState().status === 'error') {
+        <div class="translation-panel__error" role="alert" data-testid="batch-error">
+          {{ 'admin.translation.batch_error' | translate }}
+        </div>
+      }
+    </section>
+  </div>
+
+  <!-- Translation Preview -->
+  @if (translationResult()) {
+    <chora-translation-preview
+      [translation]="translationResult()!"
+      [originalContent]="originalContent()"
+      (accept)="onAcceptTranslation($event)"
+      (reject)="onRejectTranslation($event)">
+    </chora-translation-preview>
+  }
+
+  <!-- Batch Queue -->
+  @if (batchResult()) {
+    <chora-batch-translate-queue
+      [batch]="batchResult()!">
+    </chora-batch-translate-queue>
+  }
+</section>

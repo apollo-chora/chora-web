@@ -1,0 +1,102 @@
+<form
+  class="bootstrap-form"
+  data-testid="bootstrap-tenant-form"
+  [formGroup]="form"
+  (ngSubmit)="submit()"
+  novalidate
+  aria-labelledby="bootstrap-form-heading">
+
+  <h2 id="bootstrap-form-heading" class="bootstrap-form__heading">
+    {{ 'onboarding.bootstrap-form.heading' | translate }}
+  </h2>
+
+  <p class="bootstrap-form__hint">
+    {{ 'onboarding.bootstrap-form.hint' | translate }}
+  </p>
+
+  <div class="bootstrap-form__field">
+    <label for="bootstrap-form-name" class="bootstrap-form__label">
+      {{ 'onboarding.bootstrap-form.name-label' | translate }}
+    </label>
+
+    <input
+      id="bootstrap-form-name"
+      type="text"
+      class="bootstrap-form__input"
+      data-testid="bootstrap-tenant-form-name"
+      [formControl]="nameControl"
+      [attr.aria-invalid]="invalidNameMessage() !== null"
+      aria-describedby="bootstrap-form-name-help"
+      maxlength="256"
+      autocomplete="organization" />
+
+    @if (invalidNameMessage(); as msg) {
+      <p
+        class="bootstrap-form__error bootstrap-form__error--inline"
+        data-testid="bootstrap-tenant-form-error-name"
+        role="alert"
+        id="bootstrap-form-name-help">
+        {{ msg }}
+      </p>
+    } @else {
+      <p class="bootstrap-form__help" id="bootstrap-form-name-help">
+        {{ 'onboarding.bootstrap-form.name-help' | translate }}
+      </p>
+    }
+  </div>
+
+  @if (showServerError()) {
+    <div
+      class="bootstrap-form__banner bootstrap-form__banner--error"
+      data-testid="bootstrap-tenant-form-error-server"
+      role="alert">
+      {{ 'onboarding.bootstrap-form.error-server' | translate }}
+    </div>
+  }
+
+  @if (showNetworkError()) {
+    <div
+      class="bootstrap-form__banner bootstrap-form__banner--error"
+      data-testid="bootstrap-tenant-form-error-network"
+      role="alert">
+      {{ 'onboarding.bootstrap-form.error-network' | translate }}
+    </div>
+  }
+
+  @if (showUnauthError()) {
+    <div
+      class="bootstrap-form__banner bootstrap-form__banner--error"
+      data-testid="bootstrap-tenant-form-error-unauth"
+      role="alert">
+      {{ 'onboarding.bootstrap-form.error-unauth' | translate }}
+    </div>
+  }
+
+  @if (showAlreadyMember()) {
+    <div
+      class="bootstrap-form__banner bootstrap-form__banner--info"
+      data-testid="bootstrap-tenant-form-already-member"
+      role="status">
+      <p>{{ 'onboarding.bootstrap-form.already-member' | translate }}</p>
+      <a
+        class="bootstrap-form__btn bootstrap-form__btn--primary"
+        [routerLink]="['/h/tenant']"
+        data-testid="bootstrap-tenant-form-already-member-link">
+        {{ 'onboarding.bootstrap-form.go-to-tenant' | translate }}
+      </a>
+    </div>
+  } @else {
+    <button
+      type="submit"
+      class="bootstrap-form__btn bootstrap-form__btn--primary"
+      data-testid="bootstrap-tenant-form-submit"
+      [disabled]="nameControl.invalid || isLoading()">
+      @if (isLoading()) {
+        <span class="bootstrap-form__spinner" aria-hidden="true"></span>
+        <span>{{ 'onboarding.bootstrap-form.submit-loading' | translate }}</span>
+      } @else {
+        <span>{{ 'onboarding.bootstrap-form.submit' | translate }}</span>
+      }
+    </button>
+  }
+</form>

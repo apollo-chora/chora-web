@@ -1,0 +1,22 @@
+<nav
+  class="authoring-sub-nav glass-panel"
+  [attr.aria-label]="'aplus.study_sub_nav.aria_label' | translate"
+  data-testid="study-sub-nav">
+  <a
+    routerLink="/a/study"
+    routerLinkActive="authoring-sub-nav__tab--active"
+    [routerLinkActiveOptions]="{ exact: true }"
+    class="authoring-sub-nav__tab"
+    data-testid="study-sub-nav-lists">
+    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+    {{ 'aplus.study_sub_nav.lists' | translate }}
+  </a>
+  <a
+    routerLink="/a/study/collections"
+    routerLinkActive="authoring-sub-nav__tab--active"
+    class="authoring-sub-nav__tab"
+    data-testid="study-sub-nav-collections">
+    <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+    {{ 'aplus.study_sub_nav.collections' | translate }}
+  </a>
+</nav>

@@ -1,0 +1,124 @@
+<section
+  class="my-courses aplus-hub-page surface-aplus"
+  aria-labelledby="my-courses-heading"
+  data-testid="aplus-my-courses">
+  <chora-courses-sub-nav />
+
+  <header class="my-courses__header glass-panel">
+    <div class="my-courses__header-content">
+      <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+      <div>
+        <h1 id="my-courses-heading" class="my-courses__title">
+          {{ 'aplus.my_courses.title' | translate }}
+        </h1>
+        <p class="my-courses__subtitle">
+          {{ 'aplus.my_courses.subtitle' | translate }}
+        </p>
+      </div>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <div
+      class="glass-panel my-courses__status"
+      role="status"
+      aria-busy="true"
+      data-testid="my-courses-loading">
+      <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+      <p class="my-courses__status-text">
+        {{ 'aplus.my_courses.loading' | translate }}
+      </p>
+    </div>
+  } @else if (isError()) {
+    <div
+      class="glass-panel my-courses__status my-courses__status--error"
+      role="alert"
+      data-testid="my-courses-error">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <p class="my-courses__status-text">
+        {{ 'aplus.my_courses.error' | translate }}
+      </p>
+      <button
+        type="button"
+        class="btn btn-ghost"
+        (click)="retry()"
+        data-testid="my-courses-retry">
+        {{ 'aplus.my_courses.retry' | translate }}
+      </button>
+    </div>
+  } @else if (!hasCourses()) {
+    <div class="glass-panel my-courses__status" data-testid="my-courses-empty">
+      <i class="fa-solid fa-book-open my-courses__empty-icon" aria-hidden="true"></i>
+      <p class="my-courses__status-text">
+        {{ 'aplus.my_courses.empty' | translate }}
+      </p>
+      <a
+        routerLink="/a/catalog"
+        class="btn btn-primary"
+        data-testid="my-courses-browse">
+        {{ 'aplus.my_courses.browse_catalog' | translate }}
+      </a>
+    </div>
+  } @else {
+    <ul
+      class="my-courses__list"
+      [attr.aria-label]="'aplus.my_courses.list_aria' | translate"
+      data-testid="my-courses-list">
+      @for (c of courses(); track c.courseId) {
+        <li
+          class="my-courses__row glass-panel"
+          [attr.data-testid]="'my-courses-row-' + c.courseId">
+          <div class="my-courses__row-main">
+            <div class="my-courses__row-meta">
+              <span class="my-courses__chip">
+                {{ 'aplus.my_courses.day' | translate }} {{ c.dayNumber }} / {{ c.dayTotal }}
+              </span>
+              <span
+                class="my-courses__retention-dot"
+                [style.background]="retentionColor(c.retention_state)"
+                [attr.aria-label]="retentionLabel(c.retention_state) | translate"
+                [attr.data-testid]="'my-courses-retention-' + c.courseId"
+                role="img">
+              </span>
+            </div>
+            <h2 class="my-courses__row-title">{{ c.title }}</h2>
+            @if (c.instructorName) {
+              <p class="my-courses__row-instructor">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                {{ 'aplus.my_courses.by' | translate }} {{ c.instructorName }}
+              </p>
+            }
+          </div>
+
+          <div class="my-courses__row-progress">
+            <div class="my-courses__progress-row">
+              <span>{{ 'aplus.my_courses.progress' | translate }}</span>
+              <span>{{ c.progressPct }}%</span>
+            </div>
+            <div
+              class="progress-track"
+              role="progressbar"
+              [attr.aria-valuenow]="c.progressPct"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-label]="('aplus.my_courses.progress_aria' | translate) + ' ' + c.title">
+              <div class="progress-fill" [style.width.%]="c.progressPct"></div>
+            </div>
+          </div>
+
+          <div class="my-courses__row-action">
+            @if (c.courseId) {
+              <a
+                [routerLink]="['/a/courses', c.courseId, 'learn']"
+                class="btn btn-primary"
+                [attr.data-testid]="'my-courses-open-' + c.courseId">
+                {{ 'aplus.my_courses.open' | translate }}
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </a>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

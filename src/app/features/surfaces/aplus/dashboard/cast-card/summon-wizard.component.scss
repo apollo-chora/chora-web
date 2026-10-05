@@ -1,0 +1,248 @@
+/* Summon wizard — a small glass Topology-C overlay (mirrors goal-picker). The
+   backdrop dims + centres; the panel carries the three-step flow. Reveal easing
+   per Dale's FE design language. */
+:host {
+  display: contents;
+}
+
+.summon-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--chora-space-lg, 24px);
+  background: rgba(17, 20, 28, 0.44);
+  backdrop-filter: blur(2px);
+  animation: summon-fade 160ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+}
+
+.summon {
+  width: min(460px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--chora-space-lg, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-md, 16px);
+  animation: summon-rise 220ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 3px;
+  }
+}
+
+.summon__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--chora-space-sm, 8px);
+}
+
+.summon__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-main, #1f2430);
+
+  i {
+    color: var(--primary, #1976d2);
+  }
+}
+
+.summon__title-name {
+  color: var(--primary, #1976d2);
+}
+
+.summon__close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-muted, #6b7280) 12%, transparent);
+  color: var(--text-muted, #6b7280);
+  cursor: pointer;
+  transition: background 160ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--text-muted, #6b7280) 22%, transparent);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+}
+
+.summon__lead,
+.summon__conflict-hint {
+  margin: 0;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.92rem;
+}
+
+/* ── Goal picker list ── */
+.summon__goals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-sm, 8px);
+}
+
+.summon__goal {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-sm, 8px);
+  padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+  border: 1px solid color-mix(in srgb, var(--text-muted, #6b7280) 16%, transparent);
+  border-radius: var(--panel-radius, 14px);
+  background: var(--surface-0, rgba(255, 255, 255, 0.6));
+  color: var(--text-main, #1f2430);
+  font-size: 0.98rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    transform 200ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1)),
+    border-color 200ms var(--chora-ease-reveal, cubic-bezier(0.165, 0.84, 0.44, 1));
+
+  &:hover,
+  &:focus-visible {
+    transform: translateX(2px);
+    border-color: var(--primary, #1976d2);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary, #1976d2);
+    outline-offset: 2px;
+  }
+}
+
+.summon__goal-name {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summon__goal-bound {
+  flex: 0 0 auto;
+  color: var(--primary, #1976d2);
+  font-size: 0.8rem;
+}
+
+.summon__goal-chevron {
+  flex: 0 0 auto;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.8rem;
+}
+
+.summon__empty {
+  margin: 0;
+  padding: var(--chora-space-md, 16px);
+  border-radius: var(--panel-radius, 14px);
+  background: color-mix(in srgb, var(--text-muted, #6b7280) 8%, transparent);
+  color: var(--text-muted, #6b7280);
+  text-align: center;
+  font-size: 0.92rem;
+}
+
+/* ── Conflict + confirm copy ── */
+.summon__conflict,
+.summon__confirm {
+  margin: 0;
+  color: var(--text-main, #1f2430);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.summon__conflict-familiar {
+  color: var(--primary, #1976d2);
+}
+
+.summon__pair {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-sm, 8px);
+  flex-wrap: wrap;
+  font-size: 1.02rem;
+
+  i {
+    color: var(--primary, #1976d2);
+  }
+}
+
+.summon__replace-note {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.88rem;
+
+  i {
+    color: var(--chora-color-warning, #d97706);
+  }
+}
+
+.summon__error {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+  border-radius: var(--panel-radius, 12px);
+  background: color-mix(in srgb, var(--chora-color-danger, #dc2626) 10%, transparent);
+  color: var(--chora-color-danger, #dc2626);
+  font-size: 0.9rem;
+}
+
+.summon__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--chora-space-sm, 8px);
+  margin-top: var(--chora-space-xs, 4px);
+}
+
+@keyframes summon-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes summon-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .summon-backdrop,
+  .summon {
+    animation: none;
+  }
+  .summon__goal {
+    transition: none;
+  }
+  .summon__goal:hover,
+  .summon__goal:focus-visible {
+    transform: none;
+  }
+}

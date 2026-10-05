@@ -1,0 +1,702 @@
+// =====================================================================
+// Familiar Hatching Ceremony — 4-step wizard with view-transitions
+// =====================================================================
+
+@use '../../../../../styles/breed-accents';
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  view-transition-name: hatching-canvas;
+}
+
+.aplus-hatching {
+  padding: 1.5rem clamp(1rem, 3vw, 2rem);
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// ─── Header + step pills ───────────────────────────────────────────
+.aplus-hatching__header {
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.aplus-hatching__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.aplus-hatching__steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.step-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--glass-border);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &.is-active {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  &.is-done {
+    color: var(--success);
+
+    .step-pill__num {
+      background: var(--success);
+      color: #fff;
+    }
+  }
+}
+
+.step-pill__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.1);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.step-pill.is-active .step-pill__num {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+// ─── Step canvas shared ────────────────────────────────────────────
+.step-canvas {
+  padding: 2rem clamp(1rem, 4vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
+  min-height: 480px;
+  justify-content: center;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: step-fade-in 0.32s ease-out;
+  }
+}
+
+@keyframes step-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.step-canvas__heading {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.step-canvas__narrative {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 500px;
+  line-height: 1.55;
+}
+
+.step-canvas__art {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.egg-halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(165, 180, 252, 0.4) 0%, transparent 60%);
+  transform: translate(-50%, -50%);
+  filter: blur(20px);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: egg-halo-pulse 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes egg-halo-pulse {
+  0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.95); }
+  50%      { opacity: 1.0;  transform: translate(-50%, -50%) scale(1.08); }
+}
+
+.egg-art {
+  position: relative;
+  z-index: 1;
+  width: 240px;
+  height: auto;
+}
+
+.egg-art.is-cracking {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: egg-shake 0.5s ease-in-out infinite;
+  }
+}
+
+@keyframes egg-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25%      { transform: translateX(-3px) rotate(-1.5deg); }
+  75%      { transform: translateX(3px) rotate(1.5deg); }
+}
+
+.crack {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.4);
+  height: 2px;
+  z-index: 2;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: crack-appear 1.6s ease-out forwards;
+  }
+}
+
+.crack--1 { top: 38%; left: 38%; width: 24px; transform: rotate(-30deg); animation-delay: 0.3s; }
+.crack--2 { top: 52%; left: 32%; width: 32px; transform: rotate(15deg);  animation-delay: 0.8s; }
+.crack--3 { top: 60%; left: 48%; width: 28px; transform: rotate(-50deg); animation-delay: 1.2s; }
+
+@keyframes crack-appear {
+  from { opacity: 0; width: 0; }
+  to   { opacity: 1; }
+}
+
+// ─── CTA buttons ──────────────────────────────────────────────────
+.step-canvas__cta {
+  padding: 0.9rem 1.6rem;
+  border-radius: 12px;
+  border: none;
+  background: var(--surface-accent-fill, var(--primary));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(25, 118, 210, 0.32);
+  }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+}
+
+.step-canvas__cta--commit {
+  background: linear-gradient(135deg, var(--success), #14b8a6);
+}
+
+.step-canvas__back {
+  padding: 0.85rem 1.4rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.85); color: var(--primary); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+.step-canvas__nav {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.step-canvas__error {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// ─── Step 2 reveal — per-rarity treatments ─────────────────────────
+.step-canvas--reveal {
+  position: relative;
+  overflow: hidden;
+}
+
+.reveal-art {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: reveal-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+// CHO-2235: the per-species awaken image mirrors the BreedArt xl footprint
+// so the load-time swap (BreedArt fallback → awaken art) never reflows.
+.reveal-awaken-art {
+  width: 360px;
+  height: 360px;
+  max-width: 70vw;
+  max-height: 70vw;
+  object-fit: contain;
+}
+
+@keyframes reveal-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.reveal-sparkle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+
+  i {
+    position: absolute;
+    color: var(--breed-accent, var(--primary));
+    font-size: 18px;
+
+    @media (prefers-reduced-motion: no-preference) {
+      animation: reveal-sparkle-pulse 1.6s ease-in-out infinite;
+    }
+
+    &:nth-child(1) { top: 10%;  left: 12%; animation-delay: 0s; }
+    &:nth-child(2) { top: 70%;  left: 80%; animation-delay: 0.4s; }
+    &:nth-child(3) { top: 30%;  left: 78%; animation-delay: 0.8s; }
+  }
+}
+
+@keyframes reveal-sparkle-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.85); }
+  50%      { opacity: 1;   transform: scale(1.2); }
+}
+
+[data-rarity='rare'] .reveal-art::before,
+[data-rarity='legendary'] .reveal-art::before {
+  content: '';
+  position: absolute;
+  inset: -40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--breed-accent-glow, rgba(25, 118, 210, 0.4)) 0%, transparent 60%);
+  filter: blur(24px);
+  z-index: -1;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: reveal-glow 2.8s ease-in-out infinite;
+  }
+}
+
+@keyframes reveal-glow {
+  0%, 100% { opacity: 0.5; transform: scale(0.95); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+
+.reveal-light-wash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at centre,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 215, 100, 0.35) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: legendary-wash 2.2s ease-out;
+  }
+}
+
+@keyframes legendary-wash {
+  from { opacity: 1; }
+  to   { opacity: 0.3; }
+}
+
+[data-shiny='true'] .reveal-art {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: shiny-palette-swap 0.5s ease-out 0.7s;
+  }
+}
+
+@keyframes shiny-palette-swap {
+  0%   { filter: hue-rotate(0deg) saturate(1); }
+  50%  { filter: hue-rotate(60deg) saturate(1.6); }
+  100% { filter: hue-rotate(0deg) saturate(1); }
+}
+
+.reveal-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.reveal-tagline {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.reveal-headline {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+
+  strong { color: var(--breed-accent, var(--primary)); }
+}
+
+.reveal-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.reveal-rarity-chip,
+.reveal-shiny-chip,
+.reveal-prob-chip {
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.reveal-rarity-chip {
+  &[data-rarity='common']    { background: rgba(148, 163, 184, 0.2); color: #475569; }
+  &[data-rarity='uncommon']  { background: rgba(16, 185, 129, 0.2); color: #047857; }
+  &[data-rarity='rare']      { background: rgba(59, 130, 246, 0.2); color: #1e40af; }
+  &[data-rarity='legendary'] { background: linear-gradient(135deg, #fde68a, #f472b6); color: #7c2d12; }
+}
+
+.reveal-shiny-chip {
+  background: linear-gradient(135deg, #fff7c2, #f4d03f);
+  color: #7a5300;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.reveal-prob-chip {
+  background: rgba(25, 118, 210, 0.12);
+  color: var(--primary);
+}
+
+// ─── Step 3 identity form ─────────────────────────────────────────
+.step-canvas--identity {
+  align-items: stretch;
+  text-align: left;
+}
+
+.identity-field {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  legend {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    padding: 0;
+  }
+}
+
+.identity-input {
+  padding: 0.75rem 0.95rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.7);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-main);
+
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+.identity-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.identity-pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.identity-pill {
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-family: inherit;
+  cursor: pointer;
+  text-transform: uppercase;
+
+  &.is-active {
+    background: var(--primary);
+    color: #fff;
+    border-color: transparent;
+  }
+
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+// ─── Step 2 identity — companion preview (bug #17) ────────────────
+.identity-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 0.5rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 22px rgba(25, 118, 210, 0.12);
+}
+
+.identity-preview__art {
+  position: relative;
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .egg-halo { width: 110px; height: 110px; }
+  .egg-art  { width: 84px; }
+}
+
+.identity-preview__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.identity-preview__name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.identity-preview__name--placeholder {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-style: italic;
+}
+
+.identity-preview__traits {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.identity-preview__chip {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(25, 118, 210, 0.1);
+  color: var(--primary);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.identity-preview__mystery {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+// ─── Step 4 commit summary ────────────────────────────────────────
+.step-canvas--commit {
+  align-items: stretch;
+}
+
+.commit-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+
+  div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--glass-border);
+    font-size: 13px;
+  }
+
+  dt {
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text-main);
+    text-align: right;
+
+    code {
+      font-family: 'Courier New', monospace;
+      background: rgba(0,0,0,0.05);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  }
+}
+
+// ── F-I2 award moment: first Skill auto-equipped at hatch (CHO-2089) ──
+.reveal-skill-award {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 360px;
+  margin: 0.25rem auto 0;
+  padding: 0.85rem 1.1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 22px rgba(25, 118, 210, 0.14);
+  text-align: left;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: reveal-award-pop 520ms cubic-bezier(0.165, 0.84, 0.44, 1) 220ms both;
+  }
+}
+
+@keyframes reveal-award-pop {
+  from { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.96); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.reveal-skill-award__badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 17px;
+}
+
+.reveal-skill-award__body { display: flex; flex-direction: column; gap: 0.1rem; }
+
+.reveal-skill-award__eyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+}
+
+.reveal-skill-award__name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.reveal-skill-award__sub {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}

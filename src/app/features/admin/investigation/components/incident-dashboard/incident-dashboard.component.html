@@ -1,0 +1,239 @@
+<section
+  class="incident-dashboard"
+  role="main"
+  [attr.aria-label]="'admin.investigation.incidents_title' | translate"
+  data-testid="incident-dashboard">
+
+  <!-- Page Header -->
+  <header class="incident-dashboard__header">
+    <div class="incident-dashboard__header-nav">
+      <a
+        routerLink="../"
+        class="incident-dashboard__back-link"
+        data-testid="btn-back"
+        [attr.aria-label]="'admin.investigation.back_to_workspace' | translate">
+        &larr; {{ 'admin.investigation.back_to_workspace' | translate }}
+      </a>
+      <h1 class="incident-dashboard__title" data-testid="incidents-title">
+        {{ 'admin.investigation.incidents_title' | translate }}
+      </h1>
+    </div>
+    <button
+      type="button"
+      class="incident-dashboard__btn incident-dashboard__btn--primary"
+      (click)="loadIncidents()"
+      data-testid="btn-refresh-incidents"
+      [attr.aria-label]="'admin.investigation.refresh' | translate">
+      {{ 'admin.investigation.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="incident-dashboard__filters" data-testid="incident-filters" role="search">
+    <div class="incident-dashboard__filter-group">
+      <label for="severity-filter" class="incident-dashboard__filter-label">
+        {{ 'admin.investigation.severity' | translate }}
+      </label>
+      <select
+        id="severity-filter"
+        class="incident-dashboard__select"
+        data-testid="severity-filter"
+        (change)="onSeverityFilter($any($event.target).value)">
+        <option value="">{{ 'admin.investigation.all_severities' | translate }}</option>
+        @for (sev of allSeverities; track sev) {
+          <option [value]="sev">{{ severityLabels[sev] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="incident-dashboard__filter-group">
+      <label for="status-filter" class="incident-dashboard__filter-label">
+        {{ 'admin.investigation.status' | translate }}
+      </label>
+      <select
+        id="status-filter"
+        class="incident-dashboard__select"
+        data-testid="status-filter"
+        (change)="onStatusFilter($any($event.target).value)">
+        <option value="">{{ 'admin.investigation.all_statuses' | translate }}</option>
+        @for (st of allStatuses; track st) {
+          <option [value]="st">{{ statusLabels[st] | translate }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="incident-dashboard__loading" data-testid="incidents-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="incident-dashboard__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="incident-dashboard__empty" data-testid="incidents-empty" role="status">
+      <p class="incident-dashboard__empty-text">
+        {{ 'admin.investigation.no_incidents' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Incidents List + Detail Panel -->
+  @if (!loading() && !isEmpty()) {
+    <div class="incident-dashboard__layout">
+      <!-- Incidents List -->
+      <div class="incident-dashboard__list" data-testid="incident-list" role="list">
+        @for (incident of filteredIncidents(); track incident.id) {
+          <div
+            class="incident-dashboard__card"
+            role="listitem"
+            [class.incident-dashboard__card--selected]="isSelected(incident.id)"
+            [attr.data-testid]="'incident-' + incident.id"
+            [attr.aria-expanded]="isSelected(incident.id)"
+            (click)="selectIncident(incident.id)"
+            (keyup.enter)="selectIncident(incident.id)"
+            tabindex="0">
+
+            <!-- Card Header -->
+            <div class="incident-dashboard__card-header">
+              <span
+                class="incident-dashboard__severity"
+                [class]="severityClass(incident.severity)">
+                {{ incident.severity | uppercase }}
+              </span>
+              <span
+                class="incident-dashboard__status"
+                [class]="statusClass(incident.status)">
+                {{ incident.status }}
+              </span>
+            </div>
+
+            <!-- Card Body -->
+            <h3 class="incident-dashboard__card-title">{{ incident.title }}</h3>
+
+            <!-- Affected Services -->
+            <div class="incident-dashboard__affected">
+              @for (svc of incident.affectedServices; track svc) {
+                <span class="incident-dashboard__service-chip">{{ svc }}</span>
+              }
+            </div>
+
+            <!-- Card Meta -->
+            <div class="incident-dashboard__card-meta">
+              <span>{{ formatDateTime(incident.createdAt) }}</span>
+              @if (incident.assignedTo) {
+                <span class="incident-dashboard__assignee">{{ incident.assignedTo }}</span>
+              } @else {
+                <span class="incident-dashboard__unassigned">
+                  {{ 'admin.investigation.unassigned' | translate }}
+                </span>
+              }
+            </div>
+
+            <!-- Action Buttons -->
+            <div
+              class="incident-dashboard__actions"
+              role="presentation"
+              (click)="$event.stopPropagation()"
+              (keydown)="$event.stopPropagation()">
+              @if (canAcknowledge(incident)) {
+                <button
+                  type="button"
+                  class="incident-dashboard__btn incident-dashboard__btn--info"
+                  [attr.data-testid]="'btn-ack-' + incident.id"
+                  (click)="acknowledgeIncident(incident)">
+                  {{ 'admin.investigation.acknowledge' | translate }}
+                </button>
+              }
+              @if (canEscalate(incident)) {
+                <button
+                  type="button"
+                  class="incident-dashboard__btn incident-dashboard__btn--danger"
+                  [attr.data-testid]="'btn-escalate-' + incident.id"
+                  (click)="escalateIncident(incident)">
+                  {{ 'admin.investigation.escalate' | translate }}
+                </button>
+              }
+              @if (canResolve(incident)) {
+                <button
+                  type="button"
+                  class="incident-dashboard__btn incident-dashboard__btn--success"
+                  [attr.data-testid]="'btn-resolve-' + incident.id"
+                  (click)="resolveIncident(incident)">
+                  {{ 'admin.investigation.resolve' | translate }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Detail Panel (Timeline) -->
+      @if (selectedIncident()) {
+        <aside
+          class="incident-dashboard__detail"
+          data-testid="incident-detail"
+          [attr.aria-label]="'admin.investigation.timeline' | translate">
+          <h2 class="incident-dashboard__detail-title">
+            {{ 'admin.investigation.timeline' | translate }}
+          </h2>
+          <p class="incident-dashboard__detail-subtitle">{{ selectedIncident()!.title }}</p>
+
+          <!-- Affected Services -->
+          <div class="incident-dashboard__detail-section">
+            <h3 class="incident-dashboard__detail-heading">
+              {{ 'admin.investigation.affected_services' | translate }}
+            </h3>
+            <div class="incident-dashboard__affected">
+              @for (svc of selectedIncident()!.affectedServices; track svc) {
+                <span class="incident-dashboard__service-chip">{{ svc }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="incident-dashboard__detail-section">
+            <h3 class="incident-dashboard__detail-heading">
+              {{ 'admin.investigation.resolution_timeline' | translate }}
+            </h3>
+
+            @if (timelineLoading()) {
+              <div class="incident-dashboard__timeline-loading" aria-live="polite">
+                {{ 'admin.investigation.loading_timeline' | translate }}
+              </div>
+            }
+
+            @if (!timelineLoading() && timeline().length === 0) {
+              <p class="incident-dashboard__empty-text">
+                {{ 'admin.investigation.no_timeline' | translate }}
+              </p>
+            }
+
+            @if (!timelineLoading() && timeline().length > 0) {
+              <div class="incident-dashboard__timeline" data-testid="timeline" role="list">
+                @for (entry of timeline(); track entry.timestamp) {
+                  <div class="incident-dashboard__timeline-entry" role="listitem">
+                    <div class="incident-dashboard__timeline-dot"></div>
+                    <div class="incident-dashboard__timeline-content">
+                      <div class="incident-dashboard__timeline-header">
+                        <span class="incident-dashboard__timeline-action">{{ entry.action }}</span>
+                        <span class="incident-dashboard__timeline-time">{{ formatTimestamp(entry.timestamp) }}</span>
+                      </div>
+                      <span class="incident-dashboard__timeline-actor">{{ entry.actor }}</span>
+                      @if (entry.note) {
+                        <p class="incident-dashboard__timeline-note">{{ entry.note }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </aside>
+      }
+    </div>
+  }
+</section>

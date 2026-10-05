@@ -1,0 +1,87 @@
+<section
+  class="developer-console"
+  role="main"
+  [attr.aria-label]="'admin.developer.console_title' | translate"
+  data-testid="developer-console">
+
+  <!-- Page Header -->
+  <header class="developer-console__header">
+    <h1 class="developer-console__title" data-testid="console-title">
+      {{ 'admin.developer.console_title' | translate }}
+    </h1>
+    <p class="developer-console__subtitle">
+      {{ 'admin.developer.console_subtitle' | translate }}
+    </p>
+  </header>
+
+  <!-- Tab Navigation -->
+  <nav
+    class="developer-console__tabs"
+    role="tablist"
+    [attr.aria-label]="'admin.developer.tab_navigation' | translate"
+    data-testid="console-tabs">
+    @for (tab of tabs; track tab.value) {
+      <a
+        class="developer-console__tab"
+        role="tab"
+        [routerLink]="tab.value"
+        routerLinkActive="developer-console__tab--active"
+        [attr.aria-selected]="activeTab() === tab.value"
+        [attr.data-testid]="'tab-' + tab.value"
+        (click)="onTabChange(tab.value)">
+        {{ tab.label | translate }}
+      </a>
+    }
+  </nav>
+
+  <!-- Quick Links Cards -->
+  <div class="developer-console__cards" data-testid="console-cards">
+    <a
+      routerLink="api-inspector"
+      class="developer-console__card"
+      data-testid="card-api-inspector">
+      <h2 class="developer-console__card-title">
+        {{ 'admin.developer.card_api_inspector_title' | translate }}
+      </h2>
+      <p class="developer-console__card-desc">
+        {{ 'admin.developer.card_api_inspector_desc' | translate }}
+      </p>
+    </a>
+
+    <a
+      routerLink="feature-flags"
+      class="developer-console__card"
+      data-testid="card-feature-flags">
+      <h2 class="developer-console__card-title">
+        {{ 'admin.developer.card_feature_flags_title' | translate }}
+      </h2>
+      <p class="developer-console__card-desc">
+        {{ 'admin.developer.card_feature_flags_desc' | translate }}
+      </p>
+    </a>
+
+    <a
+      routerLink="event-bus"
+      class="developer-console__card"
+      data-testid="card-event-bus">
+      <h2 class="developer-console__card-title">
+        {{ 'admin.developer.card_event_bus_title' | translate }}
+      </h2>
+      <p class="developer-console__card-desc">
+        {{ 'admin.developer.card_event_bus_desc' | translate }}
+      </p>
+    </a>
+
+    <a
+      routerLink="rls-context"
+      class="developer-console__card"
+      data-testid="card-rls-context">
+      <h2 class="developer-console__card-title">
+        {{ 'admin.developer.card_rls_context_title' | translate }}
+      </h2>
+      <p class="developer-console__card-desc">
+        {{ 'admin.developer.card_rls_context_desc' | translate }}
+      </p>
+    </a>
+  </div>
+</section>

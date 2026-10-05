@@ -1,0 +1,156 @@
+// OplusEgressKillSwitchComponent — CHO-2148.
+//
+// Polyglass token family (--text-main / --glass-border / --danger, defined in
+// src/styles/_polyglass-tokens.scss) — the family the O+ glass shell resolves.
+// Every var() carries an explicit fallback: an undefined custom property yields
+// empty and the fallback is what renders, with no build error to catch it. A
+// prior session shipped near-invisible text exactly this way.
+//
+// The engaged/clear banners are deliberately loud. An operator glancing at this
+// page must never be unsure whether web egress is currently blocked platform-wide.
+
+.oplus-ks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg, 24px);
+  padding: var(--space-lg, 24px);
+  color: var(--text-main, #1e293b);
+}
+
+.oplus-ks__title {
+  margin: 0 0 var(--space-xs, 4px);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.oplus-ks__lede {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--text-muted, #64748b);
+  line-height: 1.5;
+}
+
+// Link to the auditor-reachable egress-audit page (recent decisions live there;
+// this page controls egress, that page audits it). Canonical AA-safe token.
+.oplus-ks__audit-link {
+  display: inline-block;
+  margin-top: var(--chora-space-sm);
+  color: var(--chora-color-primary-strong);
+  font-size: 0.875rem;
+}
+
+.oplus-ks__status {
+  color: var(--text-muted, #64748b);
+}
+
+.oplus-ks__alert {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm, 8px);
+  padding: var(--space-md, 16px);
+  border: 1px solid var(--danger, #ef4444);
+  border-radius: var(--radius-md, 8px);
+  background: var(--danger-bg, rgba(239, 68, 68, 0.08));
+  color: var(--danger, #ef4444);
+}
+
+// ── State banners — unmistakable at a glance ────────────────────────────────
+
+.oplus-ks__banner {
+  padding: var(--space-md, 16px);
+  border-radius: var(--radius-md, 8px);
+  border-left: 6px solid transparent;
+
+  strong {
+    display: block;
+    margin-bottom: var(--space-xs, 4px);
+    font-size: 1.0625rem;
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.oplus-ks__banner--engaged {
+  border-left-color: var(--danger, #ef4444);
+  background: var(--danger-bg, rgba(239, 68, 68, 0.08));
+  color: var(--danger, #ef4444);
+}
+
+.oplus-ks__banner--clear {
+  border-left-color: var(--success, #10b981);
+  background: var(--success-bg, rgba(16, 185, 129, 0.08));
+  color: var(--text-main, #1e293b);
+}
+
+.oplus-ks__audit {
+  margin: 0;
+  color: var(--text-muted, #64748b);
+  font-size: 0.8125rem;
+}
+
+// ── Control panel ──────────────────────────────────────────────────────────
+
+.oplus-ks__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md, 16px);
+  align-items: flex-start;
+  padding: var(--space-lg, 24px);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.5));
+  border-radius: var(--radius-lg, 12px);
+}
+
+.oplus-ks__reason {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs, 4px);
+  width: 100%;
+  max-width: 36rem;
+  color: var(--text-main, #1e293b);
+
+  input[type='text'] {
+    padding: var(--space-sm, 8px);
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.5));
+    border-radius: var(--radius-sm, 4px);
+    background: var(--bg-elevated, #ffffff);
+    color: var(--text-main, #1e293b);
+    font: inherit;
+  }
+}
+
+.oplus-ks__confirm {
+  width: 100%;
+  padding: var(--space-md, 16px);
+  border: 2px solid var(--danger, #ef4444);
+  border-radius: var(--radius-md, 8px);
+  background: var(--danger-bg, rgba(239, 68, 68, 0.08));
+}
+
+.oplus-ks__confirm-text {
+  margin: 0 0 var(--space-md, 16px);
+  color: var(--danger, #ef4444);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.oplus-ks__confirm-actions {
+  display: flex;
+  gap: var(--space-sm, 8px);
+}
+
+.oplus-ks__inline-error {
+  margin: 0;
+  color: var(--danger, #ef4444);
+  font-weight: 600;
+}
+
+// Tablet-first: ≥768px primary, no below-tablet breakpoints (Tier 4 D16).
+@media (min-width: 1280px) {
+  .oplus-ks {
+    max-width: 72rem;
+  }
+}

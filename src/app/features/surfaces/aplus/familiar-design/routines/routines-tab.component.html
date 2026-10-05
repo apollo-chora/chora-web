@@ -1,0 +1,579 @@
+<section class="routines" aria-labelledby="routines-heading">
+  <header class="routines__intro">
+    <h2 id="routines-heading" class="routines__title">
+      {{ 'familiar_grimoire.routines.title' | translate }}
+    </h2>
+    <p class="routines__lede">{{ 'familiar_grimoire.routines.lede' | translate }}</p>
+  </header>
+
+  @if (loading()) {
+    <p class="routines__status" role="status">
+      {{ 'familiar_grimoire.routines.loading' | translate }}
+    </p>
+  } @else if (errored()) {
+    <div class="routines__error" role="alert">
+      <p>{{ 'familiar_grimoire.error.generic' | translate }}</p>
+      <button type="button" class="btn btn-secondary" (click)="reloadList()">
+        {{ 'familiar_grimoire.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    <!-- ── LIST ─────────────────────────────────────────────────────────── -->
+    @if (mode() === 'list') {
+      <div class="routines__list-head">
+        <button type="button" class="btn btn-primary" (click)="startCreate()">
+          {{ 'familiar_grimoire.routines.new' | translate }}
+        </button>
+      </div>
+
+      @if (rituals().length === 0) {
+        <p class="routines__empty">
+          {{ 'familiar_grimoire.routines.empty' | translate }}
+        </p>
+      } @else {
+        <ul class="routines__list">
+          @for (r of rituals(); track trackByRitualId($index, r)) {
+            <li class="ritual-row">
+              <button
+                type="button"
+                class="ritual-row__open"
+                (click)="openRitual(r)"
+                [attr.aria-label]="('familiar_grimoire.routines.open' | translate) + ': ' + r.name"
+              >
+                <span class="ritual-row__name">{{ r.name }}</span>
+                <span class="ritual-row__meta">
+                  {{ triggerLabelKey(r.trigger) | translate }}
+                  →
+                  {{ sinkLabelKey(r.sink) | translate }}
+                </span>
+                @if (r.enabled) {
+                  <span class="ritual-row__badge ritual-row__badge--on">
+                    {{ 'familiar_grimoire.routines.enabled' | translate }}
+                  </span>
+                } @else {
+                  <span class="ritual-row__badge">
+                    {{ 'familiar_grimoire.routines.draft' | translate }}
+                  </span>
+                }
+                @if (r.currentRevision > 0) {
+                  <span class="ritual-row__price">
+                    {{ 'familiar_grimoire.routines.price' | translate: { units: r.publishedPriceUnits } }}
+                  </span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    }
+
+    <!-- ── CREATE DRAFT ─────────────────────────────────────────────────── -->
+    @if (mode() === 'create') {
+      <form class="routines__create" (ngSubmit)="submitCreate()">
+        <label class="field">
+          <span class="field__label">{{ 'familiar_grimoire.routines.name' | translate }}</span>
+          <input
+            type="text"
+            name="ritualName"
+            [maxlength]="nameMaxLen"
+            [ngModel]="newName()"
+            (ngModelChange)="newName.set($event)"
+            [attr.aria-label]="'familiar_grimoire.routines.name' | translate"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span class="field__label">{{ 'familiar_grimoire.routines.trigger' | translate }}</span>
+          <select
+            name="ritualTrigger"
+            [ngModel]="newTrigger()"
+            (ngModelChange)="newTrigger.set($event)"
+          >
+            @for (t of triggers; track t) {
+              <option [value]="t">{{ triggerLabelKey(t) | translate }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field__label">{{ 'familiar_grimoire.routines.sink' | translate }}</span>
+          <select
+            name="ritualSink"
+            [ngModel]="newSink()"
+            (ngModelChange)="newSink.set($event)"
+          >
+            <!-- N5: a sink with no registered writer is GREYED, not hidden, so
+                 the capability reads as "not yet" rather than absent. Every
+                 disabled option carries its reason. The server refuses one at
+                 publish with 422 RITUAL_SINK_NOT_WIRED regardless. -->
+            @for (s of sinks; track s) {
+              <!-- Text only: an <option> may not contain elements, so the
+                   reason is interpolated, not wrapped in a span (a nested span
+                   survives jsdom and is stripped by a real browser). -->
+              <option [value]="s" [disabled]="!sinkWired(s)">{{ sinkOptionLabel(s) }}</option>
+            }
+          </select>
+          <p class="field__hint" role="status">
+            {{ sinkAvailabilityHintKey() | translate }}
+          </p>
+        </label>
+
+        <div class="routines__create-actions">
+          <button type="button" class="btn btn-secondary" (click)="cancelCreate()">
+            {{ 'familiar_grimoire.cancel' | translate }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!canCreate()">
+            {{ 'familiar_grimoire.routines.create' | translate }}
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- ── COMPOSE (3-pane) ─────────────────────────────────────────────── -->
+    @if (mode() === 'compose' && selected(); as sel) {
+      <div class="composer">
+        <div class="composer__bar">
+          <button type="button" class="btn btn-secondary" (click)="backToList()">
+            {{ 'familiar_grimoire.routines.back' | translate }}
+          </button>
+          <div class="composer__title">
+            <span class="composer__name">{{ sel.name }}</span>
+            <span class="composer__meta">
+              {{ triggerLabelKey(sel.trigger) | translate }}
+              →
+              {{ sinkLabelKey(sel.sink) | translate }}
+            </span>
+          </div>
+        </div>
+
+        <!-- CHO-2362: the server's 422 RITUAL_INVALID plain-language detail,
+             verbatim - the server is the validator and its words reach the
+             learner (fail-loud, same strip styling as the list error). -->
+        @if (publishErrorDetail(); as detail) {
+          <div class="routines__error composer__invalid" role="alert">
+            <p>{{ 'familiar_grimoire.error.invalid' | translate }}</p>
+            <p class="composer__invalid-detail">{{ detail }}</p>
+          </div>
+        }
+
+        <div class="composer__panes">
+          <!-- Palette: equipped-active skills (click to add). -->
+          <div class="pane pane--palette">
+            <h3 class="pane__title">{{ 'familiar_grimoire.routines.palette' | translate }}</h3>
+            @if (palette().length === 0) {
+              <p class="pane__empty">{{ 'familiar_grimoire.routines.palette_empty' | translate }}</p>
+            } @else {
+              <ul class="palette">
+                @for (g of palette(); track trackBySkillKey($index, g)) {
+                  <li>
+                    <button
+                      type="button"
+                      class="palette__skill"
+                      [disabled]="atStepCap()"
+                      (click)="addStepFromPalette(g)"
+                      [attr.aria-label]="('familiar_grimoire.routines.add_step' | translate) + ': ' + g.skillKey"
+                    >
+                      <span class="palette__key">{{ skillLabelKey(g.skillKey) | translate }}</span>
+                      <span class="palette__add" aria-hidden="true">+</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+
+          <!-- Steps: drag to reorder, remove; capped. -->
+          <div class="pane pane--steps">
+            <h3 class="pane__title">
+              {{ 'familiar_grimoire.routines.steps' | translate }}
+              <span class="pane__count">{{ draftSteps().length }} / {{ stepCap() }}</span>
+            </h3>
+            @if (draftSteps().length === 0) {
+              <p class="pane__empty">{{ 'familiar_grimoire.routines.steps_empty' | translate }}</p>
+            } @else {
+              <!--
+                Two input paths, one mutation (ruling R-a). cdkDropList/cdkDrag
+                keep the pointer drag; choraReorderableList adds the keyboard
+                path CDK does not ship. Both land in moveStep, so the two cannot
+                drift apart. Rows carry a roving tab stop: one Tab reaches the
+                list, arrows move within it, Alt+arrow moves the step.
+              -->
+              <ol
+                class="steps"
+                cdkDropList
+                (cdkDropListDropped)="onStepDrop($event)"
+                [choraReorderableList]="draftSteps().length"
+                [rowLabel]="stepRowLabel"
+                (reorder)="onStepReorder($event)"
+                #stepsReorder="choraReorderable"
+              >
+                @for (step of draftSteps(); track trackByIndex($index)) {
+                  <li
+                    class="step"
+                    cdkDrag
+                    [attr.data-reorder-index]="$index"
+                    [attr.tabindex]="$index === stepsReorder.activeIndex() ? 0 : -1"
+                    [class.step--selected]="selectedStepIndex() === $index"
+                  >
+                    <!-- A real button (CHO-2362): selecting a step opens its
+                         param editor, so it must be keyboard operable. -->
+                    <button
+                      type="button"
+                      class="step__main"
+                      (click)="selectStep($index)"
+                      [attr.aria-label]="('familiar_grimoire.routines.select_step' | translate) + ': ' + step.skillKey"
+                    >
+                      <span class="step__order">{{ $index + 1 }}</span>
+                      <span class="step__body">
+                        <span class="step__key">{{ skillLabelKey(step.skillKey) | translate }}</span>
+                        @if (stepSummaries()[$index]; as summary) {
+                          <span class="step__params">{{ summary }}</span>
+                        }
+                        <!--
+                          b.4 cost. The only row on the card with data behind
+                          it: receives, gives and tools are dark, and the note
+                          under the list says why once rather than eight times.
+                        -->
+                        <span
+                          class="step__cost"
+                          [attr.data-testid]="'step-cost-' + $index"
+                        >
+                          @let cost = stepCosts()[$index];
+                          @if (cost && cost.kind === 'uplift') {
+                            {{
+                              'familiar_grimoire.routines.step_cost'
+                                | translate: { units: cost.units }
+                            }}
+                          } @else if (cost && cost.kind === 'included') {
+                            {{ 'familiar_grimoire.routines.step_cost_included' | translate }}
+                          } @else {
+                            {{ 'familiar_grimoire.routines.step_cost_unknown' | translate }}
+                          }
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      class="step__remove"
+                      (click)="removeStep($index); $event.stopPropagation()"
+                      [attr.aria-label]="('familiar_grimoire.routines.remove_step' | translate) + ': ' + step.skillKey"
+                    >
+                      ×
+                    </button>
+                  </li>
+                }
+              </ol>
+              <!--
+                The announcement lives in the HOST's DOM, where the screen
+                reader already is, and it is a key the template translates: the
+                directive never builds a sentence, because everywhere it could
+                have built one is a place with no locale.
+              -->
+              <!--
+                ONE dark note, not one per card. Three things are designed and
+                not yet real, and they share a single cause worth stating once:
+                  - CONNECTORS and typed hand-off between steps: ADR-257
+                    section 5 gates chaining on N4;
+                  - TOOLS per step: the narrowing is ADVISORY today, the
+                    StreamChat request carries no allowlist field
+                    (`ritual_step_turn_engine.go:14-22`), so a tools row would
+                    assert a containment the runtime does not perform;
+                  - RECEIVES and GIVES: there is no data at all. The port
+                    columns are absent from `listCatalogueSQL` and from the
+                    grant wire, and migration 0117 authored no values, so every
+                    Skill would read "none to none".
+                Repeating this on up to eight cards teaches the reader to skip
+                it, which is how a real caveat stops being read.
+              -->
+              <p class="steps__dark-note" data-testid="steps-dark-note">
+                {{ 'familiar_grimoire.routines.chaining_dark' | translate }}
+              </p>
+              <p
+                class="steps__live"
+                data-testid="steps-reorder-live"
+                aria-live="polite"
+              >
+                @if (stepsReorder.announcement(); as a) {
+                  {{ a.key | translate: a.params }}
+                }
+              </p>
+            }
+            <!--
+              N8: the number the learner is about to FREEZE, next to the act
+              that freezes it. It used to render only on an already-published
+              ritual, so the one moment it was decided was the one moment it
+              was invisible.
+            -->
+            <p class="composer__price" data-testid="composer-price">
+              @if (draftPrice(); as p) {
+                @if (p.kind === 'priced') {
+                  {{
+                    'familiar_grimoire.routines.price'
+                      | translate: { units: p.units }
+                  }}
+                } @else {
+                  <!--
+                    Never a number here. An unknown policy class is not a
+                    standard one, and totalling the rest would understate what
+                    the learner is charged, in the one direction that costs them.
+                  -->
+                  <span class="composer__price-unknown">
+                    {{ 'familiar_grimoire.routines.price_unknown' | translate }}
+                  </span>
+                }
+              }
+            </p>
+            <button
+              type="button"
+              class="btn btn-primary composer__publish"
+              [disabled]="!canPublish()"
+              (click)="publish()"
+            >
+              {{ 'familiar_grimoire.routines.publish' | translate }}
+            </button>
+          </div>
+
+          <!-- Inspector: selected-step param editor + run (CHO-2362). -->
+          <div class="pane pane--inspector">
+            <h3 class="pane__title">{{ 'familiar_grimoire.routines.inspector' | translate }}</h3>
+            @if (selectedStep(); as step) {
+              <p class="inspector__key">{{ step.skillKey }}</p>
+              @if (selectedStepSchemaEntries().length === 0) {
+                <!-- Honest state: this Skill's sheet has nothing to edit. -->
+                <p class="inspector__note">
+                  {{ 'familiar_grimoire.params.none' | translate }}
+                </p>
+              } @else {
+                <div class="params">
+                  @for (entry of selectedStepSchemaEntries(); track entry.name) {
+                    <div class="params__field">
+                      <label class="params__label" [for]="'param-' + entry.name">
+                        <span>{{ paramNameKey(entry.name) | translate }}</span>
+                        @if (entry.spec.required) {
+                          <!-- Invoke-path contract surfaced as a NUDGE only:
+                               the server never blocks publish on it. -->
+                          <span class="params__recommended">
+                            {{ 'familiar_grimoire.params.recommended' | translate }}
+                          </span>
+                        }
+                      </label>
+                      @if (entry.spec.required) {
+                        <p class="params__help">
+                          {{ 'familiar_grimoire.params.recommended_help' | translate }}
+                        </p>
+                      }
+
+                      @if (entry.spec.type === 'enum') {
+                        <select
+                          class="params__control"
+                          [id]="'param-' + entry.name"
+                          [ngModel]="paramControlValue(entry.name)"
+                          (ngModelChange)="setStepParam(entry.name, $event)"
+                        >
+                          @for (v of entry.spec.values ?? []; track v) {
+                            <option [value]="v">{{ paramValueKey(v) | translate }}</option>
+                          }
+                        </select>
+                      } @else if (entry.spec.type === 'int') {
+                        <input
+                          class="params__control"
+                          [id]="'param-' + entry.name"
+                          type="number"
+                          step="1"
+                          inputmode="numeric"
+                          [attr.min]="entry.spec.min"
+                          [attr.max]="entry.spec.max"
+                          [ngModel]="paramControlValue(entry.name)"
+                          (ngModelChange)="setStepParamFromNumber(entry.name, $event)"
+                        />
+                      } @else if (entry.spec.type === 'text') {
+                        <textarea
+                          class="params__control"
+                          [id]="'param-' + entry.name"
+                          rows="3"
+                          [attr.maxlength]="entry.spec.maxLen"
+                          [ngModel]="paramControlValue(entry.name)"
+                          (ngModelChange)="setStepParam(entry.name, $event)"
+                        ></textarea>
+                        <p class="params__counter" aria-live="polite">
+                          {{ 'familiar_grimoire.params.counter' | translate: { used: paramRuneCount(entry.name), max: entry.spec.maxLen ?? 0 } }}
+                        </p>
+                      } @else if (isRefType(entry.spec.type)) {
+                        <!-- Point at a concept / growth edge by TITLE; the id
+                             rides the wire. Never raw UUID entry (CHO-2346). -->
+                        @if (refSourceFor(entry.spec.type); as src) {
+                          @if (src.status === 'error') {
+                            <div class="params__ref-error" role="alert">
+                              <p>{{ refKey(entry.spec.type, 'error') | translate }}</p>
+                              <button
+                                type="button"
+                                class="btn btn-secondary params__ref-retry"
+                                (click)="retryRefSource(entry.spec.type)"
+                              >
+                                {{ 'familiar_grimoire.retry' | translate }}
+                              </button>
+                            </div>
+                          } @else if (src.status === 'success') {
+                            @if (src.options.length === 0) {
+                              <p class="params__hint">
+                                {{ refKey(entry.spec.type, 'empty') | translate }}
+                              </p>
+                              <select class="params__control" [id]="'param-' + entry.name" disabled>
+                                <option value="">
+                                  {{ unsetOptionKey(entry.spec.type, entry.spec.required === true) | translate }}
+                                </option>
+                              </select>
+                            } @else {
+                              <input
+                                class="params__control params__ref-filter"
+                                type="search"
+                                [id]="'param-' + entry.name + '-filter'"
+                                [attr.aria-label]="refKey(entry.spec.type, 'search') | translate"
+                                [attr.placeholder]="refKey(entry.spec.type, 'search') | translate"
+                                [ngModel]="refFilterValue(entry.spec.type)"
+                                (ngModelChange)="setRefFilter(entry.spec.type, $event)"
+                              />
+                              <select
+                                class="params__control"
+                                [id]="'param-' + entry.name"
+                                [ngModel]="paramControlValue(entry.name)"
+                                (ngModelChange)="setStepParam(entry.name, $event)"
+                              >
+                                <option value="">
+                                  {{ unsetOptionKey(entry.spec.type, entry.spec.required === true) | translate }}
+                                </option>
+                                @for (opt of refOptionsFor(entry.spec.type, paramControlValue(entry.name)); track opt.id) {
+                                  <option [value]="opt.id">{{ opt.title }}</option>
+                                }
+                              </select>
+                            }
+                          } @else {
+                            <!-- idle flips to loading on the next tick; both read as loading. -->
+                            <p class="params__hint" role="status">
+                              {{ refKey(entry.spec.type, 'loading') | translate }}
+                            </p>
+                          }
+                        }
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            } @else {
+              <p class="pane__empty">{{ 'familiar_grimoire.routines.inspector_empty' | translate }}</p>
+            }
+
+            @if (sel.currentRevision > 0) {
+              <div class="run">
+                <button
+                  type="button"
+                  class="btn btn-primary run__btn"
+                  [disabled]="!canRun()"
+                  (click)="run()"
+                >
+                  {{ (running() ? 'familiar_grimoire.routines.running' : 'familiar_grimoire.routines.run_now') | translate }}
+                </button>
+
+                <!-- The run was accepted (202) and its steps are finishing
+                     server-side. A calm, honest wait — never an error. -->
+                @if (running()) {
+                  <p class="run__pending" role="status">
+                    {{ 'familiar_grimoire.routines.run_pending' | translate }}
+                  </p>
+                }
+
+                <!-- We stopped polling before it settled. Still not an error:
+                     the outcome lands in Run history regardless. -->
+                @if (runSlow()) {
+                  <p class="run__pending" role="status">
+                    {{ 'familiar_grimoire.routines.run_slow' | translate }}
+                  </p>
+                }
+
+                @if (lastRun(); as lr) {
+                  <div class="run__result" role="status">
+                    <p class="run__status">{{ lr.status }}</p>
+                    @if (lr.story; as story) {
+                      <p class="run__story-title">{{ story.title }}</p>
+                      <ol class="run__steps">
+                        @for (rs of story.steps; track trackByIndex($index)) {
+                          <li>
+                            <strong>{{ rs.title }}</strong>
+                            <span>{{ rs.summary }}</span>
+                            <!--
+                              S8 clause 5: a persisted step output is DATA. Every
+                              field here is interpolated, never bound to
+                              innerHTML, because this is the one string on the
+                              screen that nobody on the team authored: the run
+                              wrote it from model output and the editor replays
+                              it. `sources` was on the wire and rendered
+                              NOWHERE, which is also an ADR-215 citation the
+                              learner was owed.
+                            -->
+                            @if (rs.sources?.length) {
+                              <!--
+                                Headed on purpose: an unlabelled list of titles
+                                under a step reads as MORE STEPS rather than as
+                                the evidence behind one.
+                              -->
+                              <p class="run__sources-heading">
+                                {{ 'familiar_grimoire.routines.sources' | translate }}
+                              </p>
+                              <ul class="run__sources">
+                                @for (src of rs.sources; track trackByIndex($index)) {
+                                  <li class="run__source">{{ src }}</li>
+                                }
+                              </ul>
+                            }
+                          </li>
+                        }
+                      </ol>
+                    }
+                  </div>
+                }
+
+                @if (runs().length > 0) {
+                  <details class="run__history">
+                    <summary>{{ 'familiar_grimoire.routines.history' | translate }}</summary>
+                    <ul>
+                      @for (h of runs(); track trackByRunId($index, h)) {
+                        <li>
+                          <!--
+                            A real button, so the story of an OLD run is
+                            reachable at all: the row used to be inert markup
+                            and the panel only ever held the latest run.
+                          -->
+                          <button
+                            type="button"
+                            class="run__history-open"
+                            [attr.data-testid]="'run-history-open-' + h.runId"
+                            (click)="replayRun(h.runId)"
+                          >
+                            <span class="run__history-status">{{ h.status }}</span>
+                            <span class="run__history-mana">
+                              {{ 'familiar_grimoire.routines.mana' | translate: { units: h.manaCharged } }}
+                            </span>
+                          </button>
+                        </li>
+                      }
+                    </ul>
+                    @if (replayError()) {
+                      <p
+                        class="run__replay-error"
+                        role="alert"
+                        data-testid="run-replay-error"
+                      >
+                        {{ 'familiar_grimoire.routines.replay_failed' | translate }}
+                      </p>
+                    }
+                  </details>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,67 @@
+<!--
+  The WHOLE tile is one tap target (a single <a>) → the full-view map canvas, or
+  the maps entry when there is no active map. Its accessible name comes from the
+  visible eyebrow + "Zoom in" / empty copy (no aria-label, so there is no
+  label-in-name mismatch to worry about). The live fisheye inside is decorative:
+  its canvas is `inert`, so the one link owns every interaction.
+-->
+<a
+  class="map-preview glass-panel"
+  [class.map-preview--empty]="!hasGoal()"
+  [routerLink]="tileLink()"
+  data-testid="aplus-dashboard-map-preview">
+  @if (hasGoal()) {
+    <!-- The eyebrow labels the surfaced map only when there IS one; the empty
+         state below carries its own "add a learning goal" affordance instead. -->
+    <span class="map-preview__eyebrow">
+      <i class="fa-solid fa-compass-drafting" aria-hidden="true"></i>
+      {{ 'aplus.dashboard.map_preview.heading' | translate }}
+    </span>
+
+    <!-- Live mini fisheye of the last-visited map (reuses the concept-lens render).
+         Decorative: `inert` removes the subtree from the a11y tree + tab order,
+         so the one tile link is the sole interactive target. -->
+    <div
+      class="map-preview__canvas"
+      inert
+      data-testid="aplus-dashboard-map-preview-canvas">
+      @if (showFisheye()) {
+        <chora-aplus-concept-lens-map
+          [concepts]="concepts()"
+          [edges]="conceptEdges()"
+          [focusId]="focusId()"
+          [rootId]="rootConceptId()"
+          lens="explore" />
+      } @else {
+        <!-- Graph loading / empty / error → a calm map glyph; the tile still
+             zooms in. Fail-soft: a degraded read never breaks the dashboard. -->
+        <span
+          class="map-preview__placeholder"
+          aria-hidden="true"
+          data-testid="aplus-dashboard-map-preview-placeholder">
+          <i class="fa-solid fa-diagram-project"></i>
+        </span>
+      }
+    </div>
+
+    <!-- Visible "Zoom in" affordance (the whole tile is the link; this is the cue). -->
+    <span class="map-preview__zoom" data-testid="aplus-dashboard-map-preview-zoom">
+      {{ 'aplus.dashboard.map_preview.zoom_in' | translate }}
+      <i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i>
+    </span>
+  } @else {
+    <!-- Empty / first-run: no active map → start or pick one (→ /a/knowledge). -->
+    <span class="map-preview__empty" data-testid="aplus-dashboard-map-preview-empty">
+      <span class="map-preview__empty-art" aria-hidden="true">
+        <i class="fa-solid fa-compass"></i>
+      </span>
+      <span class="map-preview__empty-prompt">
+        {{ 'aplus.dashboard.map_preview.empty_prompt' | translate }}
+      </span>
+      <span class="map-preview__empty-cta">
+        {{ 'aplus.dashboard.map_preview.empty_cta' | translate }}
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </span>
+    </span>
+  }
+</a>

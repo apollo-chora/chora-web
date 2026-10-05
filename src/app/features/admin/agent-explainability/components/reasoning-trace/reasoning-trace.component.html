@@ -1,0 +1,75 @@
+<div
+  class="reasoning-trace"
+  data-testid="reasoning-trace"
+  [attr.aria-label]="'admin.explainability.reasoning_title' | translate">
+
+  <h4 class="reasoning-trace__title">
+    {{ 'admin.explainability.reasoning_title' | translate }}
+  </h4>
+
+  <!-- Summary -->
+  @if (summary()) {
+    <p class="reasoning-trace__summary" data-testid="reasoning-summary">
+      {{ summary() }}
+    </p>
+  }
+
+  <!-- Timeline -->
+  @if (steps().length > 0) {
+    <div class="reasoning-trace__timeline" role="list" data-testid="reasoning-steps">
+      @for (step of steps(); track step.step_number) {
+        <div
+          class="reasoning-trace__step"
+          role="listitem"
+          [attr.data-testid]="'step-' + step.step_number">
+
+          <!-- Step Number -->
+          <div class="reasoning-trace__step-marker">
+            <span class="reasoning-trace__step-number">{{ step.step_number }}</span>
+            @if (!$last) {
+              <div class="reasoning-trace__step-connector"></div>
+            }
+          </div>
+
+          <!-- Step Content -->
+          <div class="reasoning-trace__step-content">
+            <p class="reasoning-trace__step-description">{{ step.description }}</p>
+
+            @if (step.evidence) {
+              <div class="reasoning-trace__evidence">
+                <span class="reasoning-trace__evidence-label">
+                  {{ 'admin.explainability.evidence' | translate }}:
+                </span>
+                <span class="reasoning-trace__evidence-text">{{ step.evidence }}</span>
+              </div>
+            }
+
+            <!-- Confidence Bar -->
+            <div class="reasoning-trace__confidence">
+              <div
+                class="reasoning-trace__confidence-track"
+                role="progressbar"
+                [attr.aria-valuenow]="confidencePercent(step.confidence)"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                [attr.data-testid]="'confidence-' + step.step_number">
+                <div
+                  class="reasoning-trace__confidence-fill"
+                  [class]="confidenceClass(step.confidence)"
+                  [style.width.%]="confidencePercent(step.confidence)">
+                </div>
+              </div>
+              <span class="reasoning-trace__confidence-value">
+                {{ confidencePercent(step.confidence) }}%
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="reasoning-trace__empty" role="status">
+      {{ 'admin.explainability.no_steps' | translate }}
+    </p>
+  }
+</div>

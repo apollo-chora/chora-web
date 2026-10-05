@@ -1,0 +1,260 @@
+<section
+  class="atom-list"
+  role="main"
+  [attr.aria-label]="'admin.atoms.list.title' | translate"
+  data-testid="atom-list">
+
+  <!-- Page Header -->
+  <header class="atom-list__header">
+    <h1 class="atom-list__title" data-testid="atom-list-title">
+      {{ 'admin.atoms.list.title' | translate }}
+    </h1>
+    <button
+      type="button"
+      class="atom-list__btn-primary"
+      (click)="navigateToCreate()"
+      data-testid="btn-create-atom">
+      {{ 'admin.atoms.list.create_atom' | translate }}
+    </button>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="atom-list__filters" data-testid="atom-list-filters" role="search">
+    <!-- Search -->
+    <div class="atom-list__search">
+      <input
+        type="search"
+        class="atom-list__search-input"
+        data-testid="search-input"
+        [placeholder]="'admin.atoms.list.search_placeholder' | translate"
+        [attr.aria-label]="'admin.atoms.list.search' | translate"
+        (input)="onSearchInput($event)" />
+    </div>
+
+    <!-- Status Filter -->
+    <div class="atom-list__filter-group">
+      <label for="status-filter" class="atom-list__filter-label">
+        {{ 'admin.atoms.list.status' | translate }}
+      </label>
+      <select
+        id="status-filter"
+        class="atom-list__select"
+        data-testid="status-filter"
+        (change)="onStatusFilter($any($event.target).value)">
+        <option value="">{{ 'admin.atoms.list.all_statuses' | translate }}</option>
+        @for (status of allStatuses; track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Difficulty Filter -->
+    <div class="atom-list__filter-group">
+      <label for="difficulty-filter" class="atom-list__filter-label">
+        {{ 'admin.atoms.list.difficulty' | translate }}
+      </label>
+      <select
+        id="difficulty-filter"
+        class="atom-list__select"
+        data-testid="difficulty-filter"
+        (change)="onDifficultyFilter($any($event.target).value)">
+        <option value="">{{ 'admin.atoms.list.all_difficulties' | translate }}</option>
+        @for (d of [1, 2, 3, 4, 5]; track d) {
+          <option [value]="d">{{ d }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Atom Type Filter Chips -->
+    <div class="atom-list__type-chips" data-testid="type-filter">
+      @for (type of allAtomTypes; track type) {
+        <button
+          type="button"
+          class="atom-list__type-chip"
+          [class.atom-list__type-chip--active]="filterAtomTypes().includes(type)"
+          (click)="onAtomTypeFilter(type)"
+          [attr.aria-pressed]="filterAtomTypes().includes(type)"
+          [attr.data-testid]="'type-chip-' + type">
+          {{ atomTypeLabels[type] | translate }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Bulk Actions Toolbar -->
+  @if (hasSelection()) {
+    <div
+      class="atom-list__bulk-actions"
+      data-testid="bulk-actions"
+      role="toolbar"
+      [attr.aria-label]="'admin.atoms.list.bulk_actions' | translate">
+      <span class="atom-list__selection-count" data-testid="selection-count">
+        {{ selectionCount() }} {{ 'admin.atoms.list.selected' | translate }}
+      </span>
+      <button
+        type="button"
+        class="atom-list__btn-secondary"
+        (click)="bulkPublish()"
+        data-testid="btn-bulk-publish"
+        [disabled]="bulkActionInProgress()">
+        {{ 'admin.atoms.list.publish_selected' | translate }}
+      </button>
+      <button
+        type="button"
+        class="atom-list__btn-danger"
+        (click)="bulkArchive()"
+        data-testid="btn-bulk-archive"
+        [disabled]="bulkActionInProgress()">
+        {{ 'admin.atoms.list.archive_selected' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Loading Skeleton -->
+  @if (loading()) {
+    <div class="atom-list__skeleton" data-testid="atom-list-loading" aria-live="polite">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="atom-list__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="atom-list__empty" data-testid="atom-list-empty" role="status">
+      <p class="atom-list__empty-text">{{ 'admin.atoms.list.no_atoms' | translate }}</p>
+      <button
+        type="button"
+        class="atom-list__btn-primary"
+        (click)="navigateToCreate()"
+        data-testid="btn-create-empty">
+        {{ 'admin.atoms.list.create_first_atom' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- Data Table -->
+  @if (!loading() && !isEmpty()) {
+    <div class="atom-list__table-wrapper" data-testid="atom-table">
+      <table class="atom-list__table" role="grid" [attr.aria-label]="'admin.atoms.list.table' | translate">
+        <thead>
+          <tr>
+            <th class="atom-list__th atom-list__th--checkbox">
+              <input
+                type="checkbox"
+                [checked]="allSelected()"
+                (change)="toggleSelectAll()"
+                [attr.aria-label]="'admin.atoms.list.select_all' | translate"
+                data-testid="select-all" />
+            </th>
+            <th class="atom-list__th">{{ 'admin.atoms.list.col_type' | translate }}</th>
+            <th class="atom-list__th atom-list__th--title">{{ 'admin.atoms.list.col_title' | translate }}</th>
+            <th class="atom-list__th">{{ 'admin.atoms.list.col_status' | translate }}</th>
+            <th class="atom-list__th">{{ 'admin.atoms.list.col_difficulty' | translate }}</th>
+            <th class="atom-list__th">{{ 'admin.atoms.list.col_author' | translate }}</th>
+            <th class="atom-list__th">{{ 'admin.atoms.list.col_updated' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (atom of atoms(); track atom.id) {
+            <tr
+              class="atom-list__row"
+              tabindex="0"
+              role="row"
+              [attr.data-testid]="'atom-row-' + atom.id"
+              (click)="navigateToEdit(atom.id)"
+              (keydown)="onRowKeydown($event, atom.id)">
+              <td class="atom-list__td atom-list__td--checkbox" (click)="$event.stopPropagation()">
+                <input
+                  type="checkbox"
+                  [checked]="isSelected(atom.id)"
+                  (change)="toggleSelection(atom.id)"
+                  [attr.aria-label]="'admin.atoms.list.select_atom' | translate"
+                  [attr.data-testid]="'select-' + atom.id" />
+              </td>
+              <td class="atom-list__td atom-list__td--type">
+                <span class="atom-list__type-icon" [attr.data-icon]="getTypeIcon(atom.atom_type)" aria-hidden="true"></span>
+                <span class="atom-list__type-text">{{ getTypeLabel(atom.atom_type) | translate }}</span>
+              </td>
+              <td class="atom-list__td atom-list__td--title" [attr.data-testid]="'atom-title-' + atom.id">
+                {{ getTitle(atom) }}
+              </td>
+              <td class="atom-list__td">
+                <span
+                  class="atom-list__status-badge"
+                  [class.atom-list__status-badge--draft]="atom.status === 'draft'"
+                  [class.atom-list__status-badge--published]="atom.status === 'published'"
+                  [class.atom-list__status-badge--archived]="atom.status === 'archived'"
+                  [attr.data-testid]="'atom-status-' + atom.id">
+                  {{ atom.status }}
+                </span>
+              </td>
+              <td class="atom-list__td">
+                <div
+                  class="atom-list__difficulty"
+                  role="img"
+                  [attr.aria-label]="'Difficulty ' + atom.difficulty + ' of 5'">
+                  @for (filled of getDifficultyStars(atom.difficulty); track $index) {
+                    <span
+                      class="atom-list__star"
+                      [class.atom-list__star--filled]="filled"
+                      aria-hidden="true">★</span>
+                  }
+                </div>
+              </td>
+              <td class="atom-list__td atom-list__td--author">
+                {{ atom.created_by }}
+              </td>
+              <td class="atom-list__td atom-list__td--date">
+                {{ formatDate(atom.updated_at) }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <footer class="atom-list__pagination" data-testid="atom-pagination">
+      <div class="atom-list__page-size">
+        <label for="page-size" class="atom-list__page-size-label">
+          {{ 'admin.atoms.list.page_size' | translate }}
+        </label>
+        <select
+          id="page-size"
+          class="atom-list__select atom-list__select--compact"
+          [ngModel]="pageSize().toString()"
+          (ngModelChange)="onPageSizeChange($event)"
+          data-testid="page-size-select">
+          @for (size of pageSizeOptions; track size) {
+            <option [value]="size">{{ size }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="atom-list__page-nav">
+        <span class="atom-list__page-info" data-testid="page-info">
+          {{ 'admin.atoms.list.page' | translate }} {{ currentPage() }}
+        </span>
+        <button
+          type="button"
+          class="atom-list__btn-page"
+          (click)="previousPage()"
+          [disabled]="!hasPreviousPage()"
+          data-testid="btn-prev-page"
+          [attr.aria-label]="'admin.atoms.list.previous_page' | translate">
+          &laquo;
+        </button>
+        <button
+          type="button"
+          class="atom-list__btn-page"
+          (click)="nextPage()"
+          [disabled]="!hasNextPage()"
+          data-testid="btn-next-page"
+          [attr.aria-label]="'admin.atoms.list.next_page' | translate">
+          &raquo;
+        </button>
+      </div>
+    </footer>
+  }
+</section>

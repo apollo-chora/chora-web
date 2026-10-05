@@ -1,0 +1,265 @@
+:host {
+  display: block;
+}
+
+.retention-alert {
+  padding: var(--chora-space-md, 16px);
+  border-radius: var(--chora-radius-md, 8px);
+  background: var(--chora-color-surface-1, #ffffff);
+  border: 1px solid var(--chora-color-border, #e0e0e0);
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-bottom: var(--chora-space-md, 16px);
+
+    .material-icons-outlined {
+      font-size: 24px;
+      color: var(--chora-color-primary, #1976d2);
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Loading / Error
+  // ---------------------------------------------------------------------------
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    font-size: 14px;
+    color: var(--chora-color-text-secondary, #757575);
+  }
+
+  &__spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--chora-color-surface-2, #e0e0e0);
+    border-top-color: var(--chora-color-primary, #1976d2);
+    border-radius: 50%;
+    animation: ret-spin 0.8s linear infinite;
+  }
+
+  &__error-msg {
+    font-size: 14px;
+    color: #f44336;
+    margin: 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Gauge
+  // ---------------------------------------------------------------------------
+
+  &__gauge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    margin-bottom: var(--chora-space-md, 16px);
+  }
+
+  &__gauge-track {
+    width: 120px;
+    height: 60px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 60px 60px 0 0;
+    background: var(--chora-color-surface-2, #e0e0e0);
+  }
+
+  &__gauge-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 120px;
+    height: 60px;
+    border-radius: 60px 60px 0 0;
+    transform-origin: center bottom;
+    transform: rotate(0deg);
+
+    &--high {
+      background: #4caf50;
+    }
+
+    &--medium {
+      background: #ff9800;
+    }
+
+    &--low {
+      background: #f44336;
+    }
+  }
+
+  &__gauge-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: var(--chora-space-xs, 4px);
+
+    &--high {
+      color: #4caf50;
+    }
+
+    &--medium {
+      color: #ff9800;
+    }
+
+    &--low {
+      color: #f44336;
+    }
+  }
+
+  &__gauge-label {
+    font-size: 12px;
+    color: var(--chora-color-text-secondary, #757575);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  // ---------------------------------------------------------------------------
+  // At-risk atoms list
+  // ---------------------------------------------------------------------------
+
+  &__at-risk {
+    margin-bottom: var(--chora-space-md, 16px);
+
+    h4 {
+      margin: 0 0 var(--chora-space-sm, 8px);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--chora-color-text-primary, #212121);
+    }
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__item {
+    margin: 0;
+    padding: 0;
+  }
+
+  &__atom-btn {
+    display: grid;
+    grid-template-columns: 1fr 2fr auto;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    width: 100%;
+    padding: var(--chora-space-xs, 4px) var(--chora-space-sm, 8px);
+    border: none;
+    border-radius: var(--chora-radius-sm, 4px);
+    background: transparent;
+    cursor: pointer;
+    text-align: start;
+
+    &:hover {
+      background: var(--chora-color-surface-0, #fafafa);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #1976d2);
+      outline-offset: 2px;
+    }
+  }
+
+  &__atom-name {
+    font-size: 13px;
+    color: var(--chora-color-text-primary, #212121);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__bar-container {
+    height: 8px;
+    background: var(--chora-color-surface-2, #e0e0e0);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  &__bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  &__atom-pct {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chora-color-text-secondary, #757575);
+    min-width: 36px;
+    text-align: end;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Forgetting curve mini chart
+  // ---------------------------------------------------------------------------
+
+  &__curve {
+    h4 {
+      margin: 0 0 var(--chora-space-sm, 8px);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--chora-color-text-primary, #212121);
+    }
+  }
+
+  &__curve-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 60px;
+  }
+
+  &__curve-bar {
+    flex: 1;
+    min-width: 8px;
+    border-radius: 2px 2px 0 0;
+    transition: height 0.3s ease;
+  }
+
+  &__curve-labels {
+    display: flex;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  &__curve-day {
+    flex: 1;
+    font-size: 10px;
+    color: var(--chora-color-text-secondary, #757575);
+    text-align: center;
+  }
+}
+
+@keyframes ret-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retention-alert__bar {
+    transition: none;
+  }
+
+  .retention-alert__curve-bar {
+    transition: none;
+  }
+}

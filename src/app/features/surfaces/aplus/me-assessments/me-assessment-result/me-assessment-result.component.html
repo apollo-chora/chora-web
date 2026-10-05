@@ -1,0 +1,330 @@
+<section
+  class="me-result surface-aplus"
+  aria-labelledby="me-result-heading"
+  data-testid="me-result">
+  <header class="me-result__header">
+    <h1 id="me-result-heading" class="me-result__title">
+      {{ 'aplus.me_assessments.result.heading' | translate }}
+    </h1>
+  </header>
+
+  @switch (resultState().status) {
+    @case ('loading') {
+      <div
+        class="me-result__loading glass-panel"
+        role="status"
+        aria-busy="true"
+        data-testid="me-result-loading">
+        {{ 'aplus.me_assessments.result.loading' | translate }}
+      </div>
+    }
+    @case ('pending') {
+      <div
+        class="me-result__pending glass-panel"
+        role="status"
+        aria-live="polite"
+        data-testid="me-result-pending">
+        <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+        <h2 class="me-result__pending-title">
+          {{ 'aplus.me_assessments.result.pending_title' | translate }}
+        </h2>
+        <p>{{ pendingMessage() }}</p>
+        <p class="me-result__pending-note">
+          {{ 'aplus.me_assessments.result.pending_note' | translate }}
+        </p>
+      </div>
+    }
+    @case ('error') {
+      <div
+        class="me-result__error glass-panel"
+        role="alert"
+        data-testid="me-result-error">
+        <p>{{ errorKey() | translate }}</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="retry()"
+          data-testid="me-result-retry">
+          {{ 'aplus.me_assessments.result.retry' | translate }}
+        </button>
+      </div>
+    }
+    @case ('released') {
+      @if (result(); as r) {
+        <article
+          class="me-result__released glass-panel"
+          data-testid="me-result-released">
+          <header class="me-result__summary">
+            <div
+              class="me-result__passed-badge"
+              data-testid="me-result-passed-badge"
+              [attr.data-passed]="r.passed">
+              @if (r.passed) {
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'aplus.me_assessments.result.passed' | translate }}
+              } @else {
+                <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                {{ 'aplus.me_assessments.result.failed' | translate }}
+              }
+            </div>
+            <p class="me-result__score" data-testid="me-result-score">
+              <strong>{{ r.total_points_earned }}</strong>
+              <span class="me-result__score-sep">/</span>
+              {{ r.total_points_possible }}
+              <span class="me-result__score-suffix">
+                {{ 'aplus.me_assessments.result.points' | translate }}
+              </span>
+            </p>
+            <p class="me-result__threshold">
+              {{ 'aplus.me_assessments.result.threshold' | translate }}:
+              <code>{{ r.passing_threshold_percent }}%</code>
+            </p>
+            @if (r.instructor_comment) {
+              <p class="me-result__instructor-comment">
+                <i class="fa-solid fa-quote-left" aria-hidden="true"></i>
+                {{ r.instructor_comment }}
+              </p>
+            }
+          </header>
+
+          <ol class="me-result__rows">
+            @for (g of grades(); track trackGrade($index, g)) {
+              <li
+                class="me-result__row"
+                [attr.data-testid]="'me-result-row-' + g.test_set_question_id"
+                [attr.data-question-type]="g.question_type">
+                <header class="me-result__row-header">
+                  <span class="me-result__row-type">{{ g.question_type }}</span>
+                  <span
+                    class="me-result__row-points"
+                    data-testid="me-result-row-points">
+                    {{ g.points_earned }} / {{ g.points_possible }}
+                    {{ 'aplus.me_assessments.result.points_short' | translate }}
+                  </span>
+                  @if (g.question_type === 'mcq') {
+                    <span
+                      class="me-result__row-mark"
+                      data-testid="me-result-row-correct-mark"
+                      [attr.data-correct]="g.correct">
+                      @if (g.correct) {
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                      } @else {
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                      }
+                    </span>
+                  }
+                  @if (g.oe_batch_pending) {
+                    <span
+                      class="me-result__oe-pending"
+                      data-testid="me-result-oe-pending">
+                      OE_BATCH_PENDING
+                    </span>
+                  }
+                </header>
+
+                @if (promptStem(g); as stem) {
+                  <h3
+                    class="me-result__row-stem"
+                    data-testid="me-result-row-stem">
+                    {{ stem }}
+                  </h3>
+                }
+
+                @if (g.question_image_url; as questionImageUrl) {
+                  <chora-question-image
+                    [src]="questionImageUrl"
+                    alt="Generated question illustration"
+                    [caption]="'aplus.me_assessments.result.question_illustration' | translate"
+                    [testIdPrefix]="'me-result-question-image-' + g.test_set_question_id" />
+                }
+
+                <div class="me-result__row-body">
+                  <div
+                    class="me-result__row-answer"
+                    [attr.data-correct]="
+                      g.question_type === 'mcq' ? g.correct : null
+                    "
+                    data-testid="me-result-row-learner-answer">
+                    <span class="me-result__row-answer-label">
+                      {{ 'aplus.me_assessments.result.learner_answer' | translate }}:
+                    </span>
+                    @if (g.question_type === 'mcq') {
+                      @if (mcqAnswerDisplay(g); as answer) {
+                        <strong>{{ answer }}</strong>
+                      } @else {
+                        <em>{{ 'aplus.me_assessments.result.no_answer' | translate }}</em>
+                      }
+                    } @else {
+                      @if (g.learner_answer?.oe_response_text) {
+                        <span>{{ g.learner_answer?.oe_response_text }}</span>
+                      } @else {
+                        <em>{{ 'aplus.me_assessments.result.no_answer' | translate }}</em>
+                      }
+                    }
+                  </div>
+
+                  @if (g.question_type === 'mcq' && g.mcq_post_grade) {
+                    <ul class="me-result__options">
+                      @for (
+                        opt of g.mcq_post_grade.options;
+                        track trackOption($index, opt);
+                        let i = $index
+                      ) {
+                        <li>
+                          <chora-mcq-option
+                            mode="reveal"
+                            [marker]="optionLetter(i)"
+                            [text]="optionDisplay(opt)"
+                            [correct]="opt.is_correct"
+                            [selected]="isOptionSelected(g, opt.option_id)"
+                            [yourAnswerLabel]="
+                              'aplus.me_assessments.result.your_answer_badge'
+                                | translate
+                            "
+                            [correctAnswerLabel]="
+                              'aplus.me_assessments.result.correct_answer_badge'
+                                | translate
+                            "
+                            [explainer]="opt.explainer ?? undefined"
+                            [testId]="'me-result-option-' + opt.option_id" />
+                        </li>
+                      }
+                    </ul>
+
+                    @if (g.mcq_post_grade.answer_image_url; as answerImageUrl) {
+                      <div class="me-result__model-answer">
+                        <hr class="me-result__divider" />
+                        <p class="me-result__model-answer-ref">
+                          <i
+                            class="fa-solid fa-image"
+                            aria-hidden="true"></i>
+                          {{ 'aplus.me_assessments.result.model_answer_see_illustration' | translate }}
+                        </p>
+                        <chora-question-image
+                          [src]="answerImageUrl"
+                          alt="Generated model-answer illustration"
+                          [caption]="'aplus.me_assessments.result.model_answer_illustration' | translate"
+                          [testIdPrefix]="'me-result-answer-image-' + g.test_set_question_id" />
+                      </div>
+                    }
+                  }
+
+                  @if (g.question_type === 'oe') {
+                    @if (g.oe_post_grade?.quality_flagged) {
+                      <p
+                        class="me-result__oe-flagged"
+                        [attr.data-testid]="'me-result-oe-flagged-' + g.test_set_question_id">
+                        <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                        {{ 'aplus.me_assessments.result.quality_flagged' | translate }}
+                      </p>
+                    }
+
+                    @if (oeComment(g); as comment) {
+                      <div
+                        class="me-result__oe-comment"
+                        [attr.data-testid]="'me-result-oe-comment-' + g.test_set_question_id">
+                        <div class="me-result__oe-comment-head">
+                          <span class="me-result__oe-comment-label">
+                            <i class="fa-solid fa-comments" aria-hidden="true"></i>
+                            {{ 'aplus.me_assessments.result.grader_comment' | translate }}
+                          </span>
+                          <span
+                            class="me-result__provenance"
+                            [attr.data-provenance]="oeCommentProvenance(g)"
+                            [attr.data-testid]="'me-result-oe-provenance-' + g.test_set_question_id">
+                            {{ provenanceLabelKey(oeCommentProvenance(g)) | translate }}
+                          </span>
+                        </div>
+                        <p class="me-result__oe-comment-body">{{ comment }}</p>
+                      </div>
+                    }
+
+                    @if (oeCriterionScores(g).length > 0) {
+                      <div class="me-result__oe-criteria">
+                        <p class="me-result__oe-criteria-label">
+                          {{ 'aplus.me_assessments.result.criterion_scores' | translate }}
+                        </p>
+                        <ul class="me-result__oe-criteria-list">
+                          @for (
+                            c of oeCriterionScores(g);
+                            track trackCriterion($index, c)
+                          ) {
+                            <li
+                              class="me-result__oe-criterion"
+                              [attr.data-testid]="'me-result-oe-criterion-' + c.criterion_id">
+                              <div class="me-result__oe-criterion-head">
+                                <span class="me-result__oe-criterion-title">
+                                  {{ c.title }}
+                                </span>
+                                <span class="me-result__oe-criterion-score">
+                                  {{ c.score }} / {{ c.max_score }}
+                                </span>
+                              </div>
+                              @if (c.feedback) {
+                                <p class="me-result__oe-criterion-feedback">
+                                  {{ c.feedback }}
+                                </p>
+                              }
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                    }
+
+                    @if (g.oe_post_grade?.answer_image_url; as oeAnswerImageUrl) {
+                      <div class="me-result__model-answer">
+                        <hr class="me-result__divider" />
+                        <p class="me-result__model-answer-ref">
+                          <i class="fa-solid fa-image" aria-hidden="true"></i>
+                          {{ 'aplus.me_assessments.result.model_answer_see_illustration' | translate }}
+                        </p>
+                        <chora-question-image
+                          [src]="oeAnswerImageUrl"
+                          alt="Generated model-answer illustration"
+                          [caption]="'aplus.me_assessments.result.model_answer_illustration' | translate"
+                          [testIdPrefix]="'me-result-oe-answer-image-' + g.test_set_question_id" />
+                      </div>
+                    }
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+
+          @if (r.overall_comment) {
+            <section
+              class="me-result__overall-comment"
+              data-testid="me-result-overall-comment"
+              aria-labelledby="me-result-overall-comment-heading">
+              <div class="me-result__overall-comment-head">
+                <h2
+                  id="me-result-overall-comment-heading"
+                  class="me-result__overall-comment-label">
+                  <i class="fa-solid fa-comment-dots" aria-hidden="true"></i>
+                  {{ 'aplus.me_assessments.result.overall_comment' | translate }}
+                </h2>
+                <span
+                  class="me-result__provenance"
+                  [attr.data-provenance]="overallCommentProvenance()"
+                  data-testid="me-result-overall-comment-provenance">
+                  {{ provenanceLabelKey(overallCommentProvenance()) | translate }}
+                </span>
+              </div>
+              <p class="me-result__overall-comment-body">{{ r.overall_comment }}</p>
+            </section>
+          }
+
+          <footer class="me-result__footer">
+            <a
+              class="btn btn-secondary"
+              routerLink="/a/me/assessments"
+              data-testid="me-result-back">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              {{ 'aplus.me_assessments.result.back_to_list' | translate }}
+            </a>
+          </footer>
+        </article>
+      }
+    }
+  }
+</section>

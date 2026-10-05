@@ -1,0 +1,113 @@
+<div class="atom-list" data-testid="atom-list-page">
+  <!-- Sidebar: Topic Explorer (desktop only via CSS) -->
+  <aside class="atom-list__sidebar" data-testid="atom-list-sidebar">
+    <h2 class="atom-list__sidebar-title">{{ 'atomic.topic-explorer.title' | translate }}</h2>
+    @if (topicTreeState().status === 'loading') {
+      <div class="atom-list__skeleton" role="status" aria-label="Loading topics">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="atom-list__skeleton-line"></div>
+        }
+      </div>
+    } @else {
+      <chora-topic-explorer
+        [topics]="topics()"
+        [selectedTopicId]="selectedTopic()?.id ?? null"
+        (topicSelected)="onTopicSelected($event)" />
+    }
+  </aside>
+
+  <!-- Main content -->
+  <main class="atom-list__content">
+    <!-- Toolbar -->
+    <div class="atom-list__toolbar" data-testid="atom-list-toolbar">
+      <div class="atom-list__filters">
+        @if (selectedTopic()) {
+          <button
+            class="atom-list__filter-chip atom-list__filter-chip--active"
+            (click)="clearTopicFilter()"
+            [attr.aria-label]="'Clear topic filter: ' + selectedTopic()!.name"
+            data-testid="clear-topic-filter">
+            {{ selectedTopic()!.name }}
+            <span aria-hidden="true">&times;</span>
+          </button>
+        }
+
+        <select
+          class="atom-list__filter-select"
+          (change)="onTypeFilterChange($event)"
+          aria-label="Filter by atom type"
+          data-testid="type-filter">
+          <option value="">{{ 'atomic.atom-list.all-types' | translate }}</option>
+          @for (t of atomTypes; track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+
+        <select
+          class="atom-list__filter-select"
+          (change)="onDifficultyFilterChange($event)"
+          aria-label="Filter by difficulty"
+          data-testid="difficulty-filter">
+          <option value="">{{ 'atomic.atom-list.all-difficulties' | translate }}</option>
+          @for (d of [1, 2, 3, 4, 5]; track d) {
+            <option [value]="d">{{ d }}</option>
+          }
+        </select>
+      </div>
+
+      <button
+        class="atom-list__view-toggle"
+        (click)="toggleViewMode()"
+        [attr.aria-label]="'Switch to ' + (viewMode() === 'grid' ? 'list' : 'grid') + ' view'"
+        data-testid="view-toggle">
+        {{ viewMode() === 'grid' ? '☰' : '▦' }}
+      </button>
+    </div>
+
+    <!-- Atom grid/list -->
+    @if (atomListState().status === 'loading' && atoms().length === 0) {
+      <div class="atom-list__skeleton-grid" role="status" aria-label="Loading atoms">
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+          <div class="atom-list__skeleton-card"></div>
+        }
+      </div>
+    } @else if (atomListState().status === 'error') {
+      <div class="atom-list__error" role="alert" data-testid="atom-list-error">
+        <p>{{ 'atomic.atom-list.load-error' | translate }}</p>
+      </div>
+    } @else if (atoms().length === 0) {
+      <div class="atom-list__empty" role="status" data-testid="atom-list-empty">
+        <p>{{ 'atomic.atom-list.empty' | translate }}</p>
+      </div>
+    } @else {
+      <div
+        class="atom-list__grid"
+        [class.atom-list__grid--list]="viewMode() === 'list'"
+        role="list"
+        data-testid="atom-grid">
+        @for (atom of atoms(); track atom.id) {
+          <chora-atom-card
+            [atom]="atom"
+            [compact]="viewMode() === 'list'"
+            (selected)="onAtomSelected($event)" />
+        }
+      </div>
+
+      @if (hasNextPage()) {
+        <div class="atom-list__load-more">
+          <button
+            class="atom-list__load-more-btn"
+            (click)="loadMore()"
+            [disabled]="atomListState().status === 'loading'"
+            data-testid="load-more-btn">
+            @if (atomListState().status === 'loading') {
+              {{ 'atomic.atom-list.loading' | translate }}
+            } @else {
+              {{ 'atomic.atom-list.load-more' | translate }}
+            }
+          </button>
+        </div>
+      }
+    }
+  </main>
+</div>

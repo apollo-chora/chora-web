@@ -1,0 +1,181 @@
+<section
+  data-testid="rplus-grading-queue"
+  class="surface-rplus grading-queue">
+  <nav class="grading-queue__breadcrumbs">
+    @if (assessmentId) {
+      <a [routerLink]="['/r', 'assessments', assessmentId, 'monitor']">
+        {{ 'rplus.grading_queue.back_to_monitor' | translate }}
+      </a>
+    } @else {
+      <a [routerLink]="['/r', 'assessments']">
+        {{ 'rplus.grading_queue.back_to_list' | translate }}
+      </a>
+    }
+  </nav>
+
+  <header class="grading-queue__header">
+    <h1 class="grading-queue__title">
+      {{ 'rplus.grading_queue.title' | translate }}
+    </h1>
+
+    <div class="grading-queue__cta-bar">
+      <button
+        type="button"
+        data-testid="grading-queue-approve-all"
+        class="cta cta--neutral"
+        [disabled]="approveAllSubmitting() || gradedCount() === 0"
+        (click)="approveAll()">
+        {{ 'rplus.grading_queue.approve_all' | translate }}
+      </button>
+      <button
+        type="button"
+        data-testid="grading-queue-approve-release"
+        class="cta cta--primary"
+        [disabled]="approveAllSubmitting() || gradedCount() === 0"
+        (click)="approveAndRelease()">
+        {{ 'rplus.grading_queue.approve_and_release' | translate }}
+      </button>
+      <button
+        type="button"
+        data-testid="grading-queue-release"
+        class="cta cta--success cta--release"
+        [disabled]="!releaseEnabled()"
+        (click)="releaseResults()">
+        {{ 'rplus.grading_queue.release_results' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Gate hint: how many graded submissions are still pending approval -->
+  <p
+    data-testid="grading-queue-gate-hint"
+    class="grading-queue__gate-hint">
+    {{ 'rplus.grading_queue.gate_hint' | translate }}
+    {{ approvedCount() }} / {{ gradedCount() }}
+  </p>
+
+  @if (bulkErrorKey()) {
+    <div
+      data-testid="grading-queue-bulk-error"
+      class="grading-queue__error"
+      role="alert">
+      <p>{{ bulkErrorKey() | translate }}</p>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div
+      data-testid="grading-queue-loading"
+      class="grading-queue__loading"
+      aria-busy="true">
+      <p>{{ 'rplus.grading_queue.loading' | translate }}</p>
+    </div>
+  } @else if (isError()) {
+    <div
+      data-testid="grading-queue-error"
+      class="grading-queue__error"
+      role="alert">
+      <p>{{ errorKey() | translate }}</p>
+      <button
+        type="button"
+        data-testid="grading-queue-retry"
+        class="grading-queue__retry"
+        (click)="retry()">
+        {{ 'rplus.grading_queue.retry' | translate }}
+      </button>
+    </div>
+  } @else {
+    <div class="grading-queue__layout">
+
+      <!-- Submissions list -->
+      <section
+        class="grading-queue__list"
+        aria-labelledby="grading-queue-list-heading">
+        <h2 id="grading-queue-list-heading" class="grading-queue__h2">
+          {{ 'rplus.grading_queue.submissions_heading' | translate }}
+        </h2>
+
+        @if (rows().length === 0) {
+          <chora-empty-state
+            class="grading-queue__empty"
+            icon="fa-solid fa-clipboard-check"
+            [heading]="'rplus.grading_queue.submissions_empty' | translate"
+            testId="grading-queue-empty" />
+        } @else {
+          <table class="grading-queue-table">
+            <thead>
+              <tr>
+                <th scope="col">
+                  {{ 'rplus.grading_queue.col_learner' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.grading_queue.col_state' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.grading_queue.col_review_status' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.grading_queue.col_action' | translate }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of rows(); track r.submission_id) {
+                <tr
+                  [attr.data-testid]="'grading-queue-row-' + r.submission_id"
+                  [class.grading-queue-table__row--selected]="
+                    selectedSubmissionId() === r.submission_id
+                  ">
+                  <td data-testid="grading-queue-row-learner">
+                    {{ r.learner_display_name ?? r.learner_gcid }}
+                  </td>
+                  <td>
+                    <span
+                      [attr.data-state]="r.state"
+                      class="grading-queue-table__pill {{ submissionBadgeClass(r.state) }}">
+                      {{ 'rplus.submission_state.' + r.state | translate }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (isGraded(r.state)) {
+                      <span
+                        data-testid="grading-queue-row-review-status"
+                        [attr.data-review-status]="r.review_gate"
+                        class="grading-queue-table__pill {{ reviewGateBadgeClass(r.review_gate) }}">
+                        {{ reviewGateLabelKey(r.review_gate) | translate }}
+                      </span>
+                    } @else {
+                      <span class="grading-queue-table__muted">
+                        {{ 'rplus.grading_queue.not_yet_graded' | translate }}
+                      </span>
+                    }
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      [attr.data-testid]="'grading-queue-row-review-' + r.submission_id"
+                      class="grading-queue-table__review-btn"
+                      [disabled]="!isGraded(r.state)"
+                      (click)="reviewRow(r.submission_id)">
+                      {{ 'rplus.grading_queue.review' | translate }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+
+      <!-- Grading-detail panel (opens on row select) -->
+      @if (selectedSubmissionId(); as sid) {
+        <chora-rplus-submission-grading-detail
+          class="grading-queue__detail"
+          [assessmentId]="assessmentId"
+          [submissionId]="sid"
+          (approved)="onSubmissionApproved()"
+          (closed)="onDetailClosed()" />
+      }
+    </div>
+  }
+</section>

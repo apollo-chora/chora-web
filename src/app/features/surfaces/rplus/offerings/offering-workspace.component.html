@@ -1,0 +1,3421 @@
+<section
+  class="surface-rplus offering-workspace"
+  data-testid="rplus-offering-workspace"
+  role="region"
+  aria-labelledby="offering-workspace-heading">
+  <header class="offering-workspace__header glass-panel">
+    <nav
+      class="offering-workspace__breadcrumb"
+      [attr.aria-label]="'rplus.offerings.workspace.breadcrumb_aria' | translate">
+      <a
+        class="offering-workspace__breadcrumb-link"
+        data-testid="offering-workspace-back-link"
+        routerLink="/r/offerings">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        {{ 'rplus.offerings.workspace.breadcrumb_root' | translate }}
+      </a>
+    </nav>
+
+    <div class="offering-workspace__title-row">
+      <h1
+        id="offering-workspace-heading"
+        class="offering-workspace__title"
+        data-testid="offering-workspace-title">
+        @if (offering(); as o) {
+          {{ o.label }}
+        } @else {
+          {{ 'rplus.offerings.workspace.heading' | translate }}
+        }
+      </h1>
+      <code class="offering-workspace__id" data-testid="offering-workspace-id">{{ id() }}</code>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <p
+      class="offering-workspace__loading glass-panel"
+      data-testid="offering-workspace-loading"
+      role="status"
+      aria-busy="true">
+      {{ 'rplus.offerings.workspace.loading' | translate }}
+    </p>
+  } @else if (isError()) {
+    <div
+      class="offering-workspace__error glass-panel"
+      data-testid="offering-workspace-error"
+      role="alert">
+      <p class="offering-workspace__error-message">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        {{ errorKey() | translate }}
+      </p>
+      @if (isNotFound()) {
+        <a
+          class="btn btn-ghost"
+          data-testid="offering-workspace-error-back"
+          routerLink="/r/offerings">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          {{ 'rplus.offerings.workspace.back_to_finder' | translate }}
+        </a>
+      } @else {
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-testid="offering-workspace-retry"
+          (click)="retry()">
+          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          {{ 'rplus.common.retry' | translate }}
+        </button>
+      }
+    </div>
+  } @else if (offering(); as o) {
+    <!-- Object-derived tab bar (set computed from deliveryType; not a toggle). -->
+    <nav
+      class="offering-workspace__tabs"
+      role="tablist"
+      data-testid="offering-workspace-tablist"
+      [attr.aria-label]="'rplus.offerings.workspace.tablist_aria' | translate">
+      @for (tab of tabList(); track tab.id) {
+        <button
+          #tabBtn
+          type="button"
+          role="tab"
+          class="offering-workspace__tab"
+          [class.offering-workspace__tab--active]="tab.id === activeTabId()"
+          [id]="'offering-tab-' + tab.id"
+          [attr.aria-selected]="tab.id === activeTabId()"
+          [attr.aria-controls]="'offering-panel-' + tab.id"
+          [attr.tabindex]="tab.id === activeTabId() ? 0 : -1"
+          [attr.data-testid]="'offering-tab-' + tab.id"
+          (click)="selectTab(tab.id)"
+          (keydown)="onTabKeydown($event)">
+          {{ tab.labelKey | translate }}
+        </button>
+      }
+    </nav>
+
+    @if (isOverviewActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-overview"
+        aria-labelledby="offering-tab-overview"
+        tabindex="0"
+        data-testid="offering-panel-overview">
+        <div class="offering-workspace__overview-head">
+          <span
+            class="badge"
+            [class]="'badge ' + stateBadgeClass()"
+            data-testid="offering-overview-state">
+            {{ stateKey() | translate }}
+          </span>
+          <span class="badge badge-neutral" data-testid="offering-overview-delivery-type">
+            {{ deliveryTypeKey() | translate }}
+          </span>
+        </div>
+
+        <dl class="offering-workspace__fields">
+          <div class="offering-workspace__field">
+            <dt>{{ 'rplus.offerings.workspace.field.course' | translate }}</dt>
+            <dd>
+              <!-- No course-title projection on the offering read-model yet
+                   (Course.title lives only behind GET /api/v1/courses/{id});
+                   shown as a muted, honest id fallback rather than a
+                   fabricated name. -->
+              <code
+                class="offering-workspace__course-ref-muted"
+                data-testid="offering-overview-course"
+                [attr.title]="o.courseId">{{ o.courseId }}</code>
+            </dd>
+          </div>
+          <div class="offering-workspace__field">
+            <dt>{{ 'rplus.offerings.workspace.field.capacity' | translate }}</dt>
+            <dd data-testid="offering-overview-capacity">
+              @if (o.capacity > 0) {
+                {{ o.capacity }}
+              } @else {
+                {{ 'rplus.offerings.workspace.field.capacity_unbounded' | translate }}
+              }
+            </dd>
+          </div>
+          <div class="offering-workspace__field">
+            <dt>{{ 'rplus.offerings.workspace.field.created_at' | translate }}</dt>
+            <dd>
+              <time [attr.datetime]="o.createdAt">{{ o.createdAt | date: 'medium' }}</time>
+            </dd>
+          </div>
+          <div class="offering-workspace__field">
+            <dt>{{ 'rplus.offerings.workspace.field.updated_at' | translate }}</dt>
+            <dd>
+              <time [attr.datetime]="o.updatedAt">{{ o.updatedAt | date: 'medium' }}</time>
+            </dd>
+          </div>
+          @if (o.launchedAt) {
+            <div class="offering-workspace__field">
+              <dt>{{ 'rplus.offerings.workspace.field.launched_at' | translate }}</dt>
+              <dd>
+                <time [attr.datetime]="o.launchedAt">{{ o.launchedAt | date: 'medium' }}</time>
+              </dd>
+            </div>
+          }
+          @if (o.concludedAt) {
+            <div class="offering-workspace__field">
+              <dt>{{ 'rplus.offerings.workspace.field.concluded_at' | translate }}</dt>
+              <dd>
+                <time [attr.datetime]="o.concludedAt">{{ o.concludedAt | date: 'medium' }}</time>
+              </dd>
+            </div>
+          }
+          @if (o.archivedAt) {
+            <div class="offering-workspace__field">
+              <dt>{{ 'rplus.offerings.workspace.field.archived_at' | translate }}</dt>
+              <dd>
+                <time [attr.datetime]="o.archivedAt">{{ o.archivedAt | date: 'medium' }}</time>
+              </dd>
+            </div>
+          }
+        </dl>
+
+        <!-- Lifecycle actions: visible ONLY to admins (role-driven visibility,
+             not a disabled state); derived from offering.state. -->
+        @if (canManage()) {
+          <div class="offering-workspace__lifecycle" data-testid="offering-overview-lifecycle">
+            <h2 class="offering-workspace__lifecycle-title">
+              {{ 'rplus.offerings.workspace.action.heading' | translate }}
+            </h2>
+
+            @if (conflictKey()) {
+              <div
+                class="offering-workspace__conflict"
+                data-testid="offering-overview-conflict"
+                role="alert">
+                <p>
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ conflictKey() | translate }}
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  data-testid="offering-overview-conflict-reload"
+                  (click)="reloadAfterConflict()">
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                  {{ 'rplus.offerings.workspace.conflict_reload' | translate }}
+                </button>
+              </div>
+            }
+
+            @if (hasActionError()) {
+              <p
+                class="offering-workspace__action-error"
+                data-testid="offering-overview-action-error"
+                role="alert">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                @if (actionErrorDetail()) {
+                  {{ actionErrorDetail() }}
+                } @else {
+                  {{ 'rplus.offerings.workspace.action_error' | translate }}
+                }
+              </p>
+            }
+
+            @if (actions().length > 0) {
+              <div class="offering-workspace__actions">
+                @for (action of actions(); track action.id) {
+                  <button
+                    type="button"
+                    class="btn"
+                    [class.btn-primary]="!action.destructive"
+                    [class.btn-danger]="action.destructive"
+                    [attr.data-testid]="'offering-action-' + action.id"
+                    [disabled]="isActionInFlight()"
+                    (click)="runAction(action.id)">
+                    @if (isPending(action.id)) {
+                      {{ 'rplus.offerings.workspace.action.busy' | translate }}
+                    } @else {
+                      {{ action.labelKey | translate }}
+                    }
+                  </button>
+                }
+              </div>
+            } @else {
+              <p class="offering-workspace__terminal" data-testid="offering-overview-terminal">
+                {{ 'rplus.offerings.workspace.terminal' | translate }}
+              </p>
+            }
+          </div>
+        }
+      </section>
+    } @else if (isAssessmentsActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-assessments"
+        aria-labelledby="offering-tab-assessments"
+        tabindex="0"
+        data-testid="offering-panel-assessments">
+        <div class="offering-workspace__assessments-head">
+          <div class="offering-workspace__assessments-intro">
+            <h2 class="offering-workspace__lifecycle-title">
+              {{ 'rplus.offerings.workspace.assessments.heading' | translate }}
+            </h2>
+            <p class="offering-workspace__assessments-subtitle">
+              {{ 'rplus.offerings.workspace.assessments.subtitle' | translate }}
+            </p>
+          </div>
+          <!--
+            Assessment front-door (CHO-2123 / ADR-232) — manage-only by
+            role-driven VISIBILITY (hidden, not disabled). The DEFAULT path is
+            reuse-and-assemble: link out to the caller's Question Banks (where a
+            bank → PUBLISHED TestSet assembly lives). Attaching an already-
+            published TestSet stays a peer action; authoring a fresh assessment
+            is the SECONDARY link.
+          -->
+          @if (canManage()) {
+            <div
+              class="offering-workspace__assessments-actions"
+              data-testid="offering-assessments-actions">
+              <!-- PRIMARY: reuse-and-assemble from a Question Bank. -->
+              <a
+                class="btn btn-primary"
+                routerLink="/r/question-banks"
+                data-testid="offering-assessments-assemble">
+                <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                {{ 'rplus.offerings.workspace.assessments.assemble_from_bank' | translate }}
+              </a>
+              <!-- Instantiate a published TestSet into this offering. -->
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-testid="offering-assessments-attach"
+                (click)="openPicker()">
+                <i class="fa-solid fa-link" aria-hidden="true"></i>
+                {{ 'rplus.offerings.workspace.assessments.attach' | translate }}
+              </button>
+              <!-- SECONDARY: author a fresh assessment from scratch. -->
+              <a
+                class="btn btn-ghost"
+                routerLink="/r/assessment-authoring"
+                data-testid="offering-assessments-author">
+                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                {{ 'rplus.offerings.workspace.assessments.author_fresh' | translate }}
+              </a>
+            </div>
+          }
+        </div>
+
+        <!-- "Add another" affordance (CHO-2123 / ADR-232): the add controls are never
+             count-gated, so once at least one assessment exists, invite more. -->
+        @if (canManage() && hasAssessments()) {
+          <p
+            class="offering-workspace__assessments-hint"
+            data-testid="offering-assessments-add-more-hint">
+            {{ 'rplus.offerings.workspace.assessments.add_more_hint' | translate }}
+          </p>
+        }
+
+        @if (attachSucceeded()) {
+          <p
+            class="offering-workspace__assessments-success"
+            data-testid="offering-assessments-attach-success"
+            role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.assessments.attach_success' | translate }}
+          </p>
+        }
+        @if (attachError()) {
+          <p
+            class="offering-workspace__action-error"
+            data-testid="offering-assessments-attach-error"
+            role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.assessments.attach_error' | translate }}
+          </p>
+        }
+        @if (removeError()) {
+          <p
+            class="offering-workspace__action-error"
+            data-testid="offering-assessments-remove-error"
+            role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.assessments.remove_error' | translate }}
+          </p>
+        }
+
+        <!-- Inline attach picker (PUBLISHED test-sets only). -->
+        @if (isPickerOpen()) {
+          <div class="offering-workspace__picker" data-testid="offering-assessments-picker">
+            <div class="offering-workspace__picker-head">
+              <h3 class="offering-workspace__picker-title">
+                {{ 'rplus.offerings.workspace.assessments.picker_title' | translate }}
+              </h3>
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="offering-assessments-picker-close"
+                (click)="closePicker()">
+                {{ 'rplus.offerings.workspace.assessments.picker_close' | translate }}
+              </button>
+            </div>
+
+            @if (testSetsLoading()) {
+              <p
+                class="offering-workspace__terminal"
+                data-testid="offering-assessments-picker-loading"
+                role="status"
+                aria-busy="true">
+                {{ 'rplus.offerings.workspace.assessments.picker_loading' | translate }}
+              </p>
+            } @else if (testSetsError()) {
+              <div
+                class="offering-workspace__conflict"
+                data-testid="offering-assessments-picker-error"
+                role="alert">
+                <p>
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ 'rplus.offerings.workspace.assessments.picker_error' | translate }}
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  data-testid="offering-assessments-picker-retry"
+                  (click)="retryTestSets()">
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                  {{ 'rplus.common.retry' | translate }}
+                </button>
+              </div>
+            } @else if (hasTestSets()) {
+              <ul class="offering-workspace__picker-list">
+                @for (ts of testSets(); track ts.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="offering-workspace__picker-option"
+                      data-testid="offering-assessments-picker-option"
+                      [disabled]="isAttaching(ts.id)"
+                      (click)="selectTestSet(ts.id)">
+                      <span class="offering-workspace__picker-option-title">{{ ts.title }}</span>
+                      <span class="offering-workspace__picker-option-meta">
+                        {{ ts.questionCount }}
+                        {{ 'rplus.offerings.workspace.assessments.col_questions' | translate }}
+                        @if (isAttaching(ts.id)) {
+                          · {{ 'rplus.offerings.workspace.assessments.attaching' | translate }}
+                        }
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p
+                class="offering-workspace__terminal"
+                data-testid="offering-assessments-picker-empty">
+                {{ 'rplus.offerings.workspace.assessments.picker_empty' | translate }}
+              </p>
+            }
+          </div>
+        }
+
+        <!-- Assessment list (loading / error / list / empty). -->
+        @if (assessmentsLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-assessments-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.assessments.loading' | translate }}
+          </p>
+        } @else if (assessmentsError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-assessments-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ assessmentsErrorKey() | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-assessments-retry"
+              (click)="retryAssessments()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (hasAssessments()) {
+          <table
+            class="offering-workspace__assessments-table"
+            data-testid="offering-assessments-table">
+            <thead>
+              <tr>
+                <th scope="col">
+                  {{ 'rplus.offerings.workspace.assessments.col_title' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.offerings.workspace.assessments.col_state' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.offerings.workspace.assessments.col_questions' | translate }}
+                </th>
+                <th scope="col">
+                  {{ 'rplus.offerings.workspace.assessments.col_points' | translate }}
+                </th>
+                @if (canManage()) {
+                  <th scope="col">
+                    {{ 'rplus.offerings.workspace.assessments.col_actions' | translate }}
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of assessments(); track a.id) {
+                <tr data-testid="offering-assessments-row">
+                  <td class="offering-workspace__assessments-title">{{ a.title }}</td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class]="'badge ' + assessmentStateBadgeClass(a.state)">
+                      {{ assessmentStateLabelKey(a.state) | translate }}
+                    </span>
+                  </td>
+                  <td>{{ a.questionCount }}</td>
+                  <td>{{ a.totalPoints }}</td>
+                  @if (canManage()) {
+                    <td>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-danger"
+                        data-testid="offering-assessments-remove"
+                        [disabled]="isRemoving(a.id)"
+                        (click)="removeAssessment(a)">
+                        @if (isRemoving(a.id)) {
+                          {{ 'rplus.offerings.workspace.assessments.removing' | translate }}
+                        } @else {
+                          {{ 'rplus.offerings.workspace.assessments.remove' | translate }}
+                        }
+                      </button>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="offering-workspace__terminal" data-testid="offering-assessments-empty">
+            {{ 'rplus.offerings.workspace.assessments.empty' | translate }}
+          </p>
+        }
+      </section>
+    } @else if (isCurriculumActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-curriculum"
+        aria-labelledby="offering-tab-curriculum"
+        tabindex="0"
+        data-testid="offering-panel-curriculum">
+        <div class="offering-workspace__assessments-intro">
+          <h2 class="offering-workspace__lifecycle-title">
+            {{ 'rplus.offerings.workspace.curriculum.heading' | translate }}
+          </h2>
+          <p class="offering-workspace__assessments-subtitle">
+            {{ 'rplus.offerings.workspace.curriculum.subtitle' | translate }}
+          </p>
+        </div>
+
+        <!-- Panel-level write feedback (add success + remove/reorder errors). -->
+        @if (curriculumAddSucceeded()) {
+          <p
+            class="offering-workspace__assessments-success"
+            data-testid="offering-curriculum-add-success"
+            role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.curriculum.add_success' | translate }}
+          </p>
+        }
+        @if (curriculumRemoveError()) {
+          <p
+            class="offering-workspace__action-error"
+            data-testid="offering-curriculum-remove-error"
+            role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.curriculum.remove_error' | translate }}
+          </p>
+        }
+        @if (curriculumReorderError()) {
+          <p
+            class="offering-workspace__action-error"
+            data-testid="offering-curriculum-reorder-error"
+            role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.curriculum.reorder_error' | translate }}
+          </p>
+        }
+
+        @if (curriculumLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-curriculum-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.curriculum.loading' | translate }}
+          </p>
+        } @else if (curriculumError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-curriculum-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.curriculum.error' | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-curriculum-retry"
+              (click)="retryCurriculum()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (hasCurriculum()) {
+          <ul class="offering-workspace__curriculum-list" data-testid="offering-curriculum-list">
+            @for (course of curriculum(); track course.id) {
+              <li
+                class="offering-workspace__curriculum-course"
+                data-testid="offering-curriculum-course">
+                <div class="offering-workspace__curriculum-course-head">
+                  <div class="offering-workspace__curriculum-course-heading">
+                    <h3 class="offering-workspace__curriculum-course-title">
+                      @if (course.title) {
+                        {{ course.title }}
+                      } @else {
+                        {{ 'rplus.offerings.workspace.curriculum.untitled_course' | translate }}
+                      }
+                    </h3>
+                    <!-- Blast-radius hint: how many offerings bundle this course.
+                         Warning tone when shared (>1) — editing it affects them all.
+                         Only shown once the count is known (no badge on a failed or
+                         still-loading count → fail-soft). -->
+                    @if (usageCountForCourse(course.id); as usage) {
+                      <span
+                        class="badge offering-workspace__curriculum-usage"
+                        [class.badge-warning]="usage > 1"
+                        [class.badge-neutral]="usage <= 1"
+                        data-testid="curriculum-course-usage">
+                        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                        {{ usageLabelForCourse(course.id) }}
+                      </span>
+                    }
+                  </div>
+                  <!-- Add is admin-only (role-driven VISIBILITY, not disabled). -->
+                  @if (canManage()) {
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      data-testid="offering-curriculum-add"
+                      (click)="openCurriculumAddForm(course.id)">
+                      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                      {{ 'rplus.offerings.workspace.curriculum.add_item' | translate }}
+                    </button>
+                  }
+                </div>
+
+                <!-- Inline add-item form (manager-only; signal-driven, no FormsModule). -->
+                @if (canManage() && isCurriculumAddOpen(course.id)) {
+                  <form
+                    class="offering-workspace__section-form"
+                    data-testid="offering-curriculum-add-form"
+                    (submit)="onCurriculumAddSubmit($event, course.id)">
+                    <h4 class="offering-workspace__picker-title">
+                      {{ 'rplus.offerings.workspace.curriculum.add_form_title' | translate }}
+                    </h4>
+
+                    <div class="offering-workspace__section-grid">
+                      <label class="offering-workspace__section-field">
+                        <span>{{
+                          'rplus.offerings.workspace.curriculum.kind_label' | translate
+                        }}</span>
+                        <select
+                          data-testid="offering-curriculum-kind"
+                          [attr.aria-label]="
+                            'rplus.offerings.workspace.curriculum.kind_label' | translate
+                          "
+                          (change)="onCurriculumKindChange($event)">
+                          @for (k of curriculumKinds; track k) {
+                            <option [value]="k" [selected]="k === curriculumKind()">
+                              {{ curriculumKindLabelKey(k) | translate }}
+                            </option>
+                          }
+                        </select>
+                      </label>
+                      <label class="offering-workspace__section-field">
+                        <span>{{
+                          'rplus.offerings.workspace.curriculum.title_label' | translate
+                        }}</span>
+                        <input
+                          type="text"
+                          data-testid="offering-curriculum-title"
+                          [attr.placeholder]="
+                            'rplus.offerings.workspace.curriculum.title_placeholder' | translate
+                          "
+                          [attr.aria-label]="
+                            'rplus.offerings.workspace.curriculum.title_label' | translate
+                          "
+                          (input)="onCurriculumTitleInput($event)"
+                          required />
+                      </label>
+                    </div>
+
+                    <label class="offering-workspace__section-field">
+                      <span>{{ 'rplus.offerings.workspace.curriculum.ref_label' | translate }}</span>
+                      @if (curriculumRefPickerType(); as refPickerType) {
+                        <!-- Name-based search (atom/assessment) — no raw-UUID paste. -->
+                        <chora-entity-picker
+                          data-testid="offering-curriculum-ref-picker"
+                          [entityType]="refPickerType"
+                          [searchPortOverride]="curriculumRefSearchPort()"
+                          [value]="curriculumRefPicked()"
+                          variant="single"
+                          [minChars]="2"
+                          [placeholder]="
+                            'rplus.offerings.workspace.curriculum.ref_search_placeholder' | translate
+                          "
+                          (picked)="onCurriculumRefPicked($event)" />
+                        <span
+                          class="offering-workspace__curriculum-ref-hint"
+                          id="offering-curriculum-ref-hint"
+                          data-testid="offering-curriculum-ref-hint">
+                          {{ 'rplus.offerings.workspace.curriculum.ref_hint_search' | translate }}
+                        </span>
+                      } @else {
+                        <input
+                          type="text"
+                          data-testid="offering-curriculum-ref"
+                          [attr.placeholder]="
+                            (curriculumRefIsUuid()
+                              ? 'rplus.offerings.workspace.curriculum.ref_placeholder_uuid'
+                              : 'rplus.offerings.workspace.curriculum.ref_placeholder_url'
+                            ) | translate
+                          "
+                          [attr.aria-label]="
+                            'rplus.offerings.workspace.curriculum.ref_label' | translate
+                          "
+                          aria-describedby="offering-curriculum-ref-hint"
+                          (input)="onCurriculumRefInput($event)"
+                          required />
+                        <span
+                          class="offering-workspace__curriculum-ref-hint"
+                          id="offering-curriculum-ref-hint"
+                          data-testid="offering-curriculum-ref-hint">
+                          @if (curriculumRefIsUuid()) {
+                            {{ 'rplus.offerings.workspace.curriculum.ref_hint_uuid' | translate }}
+                          } @else {
+                            {{ 'rplus.offerings.workspace.curriculum.ref_hint_url' | translate }}
+                          }
+                        </span>
+                      }
+                    </label>
+
+                    @if (curriculumAddError()) {
+                      <p
+                        class="offering-workspace__action-error"
+                        data-testid="offering-curriculum-add-error"
+                        role="alert">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        @if (curriculumAddErrorDetail()) {
+                          {{ curriculumAddErrorDetail() }}
+                        } @else {
+                          {{ 'rplus.offerings.workspace.curriculum.add_error' | translate }}
+                        }
+                      </p>
+                    }
+
+                    <div class="offering-workspace__actions">
+                      <button
+                        type="button"
+                        class="btn btn-ghost"
+                        data-testid="offering-curriculum-add-cancel"
+                        (click)="closeCurriculumAddForm()">
+                        {{ 'rplus.offerings.workspace.curriculum.cancel' | translate }}
+                      </button>
+                      <button
+                        type="submit"
+                        class="btn btn-primary"
+                        data-testid="offering-curriculum-add-submit"
+                        [disabled]="!canAddCurriculumItem() || isAddingItem()">
+                        @if (isAddingItem()) {
+                          {{ 'rplus.offerings.workspace.curriculum.adding' | translate }}
+                        } @else {
+                          {{ 'rplus.offerings.workspace.curriculum.add' | translate }}
+                        }
+                      </button>
+                    </div>
+                  </form>
+                }
+
+                @if (course.items.length > 0) {
+                  <ol class="offering-workspace__curriculum-items">
+                    @for (item of course.items; track item.itemId; let first = $first; let last = $last) {
+                      <li
+                        class="offering-workspace__curriculum-item"
+                        data-testid="offering-curriculum-item">
+                        <span class="badge badge-neutral offering-workspace__curriculum-kind">
+                          {{ curriculumKindLabelKey(item.kind) | translate }}
+                        </span>
+                        <span class="offering-workspace__curriculum-item-title">{{
+                          item.title
+                        }}</span>
+                        <!-- Show a URL ref verbatim; hide the opaque UUID a
+                             UUID-kind ref points to (the title is the label). -->
+                        @if (item.ref && !itemRefIsUuid(item.kind)) {
+                          <code
+                            class="offering-workspace__curriculum-item-ref"
+                            data-testid="offering-curriculum-item-ref"
+                            >{{ item.ref }}</code
+                          >
+                        }
+                        <!-- Reorder + remove are admin-only (role-driven VISIBILITY). -->
+                        @if (canManage()) {
+                          <span class="offering-workspace__curriculum-item-actions">
+                            <button
+                              type="button"
+                              class="btn btn-ghost offering-workspace__icon-btn"
+                              data-testid="offering-curriculum-move-up"
+                              [attr.aria-label]="
+                                'rplus.offerings.workspace.curriculum.move_up' | translate
+                              "
+                              [attr.title]="
+                                'rplus.offerings.workspace.curriculum.move_up' | translate
+                              "
+                              [disabled]="first || isReorderInFlight()"
+                              (click)="moveCurriculumItemUp(course, $index)">
+                              <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                            </button>
+                            <button
+                              type="button"
+                              class="btn btn-ghost offering-workspace__icon-btn"
+                              data-testid="offering-curriculum-move-down"
+                              [attr.aria-label]="
+                                'rplus.offerings.workspace.curriculum.move_down' | translate
+                              "
+                              [attr.title]="
+                                'rplus.offerings.workspace.curriculum.move_down' | translate
+                              "
+                              [disabled]="last || isReorderInFlight()"
+                              (click)="moveCurriculumItemDown(course, $index)">
+                              <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                            </button>
+                            <button
+                              type="button"
+                              class="btn btn-ghost btn-danger"
+                              data-testid="offering-curriculum-remove"
+                              [disabled]="isRemovingItem(item.itemId)"
+                              (click)="removeCurriculumItem(course, item)">
+                              @if (isRemovingItem(item.itemId)) {
+                                {{ 'rplus.offerings.workspace.curriculum.removing' | translate }}
+                              } @else {
+                                {{ 'rplus.offerings.workspace.curriculum.remove' | translate }}
+                              }
+                            </button>
+                          </span>
+                        }
+                      </li>
+                    }
+                  </ol>
+                } @else {
+                  <p
+                    class="offering-workspace__terminal"
+                    data-testid="offering-curriculum-course-empty">
+                    {{ 'rplus.offerings.workspace.curriculum.course_empty' | translate }}
+                  </p>
+                }
+
+                <!-- R+ Phase-2 W7 — Module structure: group the flat items into
+                     ordered, named modules each with a completion requirement. -->
+                <section class="offering-workspace__modules" data-testid="offering-modules">
+                  <div class="offering-workspace__modules-head">
+                    <h4 class="offering-workspace__modules-title">
+                      {{ 'rplus.offerings.workspace.modules.heading' | translate }}
+                    </h4>
+                    @if (canManage() && !isModuleCreateOpen(course.id)) {
+                      <button
+                        type="button"
+                        class="btn btn-ghost"
+                        data-testid="module-new"
+                        (click)="openModuleCreate(course.id)">
+                        {{ 'rplus.offerings.workspace.modules.new' | translate }}
+                      </button>
+                    }
+                  </div>
+
+                  @if (moduleError()) {
+                    <p
+                      class="offering-workspace__error-message"
+                      role="alert"
+                      data-testid="module-error">
+                      {{ moduleError() }}
+                    </p>
+                  }
+
+                  @if (isModuleCreateOpen(course.id)) {
+                    <div
+                      class="offering-workspace__module-create"
+                      data-testid="module-create-form">
+                      <input
+                        type="text"
+                        class="input"
+                        data-testid="module-create-title"
+                        [value]="moduleCreateTitle()"
+                        [placeholder]="
+                          'rplus.offerings.workspace.modules.title_label' | translate
+                        "
+                        [attr.aria-label]="
+                          'rplus.offerings.workspace.modules.title_label' | translate
+                        "
+                        (input)="onModuleCreateTitleInput($event)" />
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        data-testid="module-create-submit"
+                        [disabled]="!moduleCreateTitle().trim() || moduleBusy()"
+                        (click)="submitModuleCreate(course.id)">
+                        {{ 'rplus.offerings.workspace.modules.create' | translate }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-ghost"
+                        data-testid="module-create-cancel"
+                        (click)="cancelModuleCreate()">
+                        {{ 'rplus.offerings.workspace.modules.cancel' | translate }}
+                      </button>
+                    </div>
+                  }
+
+                  @if (modulesForCourse(course.id).length > 0) {
+                    <ol class="offering-workspace__module-list">
+                      @for (m of modulesForCourse(course.id); track m.id) {
+                        <li
+                          class="offering-workspace__module glass-panel"
+                          data-testid="offering-module">
+                          <div class="offering-workspace__module-head">
+                            <span
+                              class="offering-workspace__module-title"
+                              data-testid="module-title"
+                              >{{ m.title }}</span
+                            >
+                            <span class="badge badge-neutral" data-testid="module-requirement">
+                              {{
+                                moduleRequirementLabelKey(m)
+                                  | translate
+                                    : { n: m.requirement.thresholdN, total: m.items.length }
+                              }}
+                            </span>
+                            @if (moduleCompletionLabel(m.id); as completeLabel) {
+                              <span
+                                class="badge badge-success"
+                                data-testid="module-progress"
+                                [attr.title]="
+                                  'rplus.offerings.workspace.modules.complete_hint' | translate
+                                "
+                                >{{ completeLabel }}</span
+                              >
+                            }
+                            @if (canManage()) {
+                              <button
+                                type="button"
+                                class="btn btn-ghost btn-danger"
+                                data-testid="module-remove"
+                                [disabled]="moduleBusy()"
+                                (click)="removeModule(course.id, m.id)">
+                                {{ 'rplus.offerings.workspace.modules.remove' | translate }}
+                              </button>
+                            }
+                          </div>
+
+                          @if (m.items.length > 0) {
+                            <ul class="offering-workspace__module-items">
+                              @for (mi of m.items; track mi.itemId) {
+                                <li
+                                  class="offering-workspace__module-item"
+                                  data-testid="module-item">
+                                  <span>{{ moduleItemLabel(course, mi.contentItemId) }}</span>
+                                  @if (canManage()) {
+                                    <button
+                                      type="button"
+                                      class="btn btn-ghost offering-workspace__icon-btn"
+                                      data-testid="module-item-remove"
+                                      [attr.aria-label]="
+                                        'rplus.offerings.workspace.modules.item_remove' | translate
+                                      "
+                                      [disabled]="moduleBusy()"
+                                      (click)="removeModuleItem(course.id, m.id, mi.itemId)">
+                                      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                    </button>
+                                  }
+                                </li>
+                              }
+                            </ul>
+                          } @else {
+                            <p
+                              class="offering-workspace__terminal"
+                              data-testid="module-empty">
+                              {{ 'rplus.offerings.workspace.modules.module_empty' | translate }}
+                            </p>
+                          }
+
+                          @if (canManage()) {
+                            <div class="offering-workspace__module-actions">
+                              @if (moduleAvailableItems(course, m).length > 0) {
+                                <div class="offering-workspace__module-add">
+                                  <select
+                                    class="input"
+                                    data-testid="module-add-select"
+                                    [disabled]="moduleBusy()"
+                                    [value]="moduleAddSelection(m.id)"
+                                    (change)="onModuleAddSelect(m.id, $event)"
+                                    [attr.aria-label]="
+                                      'rplus.offerings.workspace.modules.add_item' | translate
+                                    ">
+                                    <option value="">
+                                      {{ 'rplus.offerings.workspace.modules.add_item' | translate }}
+                                    </option>
+                                    @for (opt of moduleAvailableItems(course, m); track opt.itemId) {
+                                      <option [value]="opt.itemId">{{ opt.title }}</option>
+                                    }
+                                  </select>
+                                  <button
+                                    type="button"
+                                    class="btn btn-ghost"
+                                    data-testid="module-add-submit"
+                                    [disabled]="!moduleAddSelection(m.id) || moduleBusy()"
+                                    (click)="addModuleItem(course.id, m.id, moduleAddSelection(m.id))">
+                                    {{ 'rplus.offerings.workspace.modules.add' | translate }}
+                                  </button>
+                                </div>
+                              }
+                              <div
+                                class="offering-workspace__module-req"
+                                data-testid="module-req-controls">
+                                <button
+                                  type="button"
+                                  class="btn btn-ghost"
+                                  data-testid="module-req-all"
+                                  [class.badge-warning]="m.requirement.kind === 'all_items'"
+                                  [disabled]="moduleBusy()"
+                                  (click)="setModuleRequirement(course.id, m.id, 'all_items', 0)">
+                                  {{ 'rplus.offerings.workspace.modules.req_all' | translate }}
+                                </button>
+                                <input
+                                  #reqN
+                                  type="number"
+                                  min="1"
+                                  [max]="m.items.length"
+                                  [value]="m.requirement.thresholdN || 1"
+                                  class="input offering-workspace__module-req-n"
+                                  data-testid="module-req-threshold"
+                                  [attr.aria-label]="
+                                    'rplus.offerings.workspace.modules.req_threshold' | translate
+                                  " />
+                                <button
+                                  type="button"
+                                  class="btn btn-ghost"
+                                  data-testid="module-req-nofm"
+                                  [class.badge-warning]="m.requirement.kind === 'n_of_m'"
+                                  [disabled]="moduleBusy() || m.items.length === 0"
+                                  (click)="
+                                    setModuleRequirement(
+                                      course.id,
+                                      m.id,
+                                      'n_of_m',
+                                      reqN.valueAsNumber || 1
+                                    )
+                                  ">
+                                  {{ 'rplus.offerings.workspace.modules.req_nofm' | translate }}
+                                </button>
+                              </div>
+                            </div>
+                          }
+                        </li>
+                      }
+                    </ol>
+                  } @else if (!isModuleCreateOpen(course.id)) {
+                    <p class="offering-workspace__terminal" data-testid="modules-empty">
+                      {{ 'rplus.offerings.workspace.modules.none' | translate }}
+                    </p>
+                  }
+                </section>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="offering-workspace__terminal" data-testid="offering-curriculum-empty">
+            {{ 'rplus.offerings.workspace.curriculum.empty' | translate }}
+          </p>
+        }
+      </section>
+    } @else if (isCertificationActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-certification"
+        aria-labelledby="offering-tab-certification"
+        tabindex="0"
+        data-testid="offering-panel-certification">
+        <div class="offering-workspace__assessments-intro">
+          <h2 class="offering-workspace__lifecycle-title">
+            {{ 'rplus.offerings.workspace.certification.heading' | translate }}
+          </h2>
+          <p class="offering-workspace__assessments-subtitle">
+            {{ 'rplus.offerings.workspace.certification.subtitle' | translate }}
+          </p>
+        </div>
+
+        <!-- S2: editable offering-level completion policy ("cert = policy on top").
+             The per-course cert config below stays READ-ONLY; this is the delivery
+             decision. Shown once the cert data resolves (success), for any
+             delivery_type; the "Set/Edit policy" button is admin-only. -->
+        @if (!certificationLoading() && !certificationError()) {
+          <div class="offering-workspace__policy" data-testid="offering-certification-policy">
+            <div class="offering-workspace__assessments-head">
+              <div class="offering-workspace__assessments-intro">
+                <h3 class="offering-workspace__picker-title">
+                  {{ 'rplus.offerings.workspace.certification.policy.heading' | translate }}
+                </h3>
+                <p class="offering-workspace__assessments-subtitle">
+                  {{ 'rplus.offerings.workspace.certification.policy.subtitle' | translate }}
+                </p>
+              </div>
+              @if (canManage()) {
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  data-testid="offering-certification-policy-edit"
+                  (click)="openPolicyForm()">
+                  <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                  @if (hasCompletionPolicy()) {
+                    {{ 'rplus.offerings.workspace.certification.policy.edit' | translate }}
+                  } @else {
+                    {{ 'rplus.offerings.workspace.certification.policy.set' | translate }}
+                  }
+                </button>
+              }
+            </div>
+
+            @if (policySaveSucceeded()) {
+              <p
+                class="offering-workspace__assessments-success"
+                data-testid="offering-certification-policy-success"
+                role="status">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ 'rplus.offerings.workspace.certification.policy.save_success' | translate }}
+              </p>
+            }
+
+            <!-- Inline policy form (manager-only; signal-driven, no FormsModule). -->
+            @if (canManage() && isPolicyFormOpen()) {
+              <form
+                class="offering-workspace__section-form"
+                data-testid="offering-certification-policy-form"
+                (submit)="onPolicySubmit($event)">
+                <h4 class="offering-workspace__picker-title">
+                  {{ 'rplus.offerings.workspace.certification.policy.form_title' | translate }}
+                </h4>
+
+                <label class="offering-workspace__policy-check">
+                  <input
+                    type="checkbox"
+                    data-testid="offering-certification-policy-awards"
+                    [checked]="policyAwards()"
+                    (change)="onPolicyAwardsChange($event)" />
+                  <span>{{
+                    'rplus.offerings.workspace.certification.policy.awards_label' | translate
+                  }}</span>
+                </label>
+
+                <!-- WIRED lane note: the awards_certificate toggle IS the
+                     automatic control — a certificate is auto-issued on
+                     assessment release when the learner's score meets the cut.
+                     (The per-learner manual action below is the explicit lane.) -->
+                <p
+                  class="offering-workspace__policy-note"
+                  data-testid="offering-certification-policy-auto-issue-note">
+                  <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                  {{
+                    'rplus.offerings.workspace.certification.policy.auto_issue_note' | translate
+                  }}
+                </p>
+
+                <div class="offering-workspace__section-grid">
+                  <label class="offering-workspace__section-field">
+                    <span>{{
+                      'rplus.offerings.workspace.certification.policy.score_label' | translate
+                    }}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      data-testid="offering-certification-policy-score"
+                      [value]="policyScore()"
+                      [attr.aria-label]="
+                        'rplus.offerings.workspace.certification.policy.score_label' | translate
+                      "
+                      (input)="onPolicyScoreInput($event)"
+                      required />
+                  </label>
+                  <label class="offering-workspace__section-field">
+                    <span>{{
+                      'rplus.offerings.workspace.certification.policy.title_label' | translate
+                    }}</span>
+                    <input
+                      type="text"
+                      data-testid="offering-certification-policy-title"
+                      [value]="policyTitle()"
+                      [attr.placeholder]="
+                        'rplus.offerings.workspace.certification.policy.title_placeholder'
+                          | translate
+                      "
+                      [attr.aria-label]="
+                        'rplus.offerings.workspace.certification.policy.title_label' | translate
+                      "
+                      (input)="onPolicyTitleInput($event)" />
+                  </label>
+                </div>
+
+                @if (policySaveError()) {
+                  <p
+                    class="offering-workspace__action-error"
+                    data-testid="offering-certification-policy-error"
+                    role="alert">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    @if (policySaveErrorDetail()) {
+                      {{ policySaveErrorDetail() }}
+                    } @else {
+                      {{ 'rplus.offerings.workspace.certification.policy.save_error' | translate }}
+                    }
+                  </p>
+                }
+
+                <div class="offering-workspace__actions">
+                  <button
+                    type="button"
+                    class="btn btn-ghost"
+                    data-testid="offering-certification-policy-cancel"
+                    (click)="closePolicyForm()">
+                    {{ 'rplus.offerings.workspace.certification.policy.cancel' | translate }}
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    data-testid="offering-certification-policy-submit"
+                    [disabled]="!canSavePolicy() || isSavingPolicy()">
+                    @if (isSavingPolicy()) {
+                      {{ 'rplus.offerings.workspace.certification.policy.saving' | translate }}
+                    } @else {
+                      {{ 'rplus.offerings.workspace.certification.policy.save' | translate }}
+                    }
+                  </button>
+                </div>
+              </form>
+            }
+
+            <!-- Saved policy summary (or an honest "not set yet" note). -->
+            @if (hasCompletionPolicy()) {
+              <dl
+                class="offering-workspace__section-meta"
+                data-testid="offering-certification-policy-summary">
+                <div class="offering-workspace__section-meta-item">
+                  <dt>
+                    {{ 'rplus.offerings.workspace.certification.policy.awards_label' | translate }}
+                  </dt>
+                  <dd data-testid="offering-certification-policy-awards-value">
+                    @if (completionPolicy()!.awardsCertificate) {
+                      {{ 'rplus.offerings.workspace.certification.policy.awards_yes' | translate }}
+                    } @else {
+                      {{ 'rplus.offerings.workspace.certification.policy.awards_no' | translate }}
+                    }
+                  </dd>
+                </div>
+                <div class="offering-workspace__section-meta-item">
+                  <dt>
+                    {{ 'rplus.offerings.workspace.certification.policy.score_label' | translate }}
+                  </dt>
+                  <dd>{{ completionPolicy()!.passingScorePct }}%</dd>
+                </div>
+                @if (completionPolicy()!.certTitle) {
+                  <div class="offering-workspace__section-meta-item">
+                    <dt>
+                      {{ 'rplus.offerings.workspace.certification.policy.title_label' | translate }}
+                    </dt>
+                    <dd>{{ completionPolicy()!.certTitle }}</dd>
+                  </div>
+                }
+                @if (completionPolicy()!.updatedAt) {
+                  <div class="offering-workspace__section-meta-item">
+                    <dt>
+                      {{ 'rplus.offerings.workspace.certification.policy.updated_at' | translate }}
+                    </dt>
+                    <dd>
+                      <time [attr.datetime]="completionPolicy()!.updatedAt">{{
+                        completionPolicy()!.updatedAt | date: 'medium'
+                      }}</time>
+                    </dd>
+                  </div>
+                }
+              </dl>
+            } @else {
+              <p
+                class="offering-workspace__terminal"
+                data-testid="offering-certification-policy-none">
+                {{ 'rplus.offerings.workspace.certification.policy.none' | translate }}
+              </p>
+            }
+          </div>
+        }
+
+        <!-- MANUAL per-learner issuance (manager-only). The WIRED lane above
+             auto-issues on assessment release; this is the explicit "issue now"
+             action for one enrolled learner. The enrolled learners come from the
+             roster (shared with the Roster tab — the cert tab lazy-loads it for
+             a manager). Two-step confirm mirrors the roster unenrol control; a
+             409 is a friendly "already holds a certificate" note, not an error. -->
+        @if (canManage()) {
+          <div class="offering-workspace__cert-issue" data-testid="offering-certification-issue">
+            <div class="offering-workspace__assessments-intro">
+              <h3 class="offering-workspace__picker-title">
+                {{ 'rplus.offerings.workspace.certification.issue.heading' | translate }}
+              </h3>
+              <p class="offering-workspace__assessments-subtitle">
+                {{ 'rplus.offerings.workspace.certification.issue.subtitle' | translate }}
+              </p>
+            </div>
+
+            @if (rosterLoading()) {
+              <p
+                class="offering-workspace__terminal"
+                data-testid="offering-certification-issue-loading"
+                role="status"
+                aria-busy="true">
+                {{ 'rplus.offerings.workspace.certification.issue.loading' | translate }}
+              </p>
+            } @else if (rosterError()) {
+              <div
+                class="offering-workspace__conflict"
+                data-testid="offering-certification-issue-error"
+                role="alert">
+                <p>
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ 'rplus.offerings.workspace.certification.issue.load_error' | translate }}
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  data-testid="offering-certification-issue-retry"
+                  (click)="retryRoster()">
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                  {{ 'rplus.common.retry' | translate }}
+                </button>
+              </div>
+            } @else if (hasRoster()) {
+              <ul
+                class="offering-workspace__cert-issue-list"
+                data-testid="offering-certification-issue-list">
+                @for (course of rosterCourses(); track course.id) {
+                  <li
+                    class="offering-workspace__cert-issue-course"
+                    data-testid="offering-certification-issue-course">
+                    <h4 class="offering-workspace__roster-course-title">
+                      @if (course.title) {
+                        {{ course.title }}
+                      } @else {
+                        {{ 'rplus.offerings.workspace.certification.untitled_course' | translate }}
+                      }
+                    </h4>
+                    @if (course.learners.length > 0) {
+                      <ul class="offering-workspace__roster-learners">
+                        @for (learner of course.learners; track $index) {
+                          <li
+                            class="offering-workspace__roster-learner"
+                            data-testid="offering-certification-issue-learner">
+                            <span class="offering-workspace__roster-learner-name">
+                              {{ learner.displayName }}
+                            </span>
+                            @if (certIssueSucceeded(course.id, learner.gcid)) {
+                              <span
+                                class="offering-workspace__cert-issue-note"
+                                data-testid="offering-certification-issue-success"
+                                role="status">
+                                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                {{
+                                  'rplus.offerings.workspace.certification.issue.success'
+                                    | translate
+                                }}
+                              </span>
+                            } @else if (certAlreadyIssued(course.id, learner.gcid)) {
+                              <span
+                                class="offering-workspace__cert-issue-note"
+                                data-testid="offering-certification-issue-already"
+                                role="status">
+                                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                                {{
+                                  'rplus.offerings.workspace.certification.issue.already_issued'
+                                    | translate
+                                }}
+                              </span>
+                            } @else if (isConfirmingCertIssue(course.id, learner.gcid)) {
+                              <span class="offering-workspace__cert-issue-actions">
+                                <button
+                                  type="button"
+                                  class="btn btn-primary btn-inline"
+                                  data-testid="offering-certification-issue-confirm"
+                                  [disabled]="isIssuingCert(course.id, learner.gcid)"
+                                  (click)="issueCertificate(course.id, learner.gcid)">
+                                  @if (isIssuingCert(course.id, learner.gcid)) {
+                                    {{
+                                      'rplus.offerings.workspace.certification.issue.issuing'
+                                        | translate
+                                    }}
+                                  } @else {
+                                    {{
+                                      'rplus.offerings.workspace.certification.issue.confirm'
+                                        | translate
+                                    }}
+                                  }
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn btn-ghost btn-inline"
+                                  data-testid="offering-certification-issue-cancel"
+                                  [disabled]="isIssuingCert(course.id, learner.gcid)"
+                                  (click)="cancelCertIssue()">
+                                  {{
+                                    'rplus.offerings.workspace.certification.policy.cancel'
+                                      | translate
+                                  }}
+                                </button>
+                              </span>
+                            } @else {
+                              <button
+                                type="button"
+                                class="btn btn-ghost btn-inline offering-workspace__cert-issue-button"
+                                data-testid="offering-certification-issue-button"
+                                (click)="startCertIssue(course.id, learner.gcid)">
+                                <i class="fa-solid fa-certificate" aria-hidden="true"></i>
+                                {{
+                                  'rplus.offerings.workspace.certification.issue.button' | translate
+                                }}
+                              </button>
+                            }
+                            @if (hasCertIssueError(course.id, learner.gcid)) {
+                              <span
+                                class="offering-workspace__roster-unenrol-error"
+                                data-testid="offering-certification-issue-row-error"
+                                role="alert">
+                                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                                @if (certIssueErrorDetail()) {
+                                  {{ certIssueErrorDetail() }}
+                                } @else {
+                                  {{
+                                    'rplus.offerings.workspace.certification.issue.error' | translate
+                                  }}
+                                }
+                              </span>
+                            }
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <p
+                        class="offering-workspace__terminal"
+                        data-testid="offering-certification-issue-course-none">
+                        {{ 'rplus.offerings.workspace.certification.issue.course_none' | translate }}
+                      </p>
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p
+                class="offering-workspace__terminal"
+                data-testid="offering-certification-issue-empty">
+                {{ 'rplus.offerings.workspace.certification.issue.empty' | translate }}
+              </p>
+            }
+          </div>
+        }
+
+        @if (certificationLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-certification-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.certification.loading' | translate }}
+          </p>
+        } @else if (certificationError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-certification-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.certification.error' | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-certification-retry"
+              (click)="retryCertification()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (hasCertification()) {
+          <ul
+            class="offering-workspace__certification-list"
+            data-testid="offering-certification-list">
+            @for (course of certification(); track course.id) {
+              <li
+                class="offering-workspace__certification-course"
+                data-testid="offering-certification-course">
+                <h3 class="offering-workspace__certification-course-title">
+                  @if (course.title) {
+                    {{ course.title }}
+                  } @else {
+                    {{ 'rplus.offerings.workspace.certification.untitled_course' | translate }}
+                  }
+                </h3>
+                @if (course.certifications.length > 0) {
+                  <ul class="offering-workspace__certification-configs">
+                    @for (cfg of course.certifications; track $index) {
+                      <li
+                        class="offering-workspace__certification-config"
+                        data-testid="offering-certification-config">
+                        <span class="badge badge-neutral offering-workspace__certification-type">
+                          @if (cfg.certType) {
+                            {{ certTypeLabelKey(cfg.certType) | translate }}
+                          } @else {
+                            {{ 'rplus.offerings.workspace.certification.untyped' | translate }}
+                          }
+                        </span>
+                        <span class="offering-workspace__certification-detail">
+                          {{ 'rplus.offerings.workspace.certification.passing_score' | translate }}:
+                          {{ cfg.passingScorePct }}%
+                        </span>
+                        @if (cfg.requireAllContent) {
+                          <span
+                            class="offering-workspace__certification-detail"
+                            data-testid="offering-certification-require-all">
+                            {{
+                              'rplus.offerings.workspace.certification.require_all_content'
+                                | translate
+                            }}
+                          </span>
+                        }
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p
+                    class="offering-workspace__terminal"
+                    data-testid="offering-certification-course-none">
+                    {{ 'rplus.offerings.workspace.certification.course_none' | translate }}
+                  </p>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="offering-workspace__terminal" data-testid="offering-certification-empty">
+            {{ 'rplus.offerings.workspace.certification.empty' | translate }}
+          </p>
+        }
+      </section>
+    } @else if (isSectionsActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-sections"
+        aria-labelledby="offering-tab-sections"
+        tabindex="0"
+        data-testid="offering-panel-sections">
+        <div class="offering-workspace__assessments-head">
+          <div class="offering-workspace__assessments-intro">
+            <h2 class="offering-workspace__lifecycle-title">
+              {{ 'rplus.offerings.workspace.sections.heading' | translate }}
+            </h2>
+            <p class="offering-workspace__assessments-subtitle">
+              {{ 'rplus.offerings.workspace.sections.subtitle' | translate }}
+            </p>
+          </div>
+          <!-- Create is admin-only (role-driven VISIBILITY, not disabled). -->
+          @if (canManage()) {
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-testid="offering-sections-add"
+              (click)="openSectionForm()">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.sections.add' | translate }}
+            </button>
+          }
+        </div>
+
+        @if (sectionCreateSucceeded()) {
+          <p
+            class="offering-workspace__assessments-success"
+            data-testid="offering-sections-create-success"
+            role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.sections.create_success' | translate }}
+          </p>
+        }
+        @if (sectionUpdateSucceeded()) {
+          <p
+            class="offering-workspace__assessments-success"
+            data-testid="offering-sections-update-success"
+            role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.sections.update_success' | translate }}
+          </p>
+        }
+
+        <!-- Inline create form (manager-only; signal-driven, no FormsModule). -->
+        @if (isSectionFormOpen()) {
+          <form
+            class="offering-workspace__section-form"
+            data-testid="offering-sections-form"
+            (submit)="
+              onSectionSubmit(
+                $event,
+                roomInput.value,
+                startInput.value,
+                endInput.value
+              )
+            ">
+            <h3 class="offering-workspace__picker-title">
+              {{ 'rplus.offerings.workspace.sections.form_title' | translate }}
+            </h3>
+
+            <label class="offering-workspace__section-field">
+              <span>{{ 'rplus.offerings.workspace.sections.name_label' | translate }}</span>
+              <input
+                type="text"
+                data-testid="offering-sections-name"
+                [attr.placeholder]="
+                  'rplus.offerings.workspace.sections.name_placeholder' | translate
+                "
+                [attr.aria-label]="'rplus.offerings.workspace.sections.name_label' | translate"
+                (input)="onSectionNameInput($event)"
+                required />
+            </label>
+
+            <div class="offering-workspace__section-grid">
+              <label class="offering-workspace__section-field">
+                <span>{{ 'rplus.offerings.workspace.sections.lead_label' | translate }}</span>
+                <!-- Name-based search — no raw-GCID paste; scoped to instructor-role members. -->
+                <!-- minChars 0 browses on focus (CHO-2291): depends on the member port paging an empty q. -->
+                <chora-entity-picker
+                  data-testid="offering-sections-lead"
+                  entityType="member"
+                  [searchPortOverride]="memberSearch"
+                  [facets]="instructorFacet"
+                  [value]="sectionLeadPicked()"
+                  variant="single"
+                  [minChars]="0"
+                  [placeholder]="
+                    'rplus.offerings.workspace.sections.lead_search_placeholder' | translate
+                  "
+                  (picked)="onSectionLeadPicked($event)" />
+              </label>
+              <label class="offering-workspace__section-field">
+                <span>{{ 'rplus.offerings.workspace.sections.room_label' | translate }}</span>
+                <input #roomInput type="text" data-testid="offering-sections-room" />
+              </label>
+              <label class="offering-workspace__section-field">
+                <span>{{ 'rplus.offerings.workspace.sections.start_label' | translate }}</span>
+                <input #startInput type="date" data-testid="offering-sections-start" />
+              </label>
+              <label class="offering-workspace__section-field">
+                <span>{{ 'rplus.offerings.workspace.sections.end_label' | translate }}</span>
+                <input #endInput type="date" data-testid="offering-sections-end" />
+              </label>
+            </div>
+
+            @if (sectionCreateError()) {
+              <p
+                class="offering-workspace__action-error"
+                data-testid="offering-sections-create-error"
+                role="alert">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                {{ 'rplus.offerings.workspace.sections.create_error' | translate }}
+              </p>
+            }
+
+            <div class="offering-workspace__actions">
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="offering-sections-cancel"
+                (click)="closeSectionForm()">
+                {{ 'rplus.offerings.workspace.sections.cancel' | translate }}
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                data-testid="offering-sections-submit"
+                [disabled]="!canCreateSection() || isCreatingSection()">
+                @if (isCreatingSection()) {
+                  {{ 'rplus.offerings.workspace.sections.submitting' | translate }}
+                } @else {
+                  {{ 'rplus.offerings.workspace.sections.submit' | translate }}
+                }
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- Section list (loading / error / list / empty). -->
+        @if (sectionsLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-sections-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.sections.loading' | translate }}
+          </p>
+        } @else if (sectionsError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-sections-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ sectionsErrorKey() | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-sections-retry"
+              (click)="retrySections()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (hasSections()) {
+          <ul class="offering-workspace__sections-list" data-testid="offering-sections-list">
+            @for (sec of sections(); track sec.sectionId) {
+              <li class="offering-workspace__section-card" data-testid="offering-sections-row">
+                <div class="offering-workspace__section-card-head">
+                  <h3 class="offering-workspace__section-name">
+                    @if (sec.name) {
+                      {{ sec.name }}
+                    } @else {
+                      {{ 'rplus.offerings.workspace.sections.unnamed' | translate }}
+                    }
+                  </h3>
+                  <!-- Edit is admin-only (role-driven VISIBILITY, not disabled). -->
+                  @if (canManage() && !isSectionEditOpen(sec.sectionId)) {
+                    <button
+                      type="button"
+                      class="btn btn-ghost"
+                      data-testid="offering-sections-edit"
+                      (click)="openSectionEditForm(sec)">
+                      <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                      {{ 'rplus.offerings.workspace.sections.edit' | translate }}
+                    </button>
+                  }
+                </div>
+
+                <!-- Inline edit form (manager-only; signal-driven, no FormsModule). -->
+                @if (canManage() && isSectionEditOpen(sec.sectionId)) {
+                  <form
+                    class="offering-workspace__section-form"
+                    data-testid="offering-sections-edit-form"
+                    (submit)="
+                      onSectionEditSubmit(
+                        $event,
+                        sec,
+                        editRoom.value,
+                        editStart.value,
+                        editEnd.value
+                      )
+                    ">
+                    <h4 class="offering-workspace__picker-title">
+                      {{ 'rplus.offerings.workspace.sections.edit_form_title' | translate }}
+                    </h4>
+
+                    <label class="offering-workspace__section-field">
+                      <span>{{ 'rplus.offerings.workspace.sections.name_label' | translate }}</span>
+                      <input
+                        type="text"
+                        data-testid="offering-sections-edit-name"
+                        [value]="editSectionName()"
+                        [attr.placeholder]="
+                          'rplus.offerings.workspace.sections.name_placeholder' | translate
+                        "
+                        [attr.aria-label]="
+                          'rplus.offerings.workspace.sections.name_label' | translate
+                        "
+                        (input)="onEditSectionNameInput($event)"
+                        required />
+                    </label>
+
+                    <div class="offering-workspace__section-grid">
+                      <label class="offering-workspace__section-field">
+                        <span>{{ 'rplus.offerings.workspace.sections.lead_label' | translate }}</span>
+                        <!-- Name-based search — no raw-GCID paste; scoped to instructor-role members. -->
+                        <!-- minChars 0 browses on focus (CHO-2291): depends on the member port paging an empty q. -->
+                        <chora-entity-picker
+                          data-testid="offering-sections-edit-lead"
+                          entityType="member"
+                          [searchPortOverride]="memberSearch"
+                          [facets]="instructorFacet"
+                          [value]="editSectionLeadPicked()"
+                          variant="single"
+                          [minChars]="0"
+                          [placeholder]="
+                            'rplus.offerings.workspace.sections.lead_search_placeholder'
+                              | translate
+                          "
+                          (picked)="onEditSectionLeadPicked($event)" />
+                      </label>
+                      <label class="offering-workspace__section-field">
+                        <span>{{ 'rplus.offerings.workspace.sections.room_label' | translate }}</span>
+                        <input
+                          #editRoom
+                          type="text"
+                          data-testid="offering-sections-edit-room"
+                          [value]="sec.room" />
+                      </label>
+                      <label class="offering-workspace__section-field">
+                        <span>{{ 'rplus.offerings.workspace.sections.start_label' | translate }}</span>
+                        <input
+                          #editStart
+                          type="date"
+                          data-testid="offering-sections-edit-start"
+                          [value]="sec.startDate" />
+                      </label>
+                      <label class="offering-workspace__section-field">
+                        <span>{{ 'rplus.offerings.workspace.sections.end_label' | translate }}</span>
+                        <input
+                          #editEnd
+                          type="date"
+                          data-testid="offering-sections-edit-end"
+                          [value]="sec.endDate" />
+                      </label>
+                    </div>
+
+                    @if (sectionUpdateError()) {
+                      <p
+                        class="offering-workspace__action-error"
+                        data-testid="offering-sections-update-error"
+                        role="alert">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        @if (sectionUpdateErrorDetail()) {
+                          {{ sectionUpdateErrorDetail() }}
+                        } @else {
+                          {{ 'rplus.offerings.workspace.sections.update_error' | translate }}
+                        }
+                      </p>
+                    }
+
+                    <div class="offering-workspace__actions">
+                      <button
+                        type="button"
+                        class="btn btn-ghost"
+                        data-testid="offering-sections-edit-cancel"
+                        (click)="closeSectionEditForm()">
+                        {{ 'rplus.offerings.workspace.sections.cancel' | translate }}
+                      </button>
+                      <button
+                        type="submit"
+                        class="btn btn-primary"
+                        data-testid="offering-sections-edit-submit"
+                        [disabled]="!canUpdateSection() || isUpdatingSection()">
+                        @if (isUpdatingSection()) {
+                          {{ 'rplus.offerings.workspace.sections.updating' | translate }}
+                        } @else {
+                          {{ 'rplus.offerings.workspace.sections.update' | translate }}
+                        }
+                      </button>
+                    </div>
+                  </form>
+                } @else {
+                  <dl class="offering-workspace__section-meta">
+                    @if (sec.room) {
+                      <div class="offering-workspace__section-meta-item">
+                        <dt>{{ 'rplus.offerings.workspace.sections.room_label' | translate }}</dt>
+                        <dd>{{ sec.room }}</dd>
+                      </div>
+                    }
+                    @if (sec.leadInstructorGcid) {
+                      <div class="offering-workspace__section-meta-item">
+                        <dt>{{ 'rplus.offerings.workspace.sections.lead_label' | translate }}</dt>
+                        <dd><code>{{ sec.leadInstructorGcid }}</code></dd>
+                      </div>
+                    }
+                    @if (sec.startDate || sec.endDate) {
+                      <div class="offering-workspace__section-meta-item">
+                        <dt>{{ 'rplus.offerings.workspace.sections.dates_label' | translate }}</dt>
+                        <dd>
+                          {{ sec.startDate }}<span aria-hidden="true"> – </span>{{ sec.endDate }}
+                        </dd>
+                      </div>
+                    }
+                  </dl>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="offering-workspace__terminal" data-testid="offering-sections-empty">
+            {{ 'rplus.offerings.workspace.sections.empty' | translate }}
+          </p>
+        }
+      </section>
+    } @else if (isRosterActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-roster"
+        aria-labelledby="offering-tab-roster"
+        tabindex="0"
+        data-testid="offering-panel-roster">
+        <div class="offering-workspace__assessments-intro">
+          <h2 class="offering-workspace__lifecycle-title">
+            {{ 'rplus.offerings.workspace.roster.heading' | translate }}
+          </h2>
+          <p class="offering-workspace__assessments-subtitle">
+            {{ 'rplus.offerings.workspace.roster.subtitle' | translate }}
+          </p>
+        </div>
+
+        @if (rosterLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-roster-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.roster.loading' | translate }}
+          </p>
+        } @else if (rosterError()) {
+          <div class="offering-workspace__conflict" data-testid="offering-roster-error" role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.roster.error' | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-roster-retry"
+              (click)="retryRoster()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (hasRoster()) {
+          <!-- S3: admin enrol a learner into an attached course. -->
+          @if (canManage()) {
+            <div class="offering-workspace__assessments-head">
+              <div class="offering-workspace__assessments-intro">
+                <h3 class="offering-workspace__picker-title">
+                  {{ 'rplus.offerings.workspace.roster.enrol.heading' | translate }}
+                </h3>
+                <p class="offering-workspace__assessments-subtitle">
+                  {{ 'rplus.offerings.workspace.roster.enrol.subtitle' | translate }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="btn btn-primary"
+                data-testid="offering-roster-enrol"
+                (click)="openEnrolForm()">
+                <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                {{ 'rplus.offerings.workspace.roster.enrol.add' | translate }}
+              </button>
+            </div>
+          }
+
+          @if (enrolSucceeded()) {
+            <p
+              class="offering-workspace__assessments-success"
+              data-testid="offering-roster-enrol-success"
+              role="status">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.roster.enrol.success' | translate }}
+            </p>
+          }
+
+          <!-- WS-B: panel-level "learner removed" note (the row itself is gone). -->
+          @if (unenrolSucceeded()) {
+            <p
+              class="offering-workspace__assessments-success"
+              data-testid="offering-roster-unenrol-success"
+              role="status">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.roster.unenrol.success' | translate }}
+            </p>
+          }
+
+          <!-- Inline enrol form (manager-only; signal-driven, no FormsModule). -->
+          @if (canManage() && isEnrolFormOpen()) {
+            <form
+              class="offering-workspace__section-form"
+              data-testid="offering-roster-enrol-form"
+              (submit)="onEnrolSubmit($event)">
+              <h4 class="offering-workspace__picker-title">
+                {{ 'rplus.offerings.workspace.roster.enrol.form_title' | translate }}
+              </h4>
+
+              <div class="offering-workspace__section-grid">
+                <label class="offering-workspace__section-field">
+                  <span>{{
+                    'rplus.offerings.workspace.roster.enrol.course_label' | translate
+                  }}</span>
+                  <select
+                    data-testid="offering-roster-enrol-course"
+                    [attr.aria-label]="
+                      'rplus.offerings.workspace.roster.enrol.course_label' | translate
+                    "
+                    (change)="onEnrolCourseChange($event)">
+                    @for (course of rosterCourses(); track course.id) {
+                      <option [value]="course.id" [selected]="course.id === enrolCourseId()">
+                        @if (course.title) {
+                          {{ course.title }}
+                        } @else {
+                          {{ 'rplus.offerings.workspace.roster.untitled_course' | translate }}
+                        }
+                      </option>
+                    }
+                  </select>
+                </label>
+              </div>
+
+              <!-- Issue 4b: a proper multi-select learner checklist (up to ~100),
+                   replacing the single name-search field. Submits via the atomic
+                   bulk-enrol endpoint. -->
+              <div
+                class="offering-workspace__enrol-members"
+                data-testid="offering-roster-enrol-members-field">
+                <p class="offering-workspace__picker-title">
+                  {{ 'rplus.offerings.workspace.roster.enrol.gcid_label' | translate }}
+                </p>
+                <chora-member-multiselect
+                  data-testid="offering-roster-enrol-members"
+                  [memberRole]="'learner'"
+                  [maxSelectable]="100"
+                  (selectionChange)="onEnrolSelectionChange($event)" />
+              </div>
+
+              @if (enrolError()) {
+                <p
+                  class="offering-workspace__action-error"
+                  data-testid="offering-roster-enrol-error"
+                  role="alert">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  @if (enrolErrorDetail()) {
+                    {{ enrolErrorDetail() }}
+                  } @else {
+                    {{ 'rplus.offerings.workspace.roster.enrol.error' | translate }}
+                  }
+                </p>
+              }
+
+              <div class="offering-workspace__actions">
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  data-testid="offering-roster-enrol-cancel"
+                  (click)="closeEnrolForm()">
+                  {{ 'rplus.offerings.workspace.roster.enrol.cancel' | translate }}
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  data-testid="offering-roster-enrol-submit"
+                  [disabled]="!canEnrol() || isEnroling()">
+                  @if (isEnroling()) {
+                    {{ 'rplus.offerings.workspace.roster.enrol.submitting' | translate }}
+                  } @else {
+                    {{
+                      'rplus.offerings.workspace.roster.enrol.submit_n'
+                        | translate: { count: enrolSelectedCount() }
+                    }}
+                  }
+                </button>
+              </div>
+            </form>
+          }
+
+          <p class="offering-workspace__roster-summary" data-testid="offering-roster-summary">
+            {{ 'rplus.offerings.workspace.roster.distinct_learners' | translate }}:
+            {{ rosterDistinctCount() }}
+          </p>
+          <ul class="offering-workspace__roster-list" data-testid="offering-roster-list">
+            @for (course of rosterCourses(); track course.id) {
+              <li class="offering-workspace__roster-course" data-testid="offering-roster-course">
+                <h3 class="offering-workspace__roster-course-title">
+                  @if (course.title) {
+                    {{ course.title }}
+                  } @else {
+                    {{ 'rplus.offerings.workspace.roster.untitled_course' | translate }}
+                  }
+                  <span class="badge badge-neutral offering-workspace__roster-count">
+                    {{ 'rplus.offerings.workspace.roster.learner_count' | translate }}:
+                    {{ course.learnerCount }}
+                  </span>
+                </h3>
+                @if (course.learners.length > 0) {
+                  <ul class="offering-workspace__roster-learners">
+                    @for (learner of course.learners; track $index) {
+                      <li
+                        class="offering-workspace__roster-learner"
+                        data-testid="offering-roster-learner">
+                        <span class="offering-workspace__roster-learner-name">
+                          {{ learner.displayName }}
+                        </span>
+                        <span class="offering-workspace__roster-detail">
+                          {{ 'rplus.offerings.workspace.roster.progress' | translate }}:
+                          {{ learner.progressPct }}%
+                        </span>
+                        @if (canManage()) {
+                          <!-- WS-B: per-learner two-step unenrol (manager-only). -->
+                          @if (isConfirmingUnenrol(course.id, learner.gcid)) {
+                            <span class="offering-workspace__roster-unenrol">
+                              <button
+                                type="button"
+                                class="btn btn-danger btn-inline"
+                                data-testid="offering-roster-unenrol-confirm"
+                                [disabled]="isRemovingLearner(course.id, learner.gcid)"
+                                (click)="unenrolLearner(course.id, learner.gcid)">
+                                @if (isRemovingLearner(course.id, learner.gcid)) {
+                                  {{ 'rplus.offerings.workspace.roster.unenrol.removing' | translate }}
+                                } @else {
+                                  {{ 'rplus.offerings.workspace.roster.unenrol.confirm' | translate }}
+                                }
+                              </button>
+                              <button
+                                type="button"
+                                class="btn btn-ghost btn-inline"
+                                data-testid="offering-roster-unenrol-cancel"
+                                [disabled]="isRemovingLearner(course.id, learner.gcid)"
+                                (click)="cancelUnenrol()">
+                                {{ 'rplus.offerings.workspace.roster.unenrol.cancel' | translate }}
+                              </button>
+                            </span>
+                          } @else {
+                            <button
+                              type="button"
+                              class="btn btn-ghost btn-inline offering-workspace__roster-unenrol"
+                              data-testid="offering-roster-unenrol"
+                              (click)="startUnenrol(course.id, learner.gcid)">
+                              <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
+                              {{ 'rplus.offerings.workspace.roster.unenrol.button' | translate }}
+                            </button>
+                          }
+                          @if (hasUnenrolError(course.id, learner.gcid)) {
+                            <span
+                              class="offering-workspace__roster-unenrol-error"
+                              data-testid="offering-roster-unenrol-error"
+                              role="alert">
+                              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                              @if (unenrolErrorDetail()) {
+                                {{ unenrolErrorDetail() }}
+                              } @else {
+                                {{ 'rplus.offerings.workspace.roster.unenrol.error' | translate }}
+                              }
+                            </span>
+                          }
+                        }
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p
+                    class="offering-workspace__terminal"
+                    data-testid="offering-roster-course-none">
+                    {{ 'rplus.offerings.workspace.roster.course_none' | translate }}
+                  </p>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="offering-workspace__terminal" data-testid="offering-roster-empty">
+            {{ 'rplus.offerings.workspace.roster.empty' | translate }}
+          </p>
+        }
+      </section>
+    } @else if (isTranscriptActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-transcript"
+        aria-labelledby="offering-tab-transcript"
+        tabindex="0"
+        data-testid="offering-panel-transcript">
+        <div class="offering-workspace__assessments-intro">
+          <h2 class="offering-workspace__lifecycle-title">
+            {{ 'rplus.offerings.workspace.transcript.heading' | translate }}
+          </h2>
+          <p class="offering-workspace__assessments-subtitle">
+            {{ 'rplus.offerings.workspace.transcript.subtitle' | translate }}
+          </p>
+        </div>
+
+        <!-- Phase 1: the REUSED Assessments read — gates everything else, since
+             the join needs the offering's assessment ids up front. -->
+        @if (transcriptAssessmentsLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-transcript-assessments-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.transcript.loading' | translate }}
+          </p>
+        } @else if (transcriptAssessmentsError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-transcript-assessments-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ assessmentsErrorKey() | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-transcript-assessments-retry"
+              (click)="retryAssessments()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (!hasAssessments()) {
+          <p class="offering-workspace__terminal" data-testid="offering-transcript-empty">
+            {{ 'rplus.offerings.workspace.transcript.empty' | translate }}
+          </p>
+        } @else if (transcriptEntriesLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-transcript-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.transcript.loading' | translate }}
+          </p>
+        } @else if (transcriptEntriesError()) {
+          <div class="offering-workspace__conflict" data-testid="offering-transcript-error" role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ transcriptEntriesErrorKey() | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-transcript-retry"
+              (click)="retryTranscript()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (!hasTranscriptLearners()) {
+          <p class="offering-workspace__terminal" data-testid="offering-transcript-no-learners">
+            {{ 'rplus.offerings.workspace.transcript.no_learners' | translate }}
+          </p>
+        } @else {
+          <div class="offering-workspace__transcript-scroll">
+            <table class="offering-workspace__transcript-table" data-testid="offering-transcript-table">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'rplus.offerings.workspace.transcript.col_learner' | translate }}</th>
+                  @for (a of assessments(); track a.id) {
+                    <th scope="col">{{ a.title }}</th>
+                  }
+                  <th scope="col">{{ 'rplus.offerings.workspace.transcript.col_overall' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (learner of transcriptLearners(); track learner.gcid) {
+                  <tr data-testid="offering-transcript-row">
+                    <td
+                      class="offering-workspace__transcript-learner"
+                      data-testid="offering-transcript-learner-name">
+                      @if (learner.displayName) {
+                        {{ learner.displayName }}
+                      } @else {
+                        <code class="offering-workspace__course-ref-muted">{{ learner.gcid }}</code>
+                      }
+                    </td>
+                    @for (a of assessments(); track a.id) {
+                      <td data-testid="offering-transcript-cell">
+                        @if (transcriptCell(a.id, learner.gcid); as entry) {
+                          <span class="offering-workspace__transcript-score">{{ entry.scorePercent }}%</span>
+                          <span
+                            class="badge"
+                            [class]="'badge ' + (entry.passed ? 'badge-success' : 'badge-danger')">
+                            {{
+                              (entry.passed
+                                ? 'rplus.offerings.workspace.transcript.passed'
+                                : 'rplus.offerings.workspace.transcript.failed'
+                              ) | translate
+                            }}
+                          </span>
+                        } @else {
+                          <span
+                            class="offering-workspace__transcript-ungraded"
+                            data-testid="offering-transcript-ungraded">
+                            {{ 'rplus.offerings.workspace.transcript.not_graded' | translate }}
+                          </span>
+                        }
+                      </td>
+                    }
+                    <td class="offering-workspace__transcript-overall" data-testid="offering-transcript-overall">
+                      @if (transcriptLearnerOverall(learner.gcid) === null) {
+                        {{ 'rplus.offerings.workspace.transcript.not_graded' | translate }}
+                      } @else {
+                        {{ transcriptLearnerOverall(learner.gcid) }}%
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr data-testid="offering-transcript-cohort-row">
+                  <th scope="row">{{ 'rplus.offerings.workspace.transcript.cohort_average' | translate }}</th>
+                  @for (a of assessments(); track a.id) {
+                    <td data-testid="offering-transcript-cohort-cell">
+                      @if (transcriptCohortAverage(a.id) === null) {
+                        {{ 'rplus.offerings.workspace.transcript.not_graded' | translate }}
+                      } @else {
+                        {{ transcriptCohortAverage(a.id) }}%
+                      }
+                    </td>
+                  }
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        }
+      </section>
+    } @else if (isAnalyticsActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-analytics"
+        aria-labelledby="offering-tab-analytics"
+        tabindex="0"
+        data-testid="offering-panel-analytics">
+        <div class="offering-workspace__assessments-intro">
+          <h2 class="offering-workspace__lifecycle-title">
+            {{ 'rplus.offerings.workspace.analytics.heading' | translate }}
+          </h2>
+          <p class="offering-workspace__assessments-subtitle">
+            {{ 'rplus.offerings.workspace.analytics.subtitle' | translate }}
+          </p>
+        </div>
+
+        @if (analyticsLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-analytics-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.analytics.loading' | translate }}
+          </p>
+        } @else if (analyticsError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-analytics-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.analytics.error' | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-analytics-retry"
+              (click)="retryAnalytics()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (analytics(); as a) {
+          <dl class="offering-workspace__analytics-grid" data-testid="offering-analytics-grid">
+            <div class="offering-workspace__analytics-stat">
+              <dt>{{ 'rplus.offerings.workspace.analytics.total_enrollments' | translate }}</dt>
+              <dd data-testid="offering-analytics-total-enrollments">{{ a.totalEnrollments }}</dd>
+            </div>
+            <div class="offering-workspace__analytics-stat">
+              <dt>{{ 'rplus.offerings.workspace.analytics.distinct_learners' | translate }}</dt>
+              <dd data-testid="offering-analytics-distinct-learners">{{ a.distinctLearners }}</dd>
+            </div>
+            <div class="offering-workspace__analytics-stat">
+              <dt>{{ 'rplus.offerings.workspace.analytics.capacity' | translate }}</dt>
+              <dd data-testid="offering-analytics-capacity">
+                @if (a.capacityUnbounded) {
+                  {{ 'rplus.offerings.workspace.analytics.unbounded' | translate }}
+                } @else if (a.capacityUtilisationPct !== null) {
+                  {{ a.capacity }} ({{ a.capacityUtilisationPct }}%)
+                } @else {
+                  {{ a.capacity }}
+                }
+              </dd>
+            </div>
+            <div class="offering-workspace__analytics-stat">
+              <dt>{{ 'rplus.offerings.workspace.analytics.assessments' | translate }}</dt>
+              <dd data-testid="offering-analytics-assessment-count">{{ a.assessmentCount }}</dd>
+            </div>
+            <div class="offering-workspace__analytics-stat">
+              <dt>{{ 'rplus.offerings.workspace.analytics.avg_progress' | translate }}</dt>
+              <dd data-testid="offering-analytics-avg-progress">
+                @if (a.avgProgressPct !== null) {
+                  {{ a.avgProgressPct }}%
+                } @else {
+                  {{ 'rplus.offerings.workspace.analytics.not_applicable' | translate }}
+                }
+              </dd>
+            </div>
+            <div class="offering-workspace__analytics-stat">
+              <dt>{{ 'rplus.offerings.workspace.analytics.completion_rate' | translate }}</dt>
+              <dd data-testid="offering-analytics-completion-rate">
+                @if (a.completionRatePct !== null) {
+                  {{ a.completionRatePct }}%
+                } @else {
+                  {{ 'rplus.offerings.workspace.analytics.not_applicable' | translate }}
+                }
+              </dd>
+            </div>
+            <div class="offering-workspace__analytics-stat">
+              <dt>{{ 'rplus.offerings.workspace.analytics.completed' | translate }}</dt>
+              <dd data-testid="offering-analytics-completed">{{ a.completedEnrollments }}</dd>
+            </div>
+            <div class="offering-workspace__analytics-stat">
+              <dt>{{ 'rplus.offerings.workspace.analytics.state' | translate }}</dt>
+              <dd data-testid="offering-analytics-state">{{ a.state }}</dd>
+            </div>
+          </dl>
+
+          @if (analyticsCourses().length > 0) {
+            <table class="offering-workspace__analytics-table" data-testid="offering-analytics-courses">
+              <caption class="offering-workspace__analytics-caption">
+                {{ 'rplus.offerings.workspace.analytics.per_course' | translate }}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'rplus.offerings.workspace.analytics.course' | translate }}</th>
+                  <th scope="col">
+                    {{ 'rplus.offerings.workspace.analytics.enrollments' | translate }}
+                  </th>
+                  <th scope="col">
+                    {{ 'rplus.offerings.workspace.analytics.avg_progress' | translate }}
+                  </th>
+                  <th scope="col">
+                    {{ 'rplus.offerings.workspace.analytics.completion_rate' | translate }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (course of analyticsCourses(); track course.id) {
+                  <tr data-testid="offering-analytics-course-row">
+                    <td>
+                      @if (course.title) {
+                        {{ course.title }}
+                      } @else {
+                        {{ 'rplus.offerings.workspace.analytics.untitled_course' | translate }}
+                      }
+                    </td>
+                    <td>{{ course.enrollments }}</td>
+                    <td>
+                      @if (course.avgProgressPct !== null) {
+                        {{ course.avgProgressPct }}%
+                      } @else {
+                        {{ 'rplus.offerings.workspace.analytics.not_applicable' | translate }}
+                      }
+                    </td>
+                    <td>
+                      @if (course.completionRatePct !== null) {
+                        {{ course.completionRatePct }}%
+                      } @else {
+                        {{ 'rplus.offerings.workspace.analytics.not_applicable' | translate }}
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+
+          <p class="offering-workspace__analytics-deferred" data-testid="offering-analytics-deferred">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.analytics.deferred_note' | translate }}
+          </p>
+        }
+      </section>
+    } @else if (isScheduleActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-schedule"
+        aria-labelledby="offering-tab-schedule"
+        tabindex="0"
+        data-testid="offering-panel-schedule">
+        <div class="offering-workspace__assessments-head">
+          <div class="offering-workspace__assessments-intro">
+            <h2 class="offering-workspace__lifecycle-title">
+              {{ 'rplus.offerings.workspace.schedule.heading' | translate }}
+            </h2>
+            <p class="offering-workspace__assessments-subtitle">
+              {{ 'rplus.offerings.workspace.schedule.subtitle' | translate }}
+            </p>
+          </div>
+          <!-- Add session is admin-only (role-driven VISIBILITY, not disabled). -->
+          @if (canManage()) {
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-testid="offering-schedule-add"
+              (click)="openSessionForm()">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.schedule.add' | translate }}
+            </button>
+          }
+        </div>
+
+        <!-- CHO-2191 Rooms: create bookable rooms so the schedule picker has
+             options (the picker keys the double-book / over-capacity gate on
+             room_id). Admin-only; outside the session form (no nested form). -->
+        @if (canManage()) {
+          <div class="offering-workspace__room-manage" data-testid="offering-rooms-manage">
+            @if (!isRoomFormOpen()) {
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="offering-schedule-room-add"
+                (click)="openRoomForm()">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                {{ 'rplus.offerings.workspace.schedule.room_add' | translate }}
+              </button>
+              @if (roomsLoaded() && !hasRooms() && !roomsLoading() && !roomsError()) {
+                <span
+                  class="offering-workspace__hint"
+                  data-testid="offering-schedule-rooms-empty">
+                  {{ 'rplus.offerings.workspace.schedule.rooms_empty' | translate }}
+                </span>
+              }
+            } @else {
+              <div
+                class="offering-workspace__section-form"
+                data-testid="offering-schedule-room-form">
+                <h3 class="offering-workspace__picker-title">
+                  {{ 'rplus.offerings.workspace.schedule.room_form_title' | translate }}
+                </h3>
+                <div class="offering-workspace__section-grid">
+                  <label class="offering-workspace__section-field">
+                    <span>{{
+                      'rplus.offerings.workspace.schedule.room_name_label' | translate
+                    }}</span>
+                    <input
+                      type="text"
+                      data-testid="offering-schedule-room-name"
+                      (input)="onRoomNameInput($event)"
+                      [attr.aria-label]="
+                        'rplus.offerings.workspace.schedule.room_name_label' | translate
+                      " />
+                  </label>
+                  <label class="offering-workspace__section-field">
+                    <span>{{
+                      'rplus.offerings.workspace.schedule.room_capacity_label' | translate
+                    }}</span>
+                    <input
+                      type="number"
+                      min="1"
+                      data-testid="offering-schedule-room-capacity"
+                      (input)="onRoomCapacityInput($event)"
+                      [attr.aria-label]="
+                        'rplus.offerings.workspace.schedule.room_capacity_label' | translate
+                      " />
+                  </label>
+                </div>
+                @if (roomCreateError()) {
+                  <p
+                    class="offering-workspace__action-error"
+                    data-testid="offering-schedule-room-error"
+                    role="alert">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    {{ 'rplus.offerings.workspace.schedule.room_create_error' | translate }}
+                  </p>
+                }
+                <div class="offering-workspace__actions">
+                  <button
+                    type="button"
+                    class="btn btn-ghost"
+                    data-testid="offering-schedule-room-cancel"
+                    (click)="closeRoomForm()">
+                    {{ 'rplus.offerings.workspace.schedule.cancel' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    data-testid="offering-schedule-room-submit"
+                    [disabled]="!canCreateRoom() || isCreatingRoom()"
+                    (click)="onRoomSubmit($event)">
+                    @if (isCreatingRoom()) {
+                      {{ 'rplus.offerings.workspace.schedule.room_submitting' | translate }}
+                    } @else {
+                      {{ 'rplus.offerings.workspace.schedule.room_submit' | translate }}
+                    }
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        @if (sessionCreateSucceeded()) {
+          <p
+            class="offering-workspace__assessments-success"
+            data-testid="offering-schedule-create-success"
+            role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.schedule.create_success' | translate }}
+          </p>
+        }
+
+        <!-- Inline add-session form (manager-only; signal-driven, no FormsModule). -->
+        @if (isSessionFormOpen()) {
+          <form
+            class="offering-workspace__section-form"
+            data-testid="offering-schedule-form"
+            (submit)="onSessionSubmit($event)">
+            <h3 class="offering-workspace__picker-title">
+              {{ 'rplus.offerings.workspace.schedule.form_title' | translate }}
+            </h3>
+
+            <label class="offering-workspace__section-field">
+              <span>{{ 'rplus.offerings.workspace.schedule.title_label' | translate }}</span>
+              <input
+                type="text"
+                data-testid="offering-schedule-title"
+                [attr.placeholder]="
+                  'rplus.offerings.workspace.schedule.title_placeholder' | translate
+                "
+                [attr.aria-label]="'rplus.offerings.workspace.schedule.title_label' | translate"
+                (input)="onSessionTitleInput($event)"
+                required />
+            </label>
+
+            <div class="offering-workspace__section-grid">
+              <label class="offering-workspace__section-field">
+                <span>{{ 'rplus.offerings.workspace.schedule.starts_label' | translate }}</span>
+                <input
+                  type="datetime-local"
+                  data-testid="offering-schedule-starts"
+                  [attr.aria-label]="'rplus.offerings.workspace.schedule.starts_label' | translate"
+                  (input)="onSessionStartsAtInput($event)"
+                  required />
+              </label>
+              <label class="offering-workspace__section-field">
+                <span>{{ 'rplus.offerings.workspace.schedule.ends_label' | translate }}</span>
+                <input
+                  type="datetime-local"
+                  data-testid="offering-schedule-ends"
+                  [attr.aria-label]="'rplus.offerings.workspace.schedule.ends_label' | translate"
+                  (input)="onSessionEndsAtInput($event)"
+                  required />
+              </label>
+              <label class="offering-workspace__section-field">
+                <span>{{ 'rplus.offerings.workspace.schedule.room_label' | translate }}</span>
+                @if (roomsLoading()) {
+                  <span
+                    class="offering-workspace__terminal"
+                    data-testid="offering-schedule-rooms-loading"
+                    role="status"
+                    aria-busy="true">
+                    {{ 'rplus.offerings.workspace.schedule.rooms_loading' | translate }}
+                  </span>
+                } @else if (roomsError()) {
+                  <span
+                    class="offering-workspace__action-error"
+                    data-testid="offering-schedule-rooms-error"
+                    role="alert">
+                    {{ 'rplus.offerings.workspace.schedule.rooms_error' | translate }}
+                  </span>
+                } @else {
+                  <!-- CHO-2191: a room is booked by room_id from this picker,
+                       never free text (the BE 400s free text with no id). -->
+                  <select
+                    data-testid="offering-schedule-room"
+                    (change)="onSessionRoomPicked($event)"
+                    [attr.aria-label]="
+                      'rplus.offerings.workspace.schedule.room_label' | translate
+                    ">
+                    <option value="" [selected]="sessionRoomId() === ''">
+                      {{ 'rplus.offerings.workspace.schedule.room_none' | translate }}
+                    </option>
+                    @for (rm of rooms(); track rm.id) {
+                      <option [value]="rm.id" [selected]="rm.id === sessionRoomId()">
+                        {{ rm.name }} ({{ rm.capacity }})
+                      </option>
+                    }
+                  </select>
+                }
+              </label>
+              <label class="offering-workspace__section-field">
+                <span>{{
+                  'rplus.offerings.workspace.schedule.instructor_label' | translate
+                }}</span>
+                <!-- Name-based search — no raw-GCID paste; scoped to instructor-role members. -->
+                <!-- minChars 0 browses on focus (CHO-2291): depends on the member port paging an empty q. -->
+                <chora-entity-picker
+                  data-testid="offering-schedule-instructor"
+                  entityType="member"
+                  [searchPortOverride]="memberSearch"
+                  [facets]="instructorFacet"
+                  [value]="sessionInstructorPicked()"
+                  variant="single"
+                  [minChars]="0"
+                  [placeholder]="
+                    'rplus.offerings.workspace.schedule.instructor_search_placeholder'
+                      | translate
+                  "
+                  (picked)="onSessionInstructorPicked($event)" />
+              </label>
+            </div>
+
+            @if (sessionCreateError()) {
+              <p
+                class="offering-workspace__action-error"
+                data-testid="offering-schedule-create-error"
+                role="alert">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                {{ sessionCreateErrorKey() | translate }}
+              </p>
+            }
+
+            <div class="offering-workspace__actions">
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-testid="offering-schedule-cancel"
+                (click)="closeSessionForm()">
+                {{ 'rplus.offerings.workspace.schedule.cancel' | translate }}
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                data-testid="offering-schedule-submit"
+                [disabled]="!canCreateSession() || isCreatingSession()">
+                @if (isCreatingSession()) {
+                  {{ 'rplus.offerings.workspace.schedule.submitting' | translate }}
+                } @else {
+                  {{ 'rplus.offerings.workspace.schedule.submit' | translate }}
+                }
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- Session list (loading / error / list / empty). -->
+        @if (scheduleLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-schedule-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.schedule.loading' | translate }}
+          </p>
+        } @else if (scheduleError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-schedule-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.schedule.error' | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-schedule-retry"
+              (click)="retrySchedule()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (hasSessions()) {
+          <ul class="offering-workspace__sessions-list" data-testid="offering-schedule-list">
+            @for (sess of sessions(); track sess.id) {
+              <li class="offering-workspace__session-card" data-testid="offering-schedule-row">
+                <h3 class="offering-workspace__session-title">
+                  @if (sess.title) {
+                    {{ sess.title }}
+                  } @else {
+                    {{ 'rplus.offerings.workspace.schedule.untitled' | translate }}
+                  }
+                </h3>
+                <dl class="offering-workspace__section-meta">
+                  <div class="offering-workspace__section-meta-item">
+                    <dt>{{ 'rplus.offerings.workspace.schedule.when_label' | translate }}</dt>
+                    <dd>
+                      <time [attr.datetime]="sess.startsAt">{{
+                        sess.startsAt | date: 'medium'
+                      }}</time>
+                      <span aria-hidden="true"> – </span>
+                      <time [attr.datetime]="sess.endsAt">{{ sess.endsAt | date: 'medium' }}</time>
+                    </dd>
+                  </div>
+                  @if (sess.room) {
+                    <div class="offering-workspace__section-meta-item">
+                      <dt>{{ 'rplus.offerings.workspace.schedule.room_label' | translate }}</dt>
+                      <dd>{{ sess.room }}</dd>
+                    </div>
+                  }
+                  @if (sess.instructorGcid) {
+                    <div class="offering-workspace__section-meta-item">
+                      <dt>
+                        {{ 'rplus.offerings.workspace.schedule.instructor_label' | translate }}
+                      </dt>
+                      <dd><code>{{ sess.instructorGcid }}</code></dd>
+                    </div>
+                  }
+                </dl>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="offering-workspace__terminal" data-testid="offering-schedule-empty">
+            {{ 'rplus.offerings.workspace.schedule.empty' | translate }}
+          </p>
+        }
+      </section>
+    } @else if (isAttendanceActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-attendance"
+        aria-labelledby="offering-tab-attendance"
+        tabindex="0"
+        data-testid="offering-panel-attendance">
+        <div class="offering-workspace__assessments-intro">
+          <h2 class="offering-workspace__lifecycle-title">
+            {{ 'rplus.offerings.workspace.attendance.heading' | translate }}
+          </h2>
+          <p class="offering-workspace__assessments-subtitle">
+            {{ 'rplus.offerings.workspace.attendance.subtitle' | translate }}
+          </p>
+        </div>
+
+        <!-- Session selector is populated from the schedule read (shared source). -->
+        @if (attendanceSessionsLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-attendance-sessions-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.attendance.sessions_loading' | translate }}
+          </p>
+        } @else if (attendanceSessionsError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-attendance-sessions-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.attendance.sessions_error' | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-attendance-sessions-retry"
+              (click)="retryAttendanceSessions()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (hasAttendanceSessions()) {
+          <label class="offering-workspace__section-field offering-workspace__attendance-picker">
+            <span>{{ 'rplus.offerings.workspace.attendance.session_label' | translate }}</span>
+            <select
+              data-testid="offering-attendance-session-select"
+              [attr.aria-label]="'rplus.offerings.workspace.attendance.session_label' | translate"
+              (change)="onSessionSelect($event)">
+              <option value="">
+                {{ 'rplus.offerings.workspace.attendance.session_placeholder' | translate }}
+              </option>
+              @for (sess of attendanceSessions(); track $index) {
+                <option [value]="sess.id" [selected]="sess.id === selectedSessionId()">
+                  {{ sess.title }}
+                </option>
+              }
+            </select>
+          </label>
+
+          @if (hasSelectedSession()) {
+            @if (attendanceLoading()) {
+              <p
+                class="offering-workspace__terminal"
+                data-testid="offering-attendance-loading"
+                role="status"
+                aria-busy="true">
+                {{ 'rplus.offerings.workspace.attendance.loading' | translate }}
+              </p>
+            } @else if (attendanceError()) {
+              <div
+                class="offering-workspace__conflict"
+                data-testid="offering-attendance-error"
+                role="alert">
+                <p>
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ 'rplus.offerings.workspace.attendance.error' | translate }}
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  data-testid="offering-attendance-retry"
+                  (click)="retryAttendance()">
+                  <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                  {{ 'rplus.common.retry' | translate }}
+                </button>
+              </div>
+            } @else {
+              <!-- Mark form is admin-only (role-driven VISIBILITY, not disabled). -->
+              @if (canManage()) {
+                <form
+                  class="offering-workspace__section-form"
+                  data-testid="offering-attendance-mark-form"
+                  (submit)="onMarkSubmit($event)">
+                  <h3 class="offering-workspace__picker-title">
+                    {{ 'rplus.offerings.workspace.attendance.mark_title' | translate }}
+                  </h3>
+                  <div class="offering-workspace__section-grid">
+                    <label class="offering-workspace__section-field">
+                      <span>{{ 'rplus.offerings.workspace.attendance.gcid_label' | translate }}</span>
+                      <!-- Name-based search — no raw-GCID paste. -->
+                      <!-- minChars 0 browses on focus (CHO-2291): depends on the member port paging an empty q. -->
+                      <chora-entity-picker
+                        data-testid="offering-attendance-gcid"
+                        entityType="member"
+                        [searchPortOverride]="memberSearch"
+                        [value]="markGcidPicked()"
+                        variant="single"
+                        [minChars]="0"
+                        [placeholder]="
+                          'rplus.offerings.workspace.attendance.gcid_search_placeholder'
+                            | translate
+                        "
+                        (picked)="onMarkGcidPicked($event)" />
+                    </label>
+                    <label class="offering-workspace__section-field">
+                      <span>{{
+                        'rplus.offerings.workspace.attendance.status_label' | translate
+                      }}</span>
+                      <select
+                        data-testid="offering-attendance-status"
+                        [attr.aria-label]="
+                          'rplus.offerings.workspace.attendance.status_label' | translate
+                        "
+                        (change)="onMarkStatusChange($event)">
+                        @for (st of attendanceStatuses; track st) {
+                          <option [value]="st" [selected]="st === markStatus()">
+                            {{ attendanceStatusLabelKey(st) | translate }}
+                          </option>
+                        }
+                      </select>
+                    </label>
+                  </div>
+                  <div class="offering-workspace__actions">
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                      data-testid="offering-attendance-mark-submit"
+                      [disabled]="!canMarkAttendance() || isMarking()">
+                      @if (isMarking()) {
+                        {{ 'rplus.offerings.workspace.attendance.marking' | translate }}
+                      } @else {
+                        {{ 'rplus.offerings.workspace.attendance.mark' | translate }}
+                      }
+                    </button>
+                  </div>
+                </form>
+              }
+
+              @if (markSucceeded()) {
+                <p
+                  class="offering-workspace__assessments-success"
+                  data-testid="offering-attendance-mark-success"
+                  role="status">
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  {{ 'rplus.offerings.workspace.attendance.mark_success' | translate }}
+                </p>
+              }
+              @if (markError()) {
+                <p
+                  class="offering-workspace__action-error"
+                  data-testid="offering-attendance-mark-error"
+                  role="alert">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ 'rplus.offerings.workspace.attendance.mark_error' | translate }}
+                </p>
+              }
+
+              @if (hasAttendanceRecords()) {
+                <table
+                  class="offering-workspace__attendance-table"
+                  data-testid="offering-attendance-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">
+                        {{ 'rplus.offerings.workspace.attendance.col_learner' | translate }}
+                      </th>
+                      <th scope="col">
+                        {{ 'rplus.offerings.workspace.attendance.col_status' | translate }}
+                      </th>
+                      <th scope="col">
+                        {{ 'rplus.offerings.workspace.attendance.col_source' | translate }}
+                      </th>
+                      <th scope="col">
+                        {{ 'rplus.offerings.workspace.attendance.col_recorded' | translate }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (rec of attendanceRecords(); track $index) {
+                      <tr data-testid="offering-attendance-row">
+                        <td><code>{{ rec.gcid }}</code></td>
+                        <td>
+                          <span
+                            class="badge"
+                            [class]="'badge ' + attendanceStatusBadgeClass(rec.status)">
+                            {{ attendanceStatusLabelKey(rec.status) | translate }}
+                          </span>
+                        </td>
+                        <td>
+                          @if (rec.source) {
+                            {{ attendanceSourceLabelKey(rec.source) | translate }}
+                          }
+                        </td>
+                        <td>
+                          @if (rec.recordedAt) {
+                            <time [attr.datetime]="rec.recordedAt">{{
+                              rec.recordedAt | date: 'short'
+                            }}</time>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <p class="offering-workspace__terminal" data-testid="offering-attendance-empty">
+                  {{ 'rplus.offerings.workspace.attendance.empty' | translate }}
+                </p>
+              }
+            }
+          } @else {
+            <p
+              class="offering-workspace__terminal"
+              data-testid="offering-attendance-pick-session">
+              {{ 'rplus.offerings.workspace.attendance.pick_session' | translate }}
+            </p>
+          }
+        } @else {
+          <p class="offering-workspace__terminal" data-testid="offering-attendance-no-sessions">
+            {{ 'rplus.offerings.workspace.attendance.no_sessions' | translate }}
+          </p>
+        }
+      </section>
+    } @else if (isPublishActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-publish"
+        aria-labelledby="offering-tab-publish"
+        tabindex="0"
+        data-testid="offering-panel-publish">
+        <div class="offering-workspace__assessments-head">
+          <div class="offering-workspace__assessments-intro">
+            <h2 class="offering-workspace__lifecycle-title">
+              {{ 'rplus.offerings.workspace.publish.heading' | translate }}
+            </h2>
+            <p class="offering-workspace__assessments-subtitle">
+              {{ 'rplus.offerings.workspace.publish.subtitle' | translate }}
+            </p>
+          </div>
+          <!-- Publish is admin-only (role-driven VISIBILITY, not disabled); only
+               offered once the GET has resolved (needs the loaded course set). -->
+          @if (!publishLoading() && !publishError() && canManage()) {
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-testid="offering-publish-action"
+              [disabled]="isPublishing()"
+              (click)="publishToCatalogue()">
+              <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+              @if (isPublishing()) {
+                {{ 'rplus.offerings.workspace.publish.publishing' | translate }}
+              } @else {
+                {{ 'rplus.offerings.workspace.publish.action' | translate }}
+              }
+            </button>
+          }
+        </div>
+
+        @if (publishLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-publish-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.publish.loading' | translate }}
+          </p>
+        } @else if (publishError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-publish-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.publish.error' | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-publish-retry"
+              (click)="retryPublish()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else {
+          @if (publishSucceeded()) {
+            <p
+              class="offering-workspace__assessments-success"
+              data-testid="offering-publish-success"
+              role="status">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              {{ publishedCount() }}
+              {{ 'rplus.offerings.workspace.publish.published_count' | translate }}
+            </p>
+          }
+          @if (publishActionError()) {
+            <p
+              class="offering-workspace__action-error"
+              data-testid="offering-publish-action-error"
+              role="alert">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ 'rplus.offerings.workspace.publish.action_error' | translate }}
+            </p>
+          }
+
+          @if (hasPublishCourses()) {
+            <ul class="offering-workspace__publish-list" data-testid="offering-publish-list">
+              @for (course of publishCourses(); track course.id) {
+                <li class="offering-workspace__publish-course" data-testid="offering-publish-course">
+                  <span class="offering-workspace__publish-course-title">
+                    @if (course.title) {
+                      {{ course.title }}
+                    } @else {
+                      {{ 'rplus.offerings.workspace.publish.untitled_course' | translate }}
+                    }
+                  </span>
+                  <span
+                    class="badge"
+                    [class]="'badge ' + publishVisibilityBadgeClass(course.visibility)"
+                    data-testid="offering-publish-visibility">
+                    @if (course.visibility) {
+                      {{ publishVisibilityLabelKey(course.visibility) | translate }}
+                    } @else {
+                      {{ 'rplus.offerings.workspace.publish.visibility_unset' | translate }}
+                    }
+                  </span>
+                  <span class="offering-workspace__publish-state" data-testid="offering-publish-state">
+                    @if (course.published) {
+                      <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                      {{ 'rplus.offerings.workspace.publish.published_yes' | translate }}
+                    } @else {
+                      {{ 'rplus.offerings.workspace.publish.published_no' | translate }}
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="offering-workspace__terminal" data-testid="offering-publish-empty">
+              {{ 'rplus.offerings.workspace.publish.empty' | translate }}
+            </p>
+          }
+        }
+      </section>
+    } @else if (isPrerequisitesActive()) {
+      <section
+        class="offering-workspace__panel glass-panel"
+        role="tabpanel"
+        id="offering-panel-prerequisites"
+        aria-labelledby="offering-tab-prerequisites"
+        tabindex="0"
+        data-testid="offering-panel-prerequisites">
+        <div class="offering-workspace__assessments-intro">
+          <h2 class="offering-workspace__lifecycle-title">
+            {{ 'rplus.offerings.workspace.prerequisites.heading' | translate }}
+          </h2>
+          <p class="offering-workspace__assessments-subtitle">
+            {{ 'rplus.offerings.workspace.prerequisites.subtitle' | translate }}
+          </p>
+        </div>
+
+        <!-- Panel-level write feedback (add success + remove error). -->
+        @if (prerequisiteAddSucceeded()) {
+          <p
+            class="offering-workspace__assessments-success"
+            data-testid="offering-prerequisites-add-success"
+            role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.prerequisites.add_success' | translate }}
+          </p>
+        }
+        @if (prerequisiteRemoveError()) {
+          <p
+            class="offering-workspace__action-error"
+            data-testid="offering-prerequisites-remove-error"
+            role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ 'rplus.offerings.workspace.prerequisites.remove_error' | translate }}
+          </p>
+        }
+
+        @if (prerequisitesLoading()) {
+          <p
+            class="offering-workspace__terminal"
+            data-testid="offering-prerequisites-loading"
+            role="status"
+            aria-busy="true">
+            {{ 'rplus.offerings.workspace.prerequisites.loading' | translate }}
+          </p>
+        } @else if (prerequisitesError()) {
+          <div
+            class="offering-workspace__conflict"
+            data-testid="offering-prerequisites-error"
+            role="alert">
+            <p>
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{ prerequisitesErrorKey() | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-prerequisites-retry"
+              (click)="retryPrerequisites()">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (hasPrerequisiteCourses()) {
+          <ul class="offering-workspace__prereq-list" data-testid="offering-prerequisites-list">
+            @for (course of prerequisiteCourses(); track course.id) {
+              <li
+                class="offering-workspace__prereq-course"
+                data-testid="offering-prerequisites-course">
+                <div class="offering-workspace__prereq-course-head">
+                  <h3 class="offering-workspace__prereq-course-title">
+                    @if (course.title) {
+                      {{ course.title }}
+                    } @else {
+                      {{ 'rplus.offerings.workspace.prerequisites.untitled_course' | translate }}
+                    }
+                  </h3>
+                  <!-- Add is admin-only (role-driven VISIBILITY, not disabled). -->
+                  @if (canManage()) {
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      data-testid="offering-prerequisites-add"
+                      (click)="openPrerequisiteAddForm(course.id)">
+                      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                      {{ 'rplus.offerings.workspace.prerequisites.add_edge' | translate }}
+                    </button>
+                  }
+                </div>
+
+                <!-- Inline add-edge form (manager-only; signal-driven, no FormsModule). -->
+                @if (canManage() && isPrerequisiteAddOpen(course.id)) {
+                  <form
+                    class="offering-workspace__section-form"
+                    data-testid="offering-prerequisites-add-form"
+                    (submit)="onPrerequisiteAddSubmit($event, course.id)">
+                    <h4 class="offering-workspace__picker-title">
+                      {{ 'rplus.offerings.workspace.prerequisites.add_form_title' | translate }}
+                    </h4>
+
+                    <div class="offering-workspace__section-grid">
+                      <label class="offering-workspace__section-field">
+                        <span>{{
+                          'rplus.offerings.workspace.prerequisites.target_label' | translate
+                        }}</span>
+                        <!-- Name-based search — no raw course-ID/UUID paste, and no
+                             single-page dropdown ceiling (kills the prior bounded
+                             PUBLISHED-course `<select>`). -->
+                        <!-- minChars 0 browses on focus (CHO-2291): depends on the course port paging an empty q. -->
+                        <chora-entity-picker
+                          data-testid="offering-prerequisites-target-picker"
+                          entityType="course"
+                          [searchPortOverride]="prerequisiteTargetSearchPort"
+                          [value]="prerequisiteTargetPicked()"
+                          variant="single"
+                          [minChars]="0"
+                          [placeholder]="
+                            'rplus.offerings.workspace.prerequisites.target_search_placeholder'
+                              | translate
+                          "
+                          (picked)="onPrerequisiteTargetPicked($event)" />
+                      </label>
+                      <label class="offering-workspace__section-field">
+                        <span>{{
+                          'rplus.offerings.workspace.prerequisites.kind_label' | translate
+                        }}</span>
+                        <select
+                          data-testid="offering-prerequisites-kind"
+                          [attr.aria-label]="
+                            'rplus.offerings.workspace.prerequisites.kind_label' | translate
+                          "
+                          (change)="onPrerequisiteKindChange($event)">
+                          @for (k of prerequisiteKinds; track k) {
+                            <option [value]="k" [selected]="k === prerequisiteKind()">
+                              {{ prerequisiteKindLabelKey(k) | translate }}
+                            </option>
+                          }
+                        </select>
+                      </label>
+                    </div>
+
+                    @if (prerequisiteAddError()) {
+                      <p
+                        class="offering-workspace__action-error"
+                        data-testid="offering-prerequisites-add-error"
+                        role="alert">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        @if (prerequisiteAddErrorDetail()) {
+                          {{ prerequisiteAddErrorDetail() }}
+                        } @else {
+                          {{ 'rplus.offerings.workspace.prerequisites.add_error' | translate }}
+                        }
+                      </p>
+                    }
+
+                    <div class="offering-workspace__actions">
+                      <button
+                        type="button"
+                        class="btn btn-ghost"
+                        data-testid="offering-prerequisites-add-cancel"
+                        (click)="closePrerequisiteAddForm()">
+                        {{ 'rplus.offerings.workspace.prerequisites.cancel' | translate }}
+                      </button>
+                      <button
+                        type="submit"
+                        class="btn btn-primary"
+                        data-testid="offering-prerequisites-add-submit"
+                        [disabled]="!canAddPrerequisite() || isAddingPrerequisite()">
+                        @if (isAddingPrerequisite()) {
+                          {{ 'rplus.offerings.workspace.prerequisites.adding' | translate }}
+                        } @else {
+                          {{ 'rplus.offerings.workspace.prerequisites.add' | translate }}
+                        }
+                      </button>
+                    </div>
+                  </form>
+                }
+
+                @if (course.prerequisites.length > 0) {
+                  <ul class="offering-workspace__prereq-edges" data-testid="offering-prerequisites-edges">
+                    @for (edge of course.prerequisites; track edge.prerequisiteCourseId) {
+                      <li
+                        class="offering-workspace__prereq-edge"
+                        data-testid="offering-prerequisites-edge">
+                        <span
+                          class="badge offering-workspace__prereq-kind"
+                          [class]="'badge ' + prerequisiteKindBadgeClass(edge.kind)"
+                          data-testid="offering-prerequisites-edge-kind">
+                          {{ prerequisiteKindLabelKey(edge.kind) | translate }}
+                        </span>
+                        <span
+                          class="offering-workspace__prereq-edge-title"
+                          data-testid="offering-prerequisites-edge-title">
+                          @if (edge.prerequisiteCourseTitle) {
+                            {{ edge.prerequisiteCourseTitle }}
+                          } @else {
+                            {{ edge.prerequisiteCourseId }}
+                          }
+                        </span>
+                        <!-- Remove is admin-only (role-driven VISIBILITY). -->
+                        @if (canManage()) {
+                          <span class="offering-workspace__prereq-edge-actions">
+                            <button
+                              type="button"
+                              class="btn btn-ghost btn-danger"
+                              data-testid="offering-prerequisites-remove"
+                              [disabled]="isRemovingPrerequisite(course.id, edge.prerequisiteCourseId)"
+                              (click)="removePrerequisiteEdge(course, edge)">
+                              @if (isRemovingPrerequisite(course.id, edge.prerequisiteCourseId)) {
+                                {{ 'rplus.offerings.workspace.prerequisites.removing' | translate }}
+                              } @else {
+                                {{ 'rplus.offerings.workspace.prerequisites.remove' | translate }}
+                              }
+                            </button>
+                          </span>
+                        }
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p
+                    class="offering-workspace__terminal"
+                    data-testid="offering-prerequisites-course-empty">
+                    {{ 'rplus.offerings.workspace.prerequisites.course_empty' | translate }}
+                  </p>
+                }
+
+                <!-- Free-text PrerequisiteNotes (read-only; author-supplied, non-lossy legacy field). -->
+                @if (course.prerequisiteNotes.length > 0) {
+                  <div
+                    class="offering-workspace__prereq-notes"
+                    data-testid="offering-prerequisites-notes">
+                    <h4 class="offering-workspace__picker-title">
+                      {{ 'rplus.offerings.workspace.prerequisites.notes_heading' | translate }}
+                    </h4>
+                    <ul class="offering-workspace__prereq-notes-list">
+                      @for (note of course.prerequisiteNotes; track note) {
+                        <li data-testid="offering-prerequisites-note">{{ note }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="offering-workspace__terminal" data-testid="offering-prerequisites-empty">
+            {{ 'rplus.offerings.workspace.prerequisites.empty' | translate }}
+          </p>
+        }
+      </section>
+    } @else if (activeTab(); as tab) {
+      <section
+        class="offering-workspace__panel offering-workspace__panel--placeholder glass-panel"
+        role="tabpanel"
+        [id]="'offering-panel-' + tab.id"
+        [attr.aria-labelledby]="'offering-tab-' + tab.id"
+        tabindex="0"
+        data-testid="offering-panel-placeholder">
+        <i class="fa-solid fa-screwdriver-wrench offering-workspace__coming-soon-icon" aria-hidden="true"></i>
+        <h2 class="offering-workspace__coming-soon-title">
+          {{ tab.labelKey | translate }}
+        </h2>
+        <p class="offering-workspace__coming-soon-body">
+          {{ 'rplus.offerings.workspace.coming_soon_body' | translate }}
+        </p>
+      </section>
+    }
+  }
+</section>

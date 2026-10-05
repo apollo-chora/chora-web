@@ -1,0 +1,638 @@
+:host {
+  display: block;
+}
+
+.portable-data {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Summary Bar
+  // -------------------------------------------------------------------------
+
+  &__summary-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+    padding: var(--chora-space-md, 16px) var(--chora-space-lg, 24px);
+    background: var(--chora-color-surface-1, #fafafa);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    margin-block-end: var(--chora-space-lg, 24px);
+    flex-wrap: wrap;
+  }
+
+  &__summary-item {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    flex: 1;
+    min-width: 200px;
+
+    &--gcid {
+      .portable-data__summary-icon {
+        color: var(--chora-color-primary, #2563eb);
+      }
+    }
+
+    &--tenant {
+      .portable-data__summary-icon {
+        color: var(--chora-color-text-muted, #666);
+      }
+    }
+  }
+
+  &__summary-icon {
+    font-family: 'Material Icons Outlined', sans-serif;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  &__summary-count {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--chora-color-text, #111);
+  }
+
+  &__summary-label {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__summary-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--chora-color-border, #e5e5e5);
+    flex-shrink: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Layout (stacked on tablet, side-by-side on desktop)
+  // -------------------------------------------------------------------------
+
+  &__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--chora-space-lg, 24px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Panels
+  // -------------------------------------------------------------------------
+
+  &__gcid-panel,
+  &__tenant-panel {
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    padding: var(--chora-space-md, 16px);
+  }
+
+  &__panel-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-xs, 4px);
+  }
+
+  &__panel-desc {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0 0 var(--chora-space-md, 16px);
+    line-height: 1.4;
+  }
+
+  // -------------------------------------------------------------------------
+  // Stat List
+  // -------------------------------------------------------------------------
+
+  &__stat-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: var(--chora-color-surface-1, #fafafa);
+    border-radius: var(--chora-radius-sm, 4px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    gap: var(--chora-space-sm, 8px);
+
+    &--portable {
+      background: linear-gradient(
+        135deg,
+        rgba(37, 99, 235, 0.04) 0%,
+        rgba(37, 99, 235, 0.08) 100%
+      );
+      border-color: rgba(37, 99, 235, 0.15);
+    }
+
+    &--tenant-scoped {
+      background: var(--chora-color-surface-1, #fafafa);
+    }
+  }
+
+  &__stat-left {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__stat-right {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    flex-shrink: 0;
+  }
+
+  &__stat-icon {
+    font-family: 'Material Icons Outlined', sans-serif;
+    font-size: 1rem;
+    flex-shrink: 0;
+    color: var(--chora-color-primary, #2563eb);
+
+    &--tenant {
+      color: var(--chora-color-text-muted, #888);
+    }
+  }
+
+  &__stat-label {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  &__stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--chora-color-text, #111);
+  }
+
+  // -------------------------------------------------------------------------
+  // Portable / Tenant Scope Badges
+  // -------------------------------------------------------------------------
+
+  &__portable-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--chora-color-primary, #2563eb);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  &__tenant-scope-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.625rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--chora-color-surface-2, #f0f0f0);
+    color: var(--chora-color-text-muted, #666);
+    white-space: nowrap;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // -------------------------------------------------------------------------
+  // Tenant Tabs
+  // -------------------------------------------------------------------------
+
+  &__tabs {
+    display: flex;
+    gap: var(--chora-space-xs, 4px);
+    margin-block-end: var(--chora-space-md, 16px);
+    flex-wrap: wrap;
+    border-block-end: 1px solid var(--chora-color-border, #e5e5e5);
+    padding-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-xs, 4px) var(--chora-space-md, 16px);
+    border: none;
+    border-radius: var(--chora-radius-sm, 4px) var(--chora-radius-sm, 4px) 0 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--chora-color-text-muted, #666);
+
+    &--active {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+    }
+
+    &--inactive {
+      opacity: 0.7;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__tab-badge {
+    font-size: 0.625rem;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  // -------------------------------------------------------------------------
+  // Tenant Detail
+  // -------------------------------------------------------------------------
+
+  &__tenant-detail {
+    animation: fadeIn 0.15s ease-in;
+  }
+
+  &__tenant-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-end: var(--chora-space-md, 16px);
+    flex-wrap: wrap;
+  }
+
+  &__tenant-badge {
+    font-size: 0.6875rem;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-weight: 500;
+
+    &--active {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    &--inactive {
+      background: #fecaca;
+      color: #991b1b;
+    }
+  }
+
+  &__tenant-roles {
+    display: flex;
+    gap: var(--chora-space-xs, 4px);
+    flex-wrap: wrap;
+  }
+
+  &__role-chip {
+    font-size: 0.6875rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    color: var(--chora-color-text-muted, #555);
+    text-transform: capitalize;
+  }
+
+  // -------------------------------------------------------------------------
+  // Per-Tenant Export
+  // -------------------------------------------------------------------------
+
+  &__export-section {
+    margin-block-start: var(--chora-space-md, 16px);
+    padding-block-start: var(--chora-space-md, 16px);
+    border-block-start: 1px solid var(--chora-color-border, #e5e5e5);
+  }
+
+  // -------------------------------------------------------------------------
+  // Empty / Loading / Error
+  // -------------------------------------------------------------------------
+
+  &__empty {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+
+    p {
+      font-size: 0.875rem;
+      color: var(--chora-color-text-muted, #666);
+      margin: 0;
+    }
+  }
+
+  &__loading {
+    padding: var(--chora-space-lg, 24px) 0;
+  }
+
+  &__skeleton-row {
+    height: 16px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-sm, 4px);
+    margin-block-end: var(--chora-space-sm, 8px);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+    background: #fecaca;
+    color: #991b1b;
+    border-radius: var(--chora-radius-sm, 4px);
+
+    p {
+      margin: 0 0 var(--chora-space-md, 16px);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Buttons
+  // -------------------------------------------------------------------------
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-lg, 24px);
+    border: 1px solid var(--chora-color-border, #ccc);
+    border-radius: var(--chora-radius-sm, 4px);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    &--primary {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border-color: var(--chora-color-primary, #2563eb);
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    &--secondary {
+      background: var(--chora-color-surface-1, #fff);
+      color: var(--chora-color-primary, #2563eb);
+      border-color: var(--chora-color-primary, #2563eb);
+    }
+
+    &--ghost {
+      background: transparent;
+      color: var(--chora-color-text-muted, #666);
+      border-color: transparent;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__btn-icon {
+    font-family: 'Material Icons Outlined', sans-serif;
+    font-size: 1rem;
+  }
+
+  // -------------------------------------------------------------------------
+  // Export Dialog
+  // -------------------------------------------------------------------------
+
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--chora-space-lg, 24px);
+  }
+
+  &__dialog {
+    background: var(--chora-color-surface-0, #fff);
+    border-radius: var(--chora-radius-md, 8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 480px;
+    animation: fadeIn 0.15s ease-in;
+  }
+
+  &__dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--chora-space-md, 16px) var(--chora-space-lg, 24px);
+    border-block-end: 1px solid var(--chora-color-border, #e5e5e5);
+  }
+
+  &__dialog-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__dialog-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: var(--chora-radius-sm, 4px);
+    color: var(--chora-color-text-muted, #666);
+    font-family: 'Material Icons Outlined', sans-serif;
+    font-size: 1.25rem;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+  }
+
+  &__dialog-body {
+    padding: var(--chora-space-lg, 24px);
+  }
+
+  &__dialog-scope {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0 0 var(--chora-space-md, 16px);
+
+    strong {
+      color: var(--chora-color-text, #111);
+    }
+  }
+
+  &__dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--chora-space-sm, 8px);
+    margin-block-start: var(--chora-space-lg, 24px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Format Selector
+  // -------------------------------------------------------------------------
+
+  &__format-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0 0 var(--chora-space-md, 16px);
+  }
+
+  &__format-legend {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--chora-color-text, #111);
+    margin-block-end: var(--chora-space-sm, 8px);
+  }
+
+  &__format-options {
+    display: flex;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__format-option {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-xs, 4px);
+    cursor: pointer;
+
+    input[type='radio'] {
+      accent-color: var(--chora-color-primary, #2563eb);
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__format-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  // -------------------------------------------------------------------------
+  // Export Progress
+  // -------------------------------------------------------------------------
+
+  &__export-progress {
+    text-align: center;
+    padding: var(--chora-space-md, 16px) 0;
+  }
+
+  &__progress-bar {
+    height: 4px;
+    background: var(--chora-color-surface-2, #e5e5e5);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-block-end: var(--chora-space-sm, 8px);
+  }
+
+  &__progress-bar-fill {
+    height: 100%;
+    width: 40%;
+    background: var(--chora-color-primary, #2563eb);
+    border-radius: 2px;
+    animation: progressIndeterminate 1.5s ease-in-out infinite;
+  }
+
+  &__progress-text {
+    font-size: 0.8125rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0;
+  }
+
+  // -------------------------------------------------------------------------
+  // Export Complete
+  // -------------------------------------------------------------------------
+
+  &__export-complete {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--chora-color-text, #111);
+    }
+  }
+
+  &__export-complete-icon {
+    font-family: 'Material Icons Outlined', sans-serif;
+    font-size: 2.5rem;
+    color: #16a34a;
+  }
+}
+
+// -------------------------------------------------------------------------
+// Animations
+// -------------------------------------------------------------------------
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes progressIndeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+// Desktop enhancement — side-by-side panels
+@media (min-width: 1280px) {
+  .portable-data {
+    &__layout {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}

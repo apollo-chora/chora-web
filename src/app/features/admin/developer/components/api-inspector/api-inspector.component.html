@@ -1,0 +1,193 @@
+<section
+  class="api-inspector"
+  role="main"
+  [attr.aria-label]="'admin.developer.api_inspector_title' | translate"
+  data-testid="api-inspector">
+
+  <!-- Header -->
+  <header class="api-inspector__header">
+    <div class="api-inspector__header-left">
+      <a routerLink=".." class="api-inspector__back" data-testid="btn-back">
+        {{ 'admin.developer.back_to_console' | translate }}
+      </a>
+      <h1 class="api-inspector__title" data-testid="inspector-title">
+        {{ 'admin.developer.api_inspector_title' | translate }}
+      </h1>
+    </div>
+    <button
+      type="button"
+      class="api-inspector__btn api-inspector__btn--primary"
+      (click)="refresh()"
+      data-testid="btn-refresh"
+      [attr.aria-label]="'admin.developer.refresh' | translate">
+      {{ 'admin.developer.refresh' | translate }}
+    </button>
+  </header>
+
+  <!-- Summary -->
+  <div class="api-inspector__summary" data-testid="api-summary">
+    <div class="api-inspector__summary-item">
+      <span class="api-inspector__summary-value" data-testid="total-requests">{{ totalRequests() }}</span>
+      <span class="api-inspector__summary-label">{{ 'admin.developer.total_requests' | translate }}</span>
+    </div>
+    <div class="api-inspector__summary-item">
+      <span class="api-inspector__summary-value" data-testid="avg-duration">{{ avgDuration() }}ms</span>
+      <span class="api-inspector__summary-label">{{ 'admin.developer.avg_duration' | translate }}</span>
+    </div>
+    <div class="api-inspector__summary-item">
+      <span class="api-inspector__summary-value" data-testid="error-count">{{ errorCount() }}</span>
+      <span class="api-inspector__summary-label">{{ 'admin.developer.errors' | translate }}</span>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="api-inspector__filters" data-testid="api-filters">
+    <button
+      type="button"
+      class="api-inspector__filter-btn"
+      [class.api-inspector__filter-btn--active]="methodFilter() === null"
+      (click)="onMethodFilter(null)"
+      data-testid="filter-all">
+      {{ 'admin.developer.filter_all' | translate }}
+    </button>
+    @for (method of allMethods; track method) {
+      <button
+        type="button"
+        class="api-inspector__filter-btn"
+        [class.api-inspector__filter-btn--active]="methodFilter() === method"
+        (click)="onMethodFilter(method)"
+        [attr.data-testid]="'filter-' + method">
+        {{ method }}
+      </button>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="api-inspector__loading" data-testid="inspector-loading" aria-live="polite">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="api-inspector__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading()) {
+    <!-- Request List -->
+    @if (filteredLogs().length === 0) {
+      <p class="api-inspector__empty" role="status" data-testid="no-results">
+        {{ 'admin.developer.no_requests' | translate }}
+      </p>
+    } @else {
+      <div class="api-inspector__list" role="list" data-testid="request-list">
+        @for (req of filteredLogs(); track req.id) {
+          <div
+            class="api-inspector__request"
+            role="listitem"
+            [attr.data-testid]="'request-' + req.id">
+            <!-- Request Row -->
+            <button
+              type="button"
+              class="api-inspector__request-row"
+              (click)="toggleExpand(req.id)"
+              [attr.aria-expanded]="isExpanded(req.id)"
+              [attr.aria-label]="req.method + ' ' + req.url">
+              <span
+                class="api-inspector__method"
+                [class]="methodClass(req.method)">
+                {{ req.method }}
+              </span>
+              <span class="api-inspector__url">{{ req.url }}</span>
+              <span
+                class="api-inspector__status"
+                [class]="statusClass(req.status)">
+                {{ req.status }}
+              </span>
+              <span class="api-inspector__duration">{{ req.durationMs }}ms</span>
+              <span class="api-inspector__timestamp">{{ formatTimestamp(req.timestamp) }}</span>
+            </button>
+
+            <!-- Expanded Detail -->
+            @if (isExpanded(req.id)) {
+              <div class="api-inspector__detail" data-testid="request-detail">
+                <div class="api-inspector__detail-section">
+                  <h3 class="api-inspector__detail-heading">
+                    {{ 'admin.developer.correlation_id' | translate }}
+                  </h3>
+                  <code class="api-inspector__detail-code">{{ req.correlationId }}</code>
+                </div>
+
+                <div class="api-inspector__detail-columns">
+                  <!-- Request Headers -->
+                  <div class="api-inspector__detail-section">
+                    <h3 class="api-inspector__detail-heading">
+                      {{ 'admin.developer.request_headers' | translate }}
+                    </h3>
+                    <div class="api-inspector__headers">
+                      @for (header of headerEntries(req.requestHeaders); track header.key) {
+                        <div class="api-inspector__header-row">
+                          <span class="api-inspector__header-key">{{ header.key }}:</span>
+                          <span class="api-inspector__header-value">{{ header.value }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Response Headers -->
+                  <div class="api-inspector__detail-section">
+                    <h3 class="api-inspector__detail-heading">
+                      {{ 'admin.developer.response_headers' | translate }}
+                    </h3>
+                    <div class="api-inspector__headers">
+                      @for (header of headerEntries(req.responseHeaders); track header.key) {
+                        <div class="api-inspector__header-row">
+                          <span class="api-inspector__header-key">{{ header.key }}:</span>
+                          <span class="api-inspector__header-value">{{ header.value }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Request Body -->
+                @if (req.requestBody) {
+                  <div class="api-inspector__detail-section">
+                    <h3 class="api-inspector__detail-heading">
+                      {{ 'admin.developer.request_body' | translate }}
+                    </h3>
+                    <pre class="api-inspector__body-preview">{{ req.requestBody }}</pre>
+                  </div>
+                }
+
+                <!-- Response Body -->
+                @if (req.responseBody) {
+                  <div class="api-inspector__detail-section">
+                    <h3 class="api-inspector__detail-heading">
+                      {{ 'admin.developer.response_body' | translate }}
+                    </h3>
+                    <pre class="api-inspector__body-preview">{{ req.responseBody }}</pre>
+                  </div>
+                }
+
+                <!-- Replay Button -->
+                <div class="api-inspector__detail-actions">
+                  <button
+                    type="button"
+                    class="api-inspector__btn api-inspector__btn--primary"
+                    (click)="replayRequest(req.id)"
+                    [disabled]="replaying() === req.id"
+                    [attr.data-testid]="'btn-replay-' + req.id">
+                    @if (replaying() === req.id) {
+                      {{ 'admin.developer.replaying' | translate }}
+                    } @else {
+                      {{ 'admin.developer.replay' | translate }}
+                    }
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</section>

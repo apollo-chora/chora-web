@@ -1,0 +1,135 @@
+// /a/studio home (A+ authoring hub). Tablet-first (≥768px primary; ≥1280px
+// enhanced) — no mobile-phone breakpoint by mandate.
+
+:host {
+  display: block;
+}
+
+.studio-home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-lg);
+  padding: var(--chora-space-lg);
+}
+
+.studio-home__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--chora-space-md);
+}
+
+.studio-home__heading-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+}
+
+.studio-home__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.studio-home__subtitle {
+  margin: 0;
+  color: var(--chora-color-text-secondary);
+}
+
+.studio-home__new {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--chora-space-xs);
+}
+
+// ── Destination cards ──────────────────────────────────────────────────────
+.studio-home__cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--chora-space-md);
+  grid-template-columns: 1fr;
+
+  // ≥768px is the primary target; ≥1280px spreads the three cards onto one row.
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.studio-home__card-item {
+  display: flex;
+}
+
+.studio-home__card {
+  display: flex;
+  align-items: center;
+  gap: var(--chora-space-md);
+  flex: 1;
+  padding: var(--chora-space-lg);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(25, 118, 210, 0.16);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.studio-home__card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  border-radius: 10px;
+  background: var(--chora-color-primary-surface, rgba(25, 118, 210, 0.1));
+  color: var(--primary);
+}
+
+.studio-home__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-xs);
+  min-width: 0;
+}
+
+.studio-home__card-title {
+  font-weight: 700;
+  color: var(--chora-color-text-primary);
+}
+
+.studio-home__card-desc {
+  font-size: 0.875rem;
+  color: var(--chora-color-text-secondary);
+}
+
+.studio-home__card-chevron {
+  margin-left: auto;
+  flex: none;
+  color: var(--chora-color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-home__card {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}

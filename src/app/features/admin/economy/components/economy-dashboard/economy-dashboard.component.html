@@ -1,0 +1,154 @@
+<section class="economy-dashboard" aria-label="Economy Configuration">
+  <header class="economy-dashboard__header">
+    <h1>Economy Configuration</h1>
+    <p class="economy-dashboard__subtitle">
+      Configure Choraverse economy parameters for your tenant.
+      Changes affect all learners immediately.
+    </p>
+  </header>
+
+  <!-- Category Tabs -->
+  <nav class="economy-dashboard__tabs" role="tablist" aria-label="Economy categories">
+    @for (category of categories; track category) {
+      <button
+        role="tab"
+        class="economy-dashboard__tab"
+        [class.economy-dashboard__tab--active]="activeCategory() === category"
+        [attr.aria-selected]="activeCategory() === category"
+        [attr.aria-controls]="'panel-' + category"
+        (click)="selectCategory(category)"
+      >
+        {{ categoryLabels[category] }}
+      </button>
+    }
+  </nav>
+
+  <!-- Config Panel -->
+  <div
+    class="economy-dashboard__panel"
+    role="tabpanel"
+    [id]="'panel-' + activeCategory()"
+    [attr.aria-label]="categoryLabels[activeCategory()]"
+  >
+    @if (loading()) {
+      <div class="economy-dashboard__loading" aria-live="polite">
+        <div class="economy-dashboard__spinner"></div>
+        <span>Loading configuration...</span>
+      </div>
+    } @else if (error()) {
+      <div class="economy-dashboard__error" role="alert">
+        <p>{{ error() }}</p>
+      </div>
+    } @else if (configs().length === 0) {
+      <div class="economy-dashboard__empty">
+        <p>No configuration parameters found for this category.</p>
+      </div>
+    } @else {
+      <table class="economy-dashboard__table" aria-label="Configuration parameters">
+        <thead>
+          <tr>
+            <th scope="col">Parameter</th>
+            <th scope="col">Current Value</th>
+            <th scope="col">Override</th>
+            <th scope="col">Last Updated</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (config of configs(); track config.id) {
+            <tr
+              class="economy-dashboard__row"
+              [class.economy-dashboard__row--override]="config.is_tenant_override"
+            >
+              <td class="economy-dashboard__key">{{ config.config_key }}</td>
+              <td class="economy-dashboard__value">
+                <span class="economy-dashboard__value-display">
+                  {{ formatValue(config.config_value) }}
+                </span>
+                @if (!config.is_tenant_override) {
+                  <span class="economy-dashboard__default-badge">Platform Default</span>
+                }
+              </td>
+              <td class="economy-dashboard__override">
+                @if (config.is_tenant_override) {
+                  <span class="economy-dashboard__override-active">Override Active</span>
+                } @else {
+                  <span class="economy-dashboard__override-inactive">Using Default</span>
+                }
+              </td>
+              <td class="economy-dashboard__updated">
+                {{ config.updated_at | date:'medium' }}
+              </td>
+              <td class="economy-dashboard__actions">
+                <button
+                  class="economy-dashboard__btn economy-dashboard__btn--history"
+                  (click)="openHistory(config)"
+                  aria-label="View history for {{ config.config_key }}"
+                >
+                  History
+                </button>
+                @if (config.is_tenant_override) {
+                  <button
+                    class="economy-dashboard__btn economy-dashboard__btn--clear"
+                    (click)="clearOverride(config.id)"
+                    aria-label="Clear override for {{ config.config_key }}"
+                  >
+                    Clear Override
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <!-- History Drawer -->
+  @if (historyPanelOpen()) {
+    <aside
+      class="economy-dashboard__history-drawer"
+      role="complementary"
+      aria-label="Configuration history"
+    >
+      <header class="economy-dashboard__history-header">
+        <h2>Change History</h2>
+        <button
+          class="economy-dashboard__btn economy-dashboard__btn--close"
+          (click)="closeHistory()"
+          aria-label="Close history panel"
+        >
+          Close
+        </button>
+      </header>
+      <div class="economy-dashboard__history-content">
+        @if (history().length === 0) {
+          <p class="economy-dashboard__history-empty">No history entries found.</p>
+        } @else {
+          @for (entry of history(); track entry.id) {
+            <div class="economy-dashboard__history-entry">
+              <div class="economy-dashboard__history-values">
+                <span class="economy-dashboard__history-old">{{ formatValue(entry.old_value) }}</span>
+                <span class="economy-dashboard__history-arrow" aria-hidden="true">&rarr;</span>
+                <span class="economy-dashboard__history-new">{{ formatValue(entry.new_value) }}</span>
+              </div>
+              <div class="economy-dashboard__history-meta">
+                <span>{{ entry.change_reason }}</span>
+                <time>{{ entry.created_at | date:'medium' }}</time>
+              </div>
+            </div>
+          }
+        }
+        @if (historyConfigId()) {
+          <button
+            class="economy-dashboard__btn economy-dashboard__btn--rollback"
+            (click)="rollback(historyConfigId()!)"
+            aria-label="Rollback to previous value"
+          >
+            Rollback to Previous Value
+          </button>
+        }
+      </div>
+    </aside>
+  }
+</section>

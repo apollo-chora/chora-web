@@ -1,0 +1,375 @@
+<section
+  class="campaign-admin"
+  role="main"
+  [attr.aria-label]="'billing.campaign_admin_title' | translate"
+  data-testid="campaign-admin">
+
+  <!-- ===== LIST VIEW ===== -->
+  @if (viewMode() === 'list') {
+    <header class="campaign-admin__header">
+      <h1 class="campaign-admin__title" data-testid="campaign-title">
+        {{ 'billing.campaign_admin_title' | translate }}
+      </h1>
+      <button
+        type="button"
+        class="campaign-admin__btn campaign-admin__btn--primary"
+        data-testid="btn-new-campaign"
+        [attr.aria-label]="'billing.new_campaign' | translate"
+        (click)="showWizard()">
+        {{ 'billing.new_campaign' | translate }}
+      </button>
+    </header>
+
+    <!-- Filters -->
+    <div class="campaign-admin__filters">
+      <label class="campaign-admin__filter-label" for="campaign-status-filter">
+        {{ 'billing.filter_status' | translate }}
+      </label>
+      <select
+        id="campaign-status-filter"
+        class="campaign-admin__filter-select"
+        [ngModel]="filterStatus() ?? ''"
+        (ngModelChange)="onStatusFilter($event)"
+        data-testid="status-filter">
+        <option value="">{{ 'billing.all_statuses' | translate }}</option>
+        @for (status of allStatuses; track status) {
+          <option [value]="status">{{ statusLabels[status] | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="campaign-admin__loading" aria-live="polite" data-testid="campaign-loading">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="campaign-admin__skeleton-row"></div>
+        }
+      </div>
+    }
+
+    <!-- Error -->
+    @if (isError()) {
+      <div class="campaign-admin__error" role="alert" data-testid="campaign-error">
+        <p class="campaign-admin__error-text">{{ 'billing.campaigns_load_error' | translate }}</p>
+      </div>
+    }
+
+    <!-- Campaign Table -->
+    @if (!isLoading() && !isError()) {
+      @if (filteredCampaigns().length === 0) {
+        <div class="campaign-admin__empty" role="status" data-testid="campaign-empty">
+          <p class="campaign-admin__empty-text">{{ 'billing.no_campaigns' | translate }}</p>
+        </div>
+      } @else {
+        <table class="campaign-admin__table" role="table"
+               [attr.aria-label]="'billing.campaign_table' | translate"
+               data-testid="campaign-table">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'billing.campaign_name' | translate }}</th>
+              <th scope="col">{{ 'billing.status' | translate }}</th>
+              <th scope="col">{{ 'billing.budget' | translate }}</th>
+              <th scope="col">{{ 'billing.dates' | translate }}</th>
+              <th scope="col">{{ 'billing.actions' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (campaign of filteredCampaigns(); track campaign.id) {
+              <tr data-testid="campaign-row">
+                <td>{{ campaign.name }}</td>
+                <td>
+                  <span class="campaign-admin__status" [class]="statusClass(campaign.status)">
+                    {{ statusLabels[campaign.status] | translate }}
+                  </span>
+                </td>
+                <td>{{ formatPrice(campaign.budget_cents, campaign.currency) }}</td>
+                <td>{{ formatDate(campaign.start_date) }} &ndash; {{ formatDate(campaign.end_date) }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="campaign-admin__btn campaign-admin__btn--secondary"
+                    [attr.aria-label]="'billing.view_details' | translate"
+                    (click)="showDetail(campaign)">
+                    {{ 'billing.view_details' | translate }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+  }
+
+  <!-- ===== WIZARD VIEW ===== -->
+  @if (viewMode() === 'wizard') {
+    <header class="campaign-admin__header">
+      <h1 class="campaign-admin__title" data-testid="wizard-title">
+        {{ 'billing.new_campaign' | translate }}
+      </h1>
+      <button
+        type="button"
+        class="campaign-admin__btn campaign-admin__btn--secondary"
+        [attr.aria-label]="'billing.back_to_list' | translate"
+        (click)="showList()">
+        {{ 'billing.back_to_list' | translate }}
+      </button>
+    </header>
+
+    <!-- Step indicators -->
+    <div class="campaign-admin__wizard-steps" role="list"
+         [attr.aria-label]="'billing.wizard_steps' | translate">
+      @for (step of wizardSteps; track step; let idx = $index) {
+        <div
+          class="campaign-admin__wizard-step"
+          [class.campaign-admin__wizard-step--active]="wizardStep() === step"
+          [class.campaign-admin__wizard-step--completed]="idx < wizardStepIndex()"
+          role="listitem"
+          [attr.aria-current]="wizardStep() === step ? 'step' : null">
+          <span class="campaign-admin__wizard-step-number">{{ idx + 1 }}</span>
+          <span class="campaign-admin__wizard-step-label">
+            {{ 'billing.wizard_step_' + step | translate }}
+          </span>
+        </div>
+      }
+    </div>
+
+    <!-- Step 1: Budget & Dates -->
+    @if (wizardStep() === 'budget') {
+      <div class="campaign-admin__wizard-content" data-testid="wizard-step-budget">
+        <div class="campaign-admin__form-group">
+          <label for="campaign-name" class="campaign-admin__label">
+            {{ 'billing.campaign_name' | translate }}
+          </label>
+          <input
+            id="campaign-name"
+            type="text"
+            class="campaign-admin__input"
+            [ngModel]="wizardName()"
+            (ngModelChange)="wizardName.set($event)" />
+        </div>
+
+        <div class="campaign-admin__form-group">
+          <label for="campaign-budget" class="campaign-admin__label">
+            {{ 'billing.budget' | translate }}
+          </label>
+          <input
+            id="campaign-budget"
+            type="number"
+            class="campaign-admin__input"
+            [ngModel]="wizardBudget()"
+            (ngModelChange)="wizardBudget.set($event)" />
+        </div>
+
+        <div class="campaign-admin__form-row">
+          <div class="campaign-admin__form-group">
+            <label for="campaign-start" class="campaign-admin__label">
+              {{ 'billing.start_date' | translate }}
+            </label>
+            <input
+              id="campaign-start"
+              type="date"
+              class="campaign-admin__input"
+              [ngModel]="wizardStartDate()"
+              (ngModelChange)="wizardStartDate.set($event)" />
+          </div>
+
+          <div class="campaign-admin__form-group">
+            <label for="campaign-end" class="campaign-admin__label">
+              {{ 'billing.end_date' | translate }}
+            </label>
+            <input
+              id="campaign-end"
+              type="date"
+              class="campaign-admin__input"
+              [ngModel]="wizardEndDate()"
+              (ngModelChange)="wizardEndDate.set($event)" />
+          </div>
+        </div>
+
+        <div class="campaign-admin__wizard-nav">
+          <button
+            type="button"
+            class="campaign-admin__btn campaign-admin__btn--primary"
+            [attr.aria-label]="'billing.next_step' | translate"
+            (click)="nextStep()">
+            {{ 'billing.next_step' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Target Audience -->
+    @if (wizardStep() === 'audience') {
+      <div class="campaign-admin__wizard-content" data-testid="wizard-step-audience">
+        <div class="campaign-admin__form-group">
+          <label for="campaign-tenant-types" class="campaign-admin__label">
+            {{ 'billing.target_tenant_types' | translate }}
+          </label>
+          <input
+            id="campaign-tenant-types"
+            type="text"
+            class="campaign-admin__input"
+            placeholder="e.g., school, enterprise"
+            [ngModel]="wizardTenantTypes()"
+            (ngModelChange)="wizardTenantTypes.set($event)" />
+        </div>
+
+        <div class="campaign-admin__form-group">
+          <label for="campaign-regions" class="campaign-admin__label">
+            {{ 'billing.target_regions' | translate }}
+          </label>
+          <input
+            id="campaign-regions"
+            type="text"
+            class="campaign-admin__input"
+            placeholder="e.g., SG, MY, US"
+            [ngModel]="wizardRegions()"
+            (ngModelChange)="wizardRegions.set($event)" />
+        </div>
+
+        <div class="campaign-admin__form-group">
+          <label for="campaign-min-usage" class="campaign-admin__label">
+            {{ 'billing.min_usage_days' | translate }}
+          </label>
+          <input
+            id="campaign-min-usage"
+            type="number"
+            class="campaign-admin__input"
+            [ngModel]="wizardMinUsageDays()"
+            (ngModelChange)="wizardMinUsageDays.set($event)" />
+        </div>
+
+        <div class="campaign-admin__wizard-nav">
+          <button
+            type="button"
+            class="campaign-admin__btn campaign-admin__btn--secondary"
+            [attr.aria-label]="'billing.prev_step' | translate"
+            (click)="prevStep()">
+            {{ 'billing.prev_step' | translate }}
+          </button>
+          <button
+            type="button"
+            class="campaign-admin__btn campaign-admin__btn--primary"
+            [attr.aria-label]="'billing.next_step' | translate"
+            (click)="nextStep()">
+            {{ 'billing.next_step' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 3: Review & Launch -->
+    @if (wizardStep() === 'review') {
+      <div class="campaign-admin__wizard-content" data-testid="wizard-step-review">
+        <div class="campaign-admin__review-section">
+          <h3 class="campaign-admin__review-heading">{{ 'billing.review_summary' | translate }}</h3>
+          <dl class="campaign-admin__review-list">
+            <dt>{{ 'billing.campaign_name' | translate }}</dt>
+            <dd data-testid="review-name">{{ wizardName() }}</dd>
+
+            <dt>{{ 'billing.budget' | translate }}</dt>
+            <dd>{{ formatPrice(wizardBudget() * 100, wizardCurrency()) }}</dd>
+
+            <dt>{{ 'billing.dates' | translate }}</dt>
+            <dd>{{ wizardStartDate() }} &ndash; {{ wizardEndDate() }}</dd>
+
+            <dt>{{ 'billing.target_tenant_types' | translate }}</dt>
+            <dd>{{ wizardTenantTypes() || '-' }}</dd>
+
+            <dt>{{ 'billing.target_regions' | translate }}</dt>
+            <dd>{{ wizardRegions() || '-' }}</dd>
+          </dl>
+        </div>
+
+        <div class="campaign-admin__wizard-nav">
+          <button
+            type="button"
+            class="campaign-admin__btn campaign-admin__btn--secondary"
+            [attr.aria-label]="'billing.prev_step' | translate"
+            (click)="prevStep()">
+            {{ 'billing.prev_step' | translate }}
+          </button>
+          <button
+            type="button"
+            class="campaign-admin__btn campaign-admin__btn--primary"
+            data-testid="btn-launch"
+            [attr.aria-label]="'billing.launch_campaign' | translate"
+            [disabled]="wizardSubmitting()"
+            (click)="launchCampaign()">
+            @if (wizardSubmitting()) {
+              {{ 'billing.launching' | translate }}
+            } @else {
+              {{ 'billing.launch_campaign' | translate }}
+            }
+          </button>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- ===== DETAIL VIEW ===== -->
+  @if (viewMode() === 'detail' && selectedCampaign(); as campaign) {
+    <header class="campaign-admin__header">
+      <h1 class="campaign-admin__title" data-testid="detail-title">
+        {{ campaign.name }}
+      </h1>
+      <button
+        type="button"
+        class="campaign-admin__btn campaign-admin__btn--secondary"
+        [attr.aria-label]="'billing.back_to_list' | translate"
+        (click)="showList()">
+        {{ 'billing.back_to_list' | translate }}
+      </button>
+    </header>
+
+    <!-- Status + Dates -->
+    <div class="campaign-admin__detail-meta" data-testid="detail-meta">
+      <span class="campaign-admin__status" [class]="statusClass(campaign.status)">
+        {{ statusLabels[campaign.status] | translate }}
+      </span>
+      <span class="campaign-admin__detail-dates">
+        {{ formatDate(campaign.start_date) }} &ndash; {{ formatDate(campaign.end_date) }}
+      </span>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="campaign-admin__metrics" data-testid="campaign-metrics">
+      <div class="campaign-admin__metric-card">
+        <span class="campaign-admin__metric-label">{{ 'billing.impressions' | translate }}</span>
+        <span class="campaign-admin__metric-value">{{ campaign.metrics.impressions }}</span>
+      </div>
+      <div class="campaign-admin__metric-card">
+        <span class="campaign-admin__metric-label">{{ 'billing.conversions' | translate }}</span>
+        <span class="campaign-admin__metric-value">{{ campaign.metrics.conversions }}</span>
+      </div>
+      <div class="campaign-admin__metric-card">
+        <span class="campaign-admin__metric-label">{{ 'billing.spend' | translate }}</span>
+        <span class="campaign-admin__metric-value">
+          {{ formatPrice(campaign.metrics.spend_cents, campaign.currency) }}
+        </span>
+      </div>
+      <div class="campaign-admin__metric-card">
+        <span class="campaign-admin__metric-label">{{ 'billing.conversion_rate' | translate }}</span>
+        <span class="campaign-admin__metric-value">
+          {{ formatPercent(campaign.metrics.conversion_rate) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Budget -->
+    <div class="campaign-admin__budget-bar" data-testid="budget-bar">
+      <span class="campaign-admin__budget-label">{{ 'billing.budget_spent' | translate }}</span>
+      <div class="campaign-admin__budget-track">
+        <div
+          class="campaign-admin__budget-fill"
+          [style.width.%]="(campaign.spent_cents / campaign.budget_cents) * 100">
+        </div>
+      </div>
+      <span class="campaign-admin__budget-text">
+        {{ formatPrice(campaign.spent_cents, campaign.currency) }}
+        / {{ formatPrice(campaign.budget_cents, campaign.currency) }}
+      </span>
+    </div>
+  }
+</section>

@@ -1,0 +1,322 @@
+<section class="surface-hplus billing" data-testid="hplus-billing">
+  <main class="billing__main">
+    <nav
+      class="billing__breadcrumb"
+      [attr.aria-label]="'hplus.billing.breadcrumbLabel' | translate">
+      <span>{{ 'hplus.billing.breadcrumbHub' | translate }}</span>
+      <span aria-hidden="true">›</span>
+      <span class="billing__crumb-active">
+        {{ 'hplus.billing.breadcrumbCurrent' | translate }}
+      </span>
+    </nav>
+
+    <header class="billing__hero">
+      <div>
+        <h1 class="billing__title">
+          {{ 'hplus.billing.title' | translate }}
+        </h1>
+        <p class="billing__subtitle">
+          {{ 'hplus.billing.subtitle' | translate }}
+        </p>
+      </div>
+      @if (dunning()) {
+        <button
+          type="button"
+          class="btn btn-primary billing__resolve-cta"
+          data-testid="billing-resolve-cta"
+          (click)="openResolve()">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{ 'hplus.billing.resolveCta' | translate }}
+        </button>
+      }
+    </header>
+
+    <section class="billing__grid">
+      <!-- Manage Billing in Stripe (live; replaces the deleted Wave-3 plan panel) -->
+      <article class="glass-panel billing__panel" data-testid="billing-manage-panel">
+        <header class="billing__panel-head">
+          <h2>{{ 'hplus.billing.manageBillingPanelHeading' | translate }}</h2>
+        </header>
+        <div class="billing__payment" data-testid="billing-payment">
+          <div>
+            <p class="billing__payment-label">
+              {{ 'hplus.billing.paymentLabel' | translate }}
+            </p>
+            <p class="billing__payment-hint">
+              {{ 'hplus.billing.manageBillingHint' | translate }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-testid="billing-manage-cta"
+            [disabled]="portalLoading()"
+            (click)="manageBilling()">
+            @if (portalLoading()) {
+              <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+              {{ 'hplus.billing.manageBillingLoading' | translate }}
+            } @else {
+              <i class="fa-brands fa-stripe-s" aria-hidden="true"></i>
+              {{ 'hplus.billing.manageBillingCta' | translate }}
+            }
+          </button>
+        </div>
+        @switch (portalError()) {
+          @case ('no-stripe-customer') {
+            <p
+              class="billing__inline-error"
+              role="alert"
+              data-testid="billing-portal-error-no-customer">
+              {{ 'hplus.billing.portalError.noStripeCustomer' | translate }}
+            </p>
+          }
+          @case ('validation-error') {
+            <p
+              class="billing__inline-error"
+              role="alert"
+              data-testid="billing-portal-error-validation">
+              {{ 'hplus.billing.portalError.validation' | translate }}
+            </p>
+          }
+          @case ('unauthenticated') {
+            <p
+              class="billing__inline-error"
+              role="alert"
+              data-testid="billing-portal-error-unauthenticated">
+              {{ 'hplus.billing.portalError.unauthenticated' | translate }}
+            </p>
+          }
+          @case ('server-error') {
+            <p
+              class="billing__inline-error"
+              role="alert"
+              data-testid="billing-portal-error-server">
+              {{ 'hplus.billing.portalError.server' | translate }}
+            </p>
+          }
+          @case ('network-error') {
+            <p
+              class="billing__inline-error"
+              role="alert"
+              data-testid="billing-portal-error-network">
+              {{ 'hplus.billing.portalError.network' | translate }}
+            </p>
+          }
+        }
+      </article>
+
+      <!-- Add-on breakdown (live via /h/addons — CHO-1778) -->
+      <article
+        class="glass-panel billing__panel"
+        data-testid="billing-breakdown">
+        <header class="billing__panel-head">
+          <h2>{{ 'hplus.billing.breakdownHeading' | translate }}</h2>
+        </header>
+        @if (hasBreakdown()) {
+          <dl class="billing__breakdown-list">
+            @for (line of breakdownLines(); track line.code) {
+              <div
+                class="billing__breakdown-row"
+                [attr.data-testid]="'billing-breakdown-' + line.code">
+                <dt>
+                  {{ line.name }}
+                  @if (line.tier) {
+                    <span class="billing__breakdown-tier">{{ line.tier }}</span>
+                  }
+                </dt>
+                <dd>{{ formatMonthly(line.cost_cents) }}</dd>
+              </div>
+            }
+            <div class="billing__breakdown-row billing__breakdown-total">
+              <dt>{{ 'hplus.billing.totalLabel' | translate }}</dt>
+              <dd data-testid="billing-total">
+                {{ formatMonthly(totalMonthlyCents()) }}
+              </dd>
+            </div>
+          </dl>
+        } @else {
+          <p
+            class="billing__state"
+            data-testid="billing-breakdown-empty"
+            role="status">
+            {{ 'hplus.billing.breakdownEmpty' | translate }}
+          </p>
+          <a
+            class="btn btn-secondary"
+            routerLink="/h/marketplace"
+            data-testid="billing-breakdown-marketplace-link">
+            <i class="fa-solid fa-store" aria-hidden="true"></i>
+            {{ 'hplus.billing.breakdownMarketplaceLink' | translate }}
+          </a>
+        }
+      </article>
+    </section>
+
+    <!-- Invoice history (live) -->
+    <article class="glass-panel billing__panel">
+      <header class="billing__panel-head">
+        <h2>{{ 'hplus.billing.invoiceHeading' | translate }}</h2>
+      </header>
+
+      @if (invoicesLoading()) {
+        <p
+          class="billing__state"
+          data-testid="invoices-loading"
+          role="status"
+          aria-live="polite">
+          {{ 'hplus.billing.invoicesLoading' | translate }}
+        </p>
+      } @else if (invoicesError(); as kind) {
+        <p
+          class="billing__inline-error"
+          role="alert"
+          data-testid="invoices-error">
+          @switch (kind) {
+            @case ('unauthenticated') {
+              {{ 'hplus.billing.invoicesError.unauthenticated' | translate }}
+            }
+            @case ('network-error') {
+              {{ 'hplus.billing.invoicesError.network' | translate }}
+            }
+            @default {
+              {{ 'hplus.billing.invoicesError.server' | translate }}
+            }
+          }
+        </p>
+      } @else if (hasNoInvoices()) {
+        <p
+          class="billing__state"
+          data-testid="invoices-empty"
+          role="status">
+          {{ 'hplus.billing.invoicesEmpty' | translate }}
+        </p>
+      } @else {
+        <div class="billing__table-wrap">
+          <table
+            class="data-table"
+            data-testid="invoice-history-table"
+            aria-describedby="invoice-table-caption">
+            <caption id="invoice-table-caption" class="billing__caption">
+              {{ 'hplus.billing.invoiceCaption' | translate }}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'hplus.billing.col.period' | translate }}</th>
+                <th scope="col">{{ 'hplus.billing.col.description' | translate }}</th>
+                <th scope="col">{{ 'hplus.billing.col.amount' | translate }}</th>
+                <th scope="col">{{ 'hplus.billing.col.status' | translate }}</th>
+                <th scope="col" class="billing__actions-col">
+                  <span class="sr-only">{{ 'hplus.billing.col.actions' | translate }}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (inv of invoices(); track trackByInvoice($index, inv)) {
+                <tr
+                  [attr.data-testid]="'invoice-row-' + inv.stripe_invoice_id"
+                  [attr.data-status]="inv.status">
+                  <td>
+                    {{ formatDate(inv.period_start) }} → {{ formatDate(inv.period_end) }}
+                  </td>
+                  <td class="billing__col-description">
+                    {{ inv.description || inv.number }}
+                  </td>
+                  <td class="billing__col-amount">
+                    {{ formatCurrency(inv.total_cents, inv.currency) }}
+                  </td>
+                  <td>
+                    <span [class]="invoiceBadgeClass(inv.status)">
+                      {{ invoiceLabelKey(inv.status) | translate }}
+                    </span>
+                  </td>
+                  <td class="billing__row-actions">
+                    @if (inv.hosted_invoice_url) {
+                      <a
+                        class="btn-icon"
+                        [attr.href]="inv.hosted_invoice_url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        [attr.data-testid]="'invoice-view-' + inv.stripe_invoice_id"
+                        [attr.aria-label]="
+                          ('hplus.billing.viewAriaPrefix' | translate) + ' ' + inv.number
+                        ">
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                      </a>
+                    }
+                    @if (inv.invoice_pdf_url) {
+                      <a
+                        class="btn-icon"
+                        [attr.href]="inv.invoice_pdf_url"
+                        [attr.data-testid]="'invoice-download-' + inv.stripe_invoice_id"
+                        [attr.aria-label]="
+                          ('hplus.billing.downloadAriaPrefix' | translate) + ' ' + inv.number
+                        ">
+                        <i class="fa-solid fa-download" aria-hidden="true"></i>
+                      </a>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </article>
+
+    <!-- Resolve Billing (dunning) modal -->
+    @if (showResolveModal()) {
+      <div
+        class="modal-overlay"
+        data-testid="billing-resolve-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="billing-resolve-title"
+        tabindex="-1"
+        (click)="handleBackdropClick($event)"
+        (keydown.escape)="handleBackdropClick($event)">
+        <div class="modal-content glass-panel billing__resolve">
+          <header class="billing__resolve-head">
+            <h2
+              id="billing-resolve-title"
+              class="billing__resolve-title surface-accent-text">
+              {{ 'hplus.billing.resolveTitle' | translate }}
+            </h2>
+            <button
+              type="button"
+              class="billing__resolve-close"
+              data-testid="billing-resolve-close"
+              [attr.aria-label]="'hplus.billing.resolveClose' | translate"
+              (click)="cancelResolve()">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </header>
+
+          <p class="billing__resolve-body">
+            {{ 'hplus.billing.resolveBody' | translate }}
+          </p>
+          <p class="billing__resolve-hint">
+            {{ 'hplus.billing.resolveHint' | translate }}
+          </p>
+
+          <footer class="billing__resolve-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-testid="billing-resolve-cancel"
+              (click)="cancelResolve()">
+              {{ 'hplus.billing.resolveCancel' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-testid="billing-resolve-confirm"
+              (click)="confirmResolve()">
+              <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+              {{ 'hplus.billing.resolveConfirm' | translate }}
+            </button>
+          </footer>
+        </div>
+      </div>
+    }
+  </main>
+</section>

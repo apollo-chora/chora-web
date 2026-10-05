@@ -1,0 +1,238 @@
+<section
+  class="surface-rplus offering-create"
+  data-testid="rplus-offering-create"
+  role="region"
+  aria-labelledby="offering-create-heading">
+  <header class="offering-create__header">
+    <nav
+      class="offering-create__breadcrumb"
+      [attr.aria-label]="'rplus.offerings.workspace.breadcrumb_aria' | translate">
+      <a
+        class="offering-create__breadcrumb-link"
+        data-testid="offering-create-back-link"
+        routerLink="/r/offerings">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        {{ 'rplus.offerings.workspace.breadcrumb_root' | translate }}
+      </a>
+    </nav>
+    <h1 id="offering-create-heading" class="offering-create__title">
+      {{ 'rplus.offerings.create.title' | translate }}
+    </h1>
+    <p class="offering-create__subtitle">
+      {{ 'rplus.offerings.create.subtitle' | translate }}
+    </p>
+  </header>
+
+  @if (!canManage()) {
+    <div
+      class="offering-create__denied glass-panel"
+      data-testid="offering-create-denied"
+      role="alert">
+      <i class="fa-solid fa-lock offering-create__denied-icon" aria-hidden="true"></i>
+      <h2 class="offering-create__denied-title">
+        {{ 'rplus.offerings.create.access_denied.title' | translate }}
+      </h2>
+      <p class="offering-create__denied-body">
+        {{ 'rplus.offerings.create.access_denied.body' | translate }}
+      </p>
+      <a class="btn btn-primary" data-testid="offering-create-denied-back" routerLink="/r/offerings">
+        {{ 'rplus.offerings.create.access_denied.back' | translate }}
+      </a>
+    </div>
+  } @else {
+    <form
+      class="offering-create__form glass-panel"
+      data-testid="offering-create-form"
+      (submit)="onSubmit($event)">
+      @if (submitError(); as msg) {
+        <div class="offering-create__error" data-testid="offering-create-error" role="alert">
+          <p class="offering-create__error-title">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ 'rplus.offerings.create.error.title' | translate }}
+          </p>
+          <p class="offering-create__error-detail">{{ msg }}</p>
+        </div>
+      }
+
+      <!-- Delivery mode — picked ONCE (attribute on a new object, no toggle). -->
+      <fieldset class="offering-create__fieldset">
+        <legend class="offering-create__legend">
+          {{ 'rplus.offerings.create.delivery_type.legend' | translate }}
+        </legend>
+        <div class="offering-create__radios" role="radiogroup">
+          @for (dt of deliveryTypes; track dt) {
+            <label
+              class="offering-create__radio"
+              [class.offering-create__radio--active]="deliveryType() === dt"
+              [attr.data-testid]="'offering-create-dt-' + dt">
+              <input
+                type="radio"
+                name="delivery_type"
+                [value]="dt"
+                [checked]="deliveryType() === dt"
+                (change)="selectDeliveryType(dt)" />
+              <span class="offering-create__radio-label">
+                {{ 'rplus.offerings.delivery_type_value.' + dt | translate }}
+              </span>
+              <span class="offering-create__radio-help">
+                {{ 'rplus.offerings.create.delivery_type.' + dt + '_help' | translate }}
+              </span>
+            </label>
+          }
+        </div>
+        @if (attempted() && !deliveryValid()) {
+          <p class="offering-create__field-error" data-testid="offering-create-error-delivery" role="alert">
+            {{ 'rplus.offerings.create.error.delivery_type_required' | translate }}
+          </p>
+        }
+      </fieldset>
+
+      <!--
+        Courses — 1:N checkbox multi-select (offering→course is many).
+        A real published-course list; honest loading / empty / error states.
+        <fieldset>/<legend> name the group; each row is a native checkbox in a
+        <label> (focusable, Space toggles) so the selected state is conveyed by
+        the control itself, not colour alone.
+      -->
+      <fieldset class="offering-create__fieldset offering-create__courses-field">
+        <legend class="offering-create__legend">
+          {{ 'rplus.offerings.create.course.select_legend' | translate }}
+        </legend>
+        <p class="offering-create__hint">
+          {{ 'rplus.offerings.create.course.select_help' | translate }}
+        </p>
+        @if (isCoursesLoading()) {
+          <p class="offering-create__hint" data-testid="offering-create-courses-loading" aria-busy="true">
+            {{ 'rplus.offerings.create.course.loading' | translate }}
+          </p>
+        } @else if (isCoursesError()) {
+          <div class="offering-create__inline-error" data-testid="offering-create-courses-error" role="alert">
+            <span>{{ 'rplus.offerings.create.course.error' | translate }}</span>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-testid="offering-create-courses-retry"
+              (click)="retryCourses()">
+              {{ 'rplus.common.retry' | translate }}
+            </button>
+          </div>
+        } @else if (hasNoCourses()) {
+          <div class="offering-create__empty" data-testid="offering-create-courses-empty" role="status">
+            <i class="fa-solid fa-graduation-cap offering-create__empty-icon" aria-hidden="true"></i>
+            <p class="offering-create__empty-title">
+              {{ 'rplus.offerings.create.course.empty_title' | translate }}
+            </p>
+            <p class="offering-create__empty-body">
+              {{ 'rplus.offerings.create.course.empty' | translate }}
+            </p>
+            <a
+              class="btn btn-primary offering-create__empty-cta"
+              data-testid="offering-create-courses-empty-cta"
+              routerLink="/r/catalog">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{ 'rplus.offerings.create.course.empty_cta' | translate }}
+            </a>
+          </div>
+        } @else {
+          <ul class="offering-create__courses" data-testid="offering-create-course-list" role="list">
+            @for (course of courses(); track course.id) {
+              <li class="offering-create__course-item">
+                <label
+                  class="offering-create__course"
+                  [class.offering-create__course--selected]="isCourseSelected(course.id)">
+                  <input
+                    type="checkbox"
+                    class="offering-create__course-checkbox"
+                    data-testid="offering-course-checkbox"
+                    [attr.data-course-id]="course.id"
+                    [checked]="isCourseSelected(course.id)"
+                    (change)="toggleCourse(course.id)" />
+                  <span class="offering-create__course-title">{{ course.label }}</span>
+                </label>
+              </li>
+            }
+          </ul>
+          <p
+            class="offering-create__count"
+            data-testid="offering-create-selected-count"
+            aria-live="polite">
+            <span class="offering-create__count-num">{{ selectedCount() }}</span>
+            {{ 'rplus.offerings.create.course.courses_selected' | translate }}
+          </p>
+          @if (attempted() && !courseValid()) {
+            <p class="offering-create__field-error" data-testid="offering-create-error-course" role="alert">
+              {{ 'rplus.offerings.create.error.course_required' | translate }}
+            </p>
+          }
+        }
+      </fieldset>
+
+      <!-- Label -->
+      <div class="offering-create__field">
+        <label for="offering-create-label" class="offering-create__label">
+          {{ 'rplus.offerings.create.label.label' | translate }}
+        </label>
+        <input
+          id="offering-create-label"
+          type="text"
+          class="offering-create__input"
+          data-testid="offering-create-label-input"
+          maxlength="200"
+          value=""
+          [attr.placeholder]="'rplus.offerings.create.label.placeholder' | translate"
+          [attr.aria-describedby]="'offering-create-label-help'"
+          (input)="onLabelInput($event)" />
+        <small id="offering-create-label-help" class="offering-create__hint">
+          {{ 'rplus.offerings.create.label.help' | translate }}
+        </small>
+        @if (attempted() && !labelValid()) {
+          <p class="offering-create__field-error" data-testid="offering-create-error-label" role="alert">
+            {{ 'rplus.offerings.create.error.label_required' | translate }}
+          </p>
+        }
+      </div>
+
+      <!-- Capacity (0 = unbounded) -->
+      <div class="offering-create__field">
+        <label for="offering-create-capacity" class="offering-create__label">
+          {{ 'rplus.offerings.create.capacity.label' | translate }}
+        </label>
+        <input
+          id="offering-create-capacity"
+          type="number"
+          min="0"
+          step="1"
+          class="offering-create__input"
+          data-testid="offering-create-capacity-input"
+          value="0"
+          [attr.aria-describedby]="'offering-create-capacity-help'"
+          (input)="onCapacityInput($event)" />
+        <small id="offering-create-capacity-help" class="offering-create__hint">
+          {{ 'rplus.offerings.create.capacity.help' | translate }}
+        </small>
+        @if (attempted() && !capacityValid()) {
+          <p class="offering-create__field-error" data-testid="offering-create-error-capacity" role="alert">
+            {{ 'rplus.offerings.create.error.capacity_invalid' | translate }}
+          </p>
+        }
+      </div>
+
+      <div class="offering-create__actions">
+        <a class="btn btn-ghost" data-testid="offering-create-cancel" routerLink="/r/offerings">
+          {{ 'rplus.offerings.create.cancel' | translate }}
+        </a>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          data-testid="offering-create-submit"
+          [disabled]="submitting()">
+          @if (submitting()) {
+            {{ 'rplus.offerings.create.submitting' | translate }}
+          } @else {
+            {{ 'rplus.offerings.create.submit' | translate }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+</section>

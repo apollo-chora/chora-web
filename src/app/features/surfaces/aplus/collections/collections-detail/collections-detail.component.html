@@ -1,0 +1,457 @@
+<section
+  class="collections-detail surface-aplus"
+  aria-labelledby="collections-detail-heading"
+  data-testid="collections-detail">
+
+  @switch (state().status) {
+
+    @case ('loading') {
+      <div
+        class="glass-panel collections-detail__loading"
+        role="status"
+        aria-busy="true"
+        data-testid="collections-detail-loading">
+        <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        <span>Loading collection…</span>
+      </div>
+    }
+
+    @case ('error') {
+      @if (isContractGap()) {
+        <!--
+          WS-6b-BE-A1: Collection detail endpoint not yet proxied in chora-gateway.
+          Known contract gap — not a transient failure.
+        -->
+        <div
+          class="glass-panel collections-detail__contract-gap"
+          role="alert"
+          data-testid="collections-detail-contract-gap">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <div>
+            <strong>Collection detail endpoint not yet wired</strong>
+            <p>
+              <code>GET /api/v1/collections/{{ collectionId() }}</code>
+              is contracted in <code>creation-admin.yaml §getCollection</code>
+              but not yet proxied in chora-gateway.
+              Follow-up BE ask: <strong>WS-6b-BE-A1</strong>.
+            </p>
+            <a routerLink="/a/study/collections" class="btn btn-secondary collections-detail__back-link">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              Back to Collections
+            </a>
+          </div>
+        </div>
+      } @else if (isNotFound()) {
+        <div
+          class="glass-panel collections-detail__not-found"
+          role="alert"
+          data-testid="collections-detail-not-found">
+          <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+          <div>
+            <strong>Collection not found</strong>
+            <p>This collection may have been deleted or you don't have access.</p>
+            <a routerLink="/a/study/collections" class="btn btn-secondary collections-detail__back-link">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              Back to Collections
+            </a>
+          </div>
+        </div>
+      } @else {
+        <div
+          class="glass-panel collections-detail__error"
+          role="alert"
+          data-testid="collections-detail-error">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          <div>
+            <p
+              class="collections-detail__error-message"
+              data-testid="collections-detail-error-msg">
+              {{ errorKey() | translate }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="retryLoad()"
+              data-testid="collections-detail-retry">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+              Retry
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    @case ('success') {
+      @let col = collection();
+      @if (col) {
+
+        <!-- Collection header -->
+        <header class="glass-panel collections-detail__header">
+          <div class="collections-detail__header-top">
+            <a
+              routerLink="/a/study/collections"
+              class="collections-detail__back-link"
+              aria-label="Back to My Collections">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            </a>
+            <div class="collections-detail__meta">
+              <h1
+                id="collections-detail-heading"
+                class="collections-detail__title"
+                data-testid="collections-detail-title">
+                {{ col.title }}
+              </h1>
+              <div class="collections-detail__badges">
+                <span
+                  class="collections-detail__visibility-badge"
+                  [attr.aria-label]="visibilityAria(col.visibility)"
+                  data-testid="collections-detail-visibility">
+                  <i [class]="visibilityIcon(col.visibility)" aria-hidden="true"></i>
+                  {{ visibilityLabelKey(col.visibility) | translate }}
+                </span>
+                <span class="collections-detail__atom-count" data-testid="collections-detail-atom-count">
+                  <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+                  {{ atoms().length }} {{ atoms().length === 1 ? 'atom' : 'atoms' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          @if (col.description) {
+            <p
+              class="collections-detail__description"
+              data-testid="collections-detail-description">
+              {{ col.description }}
+            </p>
+          }
+
+          <div class="collections-detail__actions">
+            <a
+              [routerLink]="['/a/study/collections', collectionId(), 'edit']"
+              class="btn btn-secondary"
+              aria-label="Edit this Collection"
+              data-testid="collections-detail-edit-btn">
+              <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+              Edit
+            </a>
+            <a
+              [routerLink]="['/a/search']"
+              [queryParams]="{ context: 'collection', id: collectionId() }"
+              class="btn btn-secondary"
+              aria-label="Search for atoms to add"
+              data-testid="collections-detail-add-atom-btn">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              Add atom
+            </a>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="openConvertConfirm()"
+              [disabled]="convertInProgress()"
+              [attr.aria-label]="'aplus.collections.convert_cta_aria' | translate"
+              data-testid="collections-detail-convert-btn">
+              @if (convertInProgress()) {
+                <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+              } @else {
+                <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+              }
+              {{ 'aplus.collections.convert_cta' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              (click)="openDeleteConfirm()"
+              aria-label="Delete this Collection"
+              data-testid="collections-detail-delete-btn">
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              Delete
+            </button>
+          </div>
+        </header>
+
+        <!--
+          Convert-to-study-list outcome (WS-4 · ADR-233 D11).
+
+          Conversion is a PARTIAL SUCCESS: the atoms this learner is still
+          entitled to study are added to their study list; any atom whose author
+          has since restricted it is left behind and NAMED below. The collection
+          itself is untouched — those atoms stay curated here, so if the author
+          re-opens access, converting again will pick them up.
+        -->
+        @if (convertState().status === 'success') {
+          <div
+            class="glass-panel collections-detail__convert-result"
+            role="status"
+            aria-live="polite"
+            data-testid="collections-detail-convert-result">
+
+            <div class="collections-detail__convert-result-head">
+              <i class="fa-solid fa-circle-check collections-detail__convert-icon" aria-hidden="true"></i>
+              <div class="collections-detail__convert-result-copy">
+                <strong class="collections-detail__convert-headline">
+                  {{ 'aplus.collections.convert_success_headline'
+                     | translate: { count: convertedCount() } }}
+                </strong>
+                <p class="collections-detail__convert-sub">
+                  {{ 'aplus.collections.convert_success_body' | translate }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="btn btn-icon-only collections-detail__convert-dismiss"
+                (click)="dismissConvertResult()"
+                [attr.aria-label]="'aplus.collections.convert_dismiss_aria' | translate"
+                data-testid="collections-detail-convert-dismiss">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            @if (convertExclusions().length > 0) {
+              <div
+                class="collections-detail__convert-excluded"
+                data-testid="collections-detail-convert-excluded">
+                <h2 class="collections-detail__convert-excluded-title">
+                  {{ 'aplus.collections.convert_excluded_title'
+                     | translate: { count: convertExclusions().length } }}
+                </h2>
+                <p class="collections-detail__convert-excluded-intro">
+                  {{ 'aplus.collections.convert_excluded_intro' | translate }}
+                </p>
+                <ul class="collections-detail__convert-excluded-list">
+                  @for (ex of convertExclusions(); track ex.atom_id) {
+                    <li
+                      class="collections-detail__convert-excluded-row"
+                      [attr.data-testid]="'collections-detail-convert-excluded-' + ex.atom_id">
+                      <i class="fa-solid fa-circle-minus" aria-hidden="true"></i>
+                      <span class="collections-detail__convert-excluded-atom">
+                        <code [attr.title]="ex.atom_id">{{ ex.atom_id.slice(0, 8) }}…</code>
+                      </span>
+                      <span class="collections-detail__convert-excluded-reason">
+                        {{ exclusionReasonKey(ex.reason) | translate }}
+                      </span>
+                    </li>
+                  }
+                </ul>
+                <p class="collections-detail__convert-excluded-footnote">
+                  {{ 'aplus.collections.convert_excluded_footnote' | translate }}
+                </p>
+              </div>
+            }
+
+            <a
+              routerLink="/a/daily-dose"
+              class="btn btn-primary collections-detail__convert-open"
+              data-testid="collections-detail-convert-open-link">
+              <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+              {{ 'aplus.collections.convert_open_study_list' | translate }}
+            </a>
+          </div>
+        }
+
+        <!-- Convert failure — explain, never dump the code. -->
+        @if (convertState().status === 'error') {
+          <div
+            class="glass-panel collections-detail__convert-error"
+            role="alert"
+            data-testid="collections-detail-convert-error">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            <div>
+              <p class="collections-detail__convert-error-msg">
+                {{ convertError() | translate }}
+              </p>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="dismissConvertResult()"
+                data-testid="collections-detail-convert-error-dismiss">
+                {{ 'aplus.collections.convert_dismiss' | translate }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Atom list -->
+        @if (atoms().length === 0) {
+          <div class="glass-panel collections-detail__empty-atoms" data-testid="collections-detail-empty-atoms">
+            <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+            <p>No atoms yet. Add LearningAtoms to this Collection.</p>
+            <a
+              [routerLink]="['/a/search']"
+              [queryParams]="{ context: 'collection', id: collectionId() }"
+              class="btn btn-primary"
+              data-testid="collections-detail-empty-add-btn">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              Add your first atom
+            </a>
+          </div>
+        } @else {
+          <ol
+            class="collections-detail__atoms"
+            aria-label="Atoms in this Collection"
+            data-testid="collections-detail-atoms-list">
+            @for (atom of atoms(); track atom.atom_id; let i = $index) {
+              <li
+                class="glass-panel collections-detail__atom-row"
+                [attr.data-testid]="'collections-detail-atom-' + atom.atom_id">
+
+                <div class="collections-detail__atom-position" aria-hidden="true">
+                  {{ i + 1 }}
+                </div>
+
+                <div class="collections-detail__atom-info">
+                  <span
+                    class="collections-detail__atom-id"
+                    [attr.title]="atom.atom_id"
+                    [attr.data-testid]="'collections-detail-atom-id-' + atom.atom_id">
+                    <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+                    <code>{{ atom.atom_id.slice(0, 8) }}…</code>
+                  </span>
+                  <time
+                    class="collections-detail__atom-added"
+                    [attr.datetime]="atom.added_at"
+                    [attr.data-testid]="'collections-detail-atom-added-' + atom.atom_id">
+                    Added {{ atom.added_at | date:'d MMM yyyy' : 'UTC' }}
+                  </time>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn btn-icon-only collections-detail__remove-btn"
+                  [attr.aria-label]="'Remove atom ' + atom.atom_id.slice(0, 8) + ' from this Collection'"
+                  [attr.data-testid]="'collections-detail-remove-' + atom.atom_id"
+                  (click)="removeAtom(atom.atom_id)">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+
+              </li>
+            }
+          </ol>
+        }
+
+        <!-- Atom op error banner -->
+        @if (atomOpState().status === 'error') {
+          <div
+            class="glass-panel collections-detail__atom-op-error"
+            role="alert"
+            data-testid="collections-detail-atom-op-error">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            <p>{{ atomOpError() }}</p>
+          </div>
+        }
+
+      }
+    }
+  }
+
+  <!--
+    Convert confirm dialog (WS-4 · ADR-233).
+    Sets expectations BEFORE the call: only the atoms you can still study will
+    be added, the collection itself is not changed, and anything left behind
+    will be named.
+  -->
+  @if (showConvertConfirm()) {
+    <div
+      class="collections-detail__dialog-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="convert-confirm-heading"
+      data-testid="collections-detail-convert-dialog">
+
+      <div class="glass-panel collections-detail__dialog-panel">
+        <h2 id="convert-confirm-heading" class="collections-detail__dialog-title">
+          {{ 'aplus.collections.convert_confirm_title' | translate }}
+        </h2>
+        <p class="collections-detail__dialog-body">
+          {{ 'aplus.collections.convert_confirm_body' | translate }}
+        </p>
+        <p class="collections-detail__dialog-body collections-detail__dialog-body--muted">
+          {{ 'aplus.collections.convert_confirm_note' | translate }}
+        </p>
+
+        <div class="collections-detail__dialog-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelConvert()"
+            [disabled]="convertInProgress()"
+            data-testid="collections-detail-convert-cancel">
+            {{ 'aplus.collections.convert_cancel' | translate }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="confirmConvert()"
+            [disabled]="convertInProgress()"
+            data-testid="collections-detail-convert-confirm">
+            @if (convertInProgress()) {
+              <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+              {{ 'aplus.collections.convert_in_progress' | translate }}
+            } @else {
+              <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+              {{ 'aplus.collections.convert_confirm_cta' | translate }}
+            }
+          </button>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- Delete confirm dialog -->
+  @if (showDeleteConfirm()) {
+    <div
+      class="collections-detail__dialog-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-confirm-heading"
+      data-testid="collections-detail-delete-dialog">
+
+      <div class="glass-panel collections-detail__dialog-panel">
+        <h2 id="delete-confirm-heading" class="collections-detail__dialog-title">
+          Delete this Collection?
+        </h2>
+        <p class="collections-detail__dialog-body">
+          This will soft-delete the Collection and all its atom references.
+          The LearningAtoms themselves are NOT affected. They remain in the platform.
+          This action cannot be undone from the UI.
+        </p>
+
+        @if (deleteError()) {
+          <div
+            class="collections-detail__dialog-error"
+            role="alert"
+            data-testid="collections-detail-delete-error">
+            {{ deleteError() }}
+          </div>
+        }
+
+        <div class="collections-detail__dialog-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelDelete()"
+            [disabled]="deleteInProgress()"
+            data-testid="collections-detail-delete-cancel">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            (click)="confirmDelete()"
+            [disabled]="deleteInProgress()"
+            data-testid="collections-detail-delete-confirm">
+            @if (deleteInProgress()) {
+              <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+              Deleting…
+            } @else {
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              Delete Collection
+            }
+          </button>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</section>

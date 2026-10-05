@@ -1,0 +1,100 @@
+<div class="ai-assist-panel" [class.ai-assist-panel--stub]="stub()">
+  <button
+    type="button"
+    class="ai-assist-panel__toggle"
+    data-testid="ai-assist-toggle"
+    [attr.aria-expanded]="expanded()"
+    [disabled]="stub()"
+    [attr.aria-disabled]="stub() ? 'true' : null"
+    [attr.title]="stub() ? ('aplus.atom_authoring.ai_assist.stub_hint' | translate) : null"
+    (click)="toggle()">
+    <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+    {{ 'aplus.atom_authoring.ai_assist.toggle' | translate }}
+    <i
+      class="fa-solid"
+      [class.fa-chevron-down]="!expanded()"
+      [class.fa-chevron-up]="expanded()"
+      aria-hidden="true"></i>
+  </button>
+
+  @if (statusKey(); as key) {
+    <p
+      class="ai-assist-panel__status"
+      data-testid="ai-assist-status"
+      role="status"
+      aria-live="polite">
+      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+      {{ key | translate }}
+    </p>
+  }
+
+  @if (errorKey(); as key) {
+    <p
+      class="ai-assist-panel__error"
+      data-testid="ai-assist-error"
+      role="alert">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      {{ key | translate }}
+    </p>
+  }
+
+  @if (expanded()) {
+    <div class="ai-assist-panel__body" data-testid="ai-assist-body">
+      <label class="ai-assist-panel__field">
+        <span class="ai-assist-panel__label">
+          {{ 'aplus.atom_authoring.ai_assist.prompt_label' | translate }}
+        </span>
+        <textarea
+          rows="3"
+          data-testid="ai-assist-prompt"
+          class="ai-assist-panel__prompt"
+          [attr.aria-label]="promptAriaKey() | translate"
+          [value]="prompt()"
+          [disabled]="inFlight()"
+          (input)="onPromptInput($event)"
+          [placeholder]="
+            'aplus.atom_authoring.ai_assist.prompt_placeholder' | translate
+          "></textarea>
+      </label>
+
+      <label class="ai-assist-panel__field ai-assist-panel__field--inline">
+        <span class="ai-assist-panel__label">
+          {{ 'aplus.atom_authoring.ai_assist.difficulty_label' | translate }}
+        </span>
+        <select
+          data-testid="ai-assist-difficulty"
+          class="ai-assist-panel__difficulty"
+          [disabled]="inFlight()"
+          (change)="onDifficultyChange($event)">
+          @for (d of difficultyOptions; track d) {
+            <option [value]="d" [selected]="d === difficulty()">{{ d }}</option>
+          }
+        </select>
+      </label>
+
+      <p
+        class="ai-assist-panel__cost-hint"
+        data-testid="ai-assist-cost-hint">
+        {{ 'aplus.atom_authoring.ai_assist.cost_hint' | translate }}
+        @if (manaBalance() !== null) {
+          <span data-testid="ai-assist-mana-balance">
+            ·
+            {{ 'aplus.atom_authoring.ai_assist.balance_prefix' | translate }}
+            {{ manaBalance() }}
+            {{ 'core.mana.unit' | translate }}
+          </span>
+        }
+      </p>
+
+      <button
+        type="button"
+        class="ai-assist-panel__cta"
+        data-testid="ai-assist-generate"
+        [disabled]="!canGenerate()"
+        (click)="submit()">
+        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+        {{ 'aplus.atom_authoring.ai_assist.generate' | translate }}
+      </button>
+    </div>
+  }
+</div>

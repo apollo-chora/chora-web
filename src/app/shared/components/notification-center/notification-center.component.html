@@ -1,0 +1,184 @@
+<div class="notification-center" role="region"
+     [attr.aria-label]="'notifications.center_label' | translate"
+     data-testid="notification-panel">
+  <!-- Header -->
+  <div class="notification-center__header">
+    <h2 class="notification-center__title">{{ 'notifications.title' | translate }}</h2>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="notification-center__tabs" role="tablist" aria-label="Notification filters">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="notification-center__tab"
+        [class.notification-center__tab--active]="activeTab() === tab.key"
+        role="tab"
+        [attr.aria-selected]="activeTab() === tab.key"
+        [attr.aria-controls]="'notification-tabpanel'"
+        (click)="onTabChange(tab.key)"
+        [attr.data-testid]="'notification-tab-' + tab.key">
+        {{ tab.labelKey | translate }}
+      </button>
+    }
+  </div>
+
+  <!-- Notification List -->
+  <div class="notification-center__list"
+       id="notification-tabpanel"
+       role="tabpanel"
+       tabindex="0">
+    @if (loading() && notifications().length === 0) {
+      <div class="notification-center__loading" data-testid="notification-loading">
+        <span class="notification-center__spinner" aria-hidden="true"></span>
+        {{ 'notifications.loading' | translate }}
+      </div>
+    } @else if (isEmpty()) {
+      <div class="notification-center__empty" data-testid="notification-empty">
+        <span class="notification-center__empty-icon" aria-hidden="true">&#128276;</span>
+        <p class="notification-center__empty-text">{{ 'notifications.empty_' + activeTab() | translate }}</p>
+      </div>
+    } @else {
+      @for (notification of notifications(); track trackById($index, notification)) {
+        <article
+          class="notification-center__item"
+          [class.notification-center__item--unread]="!notification.is_read"
+          [class.notification-center__item--pinned]="notification.is_pinned"
+          [class.notification-center__item--expired]="isExpired(notification)"
+          [attr.aria-label]="notification.title"
+          (click)="onItemClick(notification)"
+          data-testid="notification-item">
+          <!-- Priority indicator -->
+          @if (priorityIndicator(notification.priority)) {
+            <span class="notification-center__priority"
+                  [class.notification-center__priority--critical]="notification.priority === 'critical'"
+                  [class.notification-center__priority--high]="notification.priority === 'high'"
+                  [attr.aria-label]="notification.priority + ' priority'"
+                  data-testid="notification-priority">
+              {{ priorityIndicator(notification.priority) }}
+            </span>
+          }
+
+          <!-- Content -->
+          <div class="notification-center__content">
+            <div class="notification-center__content-header">
+              <h3 class="notification-center__item-title">{{ notification.title }}</h3>
+              <time class="notification-center__time"
+                    [attr.datetime]="notification.created_at">
+                {{ notification.created_at | date:'short' }}
+              </time>
+            </div>
+            <p class="notification-center__body">{{ notification.body }}</p>
+
+            <!-- Inline Actions -->
+            @if (notification.action_type && !notification.action_responded && !isExpired(notification)) {
+              <div class="notification-center__actions" data-testid="notification-actions">
+                @switch (notification.action_type) {
+                  @case ('accept') {
+                    <button class="notification-center__action notification-center__action--accept"
+                            (click)="onAction(notification, 'accept', $event)"
+                            data-testid="action-accept">
+                      {{ 'notifications.action_accept' | translate }}
+                    </button>
+                    <button class="notification-center__action notification-center__action--decline"
+                            (click)="onAction(notification, 'decline', $event)"
+                            data-testid="action-decline">
+                      {{ 'notifications.action_decline' | translate }}
+                    </button>
+                  }
+                  @case ('decline') {
+                    <button class="notification-center__action notification-center__action--decline"
+                            (click)="onAction(notification, 'decline', $event)"
+                            data-testid="action-decline">
+                      {{ 'notifications.action_decline' | translate }}
+                    </button>
+                  }
+                  @case ('approve') {
+                    <button class="notification-center__action notification-center__action--accept"
+                            (click)="onAction(notification, 'approve', $event)"
+                            data-testid="action-approve">
+                      {{ 'notifications.action_approve' | translate }}
+                    </button>
+                    <button class="notification-center__action notification-center__action--decline"
+                            (click)="onAction(notification, 'reject', $event)"
+                            data-testid="action-reject">
+                      {{ 'notifications.action_reject' | translate }}
+                    </button>
+                  }
+                  @case ('reject') {
+                    <button class="notification-center__action notification-center__action--decline"
+                            (click)="onAction(notification, 'reject', $event)"
+                            data-testid="action-reject">
+                      {{ 'notifications.action_reject' | translate }}
+                    </button>
+                  }
+                  @case ('claim') {
+                    <button class="notification-center__action notification-center__action--accept"
+                            (click)="onAction(notification, 'claim', $event)"
+                            data-testid="action-claim">
+                      {{ 'notifications.action_claim' | translate }}
+                    </button>
+                  }
+                  @case ('escalate') {
+                    <button class="notification-center__action notification-center__action--escalate"
+                            (click)="onAction(notification, 'escalate', $event)"
+                            data-testid="action-escalate">
+                      {{ 'notifications.action_escalate' | translate }}
+                    </button>
+                  }
+                }
+              </div>
+            }
+
+            @if (notification.action_responded) {
+              <span class="notification-center__responded" data-testid="notification-responded">
+                {{ 'notifications.responded' | translate }}
+              </span>
+            }
+
+            @if (isExpired(notification) && notification.action_type && !notification.action_responded) {
+              <span class="notification-center__expired-label" data-testid="notification-expired">
+                {{ 'notifications.expired' | translate }}
+              </span>
+            }
+          </div>
+
+          <!-- Quick actions (read/pin) -->
+          <div class="notification-center__quick-actions">
+            <button
+              class="notification-center__quick-action"
+              (click)="onMarkRead(notification, $event)"
+              [attr.aria-label]="notification.is_read
+                ? ('notifications.mark_unread' | translate)
+                : ('notifications.mark_read' | translate)"
+              [attr.data-testid]="notification.is_read ? 'mark-unread' : 'mark-read'">
+              <span aria-hidden="true">{{ notification.is_read ? '&#9675;' : '&#9679;' }}</span>
+            </button>
+            <button
+              class="notification-center__quick-action"
+              (click)="onTogglePin(notification, $event)"
+              [attr.aria-label]="notification.is_pinned
+                ? ('notifications.unpin' | translate)
+                : ('notifications.pin' | translate)"
+              data-testid="toggle-pin">
+              <span aria-hidden="true">{{ notification.is_pinned ? '&#9733;' : '&#9734;' }}</span>
+            </button>
+          </div>
+        </article>
+      }
+
+      <!-- Load More -->
+      @if (hasMore()) {
+        <button
+          class="notification-center__load-more"
+          (click)="onLoadMore()"
+          [disabled]="loading()"
+          data-testid="notification-load-more">
+          @if (loading()) {
+            <span class="notification-center__spinner notification-center__spinner--sm" aria-hidden="true"></span>
+          }
+          {{ 'notifications.load_more' | translate }}
+        </button>
+      }
+    }
+  </div>
+</div>

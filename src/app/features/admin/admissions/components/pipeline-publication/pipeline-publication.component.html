@@ -1,0 +1,203 @@
+<section
+  class="pipeline-publication"
+  role="main"
+  [attr.aria-label]="'admin.admissions.publication_title' | translate"
+  data-testid="pipeline-publication">
+
+  <!-- Header -->
+  <header class="pipeline-publication__header">
+    <h1 class="pipeline-publication__title" data-testid="publication-title">
+      {{ 'admin.admissions.publication_title' | translate }}
+    </h1>
+    <p class="pipeline-publication__subtitle">
+      {{ 'admin.admissions.publication_subtitle' | translate }}
+    </p>
+  </header>
+
+  @if (loading()) {
+    <div class="pipeline-publication__loading" aria-live="polite" data-testid="publication-loading">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="pipeline-publication__skeleton-row"></div>
+      }
+    </div>
+  }
+
+  @if (!loading() && template(); as tpl) {
+    <!-- Pipeline Summary -->
+    <div class="pipeline-publication__summary" data-testid="pipeline-summary">
+      <h2 class="pipeline-publication__section-title">
+        {{ 'admin.admissions.pipeline_summary' | translate }}
+      </h2>
+
+      <div class="pipeline-publication__info-grid">
+        <div class="pipeline-publication__info-item">
+          <span class="pipeline-publication__info-label">
+            {{ 'admin.admissions.template_name' | translate }}
+          </span>
+          <span class="pipeline-publication__info-value" data-testid="summary-name">
+            {{ tpl.name }}
+          </span>
+        </div>
+        @if (tpl.programme_name) {
+          <div class="pipeline-publication__info-item">
+            <span class="pipeline-publication__info-label">
+              {{ 'admin.admissions.linked_programme' | translate }}
+            </span>
+            <span class="pipeline-publication__info-value" data-testid="summary-programme">
+              {{ tpl.programme_name }}
+            </span>
+          </div>
+        }
+        <div class="pipeline-publication__info-item">
+          <span class="pipeline-publication__info-label">
+            {{ 'admin.admissions.total_stages' | translate }}
+          </span>
+          <span class="pipeline-publication__info-value" data-testid="summary-stage-count">
+            {{ tpl.stages.length }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Stage Summary Table -->
+      <div class="pipeline-publication__stage-table" role="table"
+           [attr.aria-label]="'admin.admissions.stage_summary' | translate">
+        <div class="pipeline-publication__stage-row pipeline-publication__stage-row--header" role="row">
+          <div class="pipeline-publication__stage-cell" role="columnheader">
+            {{ 'admin.admissions.order' | translate }}
+          </div>
+          <div class="pipeline-publication__stage-cell" role="columnheader">
+            {{ 'admin.admissions.stage_name' | translate }}
+          </div>
+          <div class="pipeline-publication__stage-cell" role="columnheader">
+            {{ 'admin.admissions.type' | translate }}
+          </div>
+          <div class="pipeline-publication__stage-cell" role="columnheader">
+            {{ 'admin.admissions.required_col' | translate }}
+          </div>
+        </div>
+        @for (stage of stageSummary(); track trackByIndex($index)) {
+          <div class="pipeline-publication__stage-row" role="row"
+               [attr.data-testid]="'summary-stage-' + $index">
+            <div class="pipeline-publication__stage-cell" role="cell">{{ stage.order }}</div>
+            <div class="pipeline-publication__stage-cell" role="cell">{{ stage.name }}</div>
+            <div class="pipeline-publication__stage-cell" role="cell">
+              {{ stageTypeLabels[stage.type] | translate }}
+            </div>
+            <div class="pipeline-publication__stage-cell" role="cell">
+              @if (stage.required) {
+                <span class="pipeline-publication__badge pipeline-publication__badge--required">
+                  {{ 'admin.admissions.yes' | translate }}
+                </span>
+              } @else {
+                <span class="pipeline-publication__badge pipeline-publication__badge--optional">
+                  {{ 'admin.admissions.no' | translate }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Publication Settings -->
+    <div class="pipeline-publication__settings" data-testid="publication-settings">
+      <h2 class="pipeline-publication__section-title">
+        {{ 'admin.admissions.publication_settings' | translate }}
+      </h2>
+
+      <div class="pipeline-publication__field">
+        <label for="pub-open-date" class="pipeline-publication__label">
+          {{ 'admin.admissions.scheduled_open_date' | translate }}
+        </label>
+        <input
+          type="datetime-local"
+          id="pub-open-date"
+          class="pipeline-publication__input"
+          [ngModel]="openDate()"
+          (ngModelChange)="openDate.set($event)"
+          data-testid="pub-open-date-input"
+          [attr.aria-label]="'admin.admissions.scheduled_open_date' | translate" />
+      </div>
+
+      <!-- Notification Cohorts -->
+      <div class="pipeline-publication__field">
+        <label for="cohort-input" class="pipeline-publication__label">
+          {{ 'admin.admissions.notification_cohorts' | translate }}
+        </label>
+        <div class="pipeline-publication__cohort-input-row">
+          <input
+            type="text"
+            id="cohort-input"
+            class="pipeline-publication__input"
+            [ngModel]="cohortInput()"
+            (ngModelChange)="cohortInput.set($event)"
+            (keydown.enter)="addCohort(); $event.preventDefault()"
+            [placeholder]="'admin.admissions.cohort_placeholder' | translate"
+            data-testid="cohort-input"
+            [attr.aria-label]="'admin.admissions.notification_cohorts' | translate" />
+          <button
+            type="button"
+            class="pipeline-publication__btn pipeline-publication__btn--small"
+            (click)="addCohort()"
+            data-testid="add-cohort-btn"
+            [attr.aria-label]="'admin.admissions.add_cohort' | translate">
+            {{ 'admin.admissions.add_cohort' | translate }}
+          </button>
+        </div>
+        @if (notificationCohortIds().length > 0) {
+          <div class="pipeline-publication__cohort-tags" data-testid="cohort-tags">
+            @for (cohort of notificationCohortIds(); track trackByIndex($index)) {
+              <span class="pipeline-publication__cohort-tag">
+                {{ cohort }}
+                <button
+                  type="button"
+                  class="pipeline-publication__cohort-remove"
+                  (click)="removeCohort($index)"
+                  [attr.aria-label]="'admin.admissions.remove_cohort' | translate">
+                  &times;
+                </button>
+              </span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Confirmation -->
+    <div class="pipeline-publication__confirm" data-testid="publication-confirm">
+      <label class="pipeline-publication__checkbox-label">
+        <input
+          type="checkbox"
+          [ngModel]="confirmChecked()"
+          (ngModelChange)="confirmChecked.set($event)"
+          data-testid="confirm-checkbox" />
+        {{ 'admin.admissions.confirm_publication' | translate }}
+      </label>
+    </div>
+
+    <!-- Actions -->
+    <footer class="pipeline-publication__footer" data-testid="publication-footer">
+      <button
+        type="button"
+        class="pipeline-publication__btn pipeline-publication__btn--secondary"
+        (click)="goBack()"
+        data-testid="back-btn"
+        [attr.aria-label]="'common.back' | translate">
+        {{ 'common.back' | translate }}
+      </button>
+      <button
+        type="button"
+        class="pipeline-publication__btn pipeline-publication__btn--primary"
+        [disabled]="!canPublish()"
+        (click)="publish()"
+        data-testid="publish-btn"
+        [attr.aria-label]="'admin.admissions.publish' | translate">
+        @if (publishing()) {
+          {{ 'admin.admissions.publishing' | translate }}
+        } @else {
+          {{ 'admin.admissions.publish' | translate }}
+        }
+      </button>
+    </footer>
+  }
+</section>

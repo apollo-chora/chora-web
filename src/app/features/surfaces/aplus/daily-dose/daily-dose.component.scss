@@ -1,0 +1,727 @@
+// =====================================================================
+// A+ Daily Dose — Phyllis demo Step 8 (Familiar card stack)
+//
+// Tablet-first per CLAUDE.md §11. Single-column ≥768px, 2-column (stack
+// + Familiar rail) ≥1280px.
+// =====================================================================
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.aplus-daily-dose {
+  padding: 2rem clamp(1rem, 3vw, 2rem);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+// ─── Focused-practice header (Growth Edge deep-link) ─────────────────
+.dose-focused-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  padding: 0.85rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border-left: 3px solid var(--primary);
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    text-decoration: none;
+    flex-shrink: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+  }
+
+  &__concept {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+
+    i {
+      color: var(--primary);
+      font-size: 13px;
+    }
+  }
+}
+
+// ─── Header ─────────────────────────────────────────────────────────
+.dose-header {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dose-header__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--surface-accent-ink, var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.dose-header__date {
+  margin: 0.25rem 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+// ─── Composition chips ──────────────────────────────────────────────
+.dose-composition {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.composition-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+
+  &--review {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+  }
+
+  &--new {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+  }
+
+  &--stretch {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--warning);
+  }
+}
+
+// ─── Goal-scope disclosure (ADR-242 D2) ─────────────────────────────
+// Secondary header text: it explains the dose, it does not compete with it.
+.dose-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--chora-color-text-muted);
+
+  i {
+    font-size: 11px;
+    opacity: 0.75;
+  }
+}
+
+.dose-header__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.dose-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  &__value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  &__countdown {
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dose-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+// ─── Body grid ──────────────────────────────────────────────────────
+.dose-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1280px) {
+  .dose-body {
+    grid-template-columns: 1fr 340px;
+    gap: 2rem;
+  }
+}
+
+// ─── Card stack ─────────────────────────────────────────────────────
+.dose-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dose-stack__cards {
+  position: relative;
+  min-height: 360px;
+  display: grid;
+  grid-template-areas: 'stack';
+
+  > .dose-card {
+    grid-area: stack;
+  }
+}
+
+.dose-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  background: linear-gradient(135deg, rgba(253, 242, 248, 0.85), rgba(255, 255, 255, 0.55));
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  transform-origin: top center;
+  opacity: 1;
+
+  &.is-active {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    z-index: 3;
+  }
+
+  &.is-behind {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0.55;
+    z-index: 2;
+  }
+
+  &.is-done {
+    transform: translateY(-12px) scale(0.94);
+    opacity: 0.25;
+    z-index: 1;
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__category {
+    text-transform: uppercase;
+  }
+
+  &__topic {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  &__xp {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--warning);
+    font-weight: 700;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text-main);
+  }
+
+  &__atom-id {
+    margin: 0;
+    font-size: 11px;
+    color: var(--text-muted);
+
+    code {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      color: var(--text-main);
+      font-size: 11px;
+    }
+  }
+
+  &__summary {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  &__footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+// ─── Stack nav ─────────────────────────────────────────────────────
+.dose-stack__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dose-stack__nav-btn {
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.dose-stack__dots {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dose-stack__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &.is-active {
+    background: var(--primary);
+    transform: scale(1.2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.dose-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+}
+
+// ─── Familiar rail ─────────────────────────────────────────────────
+.dose-rail {
+  padding: 1.5rem;
+  align-self: flex-start;
+}
+
+.dose-familiar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.65rem;
+}
+
+.dose-familiar__avatar {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.dose-familiar__level {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: var(--primary);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  border: 2px solid white;
+}
+
+.dose-familiar__name {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--primary);
+}
+
+.dose-familiar__rank {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.dose-familiar__greeting {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.45;
+  text-align: left;
+  width: 100%;
+}
+
+.dose-familiar__quote {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  color: var(--text-main);
+  font-style: italic;
+  line-height: 1.4;
+  text-align: left;
+  width: 100%;
+}
+
+.dose-familiar__narrative {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(25, 118, 210, 0.08);
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  text-align: left;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+
+  i {
+    color: var(--primary);
+    font-size: 12px;
+    margin-top: 0.15rem;
+  }
+}
+
+.dose-loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 4rem 1rem;
+  font-size: 14px;
+
+  i {
+    margin-right: 0.5rem;
+    color: var(--primary);
+  }
+}
+
+.dose-error {
+  margin: 2rem auto;
+  max-width: 480px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+
+  i {
+    font-size: 32px;
+    color: var(--danger, #ef4444);
+  }
+}
+
+.dose-error__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.dose-error__message {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+// ─── Empty dose panel (zero atoms composed) ──────────────────────────
+// Shares the error panel's geometry so an empty dose reads as a deliberate
+// state rather than a broken layout, but is NOT styled as a failure: neutral
+// accent, no danger colour. Body copy uses the canonical AA-safe muted token
+// (`--chora-color-text-muted`), never the legacy `--text-muted` (#64748b,
+// which fails AA and is frozen under the legacy-color-ban ratchet).
+.dose-empty {
+  margin: 2rem auto;
+  max-width: 480px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.dose-empty__icon {
+  font-size: 32px;
+  color: var(--primary);
+}
+
+.dose-empty__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.dose-empty__body {
+  margin: 0;
+  font-size: 14px;
+  color: var(--chora-color-text-muted);
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+.dose-empty__cta {
+  margin-top: 0.25rem;
+}
+
+// ─── Retention indicator (WS-12) ────────────────────────────────────
+.dose-card__retention {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  // color is bound inline via [style.color]="retentionColorVar(atom)"
+}
+
+// ─── Per-Familiar nudge card (WS-12-NUDGE) ──────────────────────────
+.dose-nudge {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1rem;
+  border-radius: var(--panel-radius);
+
+  &--familiar {
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.85), rgba(255, 255, 255, 0.55));
+    border-left: 3px solid var(--primary);
+  }
+
+  &--upsell {
+    background: linear-gradient(135deg, rgba(255, 251, 235, 0.85), rgba(255, 255, 255, 0.55));
+    border-left: 3px solid var(--warning);
+  }
+}
+
+.dose-nudge__icon {
+  font-size: 18px;
+  flex-shrink: 0;
+
+  .dose-nudge--familiar & {
+    color: var(--primary);
+  }
+
+  .dose-nudge--upsell & {
+    color: var(--warning);
+  }
+}
+
+.dose-nudge__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dose-nudge__title {
+  margin: 0 0 0.2rem;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.3;
+}
+
+.dose-nudge__text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dose-nudge__cta {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 0.4rem 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+// ─── Streak indicator (WS-12) ───────────────────────────────────────
+.dose-streak {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+
+  &--at-risk {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.5);
+  }
+}
+
+.dose-streak__icon {
+  color: var(--warning);
+  font-size: 14px;
+
+  &--pulse {
+    animation: streak-pulse 1.6s ease-in-out infinite;
+  }
+}
+
+.dose-streak__count {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--warning);
+  font-variant-numeric: tabular-nums;
+}
+
+.dose-streak__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.dose-streak__warning {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--warning);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@keyframes streak-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.65; transform: scale(1.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dose-card,
+  .dose-stack__dot,
+  .dose-progress__fill {
+    transition: none;
+  }
+
+  .dose-streak__icon--pulse {
+    animation: none;
+  }
+}
+
+// ─── AI picks (M2 / ADR-196) — recommended atoms surfaced as cards ───
+.dose-ai-picks {
+  margin-top: 1.5rem;
+  padding: 1.25rem clamp(1rem, 3vw, 1.5rem);
+}
+
+.dose-ai-picks__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+
+  i {
+    color: var(--primary);
+  }
+}
+
+.dose-ai-picks__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1440px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

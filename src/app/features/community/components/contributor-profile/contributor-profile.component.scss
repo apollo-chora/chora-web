@@ -1,0 +1,198 @@
+:host {
+  display: block;
+}
+
+.contributor-profile {
+  padding: var(--chora-space-lg, 24px);
+
+  // -------------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-md, 16px);
+    margin-block-end: var(--chora-space-lg, 24px);
+  }
+
+  &__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--chora-color-primary, #2563eb);
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  &__identity {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-xs, 4px);
+  }
+
+  &__name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__level {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: capitalize;
+    width: fit-content;
+
+    &--novice {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    &--contributor {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    &--reviewer {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    &--curator {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    &--expert {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+  }
+
+  &__member-since {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+  }
+
+  // -------------------------------------------------------------------------
+  // Reputation Score
+  // -------------------------------------------------------------------------
+
+  &__reputation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--chora-space-lg, 24px);
+    margin-block-end: var(--chora-space-lg, 24px);
+    background: var(--chora-color-surface-1, #fafafa);
+    border-radius: var(--chora-radius-md, 8px);
+    text-align: center;
+  }
+
+  &__reputation-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--chora-color-primary, #2563eb);
+    line-height: 1;
+  }
+
+  &__reputation-label {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin-block-start: var(--chora-space-xs, 4px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Stats Grid
+  // -------------------------------------------------------------------------
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--chora-space-md, 16px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    text-align: center;
+  }
+
+  &__stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--chora-color-text, #333);
+  }
+
+  &__stat-label {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+    margin-block-start: var(--chora-space-xs, 4px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Loading / Error
+  // -------------------------------------------------------------------------
+
+  &__loading {
+    padding: var(--chora-space-lg, 24px) 0;
+    display: grid;
+    gap: var(--chora-space-md, 16px);
+  }
+
+  &__skeleton-header {
+    height: 80px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-md, 8px);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  &__skeleton-stats {
+    height: 200px;
+    background: var(--chora-color-surface-1, #f0f0f0);
+    border-radius: var(--chora-radius-md, 8px);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  &__error {
+    text-align: center;
+    padding: var(--chora-space-xl, 32px);
+  }
+
+  &__error-text {
+    font-size: 0.875rem;
+    color: #991b1b;
+    margin: 0;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Desktop enhancement — 4-column stats
+@media (min-width: 1280px) {
+  .contributor-profile {
+    &__stats {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+}

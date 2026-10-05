@@ -1,0 +1,25 @@
+// =====================================================================
+// A+ Learn hub-page container geometry (CHO-2340)
+//
+// ONE source of truth for the outer frame every A+ "Learning" hub page
+// shares (dashboard / catalog / my-courses / study / me-assessments /
+// me-transcript). Each of those pages renders <chora-learning-sub-nav> as
+// the first child of its top-level <section>; giving every section the same
+// padding + max-width + inline centring lands that sub-nav pill at an
+// identical offset and width across all of them.
+//
+// Geometry ONLY (padding + max-width + inline centring). Each page keeps its
+// own inner flow (display / flex-direction / gap) in its component styles,
+// because those legitimately differ per page.
+//
+// Global (unscoped) on purpose so it cascades into every hub section. Do NOT
+// fold this into `.surface-aplus` (src/styles/_surface-accents.scss): that
+// class is accent-only (it sets --primary / --secondary) and is also used by
+// non-hub pages such as the A+ login, which must NOT inherit hub geometry.
+// =====================================================================
+
+.aplus-hub-page {
+  padding: 2rem clamp(1rem, 3vw, 2rem);
+  max-width: 1280px;
+  margin-inline: auto;
+}

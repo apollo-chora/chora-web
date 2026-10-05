@@ -1,0 +1,260 @@
+// R+ SkillsFutures Claim Detail — polyglass BEM, tablet-first
+// (≥768px primary, ≥1280px desktop enhanced). Surface accent inherited
+// from `.surface-rplus`. Mirrors the wbl-detail layout for cross-screen
+// consistency.
+
+:host { display: block; }
+
+.skillsfutures-claim-detail {
+  padding: 1.5rem;
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    i { font-size: 0.625rem; }
+  }
+
+  &__breadcrumb-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    &:hover { color: var(--text-main); }
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+  }
+
+  &__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  &__sf-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    background: rgba(180, 83, 9, 0.1);
+    color: var(--primary);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__claim-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.5);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    align-self: flex-start;
+  }
+
+  &__loading {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    color: var(--text-muted);
+    font-style: italic;
+    border-radius: 16px;
+  }
+
+  &__error {
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px;
+    background: rgba(254, 226, 226, 0.7);
+    border: 1px solid rgba(252, 165, 165, 0.7);
+    color: #991b1b;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  &__error-message {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    font-size: 0.9rem;
+  }
+
+  &__retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.85rem;
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+  }
+
+  &__panel {
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-inline-start: 4px solid var(--primary);
+  }
+
+  &__panel-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__fields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem 1.25rem;
+    margin: 0;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+
+    dt {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      word-break: break-word;
+      strong { font-weight: 700; }
+    }
+
+    &--wide {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__nric {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.5);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+  }
+
+  &__muted {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  &__reason {
+    background: rgba(255, 255, 255, 0.4);
+    padding: 0.5rem 0.625rem;
+    border-radius: 8px;
+    font-style: italic;
+    color: var(--text-muted);
+  }
+
+  &__panel-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  &__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.85rem;
+
+    &[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__back-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.85rem;
+    text-decoration: none;
+    color: var(--text-main);
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+@media (min-width: 1280px) {
+  .skillsfutures-claim-detail {
+    padding: 2rem;
+
+    &__fields {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}

@@ -1,0 +1,60 @@
+:host {
+  display: block;
+}
+
+// ADR-196 — flat stat card. NO `::before` side-stripe (the polyglass tell).
+// Status is shown via value colour keyed off data-accent only.
+.cplus-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cplus-space-xs);
+  padding: var(--cplus-space-md) var(--cplus-space-lg);
+  background: var(--cplus-surface);
+  border: 1px solid var(--cplus-border);
+  border-radius: var(--cplus-radius-card);
+  box-shadow: var(--cplus-shadow-sm);
+  min-width: 0;
+
+  &__label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--cplus-text-secondary);
+    line-height: 1.2;
+  }
+
+  &__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--cplus-text);
+    word-break: break-word;
+  }
+
+  &__hint {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--cplus-text-secondary);
+    line-height: 1.3;
+  }
+
+  &[data-state='pending'] &__value {
+    color: var(--cplus-text-secondary);
+    font-weight: 600;
+  }
+
+  // Accent recolours the value only — no stripe, no glow, no gradient.
+  &[data-accent='accent'] &__value {
+    color: var(--cplus-accent-strong);
+  }
+  &[data-accent='success'] &__value {
+    color: var(--cplus-success);
+  }
+  &[data-accent='warning'] &__value {
+    color: var(--cplus-warning);
+  }
+  &[data-accent='danger'] &__value {
+    color: var(--cplus-danger);
+  }
+}

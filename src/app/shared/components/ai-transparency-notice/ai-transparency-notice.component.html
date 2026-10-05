@@ -1,0 +1,70 @@
+@if (visible()) {
+  @if (disclosure(); as d) {
+    <!--
+      One-time first-interaction NOTICE (ADR-225 / EU AI Act Art 50).
+      Backdrop is NON-dismissible — no (click) handler, no Escape close. The
+      only exit is the single "Got it" acknowledgement.
+    -->
+    <div
+      class="ai-notice-backdrop"
+      data-testid="ai-transparency-notice"
+      role="presentation">
+      <div
+        #dialogPanel
+        class="ai-notice glass-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ai-transparency-notice-title"
+        aria-describedby="ai-transparency-notice-body"
+        tabindex="-1"
+        data-testid="ai-transparency-notice-dialog"
+        (keydown)="onKeydown($event)">
+        <div class="ai-notice__icon" aria-hidden="true">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+
+        <!-- BFF-served disclosure strings, rendered directly. -->
+        <h2
+          id="ai-transparency-notice-title"
+          class="ai-notice__title"
+          data-testid="ai-transparency-notice-title">
+          {{ d.notice.title }}
+        </h2>
+        <p
+          id="ai-transparency-notice-body"
+          class="ai-notice__body"
+          data-testid="ai-transparency-notice-body">
+          {{ d.notice.body }}
+        </p>
+
+        @if (errorKey(); as err) {
+          <p
+            class="ai-notice__error"
+            role="alert"
+            data-testid="ai-transparency-notice-error">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ err | translate }}
+          </p>
+        }
+
+        <div class="ai-notice__actions">
+          <button
+            type="button"
+            class="btn btn-primary ai-notice__action"
+            data-testid="ai-transparency-notice-action"
+            [disabled]="submitting()"
+            [attr.aria-label]="'core.ai_transparency.notice_action_aria' | translate"
+            (click)="acknowledge()">
+            @if (submitting()) {
+              <span
+                class="ai-notice__spinner"
+                data-testid="ai-transparency-notice-spinner"
+                aria-hidden="true"></span>
+            }
+            {{ d.notice.action }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}

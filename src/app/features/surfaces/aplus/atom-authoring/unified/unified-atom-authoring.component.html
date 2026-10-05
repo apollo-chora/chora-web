@@ -1,0 +1,716 @@
+<section
+  class="unified-authoring surface-aplus"
+  aria-labelledby="unified-authoring-heading"
+  data-testid="unified-authoring">
+  <!-- Studio sub-nav (Atoms / Test sets / Question Banks). Re-introduced here
+       so the standalone test-set builder is reachable from the canvas again: it
+       was orphaned when a07ea5b99 dropped the sub-nav (CHO-1980). -->
+  <chora-studio-sub-nav />
+  <article class="glass-panel unified-authoring__shell">
+    <header class="unified-authoring__header">
+      <h1 id="unified-authoring-heading" class="unified-authoring__title">
+        {{ 'aplus.unified_authoring.heading' | translate }}
+      </h1>
+    </header>
+    <p class="unified-authoring__lede">
+      {{ 'aplus.unified_authoring.lede' | translate }}
+    </p>
+
+    @switch (composeState().status) {
+      @case ('review') {
+        <!-- ── U4.3 interleaved review + accept ── -->
+        <div class="unified-authoring__review" data-testid="unified-authoring-review">
+          <!-- IMDA D2 transparency — the AI pipeline trace, pinned to the TOP of
+               the review and animate-collapsed into an accordion (CR Phase 2)
+               to signal the importance of AI explainability. AI runs only. -->
+          @if (!traceIdle()) {
+            <chora-aplus-trace-widget
+              class="unified-authoring__trace unified-authoring__trace--top"
+              [pipelineTrace]="pipelineTrace()"
+              [refused]="false"
+              [idle]="false"
+              [live]="false"
+              [collapsed]="true" />
+          }
+          <!-- CHO-2387 fail-loud: say it plainly when a requested illustration
+               did not render. A forced image is integral to the question, so a
+               silently imageless item is broken, not merely plainer. -->
+          @if (imageRenderWarning(); as img) {
+            <div
+              class="unified-authoring__image-warning"
+              role="alert"
+              data-testid="unified-authoring-image-warning">
+              <i class="fa-solid fa-image-slash" aria-hidden="true"></i>
+              <span>
+                {{
+                  'aplus.unified_authoring.image_render_warning'
+                    | translate: { rendered: img.rendered, total: img.total }
+                }}
+              </span>
+            </div>
+          }
+
+          @if (reviewManual()) {
+            <p
+              class="unified-authoring__review-hint"
+              data-testid="unified-authoring-review-manual">
+              <i class="fa-solid fa-pen-nib" aria-hidden="true"></i>
+              {{ 'aplus.unified_authoring.review_manual_ready' | translate }}
+            </p>
+          }
+
+          <!-- Generation summary: shortfall banner (GAP #5) + per-type (GAP #6) -->
+          @if (generationSummary(); as summary) {
+            @if (summary.shortfall_reason) {
+              <p
+                class="unified-authoring__shortfall"
+                role="status"
+                data-testid="unified-authoring-shortfall">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                {{ 'aplus.unified_authoring.shortfall_generated' | translate }}
+                {{ summary.generated_total }}
+                {{ 'aplus.unified_authoring.shortfall_of' | translate }}
+                {{ summary.requested_total }}
+                {{ 'aplus.unified_authoring.shortfall_requested' | translate }}
+                {{ summary.shortfall_reason }}
+              </p>
+            }
+            @if (perTypeCounts(); as counts) {
+              <p
+                class="unified-authoring__per-type"
+                data-testid="unified-authoring-per-type">
+                {{ counts }}
+              </p>
+            }
+          }
+
+          <chora-unified-review-list
+            [items]="reviewItems()"
+            [manaPreview]="manaPreview()"
+            [busy]="acceptBusy()"
+            [testSet]="testSetConfig()"
+            [canAccept]="canAccept()"
+            [acceptError]="acceptError()"
+            [canAssembleTestSet]="canAssembleTestSet()"
+            [allowRegen]="true"
+            [regenState]="regenState()"
+            (toggleSelect)="onToggleSelect($event)"
+            (editItem)="onEditItem($event)"
+            (titleChange)="onTitleChange($event)"
+            (addManual)="onAddManual($event)"
+            (removeManual)="onRemoveManual($event)"
+            (regenImage)="onRegenImage($event)"
+            (toggleAll)="onToggleAll()"
+            (reorder)="onReorder($event)"
+            (pointsChange)="onPointsChange($event)"
+            (setTestSetEnabled)="onSetTestSetEnabled($event)"
+            (setTestSetTitle)="onSetTestSetTitle($event)"
+            (setTestSetDescription)="onSetTestSetDescription($event)"
+            (accept)="onAccept()" />
+
+          <button
+            type="button"
+            class="btn btn-secondary unified-authoring__review-reset"
+            (click)="reset()"
+            data-testid="unified-authoring-reset">
+            {{ 'aplus.unified_authoring.reset_cta' | translate }}
+          </button>
+        </div>
+      }
+      @case ('accepting') {
+        <div
+          class="unified-authoring__working"
+          data-testid="unified-authoring-accepting"
+          role="status"
+          aria-live="polite">
+          <i
+            class="fa-solid fa-circle-notch fa-spin unified-authoring__working-icon"
+            aria-hidden="true"></i>
+          <p class="unified-authoring__working-text">
+            {{ 'aplus.unified_authoring.working_accepting' | translate }}
+          </p>
+        </div>
+      }
+      @case ('submitting') {
+        <!-- ── Working: minting the atom + dispatching the job ── -->
+        <div
+          class="unified-authoring__working"
+          data-testid="unified-authoring-working"
+          role="status"
+          aria-live="polite">
+          <i
+            class="fa-solid fa-circle-notch fa-spin unified-authoring__working-icon"
+            aria-hidden="true"></i>
+          <p class="unified-authoring__working-text">
+            {{ 'aplus.unified_authoring.working_submitting' | translate }}
+          </p>
+          <!-- Defect 2: an escape hatch so a severed / black-holed multi-MB
+               upload is never an inescapable "still working" spinner. -->
+          <button
+            type="button"
+            class="btn btn-secondary unified-authoring__cancel"
+            (click)="cancelDispatch()"
+            data-testid="unified-authoring-cancel">
+            {{ 'aplus.unified_authoring.cancel_cta' | translate }}
+          </button>
+        </div>
+      }
+      @case ('polling') {
+        <!-- ── Generating: stream the AI pipeline trace LIVE (cards appear as
+             each agent finishes) instead of a stale "please wait" (CR Phase 2).
+             The spinner is only the pre-first-step fallback. ── -->
+        <div
+          class="unified-authoring__generating"
+          data-testid="unified-authoring-generating">
+          @if (!traceIdle()) {
+            <chora-aplus-trace-widget
+              class="unified-authoring__trace unified-authoring__trace--live"
+              [pipelineTrace]="pipelineTrace()"
+              [refused]="false"
+              [idle]="false"
+              [live]="true"
+              [collapsed]="false" />
+          } @else {
+            <div
+              class="unified-authoring__working"
+              data-testid="unified-authoring-working"
+              role="status"
+              aria-live="polite">
+              <i
+                class="fa-solid fa-circle-notch fa-spin unified-authoring__working-icon"
+                aria-hidden="true"></i>
+              <p class="unified-authoring__working-text">
+                {{ 'aplus.unified_authoring.working_generating' | translate }}
+              </p>
+            </div>
+          }
+          <!-- Defect 2: cancel a stuck generation the same way as a stuck upload.
+               "Start another" leaves this batch RUNNING and returns an empty
+               compose form, so the author is not held hostage by a generation
+               they started; it stays in the resume list below. -->
+          <div class="unified-authoring__generating-actions">
+            <button
+              type="button"
+              class="btn btn-secondary unified-authoring__start-another"
+              (click)="startAnother()"
+              data-testid="unified-authoring-start-another">
+              {{ 'aplus.unified_authoring.start_another_cta' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary unified-authoring__cancel"
+              (click)="cancelDispatch()"
+              data-testid="unified-authoring-cancel">
+              {{ 'aplus.unified_authoring.cancel_cta' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+      @default {
+        <!-- ── Compose form (idle / error) ──────────────────────────── -->
+        <!-- Generations still tracked from earlier in this session. Without
+             this list a batch the author walked away from is unreachable,
+             which is exactly the defect CHO-2387 fixes. -->
+        @if (resumableJobs().length > 0) {
+          <div
+            class="unified-authoring__resume"
+            data-testid="unified-authoring-resume">
+            <h2 class="unified-authoring__resume-title">
+              {{ 'aplus.unified_authoring.resume_title' | translate }}
+            </h2>
+            <ul class="unified-authoring__resume-list" role="list">
+              @for (entry of resumableJobs(); track entry.jobId) {
+                <li class="unified-authoring__resume-row">
+                  <span
+                    class="unified-authoring__resume-status"
+                    [class.unified-authoring__resume-status--running]="
+                      entry.phase === 'running'
+                    "
+                    [class.unified-authoring__resume-status--error]="
+                      entry.phase === 'error'
+                    ">
+                    {{ resumableStatusKey(entry) | translate }}
+                  </span>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="resumeJob(entry.jobId)"
+                    [attr.data-testid]="'unified-authoring-resume-' + entry.jobId">
+                    {{ 'aplus.unified_authoring.resume_cta' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="unified-authoring__resume-dismiss"
+                    (click)="dismissJob(entry.jobId)"
+                    [attr.aria-label]="
+                      'aplus.unified_authoring.resume_dismiss' | translate
+                    "
+                    [attr.data-testid]="'unified-authoring-dismiss-' + entry.jobId">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+        @if (errorMessage(); as err) {
+          <div
+            class="unified-authoring__error"
+            role="alert"
+            data-testid="unified-authoring-error">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span class="unified-authoring__error-text">{{ err | translate }}</span>
+            <!-- Defect 2: a severed / timed-out (504) / non-2xx compose upload is
+                 retryable in place. The inputs are preserved, so Retry re-runs
+                 the dispatch without re-filling the form. -->
+            @if (isRetryableError()) {
+              <button
+                type="button"
+                class="btn btn-secondary unified-authoring__retry"
+                (click)="retryDispatch()"
+                data-testid="unified-authoring-retry">
+                <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                {{ 'aplus.unified_authoring.retry_cta' | translate }}
+              </button>
+            }
+          </div>
+        }
+
+        <!-- ZONE 1: mode ───────────────────────────────────────────── -->
+        <fieldset class="unified-authoring__fieldset">
+          <legend class="unified-authoring__field-label">
+            {{ 'aplus.unified_authoring.mode_label' | translate }}
+          </legend>
+          <div
+            class="unified-authoring__segmented"
+            role="radiogroup"
+            [attr.aria-label]="'aplus.unified_authoring.mode_label' | translate">
+            <button
+              type="button"
+              class="unified-authoring__segment"
+              role="radio"
+              [class.unified-authoring__segment--active]="mode() === 'ai'"
+              [attr.aria-checked]="mode() === 'ai'"
+              (click)="onModeChange('ai')"
+              data-testid="unified-mode-ai">
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+              {{ 'aplus.unified_authoring.mode_ai' | translate }}
+            </button>
+            <button
+              type="button"
+              class="unified-authoring__segment"
+              role="radio"
+              [class.unified-authoring__segment--active]="mode() === 'manual'"
+              [attr.aria-checked]="mode() === 'manual'"
+              (click)="onModeChange('manual')"
+              data-testid="unified-mode-manual">
+              <i class="fa-solid fa-pen-nib" aria-hidden="true"></i>
+              {{ 'aplus.unified_authoring.mode_manual' | translate }}
+            </button>
+          </div>
+        </fieldset>
+
+        @if (mode() === 'manual') {
+          <!-- CHO-1826 review B: "By hand" drops straight into hand-authoring —
+               no AI compose form. Rows are FE-only until Accept, which mints the
+               atom + manual job + commits the inline candidates (onManualAccept).
+               The shared mode toggle above switches back to AI assist. -->
+          <p
+            class="unified-authoring__field-hint"
+            data-testid="unified-manual-intro">
+            {{ 'aplus.unified_authoring.manual_intro' | translate }}
+          </p>
+
+          <chora-unified-review-list
+            [items]="reviewItems()"
+            [manaPreview]="manaPreview()"
+            [busy]="acceptBusy()"
+            [manualOnly]="true"
+            [canAccept]="canAcceptManual()"
+            [acceptError]="acceptError()"
+            (toggleSelect)="onToggleSelect($event)"
+            (editItem)="onEditItem($event)"
+            (titleChange)="onTitleChange($event)"
+            (addManual)="onAddManual($event)"
+            (removeManual)="onRemoveManual($event)"
+            (toggleAll)="onToggleAll()"
+            (reorder)="onReorder($event)"
+            (accept)="onManualAccept()" />
+        } @else {
+          <!-- ── AI compose form (mode === 'ai') ───────────────────────── -->
+
+        <!-- ZONE 1: topic (atom title + AI seed) ────────────────────── -->
+        <label class="unified-authoring__field-label" for="unified-topic-input">
+          {{ 'aplus.unified_authoring.topic_label' | translate }}
+        </label>
+        <input
+          id="unified-topic-input"
+          type="text"
+          class="unified-authoring__topic-input"
+          [value]="topic()"
+          (input)="onTopicInput($any($event.target).value)"
+          [placeholder]="'aplus.unified_authoring.topic_placeholder' | translate"
+          data-testid="unified-topic" />
+        <p class="unified-authoring__field-hint">
+          {{ 'aplus.unified_authoring.topic_hint' | translate }}
+        </p>
+
+        <!-- ZONE 1: AI instructions — the UNIVERSAL steer for generation.
+             Hoisted to the top (out of ZONE 2) because it is the starting point
+             for the qgen crew: it is honoured whether or not source material is
+             uploaded below. No files → describe WHAT to generate; with files →
+             describe HOW to use them (the placeholder follows the upload state).
+             AI mode only — hand-authoring has no LLM. (CHO-1826 review pts 1-3.) -->
+        @if (mode() === 'ai') {
+          <label
+            class="unified-authoring__field-label"
+            for="unified-context-input">
+            {{ 'aplus.unified_authoring.context_label' | translate }}
+          </label>
+          <textarea
+            id="unified-context-input"
+            class="unified-authoring__body-input"
+            rows="4"
+            [value]="contextBody()"
+            (input)="onContextBodyInput($any($event.target).value)"
+            [placeholder]="contextPlaceholderKey() | translate"
+            data-testid="unified-context"></textarea>
+          <p
+            class="unified-authoring__field-hint"
+            data-testid="unified-context-hint">
+            {{ 'aplus.unified_authoring.context_hint' | translate }}
+          </p>
+
+          <!-- Cognitive level sits with the AI instructions — it shapes HOW the
+               crew writes (moved here from the settings row; CHO-1826 review). -->
+          <div class="unified-authoring__settings-row">
+            <div class="unified-authoring__setting">
+              <label
+                class="unified-authoring__field-label"
+                for="unified-cognitive-level">
+                {{ 'aplus.unified_authoring.cognitive_level_label' | translate }}
+              </label>
+              <select
+                id="unified-cognitive-level"
+                class="unified-authoring__select"
+                [value]="cognitiveLevel()"
+                (change)="onCognitiveLevelChange($any($event.target).value)"
+                data-testid="unified-cognitive-level">
+                @for (level of cognitiveLevels; track level) {
+                  <option [value]="level">
+                    {{ 'aplus.unified_authoring.cognitive_level_' + level | translate }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+
+        <!-- ZONE 1: mixed-type composer ─────────────────────────────── -->
+        <chora-question-batch-generator
+          [allowedTypes]="allowedComposerTypes"
+          (planChange)="onBatchPlanChange($event)" />
+
+        <!-- "More question types coming soon" reserved-types teaser (GAP #15) -->
+        @if (reservedTypes().length > 0) {
+          <div class="unified-authoring__coming-soon">
+            <button
+              type="button"
+              class="unified-authoring__coming-soon-toggle"
+              data-testid="unified-coming-soon-toggle"
+              [attr.aria-expanded]="comingSoonExpanded()"
+              aria-controls="unified-coming-soon-panel"
+              (click)="toggleComingSoon()">
+              <span class="unified-authoring__coming-soon-text">
+                {{ 'core.question_type_picker.coming_soon_disclosure' | translate }}
+              </span>
+              <span class="unified-authoring__coming-soon-count" aria-hidden="true">
+                {{ reservedTypes().length }}
+              </span>
+              <i
+                class="fa-solid"
+                [class.fa-chevron-down]="!comingSoonExpanded()"
+                [class.fa-chevron-up]="comingSoonExpanded()"
+                aria-hidden="true"></i>
+            </button>
+            @if (comingSoonExpanded()) {
+              <div
+                class="unified-authoring__coming-soon-panel"
+                id="unified-coming-soon-panel"
+                data-testid="unified-coming-soon-panel">
+                @for (entry of reservedTypes(); track entry.code) {
+                  <div
+                    class="unified-authoring__reserved-tile"
+                    aria-disabled="true"
+                    [attr.aria-label]="entry.label_en"
+                    [attr.data-testid]="'unified-reserved-tile-' + entry.code">
+                    <span class="unified-authoring__reserved-label">{{ entry.label_en }}</span>
+                    <span class="unified-authoring__reserved-badge">
+                      {{ 'core.question_type_picker.coming_soon' | translate }}
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ZONE 1: difficulty (cognitive level now sits with the AI
+             instructions above; CHO-1826 review) ─────────────────────── -->
+        <div class="unified-authoring__settings-row">
+          <div class="unified-authoring__setting">
+            <label
+              class="unified-authoring__field-label"
+              for="unified-difficulty">
+              {{ 'aplus.unified_authoring.difficulty_label' | translate }}
+              <span class="unified-authoring__difficulty-value">{{ difficulty() }}</span>
+            </label>
+            <input
+              id="unified-difficulty"
+              type="range"
+              class="unified-authoring__difficulty-input"
+              min="1"
+              max="5"
+              step="1"
+              [value]="difficulty()"
+              (input)="onDifficultyChange($any($event.target).value)"
+              data-testid="unified-difficulty" />
+          </div>
+        </div>
+
+        <!-- ZONE 2: AI-only — OPTIONAL source material + grounding mode.
+             The instructions field (the universal steer) lives at the top of
+             ZONE 1; everything here is optional grounding the crew reads
+             alongside those instructions. ─────────────────────────────── -->
+        @if (mode() === 'ai') {
+          <div class="unified-authoring__zone2" data-testid="unified-zone2">
+            <chora-file-dropzone
+              [label]="'aplus.unified_authoring.upload_title' | translate"
+              [hint]="'aplus.unified_authoring.upload_hint' | translate"
+              [formats]="'aplus.unified_authoring.upload_formats' | translate"
+              [accept]="acceptAttr"
+              [multiple]="true"
+              [files]="sourceFiles()"
+              testIdPrefix="unified-source-"
+              (filesAdded)="onSourceFilesAdded($event)"
+              (fileRemoved)="removeSourceFile($event)" />
+            @if (fileError(); as fe) {
+              <p
+                class="unified-authoring__field-error"
+                role="alert"
+                data-testid="unified-authoring-file-error">
+                {{ fe | translate }}
+              </p>
+            }
+
+            <!-- Optional rubric / mark-scheme (OE grading), single file -->
+            <chora-file-dropzone
+              [label]="'aplus.unified_authoring.rubric_label' | translate"
+              [hint]="'aplus.unified_authoring.rubric_hint' | translate"
+              [accept]="acceptAttr"
+              [multiple]="false"
+              [files]="rubricFiles()"
+              testIdPrefix="unified-rubric-"
+              (filesAdded)="onRubricFilesAdded($event)"
+              (fileRemoved)="clearRubric()" />
+            @if (rubricError(); as re) {
+              <p
+                class="unified-authoring__field-error"
+                role="alert"
+                data-testid="unified-authoring-rubric-error">
+                {{ re | translate }}
+              </p>
+            }
+            <!-- Defect 1: a mark scheme with no source has no non-dropping
+                 dispatch (ai_draft carries no rubric; the batch handler 400s a
+                 rubric-only payload). Require a source file, stated inline. -->
+            @if (rubricNeedsSource()) {
+              <p
+                class="unified-authoring__field-error"
+                role="alert"
+                aria-live="polite"
+                data-testid="unified-authoring-rubric-needs-source">
+                {{ 'aplus.unified_authoring.rubric_needs_source' | translate }}
+              </p>
+            }
+
+            <fieldset class="unified-authoring__fieldset">
+              <legend class="unified-authoring__field-label">
+                {{ 'aplus.unified_authoring.grounding_label' | translate }}
+              </legend>
+              <div
+                class="unified-authoring__segmented"
+                role="radiogroup"
+                [attr.aria-label]="'aplus.unified_authoring.grounding_label' | translate">
+                <button
+                  type="button"
+                  class="unified-authoring__segment"
+                  role="radio"
+                  [class.unified-authoring__segment--active]="groundingMode() === 'starting_point'"
+                  [attr.aria-checked]="groundingMode() === 'starting_point'"
+                  (click)="setGroundingMode('starting_point')"
+                  data-testid="unified-grounding-starting-point">
+                  {{ 'aplus.unified_authoring.grounding_starting_point' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="unified-authoring__segment"
+                  role="radio"
+                  [class.unified-authoring__segment--active]="groundingMode() === 'strict'"
+                  [attr.aria-checked]="groundingMode() === 'strict'"
+                  (click)="setGroundingMode('strict')"
+                  data-testid="unified-grounding-strict">
+                  {{ 'aplus.unified_authoring.grounding_strict' | translate }}
+                </button>
+              </div>
+              <p class="unified-authoring__field-hint">
+                {{
+                  (groundingMode() === 'strict'
+                    ? 'aplus.unified_authoring.grounding_strict_hint'
+                    : 'aplus.unified_authoring.grounding_starting_point_hint'
+                  ) | translate
+                }}
+              </p>
+            </fieldset>
+          </div>
+        }
+
+        <!-- Primary CTA ─────────────────────────────────────────────── -->
+        <div class="unified-authoring__cta-row">
+          <button
+            type="button"
+            class="btn btn-primary unified-authoring__cta"
+            [disabled]="!canStart()"
+            (click)="start()"
+            data-testid="unified-authoring-start">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            {{ 'aplus.unified_authoring.cta_generate' | translate }}
+          </button>
+          @if (!canStart()) {
+            <span class="unified-authoring__cta-status" data-testid="unified-authoring-cta-status">
+              {{ ctaStatusKey() | translate }}
+            </span>
+          }
+        </div>
+        }
+      }
+    }
+
+    @if (doneState().status === 'done') {
+      <div class="unified-authoring__done" data-testid="unified-authoring-done">
+        <div class="unified-authoring__done-header">
+          <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+          <span>{{ ($any(doneState()).created === 1
+            ? 'aplus.unified_authoring.created_toast_one'
+            : 'aplus.unified_authoring.created_toast_other') | translate }}</span>
+        </div>
+
+        @if (shareState().status === 'success') {
+          <div class="unified-authoring__share-success">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ 'aplus.unified_authoring.share.success' | translate }}
+            <a routerLink="/c/feed" class="unified-authoring__share-view-link">
+              {{ 'aplus.unified_authoring.share.view_in_feed' | translate }}
+            </a>
+          </div>
+        } @else {
+          <div class="unified-authoring__done-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-testid="unified-authoring-share-toggle"
+              [class.unified-authoring__share-toggle--active]="sharePanelOpen()"
+              (click)="toggleSharePanel()">
+              <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+              {{ 'aplus.unified_authoring.share.cta' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-testid="unified-authoring-done-dismiss"
+              (click)="dismissDone()">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{ 'aplus.unified_authoring.done_create_another' | translate }}
+            </button>
+          </div>
+        }
+
+        @if (sharePanelOpen() && shareState().status !== 'success') {
+          <div class="unified-authoring__share-panel" data-testid="unified-authoring-share-panel">
+            <div class="unified-authoring__share-field">
+              <label for="unified-share-caption" class="unified-authoring__share-label">
+                {{ 'aplus.unified_authoring.share.caption_label' | translate }}
+              </label>
+              <textarea
+                id="unified-share-caption"
+                class="unified-authoring__share-textarea"
+                rows="2"
+                maxlength="512"
+                [value]="shareCaption()"
+                (input)="shareCaption.set($any($event.target).value)"
+                [placeholder]="'aplus.unified_authoring.share.caption_placeholder' | translate">
+              </textarea>
+            </div>
+            <div class="unified-authoring__share-field">
+              <label for="unified-share-license" class="unified-authoring__share-label">
+                {{ 'aplus.unified_authoring.share.license_label' | translate }}
+              </label>
+              <select
+                id="unified-share-license"
+                class="unified-authoring__share-select"
+                [value]="shareLicense()"
+                (change)="shareLicense.set($any($event.target).value)">
+                @for (opt of licenseOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+                }
+              </select>
+            </div>
+            @if (isRoyaltyLicense()) {
+              <div class="unified-authoring__share-field">
+                <label for="unified-share-royalty-rate" class="unified-authoring__share-label">
+                  {{ shareLicense() === 'royalty_pct'
+                    ? ('aplus.unified_authoring.share.royalty_pct_label' | translate)
+                    : ('aplus.unified_authoring.share.royalty_fixed_label' | translate) }}
+                </label>
+                <input
+                  type="number"
+                  id="unified-share-royalty-rate"
+                  class="unified-authoring__share-input"
+                  [value]="shareRoyaltyRate()"
+                  [min]="0"
+                  [max]="shareLicense() === 'royalty_pct' ? 100 : undefined"
+                  (input)="shareRoyaltyRate.set(+$any($event.target).value)"
+                />
+                <span class="unified-authoring__share-hint">
+                  {{ shareLicense() === 'royalty_pct'
+                    ? ('aplus.unified_authoring.share.royalty_pct_hint' | translate)
+                    : ('aplus.unified_authoring.share.royalty_fixed_hint' | translate) }}
+                </span>
+              </div>
+            }
+            @if (shareState().status === 'error') {
+              <p class="unified-authoring__share-error" role="alert">
+                {{ $any(shareState()).error | translate }}
+              </p>
+            }
+            <button
+              type="button"
+              class="btn btn-publish"
+              data-testid="unified-authoring-share-submit"
+              [disabled]="shareState().status === 'submitting'"
+              (click)="shareAtom()">
+              @if (shareState().status === 'submitting') {
+                <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                {{ 'aplus.unified_authoring.share.submitting' | translate }}
+              } @else {
+                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                {{ 'aplus.unified_authoring.share.submit' | translate }}
+              }
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+  </article>
+</section>

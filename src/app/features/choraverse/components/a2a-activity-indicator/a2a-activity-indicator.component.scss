@@ -1,0 +1,276 @@
+:host {
+  display: block;
+  position: relative;
+}
+
+.a2a-activity-indicator {
+  position: relative;
+
+  // ---------------------------------------------------------------------------
+  // Badge
+  // ---------------------------------------------------------------------------
+
+  &__badge {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+      border-radius: 50%;
+    }
+  }
+
+  &__pulse {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--chora-color-primary);
+    opacity: 0.3;
+    animation: a2a-pulse 2s ease-in-out infinite;
+  }
+
+  &__dot {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--chora-color-primary);
+    border: 2px solid var(--chora-color-surface-0);
+  }
+
+  &__count {
+    position: absolute;
+    top: 0;
+    inset-inline-end: 0;
+    min-width: 16px;
+    height: 16px;
+    background: var(--chora-color-error);
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tooltip
+  // ---------------------------------------------------------------------------
+
+  &__tooltip {
+    position: absolute;
+    bottom: calc(100% + var(--chora-space-sm));
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    background: var(--chora-color-text-primary);
+    color: var(--chora-color-surface-0);
+    padding: var(--chora-space-xs) var(--chora-space-sm);
+    border-radius: var(--chora-radius-sm);
+    white-space: nowrap;
+    font-size: 0.8125rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 10;
+    pointer-events: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      inset-inline-start: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--chora-color-text-primary);
+    }
+  }
+
+  &__tooltip-text {
+    font-weight: 500;
+  }
+
+  &__tooltip-skill {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Chat panel
+  // ---------------------------------------------------------------------------
+
+  &__chat {
+    position: absolute;
+    bottom: calc(100% + var(--chora-space-sm));
+    inset-inline-end: 0;
+    width: 320px;
+    max-height: 400px;
+    background: var(--chora-color-surface-0);
+    border: 1px solid var(--chora-color-border);
+    border-radius: var(--chora-radius-md);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    z-index: 20;
+  }
+
+  &__chat-header {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-sm);
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    border-bottom: 1px solid var(--chora-color-border);
+  }
+
+  &__chat-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+  }
+
+  &__chat-badge {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1px 6px;
+    background: var(--chora-color-surface-2);
+    border-radius: 9999px;
+    color: var(--chora-color-text-tertiary);
+  }
+
+  &__chat-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--chora-color-text-secondary);
+    border-radius: var(--chora-radius-sm);
+    padding: 0;
+
+    &:hover {
+      background: var(--chora-color-surface-2);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--chora-space-sm) var(--chora-space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm);
+    max-height: 320px;
+  }
+
+  &__chat-empty {
+    color: var(--chora-color-text-tertiary);
+    text-align: center;
+    padding: var(--chora-space-lg) 0;
+    font-style: italic;
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  &__chat-message {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--chora-space-xs) var(--chora-space-sm);
+    border-radius: var(--chora-radius-sm);
+    max-width: 85%;
+
+    &--familiar {
+      align-self: flex-start;
+      background: var(--chora-color-surface-1);
+    }
+
+    &--agent {
+      align-self: flex-end;
+      background: var(--chora-color-primary-light, rgba(59, 130, 246, 0.1));
+    }
+  }
+
+  &__chat-sender {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--chora-color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  &__chat-content {
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  &__chat-time {
+    font-size: 0.6875rem;
+    color: var(--chora-color-text-tertiary);
+    align-self: flex-end;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Desktop enhancement
+  // ---------------------------------------------------------------------------
+
+  @media (min-width: 1280px) {
+    &__chat {
+      width: 380px;
+      max-height: 480px;
+    }
+
+    &__chat-messages {
+      max-height: 400px;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Animations
+// ---------------------------------------------------------------------------
+
+@keyframes a2a-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+}
+
+// Respect prefers-reduced-motion: replace pulse with static indicator
+@media (prefers-reduced-motion: reduce) {
+  .a2a-activity-indicator__pulse {
+    animation: none;
+    opacity: 0.2;
+    transform: scale(1.4);
+  }
+}

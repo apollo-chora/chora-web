@@ -1,0 +1,82 @@
+<div class="chora-question-review" [attr.data-testid]="reviewTestId()">
+  @if (review().question_image_url; as img) {
+    <chora-question-image
+      [src]="img"
+      alt=""
+      [caption]="'shared.question_review.question_illustration' | translate"
+      testIdPrefix="qr-question-image" />
+  }
+
+  @if (isMcq()) {
+    @if (hasOptions()) {
+      <ul class="chora-question-review__options">
+        @for (
+          opt of review().options;
+          track trackOption($index, opt);
+          let i = $index
+        ) {
+          <li>
+            <chora-mcq-option
+              mode="reveal"
+              [marker]="optionLetter(i)"
+              [text]="opt.label"
+              [correct]="opt.is_correct"
+              [correctAnswerLabel]="
+                'shared.question_review.correct_answer' | translate
+              "
+              [explainer]="opt.explainer ?? undefined"
+              [testId]="optionTestId(opt.option_id)" />
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="chora-question-review__empty">
+        {{ 'shared.question_review.no_detail' | translate }}
+      </p>
+    }
+  } @else {
+    @if (review().model_answer; as ma) {
+      <div class="chora-question-review__model-answer">
+        <p class="chora-question-review__label">
+          {{ 'shared.question_review.model_answer' | translate }}
+        </p>
+        <p class="chora-question-review__model-answer-body">{{ ma }}</p>
+      </div>
+    }
+    @if (hasRubric()) {
+      <div class="chora-question-review__rubric">
+        <p class="chora-question-review__label">
+          {{ 'shared.question_review.rubric' | translate }}
+        </p>
+        <ul class="chora-question-review__rubric-list">
+          @for (c of review().rubric; track trackRubric($index, c)) {
+            <li class="chora-question-review__rubric-row">
+              <div class="chora-question-review__rubric-head">
+                <span class="chora-question-review__rubric-title">{{ c.title }}</span>
+                @if (c.weight !== null) {
+                  <span class="chora-question-review__rubric-weight">{{ c.weight }}</span>
+                }
+              </div>
+              @if (c.description) {
+                <p class="chora-question-review__rubric-desc">{{ c.description }}</p>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    }
+    @if (!review().model_answer && !hasRubric()) {
+      <p class="chora-question-review__empty">
+        {{ 'shared.question_review.no_detail' | translate }}
+      </p>
+    }
+  }
+
+  @if (review().answer_image_url; as aimg) {
+    <chora-question-image
+      [src]="aimg"
+      alt=""
+      [caption]="'shared.question_review.answer_illustration' | translate"
+      testIdPrefix="qr-answer-image" />
+  }
+</div>

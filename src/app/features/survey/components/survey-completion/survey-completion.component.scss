@@ -1,0 +1,142 @@
+:host {
+  display: block;
+}
+
+.survey-completion {
+  padding: var(--chora-space-lg, 24px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+
+  // -------------------------------------------------------------------------
+  // Card
+  // -------------------------------------------------------------------------
+
+  &__card {
+    text-align: center;
+    max-width: 480px;
+    width: 100%;
+    padding: var(--chora-space-xl, 32px);
+    border: 1px solid var(--chora-color-border, #e5e5e5);
+    border-radius: var(--chora-radius-md, 8px);
+    background: #fff;
+  }
+
+  // -------------------------------------------------------------------------
+  // Icon
+  // -------------------------------------------------------------------------
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--chora-space-md, 16px);
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  // -------------------------------------------------------------------------
+  // Text
+  // -------------------------------------------------------------------------
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 var(--chora-space-sm, 8px);
+  }
+
+  &__message {
+    font-size: 0.875rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0 0 var(--chora-space-lg, 24px);
+    line-height: 1.5;
+  }
+
+  // -------------------------------------------------------------------------
+  // Survey Info
+  // -------------------------------------------------------------------------
+
+  &__survey-info {
+    margin-block-end: var(--chora-space-md, 16px);
+    padding: var(--chora-space-sm, 8px) var(--chora-space-md, 16px);
+    background: var(--chora-color-surface-1, #fafafa);
+    border-radius: var(--chora-radius-sm, 4px);
+  }
+
+  &__survey-label {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+    display: block;
+    margin-block-end: var(--chora-space-xs, 4px);
+  }
+
+  &__survey-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--chora-color-text, #333);
+  }
+
+  // -------------------------------------------------------------------------
+  // Completed At
+  // -------------------------------------------------------------------------
+
+  &__completed-at {
+    font-size: 0.75rem;
+    color: var(--chora-color-text-muted, #666);
+    margin: 0 0 var(--chora-space-lg, 24px);
+  }
+
+  // -------------------------------------------------------------------------
+  // Actions
+  // -------------------------------------------------------------------------
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-sm, 8px);
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--chora-space-sm, 8px) var(--chora-space-lg, 24px);
+    border-radius: var(--chora-radius-sm, 4px);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:focus-visible {
+      outline: 2px solid var(--chora-color-primary, #2563eb);
+      outline-offset: 2px;
+    }
+
+    &--primary {
+      background: var(--chora-color-primary, #2563eb);
+      color: #fff;
+      border: 1px solid var(--chora-color-primary, #2563eb);
+
+      &:hover {
+        background: #1d4ed8;
+      }
+    }
+
+    &--secondary {
+      background: #fff;
+      color: var(--chora-color-text, #333);
+      border: 1px solid var(--chora-color-border, #e5e5e5);
+
+      &:hover {
+        background: var(--chora-color-surface-1, #fafafa);
+      }
+    }
+  }
+}

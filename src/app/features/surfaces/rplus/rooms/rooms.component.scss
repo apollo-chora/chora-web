@@ -1,0 +1,240 @@
+// rooms.component.scss - Campus Operations rooms screen (CHO-2294).
+// Glassmorphism + R+ amber accent, tablet-first (>=768 primary, >=1280 enhanced).
+// Colour is never the sole carrier of meaning: the error state pairs its accent
+// with an icon and text, and "unassigned" is a worded chip, not a hue.
+
+.rooms {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chora-space-4, 1rem);
+  padding: var(--chora-space-4, 1rem);
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-2, 0.5rem);
+    padding: var(--chora-space-4, 1rem);
+  }
+
+  &__crumbs {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-2, 0.5rem);
+    font-size: 0.875rem;
+  }
+
+  &__crumb-sep { opacity: 0.6; }
+  &__crumb--leaf { font-weight: 600; }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--chora-space-3, 0.75rem);
+    flex-wrap: wrap;
+  }
+
+  &__title { margin: 0; }
+
+  &__count { margin: 0; }
+
+  // Find / organize toolbar. Stacks on tablet, sits in a row on wide screens.
+  &__toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-3, 0.75rem);
+    padding: var(--chora-space-3, 0.75rem) var(--chora-space-4, 1rem);
+  }
+
+  &__toolbar-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-1, 0.25rem);
+  }
+
+  &__toolbar-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    opacity: 0.85;
+  }
+
+  &__filter-control {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-2, 0.5rem);
+  }
+
+  &__filter-input { flex: 1 1 auto; }
+
+  &__filter-clear { flex: 0 0 auto; }
+
+  &__sort-select { width: 100%; }
+
+  &__filtered-count {
+    margin: 0;
+    font-size: 0.875rem;
+    opacity: 0.85;
+  }
+
+  &__no-match {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-3, 0.75rem);
+    padding: var(--chora-space-4, 1rem);
+  }
+
+  &__form-title { margin: 0; }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-1, 0.25rem);
+  }
+
+  &__input {
+    padding: var(--chora-space-2, 0.5rem);
+    border-radius: var(--chora-radius-sm, 0.375rem);
+  }
+
+  &__form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--chora-space-2, 0.5rem);
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-2, 0.5rem);
+    margin: 0;
+  }
+
+  &__state {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-2, 0.5rem);
+    margin: 0;
+    padding: var(--chora-space-4, 1rem);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--chora-space-2, 0.5rem);
+    grid-template-columns: 1fr;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-3, 0.75rem);
+    padding: var(--chora-space-3, 0.75rem);
+    flex-wrap: wrap;
+  }
+
+  &__row-name {
+    font-weight: 600;
+    flex: 1 1 auto;
+  }
+
+  &__row-capacity {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-1, 0.25rem);
+  }
+
+  &__row-unassigned {
+    font-size: 0.8125rem;
+    padding: 0 var(--chora-space-2, 0.5rem);
+    border-radius: var(--chora-radius-pill, 999px);
+    border: 1px solid currentcolor;
+  }
+
+  // Row summary (name + capacity + chip) sits left; the Edit/Delete controls sit
+  // right. The inline edit form and the delete confirm take the full row width
+  // (flex-basis 100%) and wrap under the summary via the row's flex-wrap.
+  &__row-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--chora-space-3, 0.75rem);
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  &__row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--chora-space-2, 0.5rem);
+    flex: 0 0 auto;
+  }
+
+  &__row-action { white-space: nowrap; }
+
+  &__edit,
+  &__confirm { flex: 1 1 100%; }
+
+  &__edit {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-3, 0.75rem);
+  }
+
+  &__edit-title,
+  &__confirm-title { margin: 0; }
+
+  // Destructive confirmation: a worded, icon-and-text alertdialog framed with the
+  // danger accent (never colour alone as the carrier of meaning).
+  &__confirm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chora-space-2, 0.5rem);
+    margin-top: var(--chora-space-2, 0.5rem);
+    padding: var(--chora-space-3, 0.75rem);
+    border-radius: var(--chora-radius-sm, 0.375rem);
+    border: 1px solid var(--danger);
+  }
+
+  &__confirm-body { margin: 0; }
+
+  &__confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--chora-space-2, 0.5rem);
+  }
+
+  // Danger button: no global .btn-danger exists, so scope it here off the AA-safe
+  // --danger token (white text clears 4.9:1 per the token contract).
+  &__btn-danger {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  &__btn-danger:hover { background: var(--danger-strong); }
+
+  &__btn-danger:disabled,
+  &__btn-danger[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Desktop enhanced: two columns of room rows, toolbar controls in a row.
+@media (min-width: 1280px) {
+  .rooms__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .rooms__toolbar {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+
+  .rooms__filter { flex: 1 1 auto; }
+  .rooms__sort { flex: 0 0 16rem; }
+}

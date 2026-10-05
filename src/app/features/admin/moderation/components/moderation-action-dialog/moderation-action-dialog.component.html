@@ -1,0 +1,113 @@
+<div
+  class="moderation-action-dialog"
+  role="dialog"
+  [attr.aria-label]="'admin.moderation.action_dialog_title' | translate"
+  data-testid="moderation-action-dialog">
+
+  <!-- Header -->
+  <div class="moderation-action-dialog__header">
+    <h3 class="moderation-action-dialog__title">
+      {{ 'admin.moderation.action_dialog_title' | translate }}
+    </h3>
+    <button
+      type="button"
+      class="moderation-action-dialog__close-btn"
+      (click)="onCancel()"
+      data-testid="btn-dialog-close"
+      [attr.aria-label]="'admin.moderation.close' | translate">
+      &times;
+    </button>
+  </div>
+
+  <!-- Content summary -->
+  <div class="moderation-action-dialog__summary" data-testid="dialog-content-summary">
+    <span class="moderation-action-dialog__summary-label">
+      {{ 'admin.moderation.content' | translate }}:
+    </span>
+    <span class="moderation-action-dialog__summary-title">{{ item().content_title }}</span>
+    <span class="moderation-action-dialog__summary-type">
+      ({{ item().content_type }})
+    </span>
+  </div>
+
+  <!-- Decision select -->
+  <div class="moderation-action-dialog__form-group">
+    <label for="moderation-decision" class="moderation-action-dialog__label">
+      {{ 'admin.moderation.decision_label' | translate }}
+    </label>
+    <select
+      id="moderation-decision"
+      class="moderation-action-dialog__select"
+      data-testid="decision-select"
+      (change)="onDecisionChange($any($event.target).value)">
+      <option value="">{{ 'admin.moderation.choose_decision' | translate }}</option>
+      @for (decision of allDecisions; track decision) {
+        <option [value]="decision">
+          {{ decisionLabels[decision] | translate }}
+        </option>
+      }
+    </select>
+  </div>
+
+  <!-- Reason -->
+  <div class="moderation-action-dialog__form-group">
+    <label for="moderation-reason" class="moderation-action-dialog__label">
+      {{ 'admin.moderation.reason_label' | translate }}
+    </label>
+    <textarea
+      id="moderation-reason"
+      class="moderation-action-dialog__textarea"
+      rows="3"
+      [value]="reason()"
+      (input)="onReasonChange($any($event.target).value)"
+      data-testid="reason-input"
+      [placeholder]="'admin.moderation.reason_placeholder' | translate">
+    </textarea>
+  </div>
+
+  <!-- Notes -->
+  <div class="moderation-action-dialog__form-group">
+    <label for="moderation-notes" class="moderation-action-dialog__label">
+      {{ 'admin.moderation.notes_label' | translate }}
+      <span class="moderation-action-dialog__optional">
+        ({{ 'admin.moderation.optional' | translate }})
+      </span>
+    </label>
+    <textarea
+      id="moderation-notes"
+      class="moderation-action-dialog__textarea"
+      rows="2"
+      [value]="notes()"
+      (input)="onNotesChange($any($event.target).value)"
+      data-testid="notes-input"
+      [placeholder]="'admin.moderation.notes_placeholder' | translate">
+    </textarea>
+  </div>
+
+  <!-- Actions -->
+  <div class="moderation-action-dialog__actions">
+    <button
+      type="button"
+      class="moderation-action-dialog__btn moderation-action-dialog__btn--secondary"
+      (click)="onCancel()"
+      data-testid="btn-dialog-cancel">
+      {{ 'admin.moderation.cancel' | translate }}
+    </button>
+    <button
+      type="button"
+      class="moderation-action-dialog__btn"
+      [class.moderation-action-dialog__btn--success]="decisionVariant() === 'success'"
+      [class.moderation-action-dialog__btn--warning]="decisionVariant() === 'warning'"
+      [class.moderation-action-dialog__btn--danger]="decisionVariant() === 'danger'"
+      [class.moderation-action-dialog__btn--primary]="decisionVariant() === 'default'"
+      [disabled]="!isValid() || submitting()"
+      (click)="onSubmit()"
+      data-testid="btn-dialog-submit">
+      @if (submitting()) {
+        {{ 'admin.moderation.submitting' | translate }}
+      } @else {
+        {{ 'admin.moderation.submit_action' | translate }}
+      }
+    </button>
+  </div>
+</div>

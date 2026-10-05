@@ -1,0 +1,20 @@
+<div
+  class="chora-empty-state"
+  [attr.data-tone]="tone()"
+  [attr.data-testid]="testId()">
+  <span class="chora-empty-state__icon" aria-hidden="true">
+    <i [class]="icon()"></i>
+  </span>
+  <p class="chora-empty-state__heading">{{ heading() }}</p>
+  @if (body(); as b) {
+    <p class="chora-empty-state__body">{{ b }}</p>
+  }
+  @if (ctaLabel(); as label) {
+    <button
+      type="button"
+      class="chora-empty-state__cta"
+      (click)="onCtaClick()">
+      {{ label }}
+    </button>
+  }
+</div>

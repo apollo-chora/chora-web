@@ -1,0 +1,75 @@
+<section
+  class="familiar-memory-panel"
+  [attr.aria-label]="'choraverse.familiar_memory.title' | translate"
+  data-testid="familiar-memory-panel">
+
+  <!-- Header -->
+  <header class="familiar-memory-panel__header">
+    <h2 class="familiar-memory-panel__title" data-testid="memory-title">
+      {{ 'choraverse.familiar_memory.title' | translate }}
+    </h2>
+    <button
+      type="button"
+      class="familiar-memory-panel__clear-btn"
+      data-testid="memory-clear-btn"
+      [disabled]="memoryState().status === 'loading' || isEmpty()"
+      (click)="clearMemory()"
+      [attr.aria-label]="'choraverse.familiar_memory.clear' | translate">
+      {{ 'choraverse.familiar_memory.clear' | translate }}
+    </button>
+  </header>
+
+  <!-- Loading -->
+  @if (memoryState().status === 'loading') {
+    <div class="familiar-memory-panel__loading" data-testid="memory-loading" aria-live="polite">
+      {{ 'choraverse.familiar_memory.loading' | translate }}
+    </div>
+  }
+
+  <!-- Error -->
+  @if (memoryState().status === 'error') {
+    <div class="familiar-memory-panel__error" data-testid="memory-error" role="alert">
+      {{ 'choraverse.familiar_memory.error' | translate }}
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (isEmpty()) {
+    <div class="familiar-memory-panel__empty" data-testid="memory-empty" role="status">
+      <p class="familiar-memory-panel__empty-text">
+        {{ 'choraverse.familiar_memory.empty' | translate }}
+      </p>
+    </div>
+  }
+
+  <!-- Entries -->
+  @if (entries().length > 0) {
+    <div class="familiar-memory-panel__list" data-testid="memory-list" role="list">
+      @for (entry of entries(); track entry.id) {
+        <div
+          class="familiar-memory-panel__entry"
+          role="listitem"
+          [attr.data-testid]="'memory-entry-' + entry.id">
+
+          <div class="familiar-memory-panel__entry-header">
+            <span
+              class="familiar-memory-panel__source"
+              [class]="sourceClass(entry.source)"
+              [attr.data-testid]="'memory-source-' + entry.source">
+              {{ 'choraverse.familiar_memory.source_' + entry.source | translate }}
+            </span>
+            <span class="familiar-memory-panel__relevance" data-testid="memory-relevance">
+              {{ entry.relevance_score }}%
+            </span>
+          </div>
+
+          <p class="familiar-memory-panel__content">{{ entry.content }}</p>
+
+          <span class="familiar-memory-panel__date">
+            {{ entry.created_at | date:'mediumDate' }}
+          </span>
+        </div>
+      }
+    </div>
+  }
+</section>

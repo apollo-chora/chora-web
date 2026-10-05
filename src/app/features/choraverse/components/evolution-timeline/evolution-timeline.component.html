@@ -1,0 +1,112 @@
+<section
+  class="evolution-timeline"
+  [attr.aria-label]="'choraverse.evolution.title' | translate"
+  data-testid="evolution-timeline">
+
+  <h2 class="evolution-timeline__title" data-testid="evolution-title">
+    {{ 'choraverse.evolution.title' | translate }}
+  </h2>
+
+  <!-- Loading -->
+  @if (state().status === 'loading') {
+    <div class="evolution-timeline__loading" data-testid="evolution-loading" aria-live="polite">
+      {{ 'choraverse.evolution.loading' | translate }}
+    </div>
+  }
+
+  <!-- Error -->
+  @if (state().status === 'error') {
+    <div class="evolution-timeline__error" data-testid="evolution-error" role="alert">
+      {{ 'choraverse.evolution.error' | translate }}
+    </div>
+  }
+
+  <!-- Not Summoned -->
+  @if (state().status === 'not_summoned') {
+    <div class="evolution-timeline__empty" data-testid="evolution-empty" role="status">
+      {{ 'choraverse.evolution.not_summoned' | translate }}
+    </div>
+  }
+
+  <!-- Timeline Content -->
+  @if (state().status === 'success') {
+    <!-- Current Level -->
+    <div class="evolution-timeline__current" data-testid="evolution-current-level">
+      <span class="evolution-timeline__current-label">
+        {{ 'choraverse.evolution.current_level' | translate }}
+      </span>
+      <span class="evolution-timeline__current-value">{{ currentLevel() }}</span>
+    </div>
+
+    <!-- Next Milestone Progress -->
+    @if (nextMilestone(); as next) {
+      <div class="evolution-timeline__progress" data-testid="evolution-progress">
+        <div class="evolution-timeline__progress-header">
+          <span class="evolution-timeline__progress-label">
+            {{ 'choraverse.evolution.next_level' | translate }}: {{ next.level }}
+          </span>
+          <span class="evolution-timeline__progress-pct">{{ progressPercent() }}%</span>
+        </div>
+        <div
+          class="evolution-timeline__progress-bar"
+          role="progressbar"
+          [attr.aria-valuenow]="progressPercent()"
+          [attr.aria-valuemin]="0"
+          [attr.aria-valuemax]="100"
+          data-testid="evolution-progress-bar">
+          <div
+            class="evolution-timeline__progress-fill"
+            [style.width.%]="progressPercent()">
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Milestone List -->
+    @if (milestones().length > 0) {
+      <div class="evolution-timeline__list" data-testid="evolution-list" role="list">
+        @for (milestone of milestones(); track milestone.level) {
+          <div
+            class="evolution-timeline__item"
+            [class.evolution-timeline__item--achieved]="isAchieved(milestone)"
+            [class.evolution-timeline__item--current]="isCurrent(milestone)"
+            [attr.data-testid]="'evolution-milestone-' + milestone.level"
+            role="listitem">
+            <div class="evolution-timeline__connector">
+              <span class="evolution-timeline__dot"></span>
+              <span class="evolution-timeline__line"></span>
+            </div>
+            <div class="evolution-timeline__content">
+              <div class="evolution-timeline__item-header">
+                <span class="evolution-timeline__level" data-testid="milestone-level">
+                  {{ 'choraverse.evolution.level_label' | translate }} {{ milestone.level }}
+                </span>
+                @if (isAchieved(milestone)) {
+                  <span class="evolution-timeline__date" data-testid="milestone-date">
+                    {{ formatDate(milestone.unlockedAt) }}
+                  </span>
+                } @else {
+                  <span class="evolution-timeline__locked" data-testid="milestone-locked">
+                    {{ 'choraverse.evolution.locked' | translate }}
+                  </span>
+                }
+              </div>
+              <p class="evolution-timeline__desc" data-testid="milestone-desc">
+                {{ milestone.description }}
+              </p>
+              @if (milestone.reward) {
+                <span class="evolution-timeline__reward" data-testid="milestone-reward">
+                  {{ milestone.reward }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="evolution-timeline__empty" data-testid="evolution-no-milestones" role="status">
+        {{ 'choraverse.evolution.no_milestones' | translate }}
+      </div>
+    }
+  }
+</section>

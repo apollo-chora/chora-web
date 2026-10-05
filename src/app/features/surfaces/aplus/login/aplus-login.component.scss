@@ -1,0 +1,430 @@
+// =====================================================================
+// A+ Login — Phyllis demo Step 1
+//
+// Ported from chora-web/.stitch-imports/aplus/login.html (canonical Stitch
+// import). Uses the polyglass `.glass-panel` + `.form-control` + `.btn-*`
+// component classes from `chora-web/src/styles/_polyglass-components.scss`.
+// Surface accent (indigo→pink) comes from `.surface-aplus` in
+// `_surface-accents.scss`.
+//
+// Tablet-first per CLAUDE.md §11: ≥1280px desktop enhancement only;
+// no `max-width` mobile breakpoints.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.aplus-login {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background:
+    radial-gradient(ellipse at top left, rgba(224, 231, 255, 0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(227, 242, 253, 0.6) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+}
+
+// ─── Status pill (fixed, top-right) ──────────────────────────────────
+.status-pill {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+
+  .led {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  }
+
+  span:not(.led) {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+}
+
+// ─── Login card ──────────────────────────────────────────────────────
+.login-card {
+  width: 100%;
+  max-width: 540px;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.login-header {
+  text-align: center;
+}
+
+.login-title {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin: 0 0 0.25rem;
+  background: var(--surface-accent-ink, var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.login-tagline {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+// ─── Error banner ────────────────────────────────────────────────────
+.login-error {
+  background: var(--danger-bg);
+  color: var(--danger);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+// ─── Status / info banners (verify-email, reset-sent, link-prompt) ──
+.login-notice {
+  background: var(--glass-bg, rgba(255, 255, 255, 0.4));
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  p {
+    margin: 0;
+  }
+
+  &__sent {
+    color: var(--primary);
+  }
+}
+
+// ─── TOTP challenge block (Phase A3) ────────────────────────────────
+.mfa-block {
+  &__heading {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+  }
+
+  &__prompt {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+}
+
+// ─── Register CTA ────────────────────────────────────────────────────
+.register-cta {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+
+  a {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+  }
+}
+
+// ─── Form ────────────────────────────────────────────────────────────
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  padding-left: 0.25rem;
+}
+
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0.25rem;
+
+  .field-label {
+    padding: 0;
+  }
+}
+
+.forgot-link {
+  // Rendered as a <button> since Phase A2 (triggers sendPasswordResetEmail
+  // in-place instead of navigating) — neutralise UA button chrome.
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+// ─── Form control overrides (login-specific sizing) ─────────────────
+.form-control {
+  padding: 0.9rem 1rem;
+  font-size: 16px;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+// ─── Tenant detection pill ───────────────────────────────────────────
+.tenant-detect {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(25, 118, 210, 0.08);
+  border: 1px solid rgba(25, 118, 210, 0.2);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 500;
+  align-self: flex-start;
+
+  b {
+    font-weight: 700;
+  }
+}
+
+// ─── Password reveal toggle ──────────────────────────────────────────
+.password-wrap {
+  position: relative;
+
+  .form-control {
+    padding-right: 3rem;
+  }
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: var(--primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &[aria-pressed='true'] {
+    color: var(--primary);
+  }
+}
+
+// ─── Primary CTA (passkey) ───────────────────────────────────────────
+.btn-full {
+  width: 100%;
+  justify-content: center;
+  padding: 1rem 1.25rem;
+  font-size: 16px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+.login-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: aplus-login-spin 0.6s linear infinite;
+}
+
+@keyframes aplus-login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ─── Divider ─────────────────────────────────────────────────────────
+.login-divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  color: var(--text-muted);
+  font-size: 14px;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  span {
+    padding: 0 1rem;
+  }
+}
+
+// ─── Social stack ────────────────────────────────────────────────────
+.social-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .sg-mark {
+    width: 20px;
+    height: 20px;
+    // Was var(--danger) (#ef4444) — contrast 3.76:1 with white, fails
+    // WCAG 2 AA (≥4.5:1 required for normal text). Build da7e0343 axe-core
+    // flagged this on /a/login. red-700 (#b91c1c) gives ~6:1 with white.
+    background: #b91c1c;
+    color: #fff;
+    font-weight: 700;
+    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+}
+
+// ─── Powered-by mark (fixed, bottom-left) ────────────────────────────
+.powered-by {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 50;
+
+  &__label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  &__name {
+    font-size: 24px;
+    font-weight: 700;
+    color: rgba(30, 41, 59, 0.5);
+  }
+}
+
+// ─── Tablet → desktop enhancements ───────────────────────────────────
+@media (min-width: 1280px) {
+  .login-card {
+    max-width: 540px;
+    padding: 3rem;
+  }
+
+  .login-title {
+    font-size: 44px;
+  }
+}
+
+// ─── Reduced-motion preference ───────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .login-spinner {
+    animation: none;
+  }
+}

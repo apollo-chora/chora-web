@@ -1,0 +1,386 @@
+// =====================================================================
+// H+ Mana Pool — L1 Tenant lane (CHO-1709 WP-4)
+// Tablet-first; TenantManaPool card + quota form + Stripe top-up packs.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.mana {
+  display: block;
+  padding: 1.5rem;
+  min-height: 100%;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1280px;
+    margin-inline: auto;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  &__crumb-active {
+    color: var(--primary);
+  }
+
+  &__hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+  }
+
+  &__subtitle {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    max-width: 60ch;
+  }
+
+  &__panel {
+    padding: 1.25rem 1.5rem;
+  }
+
+  &__section-title {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  // ── Post-Stripe return notice ─────────────────────────────────────
+  &__return {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    font-size: 0.9rem;
+    color: var(--text-main);
+
+    &--success > i {
+      color: var(--success, #16a34a);
+    }
+
+    &--cancelled > i {
+      color: var(--text-muted);
+    }
+  }
+
+  &__return-dismiss {
+    margin-inline-start: auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
+    cursor: pointer;
+
+    &:hover {
+      background: white;
+      color: var(--primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  }
+
+  // ── Loading skeleton ──────────────────────────────────────────────
+  &__loading {
+    color: var(--text-muted);
+  }
+
+  &__skeleton {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  &__skeleton-bar {
+    height: 14px;
+    width: 55%;
+    border-radius: 7px;
+    background: linear-gradient(
+      90deg,
+      rgba(148, 163, 184, 0.18) 25%,
+      rgba(148, 163, 184, 0.32) 50%,
+      rgba(148, 163, 184, 0.18) 75%
+    );
+    background-size: 200% 100%;
+    animation: mana-shimmer 1.4s ease-in-out infinite;
+
+    &--wide {
+      width: 80%;
+      height: 28px;
+    }
+
+    &--short {
+      width: 35%;
+    }
+  }
+
+  // ── Error banner ──────────────────────────────────────────────────
+  &__error p {
+    margin: 0 0 0.75rem;
+    color: var(--text-main);
+  }
+
+  &__error-code {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    margin-inline-start: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger, #ef4444);
+      padding: 0.1rem 0.4rem;
+      border-radius: 6px;
+    }
+  }
+
+  // ── Create-if-absent state ────────────────────────────────────────
+  &__create-body {
+    margin: 0 0 1rem;
+    color: var(--text-muted);
+    max-width: 64ch;
+  }
+
+  &__create-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  // ── Pool card ─────────────────────────────────────────────────────
+  &__balance-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__balance-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__balance {
+    margin: 0.25rem 0 0;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--text-main);
+    font-feature-settings: 'tnum' 1;
+  }
+
+  &__balance-units {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-inline-start: 0.35rem;
+  }
+
+  &__low-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(245, 158, 11, 0.16);
+    color: #b45309;
+  }
+
+  &__low-hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.8rem;
+    color: #b45309;
+  }
+
+  &__stats {
+    margin: 1.25rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  &__stat {
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+
+    dt {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    dd {
+      margin: 0.3rem 0 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      font-feature-settings: 'tnum' 1;
+    }
+  }
+
+  // ── Quota form ────────────────────────────────────────────────────
+  &__quota-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  &__field-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__quota-field {
+    width: 12rem;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  &__quota-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__hint {
+    margin: 0.6rem 0 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  &__inline-success {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.6rem 0 0;
+    font-size: 0.85rem;
+    color: var(--success, #16a34a);
+  }
+
+  &__inline-error {
+    margin: 0.6rem 0 0;
+    font-size: 0.85rem;
+    color: var(--danger, #ef4444);
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: rgba(239, 68, 68, 0.1);
+      padding: 0.1rem 0.4rem;
+      border-radius: 6px;
+    }
+  }
+
+  // ── Top-up packs ──────────────────────────────────────────────────
+  &__packs {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  &__pack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+  }
+
+  &__pack-units {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-main);
+    font-feature-settings: 'tnum' 1;
+  }
+
+  &__pack-units-suffix {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  &__pack-price {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  &__pack-buy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+}
+
+@keyframes mana-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mana__skeleton-bar {
+    animation: none;
+  }
+}

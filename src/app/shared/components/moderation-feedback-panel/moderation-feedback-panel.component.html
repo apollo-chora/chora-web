@@ -1,0 +1,73 @@
+<section
+  class="moderation-feedback-panel glass-panel"
+  [class.moderation-feedback-panel--reject]="verdict().verdict === 'reject'"
+  [class.moderation-feedback-panel--unknown]="verdict().verdict === 'unknown'"
+  data-testid="moderation-feedback-panel"
+  role="alert"
+  aria-live="polite">
+  <header class="moderation-feedback-panel__header">
+    <span class="moderation-feedback-panel__icon" aria-hidden="true">
+      @switch (verdict().verdict) {
+        @case ('refine') { ✎ }
+        @case ('reject') { ⚠ }
+        @default { ? }
+      }
+    </span>
+    <h3 class="moderation-feedback-panel__heading">
+      {{ headingKey() | translate }}
+    </h3>
+    <button
+      type="button"
+      class="moderation-feedback-panel__dismiss"
+      data-testid="moderation-dismiss"
+      [attr.aria-label]="'shared.moderation_feedback.dismiss' | translate"
+      (click)="onDismiss()">
+      ✕
+    </button>
+  </header>
+
+  @if (verdict().verdict === 'unknown') {
+    <p
+      class="moderation-feedback-panel__message"
+      data-testid="moderation-feedback-message">
+      {{ 'shared.moderation_feedback.unknown_message' | translate }}
+    </p>
+  } @else {
+    <p
+      class="moderation-feedback-panel__message"
+      data-testid="moderation-feedback-reason">
+      {{ verdict().reason }}
+    </p>
+  }
+
+  @if (canAcceptRewrite()) {
+    <blockquote class="moderation-feedback-panel__rewrite">
+      <span class="moderation-feedback-panel__rewrite-label">
+        {{ 'shared.moderation_feedback.rewrite_label' | translate }}
+      </span>
+      <span class="moderation-feedback-panel__rewrite-text">
+        {{ verdict().suggested_rewrite }}
+      </span>
+    </blockquote>
+  }
+
+  <div class="moderation-feedback-panel__actions">
+    @if (canAcceptRewrite()) {
+      <button
+        type="button"
+        class="moderation-feedback-panel__cta moderation-feedback-panel__cta--primary"
+        data-testid="moderation-accept-rewrite"
+        (click)="onAcceptRewrite()">
+        {{ 'shared.moderation_feedback.accept_rewrite' | translate }}
+      </button>
+    } @else {
+      <button
+        type="button"
+        class="moderation-feedback-panel__cta moderation-feedback-panel__cta--primary"
+        data-testid="moderation-edit-retry"
+        (click)="onEditRetry()">
+        {{ 'shared.moderation_feedback.edit_retry' | translate }}
+      </button>
+    }
+  </div>
+</section>

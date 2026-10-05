@@ -1,0 +1,60 @@
+// =====================================================================
+// Named refusal for a resolved session carrying no organisation.
+// Tablet-first; centred card, no navigation chrome (the user cannot get
+// anywhere useful from here until a fresh resolve succeeds).
+//
+// Tokens are the AA-safe --chora-color-* set, NOT the legacy polyglass
+// --text-muted / --primary aliases: those paint below the 4.5:1 floor and
+// the guards ban a new file adding them.
+// =====================================================================
+
+:host {
+  display: block;
+}
+
+.no-organisation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+
+  &__card {
+    max-width: 34rem;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  &__heading {
+    margin: 0 0 0.75rem;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__body {
+    margin: 0 0 1rem;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__code {
+    margin: 0 0 1rem;
+    color: var(--chora-color-text-primary);
+  }
+
+  &__code-label {
+    margin-inline-end: 0.4rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__hint {
+    margin: 0 0 1.5rem;
+    font-size: 0.9rem;
+    color: var(--chora-color-text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}

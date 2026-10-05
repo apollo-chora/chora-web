@@ -1,0 +1,64 @@
+@if (mode() === 'interactive') {
+  <button
+    type="button"
+    role="radio"
+    class="chora-mcq-option chora-mcq-option--interactive"
+    [class.is-selected]="selected()"
+    [attr.aria-checked]="selected() ? 'true' : 'false'"
+    [attr.aria-pressed]="selected() ? 'true' : 'false'"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-describedby]="stemElementId()"
+    [attr.data-testid]="testId()"
+    [disabled]="disabled()"
+    (click)="onPick()">
+    <span class="chora-mcq-option__marker" aria-hidden="true">{{ marker() }}</span>
+    <span class="chora-mcq-option__text">{{ text() }}</span>
+    <span class="chora-mcq-option__check" aria-hidden="true">
+      @if (selected()) {
+        <i class="fa-solid fa-check"></i>
+      }
+    </span>
+  </button>
+} @else {
+  <div
+    class="chora-mcq-option chora-mcq-option--reveal"
+    [class.is-correct]="correct() === true"
+    [class.is-selected]="selected()"
+    [class.is-wrong]="selected() && correct() !== true"
+    [attr.data-is-correct]="correct() === true ? 'true' : 'false'"
+    [attr.data-selected]="selected() ? 'true' : 'false'"
+    [attr.data-testid]="testId()"
+    [attr.aria-label]="ariaLabel()">
+    <span class="chora-mcq-option__marker" aria-hidden="true">{{ marker() }}</span>
+    <span class="chora-mcq-option__text">{{ text() }}</span>
+    @if (correct() === true) {
+      <i class="fa-solid fa-circle-check chora-mcq-option__correct" aria-hidden="true"></i>
+    } @else if (selected()) {
+      <i class="fa-solid fa-circle-xmark chora-mcq-option__wrong" aria-hidden="true"></i>
+    }
+    @if (selected() || (correct() === true)) {
+      <div class="chora-mcq-option__badges">
+        @if (selected()) {
+          <span
+            class="chora-mcq-option__badge chora-mcq-option__badge--your"
+            [attr.data-correct]="correct() === true ? 'true' : 'false'">
+            <i
+              class="fa-solid"
+              [class.fa-check]="correct() === true"
+              [class.fa-xmark]="correct() !== true"
+              aria-hidden="true"></i>
+            {{ yourAnswerLabel() }}
+          </span>
+        } @else if (correct() === true) {
+          <span class="chora-mcq-option__badge chora-mcq-option__badge--answer">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            {{ correctAnswerLabel() }}
+          </span>
+        }
+      </div>
+    }
+    @if (explainer(); as exp) {
+      <p class="chora-mcq-option__explainer">{{ exp }}</p>
+    }
+  </div>
+}
