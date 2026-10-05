@@ -70,6 +70,14 @@
   .main-layout {
     grid-template-columns: 72px var(--chora-sidebar-width) 1fr;
 
+    // The compass shell drops the sidebar column, so the grid must collapse to
+    // rail + content here too. Without this the base `.main-layout` rule above
+    // (same specificity, earlier in source) is the only one that applies and the
+    // content column is squeezed into the 240px sidebar track.
+    &--compass {
+      grid-template-columns: 72px 1fr;
+    }
+
     &--sidebar-collapsed {
       grid-template-columns: 72px var(--chora-sidebar-collapsed-width) 1fr;
     }
