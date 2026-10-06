@@ -438,7 +438,7 @@ describe('MeManaService — checkoutMana()', () => {
   it('POSTs /api/v1/checkout/user-mana with sku + return URLs, then redirects to Stripe', () => {
     const redirectSpy = vi
       .spyOn(service as unknown as { redirectTo(u: string): void }, 'redirectTo')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { /* noop */ });
     vi.spyOn(
       service as unknown as { currentUrl(): string },
       'currentUrl',
@@ -475,7 +475,7 @@ describe('MeManaService — checkoutMana()', () => {
   it('does NOT redirect + surfaces error state on 503 (catalogue unconfigured)', () => {
     const redirectSpy = vi
       .spyOn(service as unknown as { redirectTo(u: string): void }, 'redirectTo')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { /* noop */ });
 
     service.checkoutMana('mana_pack_5000');
     httpMock
@@ -668,7 +668,7 @@ describe('MeManaService — checkoutMana() error + edge branches', () => {
     vi.spyOn(
       service as unknown as { redirectTo(u: string): void },
       'redirectTo',
-    ).mockImplementation(() => {});
+    ).mockImplementation(() => { /* noop */ });
     service.checkoutMana('mana_pack_5000');
     flushCheckout(400, 'Bad Request');
     const s = service.checkoutState();
@@ -725,7 +725,7 @@ describe('MeManaService — checkoutMana() error + edge branches', () => {
     vi.spyOn(
       service as unknown as { redirectTo(u: string): void },
       'redirectTo',
-    ).mockImplementation(() => {});
+    ).mockImplementation(() => { /* noop */ });
     vi.spyOn(
       service as unknown as { currentUrl(): string },
       'currentUrl',
@@ -757,7 +757,7 @@ describe('MeManaService — checkoutMana() error + edge branches', () => {
       });
     const redirectSpy = vi
       .spyOn(service as unknown as { redirectTo(u: string): void }, 'redirectTo')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { /* noop */ });
     vi.spyOn(
       service as unknown as { currentUrl(): string },
       'currentUrl',
@@ -780,7 +780,7 @@ describe('MeManaService — checkoutMana() error + edge branches', () => {
   it('does NOT redirect when the 200 response carries an empty checkout URL', () => {
     const redirectSpy = vi
       .spyOn(service as unknown as { redirectTo(u: string): void }, 'redirectTo')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { /* noop */ });
     vi.spyOn(
       service as unknown as { currentUrl(): string },
       'currentUrl',
@@ -805,7 +805,7 @@ describe('MeManaService — checkoutMana() error + edge branches', () => {
     vi.spyOn(
       service as unknown as { redirectTo(u: string): void },
       'redirectTo',
-    ).mockImplementation(() => {});
+    ).mockImplementation(() => { /* noop */ });
     vi.spyOn(
       service as unknown as { currentUrl(): string },
       'currentUrl',
@@ -843,7 +843,7 @@ describe('MeManaService — real redirectTo / currentUrl bodies', () => {
     // true arm that reads window.location.href.
     const redirectSpy = vi
       .spyOn(service as unknown as { redirectTo(u: string): void }, 'redirectTo')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { /* noop */ });
 
     const here = window.location.href; // jsdom default origin
     service.checkoutMana('mana_pack_5000');

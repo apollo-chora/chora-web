@@ -132,20 +132,36 @@ export class ReorderableListDirective {
       case 'ArrowUp':
       case 'ArrowLeft':
         ev.preventDefault();
-        moving ? this.move(i, i - 1, count) : this.focusRow(i - 1, count);
+        if (moving) {
+          this.move(i, i - 1, count);
+        } else {
+          this.focusRow(i - 1, count);
+        }
         return;
       case 'ArrowDown':
       case 'ArrowRight':
         ev.preventDefault();
-        moving ? this.move(i, i + 1, count) : this.focusRow(i + 1, count);
+        if (moving) {
+          this.move(i, i + 1, count);
+        } else {
+          this.focusRow(i + 1, count);
+        }
         return;
       case 'Home':
         ev.preventDefault();
-        moving ? this.move(i, 0, count) : this.focusRow(0, count);
+        if (moving) {
+          this.move(i, 0, count);
+        } else {
+          this.focusRow(0, count);
+        }
         return;
       case 'End':
         ev.preventDefault();
-        moving ? this.move(i, count - 1, count) : this.focusRow(count - 1, count);
+        if (moving) {
+          this.move(i, count - 1, count);
+        } else {
+          this.focusRow(count - 1, count);
+        }
         return;
       default:
         return;

@@ -33,7 +33,7 @@ describe('WebAuthnService', () => {
       const winPk = window.PublicKeyCredential;
       const navCred = navigator.credentials;
       Object.defineProperty(window, 'PublicKeyCredential', {
-        value: function PublicKeyCredentialStub() {},
+        value: function PublicKeyCredentialStub() { /* noop */ },
         writable: true,
         configurable: true,
       });
@@ -79,7 +79,7 @@ describe('WebAuthnService', () => {
       const winPk = window.PublicKeyCredential;
       const navCred = navigator.credentials;
       Object.defineProperty(window, 'PublicKeyCredential', {
-        value: function PublicKeyCredentialStub() {},
+        value: function PublicKeyCredentialStub() { /* noop */ },
         writable: true,
         configurable: true,
       });

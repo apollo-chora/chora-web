@@ -80,13 +80,13 @@ export class AddonMarketplaceDetailComponent {
   // Computed view-model
   // ---------------------------------------------------------------------------
 
-  readonly entitlements = computed<ReadonlyArray<AddOnEntitlement>>(
+  readonly entitlements = computed<readonly AddOnEntitlement[]>(
     () => this.detail()?.entitlements ?? [],
   );
-  readonly integrations = computed<ReadonlyArray<AddOnIntegration>>(
+  readonly integrations = computed<readonly AddOnIntegration[]>(
     () => this.detail()?.integrations ?? [],
   );
-  readonly pricingTiers = computed<ReadonlyArray<AddOnPricingTier>>(
+  readonly pricingTiers = computed<readonly AddOnPricingTier[]>(
     () => this.detail()?.pricing_tiers ?? [],
   );
   readonly subscription = computed(() => this.detail()?.current_subscription ?? null);
@@ -128,7 +128,7 @@ export class AddonMarketplaceDetailComponent {
     return idx > 0 ? iso.slice(0, idx) : iso;
   }
 
-  readonly compliancePills = computed<ReadonlyArray<CompliancePill>>(() => {
+  readonly compliancePills = computed<readonly CompliancePill[]>(() => {
     const c = this.detail()?.compliance ?? {};
     return [
       { key: 'gdpr', labelKey: 'hplus.addons.detail.compliance.gdpr', compliant: !!c.gdpr },
@@ -138,7 +138,7 @@ export class AddonMarketplaceDetailComponent {
     ];
   });
 
-  readonly residencyRegions = computed<ReadonlyArray<string>>(
+  readonly residencyRegions = computed<readonly string[]>(
     () => this.detail()?.compliance?.data_residency_regions ?? [],
   );
 

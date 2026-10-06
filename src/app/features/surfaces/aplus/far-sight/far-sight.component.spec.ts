@@ -150,7 +150,7 @@ describe('FarSightComponent', () => {
   // gate that was deliberately shut. The old spec faked a code the FE could never
   // actually receive, so it passed while production was broken. These drive the
   // codes the BE really emits.
-  const denials: ReadonlyArray<{ code: string; status: number; want: string }> = [
+  const denials: readonly { code: string; status: number; want: string }[] = [
     { code: 'EXTERNAL_EGRESS_DISABLED', status: 403, want: 'far_sight.error.egress_off' },
     { code: 'EXTERNAL_EGRESS_KILL_SWITCH', status: 403, want: 'far_sight.error.egress_paused' },
     { code: 'EXTERNAL_EGRESS_CEILING_REACHED', status: 429, want: 'far_sight.error.ceiling' },
@@ -185,7 +185,7 @@ describe('FarSightComponent', () => {
   // `body` is typed as an object rather than `unknown` so it satisfies flush()'s
   // body parameter — `unknown` was a pre-existing TS2345 under tsconfig.spec.json
   // (vitest runs through esbuild, which does not typecheck, so it stayed hidden).
-  const failures: ReadonlyArray<{ name: string; body: Record<string, unknown> }> = [
+  const failures: readonly { name: string; body: Record<string, unknown> }[] = [
     {
       name: 'consumption search failure (flat body)',
       body: { code: 'FACT_CHECK_SEARCH_FAILED', message: 'grounded search failed' },
@@ -217,7 +217,7 @@ describe('FarSightComponent', () => {
   // on an ApiError), so EVERY error rendered the generic message — mana and
   // stage-lock included, not just the egress ones. Pin a pre-existing code so a
   // future refactor of the error plumbing cannot silently kill the mapping again.
-  const preExisting: ReadonlyArray<{ code: string; status: number; want: string }> = [
+  const preExisting: readonly { code: string; status: number; want: string }[] = [
     { code: 'INSUFFICIENT_MANA', status: 402, want: 'far_sight.error.mana' },
     { code: 'SKILL_STAGE_LOCKED', status: 409, want: 'far_sight.error.locked' },
   ];

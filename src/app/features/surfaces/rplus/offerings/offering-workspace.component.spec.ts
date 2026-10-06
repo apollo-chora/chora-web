@@ -4041,11 +4041,11 @@ describe('OfferingWorkspaceComponent', () => {
   });
 
   describe('attendance panel (CHO-1986)', () => {
-    type Bag = {
+    interface Bag {
       fixture: ComponentFixture<OfferingWorkspaceComponent>;
       httpMock: HttpTestingController;
       element: HTMLElement;
-    };
+    }
     function scheduleUrl(id: string): string {
       return `${environment.bffBaseUrl}/api/v1/offerings/${encodeURIComponent(id)}/schedule`;
     }

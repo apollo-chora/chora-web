@@ -28,7 +28,7 @@ interface BackendGroupStub {
   course_id: string;
   name: string;
   state: 'FORMING' | 'ACTIVE' | 'SUBMITTED' | 'GRADED';
-  members: Array<{ gcid: string; role: string }>;
+  members: { gcid: string; role: string }[];
   submitted_at?: string;
   score_pct?: number;
   grader_gcid?: string;

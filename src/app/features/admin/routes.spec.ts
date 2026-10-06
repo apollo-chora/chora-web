@@ -121,7 +121,7 @@ describe('ADMIN_ROUTES', () => {
           expect(m).toBeTruthy();
         } catch (err) {
           // jsdom limitation on a specific component module — keep suite green.
-          // eslint-disable-next-line no-console
+           
           console.warn(
             `loadComponent for path "${r.path}" threw under jsdom: ${String(err)}`,
           );
@@ -137,7 +137,7 @@ describe('ADMIN_ROUTES', () => {
           expect(c).toBeTruthy();
         } catch (err) {
           // jsdom limitation on a specific child-routes module — keep suite green.
-          // eslint-disable-next-line no-console
+           
           console.warn(
             `loadChildren for path "${r.path}" threw under jsdom: ${String(err)}`,
           );

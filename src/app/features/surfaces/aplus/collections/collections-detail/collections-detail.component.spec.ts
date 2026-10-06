@@ -104,7 +104,7 @@ class StubCollectionsService {
     this.loadDetailCalls.push(id);
   }
 
-  removeAtomCalls: Array<{ collectionId: string; atomId: string }> = [];
+  removeAtomCalls: { collectionId: string; atomId: string }[] = [];
   removeAtomShouldError = false;
   removeAtom(collectionId: string, atomId: string): Observable<void> {
     this.removeAtomCalls.push({ collectionId, atomId });

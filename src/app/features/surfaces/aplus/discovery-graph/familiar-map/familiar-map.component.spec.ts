@@ -68,7 +68,7 @@ const GOALS: readonly GoalDTO[] = [
 /** Stub GoalService — the picker reads `goals()`; `load()` is a no-op here. */
 const mockGoalService: Pick<GoalService, 'goals' | 'load'> = {
   goals: signal<readonly GoalDTO[]>(GOALS).asReadonly(),
-  load: () => {},
+  load: () => { /* noop */ },
 };
 
 describe('FamiliarMapComponent', () => {

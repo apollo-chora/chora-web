@@ -38,10 +38,10 @@ interface GradeRequest {
 export interface CreateProjectGroupRequest {
   readonly courseId: string;
   readonly name: string;
-  readonly members: ReadonlyArray<{
+  readonly members: readonly {
     readonly gcid: string;
     readonly role: 'leader' | 'member';
-  }>;
+  }[];
 }
 
 @Injectable({ providedIn: 'root' })

@@ -683,11 +683,11 @@ describe('BrandingConfigurationComponent', () => {
       });
     });
 
-    const FE_ONLY_SELECTORS: ReadonlyArray<{
+    const FE_ONLY_SELECTORS: readonly {
       label: string;
       input: string;
       badge: string;
-    }> = [
+    }[] = [
       {
         label: 'secondary color',
         input: '[data-testid="branding-secondary-input"]',

@@ -74,7 +74,7 @@ export class AddonDeactivateModalComponent {
   // Local state
   // ---------------------------------------------------------------------------
 
-  readonly reasons: ReadonlyArray<DeactivateReason> = DEACTIVATE_REASONS;
+  readonly reasons: readonly DeactivateReason[] = DEACTIVATE_REASONS;
   readonly reason = signal<DeactivateReason | ''>('');
   readonly reasonText = signal('');
   readonly effectiveAt = signal<DeactivateEffectiveAt>('end_of_cycle');

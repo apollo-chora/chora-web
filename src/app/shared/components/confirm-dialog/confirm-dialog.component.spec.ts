@@ -367,11 +367,11 @@ describe('ConfirmDialogComponent', () => {
     // confirm() always substitutes a default for confirmText/cancelText, so the
     // `?? ''` fallback in the template never fires via the public API. We drive the
     // arm by writing the service's internal signal directly with undefined texts.
-    type WithInternalState = {
+    interface WithInternalState {
       _state: {
         set(value: import('./confirm-dialog.model').ConfirmDialogState): void;
       };
-    };
+    }
 
     it('should render empty string when confirmText/cancelText are undefined', () => {
       const internal = service as unknown as WithInternalState;

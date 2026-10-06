@@ -85,7 +85,9 @@
         class="chora-question-image__lightbox-img"
         [src]="src()"
         [alt]="alt()"
-        (click)="$event.stopPropagation()" />
+        tabindex="-1"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()" />
     </div>
   }
 }

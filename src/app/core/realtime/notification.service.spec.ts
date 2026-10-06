@@ -741,7 +741,7 @@ describe('NotificationService', () => {
   // defensive auth re-check is unreachable through the public API. Drive it
   // directly with no user to characterize the early-return.
   it('poll() re-checks auth and is a no-op when no user is present (defensive guard)', () => {
-    type WithPoll = { poll(): void };
+    interface WithPoll { poll(): void }
     const helper = service as unknown as WithPoll;
     authMock.user.set(null as never);
     helper.poll();
@@ -753,7 +753,7 @@ describe('NotificationService', () => {
   // limit-absent arm are never exercised through the public API. We reach the
   // private helper directly to characterize each set() arm.
   it('buildParams() sets each optional query arm when provided', () => {
-    type WithBuildParams = {
+    interface WithBuildParams {
       buildParams(o: {
         cursor?: string;
         limit?: number;
@@ -761,7 +761,7 @@ describe('NotificationService', () => {
         priority?: string;
         category?: string;
       }): { toString(): string };
-    };
+    }
     const helper = service as unknown as WithBuildParams;
 
     const full = helper

@@ -159,7 +159,7 @@ export function normaliseApplicationStatus(raw: string): ApplicationStatus {
     case 'withdrawn':
       return 'WITHDRAWN';
     default:
-      // eslint-disable-next-line no-console
+       
       console.warn(
         `[applications] unknown backend status "${raw}": falling back to SUBMITTED`,
       );

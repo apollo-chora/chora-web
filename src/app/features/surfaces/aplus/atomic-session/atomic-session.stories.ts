@@ -127,9 +127,9 @@ function makeStubAtomicService(opts: {
       const s = _start();
       return s.status === 'started' ? s.session : null;
     }),
-    load: () => {},
-    start: () => {},
-    submit: () => {},
+    load: () => { /* noop */ },
+    start: () => { /* noop */ },
+    submit: () => { /* noop */ },
   } as unknown as Partial<AtomAttemptService>;
 }
 

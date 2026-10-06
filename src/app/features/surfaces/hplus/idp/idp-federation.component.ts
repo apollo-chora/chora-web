@@ -183,7 +183,7 @@ export class IdpFederationComponent {
   }
 
   private mapRowsToCards(
-    rows: ReadonlyArray<IdpProviderRow>,
+    rows: readonly IdpProviderRow[],
   ): readonly IdpCardVm[] {
     const cards = this.buildDefaultCards().map((c) => ({ ...c }));
     const oidcRow = rows.find((r) => r.provider_type === 'oidc');

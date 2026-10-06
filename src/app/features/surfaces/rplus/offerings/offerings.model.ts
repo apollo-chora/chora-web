@@ -30,6 +30,7 @@ export type OfferingDeliveryType = 'graduate' | 'short' | 'async';
  * a literal-overlap error, and so the boundary cast in `mapExamSittingToOffering`
  * (`… as OfferingDeliveryType`) mirrors `mapBackendOffering`.
  */
+// eslint-disable-next-line @typescript-eslint/no-inferrable-types
 export const EXAM_DELIVERY_TYPE: string = 'exam';
 
 /** Offering lifecycle state. BE contract: DRAFT→LAUNCHED→RUNNING→CONCLUDED→ARCHIVED. */

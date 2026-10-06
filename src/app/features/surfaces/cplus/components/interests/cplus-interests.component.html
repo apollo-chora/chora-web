@@ -23,9 +23,9 @@
       </div>
 
       <div class="cplus-interests-form__field">
-        <label class="cplus-interests-form__label">
+        <span class="cplus-interests-form__label">
           {{ 'cplus.interests.courses_label' | translate }}
-        </label>
+        </span>
         @if (completedCourses().length > 0) {
           <div class="cplus-interests-form__courses" role="list">
             @for (course of completedCourses(); track course) {

@@ -24,7 +24,7 @@ import type { DoseFilter, DosePrefRow } from './dose-preferences.model';
 const PAGE_SIZE = 12;
 
 @Component({
-  selector: 'app-dose-preferences',
+  selector: 'chora-aplus-dose-preferences',
   standalone: true,
   imports: [TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,

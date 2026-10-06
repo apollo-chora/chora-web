@@ -24,7 +24,7 @@ type ListMarketplaceFn = (typeof TenantAddonsAdminService.prototype)['listMarket
 const PLAN_KG = '019e0000-0000-7000-8000-aaaaaaaaaaaa';
 const PLAN_FAM = '019e0000-0000-7000-8000-bbbbbbbbbbbb';
 
-const items: ReadonlyArray<AddOnDetail> = [
+const items: readonly AddOnDetail[] = [
   {
     addon_plan_id: PLAN_KG,
     code: 'knowledge_graph',

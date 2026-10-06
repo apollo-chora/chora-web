@@ -173,7 +173,7 @@ describe('OplusEgressAuditComponent', () => {
 
   it('shows a loading state before the fetch resolves', () => {
     // A never-emitting stream keeps the component in loading.
-    const { fixture, el } = setup(new Observable<EgressAuditResponse>(() => {}));
+    const { fixture, el } = setup(new Observable<EgressAuditResponse>(() => { /* noop */ }));
     fixture.detectChanges();
     expect(q(el, 'oplus-ea-loading')).toBeTruthy();
     expect(q(el, 'oplus-ea-empty')).toBeNull();

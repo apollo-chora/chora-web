@@ -83,10 +83,10 @@ export interface ProjectGroupWire {
   readonly course_id: string;
   readonly name: string;
   readonly state: ProjectGroupState;
-  readonly members: ReadonlyArray<{
+  readonly members: readonly {
     readonly gcid: string;
     readonly role: string;
-  }>;
+  }[];
   readonly submitted_at?: string;
   readonly score_pct?: number;
   readonly grader_gcid?: string;

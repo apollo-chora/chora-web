@@ -57,7 +57,7 @@ export interface MeTenantHydrationWire {
  * null-safe.
  */
 export interface MeIdpProvidersHydrationWire {
-  readonly items: ReadonlyArray<MeIdpProviderRowWire>;
+  readonly items: readonly MeIdpProviderRowWire[];
 }
 
 export interface MeIdpProviderRowWire {

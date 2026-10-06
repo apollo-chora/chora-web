@@ -666,12 +666,12 @@
                       </label>
                     </div>
 
-                    <label class="offering-workspace__section-field">
-                      <span>{{ 'rplus.offerings.workspace.curriculum.ref_label' | translate }}</span>
+                    <div class="offering-workspace__section-field">
                       @if (curriculumRefPickerType(); as refPickerType) {
                         <!-- Name-based search (atom/assessment) — no raw-UUID paste. -->
                         <chora-entity-picker
                           data-testid="offering-curriculum-ref-picker"
+                          [label]="'rplus.offerings.workspace.curriculum.ref_label' | translate"
                           [entityType]="refPickerType"
                           [searchPortOverride]="curriculumRefSearchPort()"
                           [value]="curriculumRefPicked()"
@@ -714,7 +714,7 @@
                           }
                         </span>
                       }
-                    </label>
+                    </div>
 
                     @if (curriculumAddError()) {
                       <p
@@ -1611,12 +1611,12 @@
             </label>
 
             <div class="offering-workspace__section-grid">
-              <label class="offering-workspace__section-field">
-                <span>{{ 'rplus.offerings.workspace.sections.lead_label' | translate }}</span>
+              <div class="offering-workspace__section-field">
                 <!-- Name-based search — no raw-GCID paste; scoped to instructor-role members. -->
                 <!-- minChars 0 browses on focus (CHO-2291): depends on the member port paging an empty q. -->
                 <chora-entity-picker
                   data-testid="offering-sections-lead"
+                  [label]="'rplus.offerings.workspace.sections.lead_label' | translate"
                   entityType="member"
                   [searchPortOverride]="memberSearch"
                   [facets]="instructorFacet"
@@ -1627,7 +1627,7 @@
                     'rplus.offerings.workspace.sections.lead_search_placeholder' | translate
                   "
                   (picked)="onSectionLeadPicked($event)" />
-              </label>
+              </div>
               <label class="offering-workspace__section-field">
                 <span>{{ 'rplus.offerings.workspace.sections.room_label' | translate }}</span>
                 <input #roomInput type="text" data-testid="offering-sections-room" />
@@ -1762,12 +1762,12 @@
                     </label>
 
                     <div class="offering-workspace__section-grid">
-                      <label class="offering-workspace__section-field">
-                        <span>{{ 'rplus.offerings.workspace.sections.lead_label' | translate }}</span>
+                      <div class="offering-workspace__section-field">
                         <!-- Name-based search — no raw-GCID paste; scoped to instructor-role members. -->
                         <!-- minChars 0 browses on focus (CHO-2291): depends on the member port paging an empty q. -->
                         <chora-entity-picker
                           data-testid="offering-sections-edit-lead"
+                          [label]="'rplus.offerings.workspace.sections.lead_label' | translate"
                           entityType="member"
                           [searchPortOverride]="memberSearch"
                           [facets]="instructorFacet"
@@ -1779,7 +1779,7 @@
                               | translate
                           "
                           (picked)="onEditSectionLeadPicked($event)" />
-                      </label>
+                      </div>
                       <label class="offering-workspace__section-field">
                         <span>{{ 'rplus.offerings.workspace.sections.room_label' | translate }}</span>
                         <input
@@ -2626,8 +2626,7 @@
                   (input)="onSessionEndsAtInput($event)"
                   required />
               </label>
-              <label class="offering-workspace__section-field">
-                <span>{{ 'rplus.offerings.workspace.schedule.room_label' | translate }}</span>
+              <div class="offering-workspace__section-field">
                 @if (roomsLoading()) {
                   <span
                     class="offering-workspace__terminal"
@@ -2662,15 +2661,13 @@
                     }
                   </select>
                 }
-              </label>
-              <label class="offering-workspace__section-field">
-                <span>{{
-                  'rplus.offerings.workspace.schedule.instructor_label' | translate
-                }}</span>
+              </div>
+              <div class="offering-workspace__section-field">
                 <!-- Name-based search — no raw-GCID paste; scoped to instructor-role members. -->
                 <!-- minChars 0 browses on focus (CHO-2291): depends on the member port paging an empty q. -->
                 <chora-entity-picker
                   data-testid="offering-schedule-instructor"
+                  [label]="'rplus.offerings.workspace.schedule.instructor_label' | translate"
                   entityType="member"
                   [searchPortOverride]="memberSearch"
                   [facets]="instructorFacet"
@@ -2682,7 +2679,7 @@
                       | translate
                   "
                   (picked)="onSessionInstructorPicked($event)" />
-              </label>
+              </div>
             </div>
 
             @if (sessionCreateError()) {
@@ -2891,12 +2888,12 @@
                     {{ 'rplus.offerings.workspace.attendance.mark_title' | translate }}
                   </h3>
                   <div class="offering-workspace__section-grid">
-                    <label class="offering-workspace__section-field">
-                      <span>{{ 'rplus.offerings.workspace.attendance.gcid_label' | translate }}</span>
+                    <div class="offering-workspace__section-field">
                       <!-- Name-based search — no raw-GCID paste. -->
                       <!-- minChars 0 browses on focus (CHO-2291): depends on the member port paging an empty q. -->
                       <chora-entity-picker
                         data-testid="offering-attendance-gcid"
+                        [label]="'rplus.offerings.workspace.attendance.gcid_label' | translate"
                         entityType="member"
                         [searchPortOverride]="memberSearch"
                         [value]="markGcidPicked()"
@@ -2907,7 +2904,7 @@
                             | translate
                         "
                         (picked)="onMarkGcidPicked($event)" />
-                    </label>
+                    </div>
                     <label class="offering-workspace__section-field">
                       <span>{{
                         'rplus.offerings.workspace.attendance.status_label' | translate
@@ -3250,16 +3247,14 @@
                     </h4>
 
                     <div class="offering-workspace__section-grid">
-                      <label class="offering-workspace__section-field">
-                        <span>{{
-                          'rplus.offerings.workspace.prerequisites.target_label' | translate
-                        }}</span>
+                      <div class="offering-workspace__section-field">
                         <!-- Name-based search — no raw course-ID/UUID paste, and no
                              single-page dropdown ceiling (kills the prior bounded
                              PUBLISHED-course `<select>`). -->
                         <!-- minChars 0 browses on focus (CHO-2291): depends on the course port paging an empty q. -->
                         <chora-entity-picker
                           data-testid="offering-prerequisites-target-picker"
+                          [label]="'rplus.offerings.workspace.prerequisites.target_label' | translate"
                           entityType="course"
                           [searchPortOverride]="prerequisiteTargetSearchPort"
                           [value]="prerequisiteTargetPicked()"
@@ -3270,7 +3265,7 @@
                               | translate
                           "
                           (picked)="onPrerequisiteTargetPicked($event)" />
-                      </label>
+                      </div>
                       <label class="offering-workspace__section-field">
                         <span>{{
                           'rplus.offerings.workspace.prerequisites.kind_label' | translate

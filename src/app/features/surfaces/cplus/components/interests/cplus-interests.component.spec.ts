@@ -51,7 +51,7 @@ class FakeWebSocket {
     FakeWebSocket.lastUrl = url;
   }
 
-  send(_data: string): void {}
+  send(_data: string): void { /* noop */ }
 
   close(): void {
     this.closed = true;

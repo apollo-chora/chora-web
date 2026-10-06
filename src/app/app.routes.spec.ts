@@ -259,7 +259,7 @@ describe('app routes', () => {
         // imported module's transitive deps must not red the suite — assert the
         // thunk is still a function and move on.
         expect(typeof r.loadComponent).toBe('function');
-        // eslint-disable-next-line no-console
+         
         console.warn(
           `loadComponent thunk for path="${r.path}" threw, treated as function-only: ${String(err)}`,
         );
@@ -277,7 +277,7 @@ describe('app routes', () => {
         expect(c).toBeTruthy();
       } catch (err) {
         expect(typeof r.loadChildren).toBe('function');
-        // eslint-disable-next-line no-console
+         
         console.warn(
           `loadChildren thunk for path="${r.path}" threw, treated as function-only: ${String(err)}`,
         );

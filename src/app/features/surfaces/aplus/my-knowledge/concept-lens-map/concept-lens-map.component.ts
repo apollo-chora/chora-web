@@ -11,10 +11,10 @@
  * for the focus, a pale-indigo root tint, neutral-grey shadows (softer under the
  * focus so it lifts), wrapped labels, no rim.
  *
- * - tap / Enter / Space on any node → `select(conceptId)` (parent focuses + opens
+ * - tap / Enter / Space on any node → `nodeSelected(conceptId)` (parent focuses + opens
  *   its detail); the lens eases onto it (rAF; honours prefers-reduced-motion).
  * - "make this my root" → `makeRoot` (operates on the current focus).
- * - `settled` fires when the re-focus resolves (parent redraws the connector).
+ * - `layoutSettled` fires when the re-focus resolves (parent redraws the connector).
  *
  * The geometry is the pure, unit-tested `./concept-lens` module. Per chora-web
  * CLAUDE.md §3 — standalone, signal state, OnPush.
@@ -185,7 +185,7 @@ interface LensRenderRoad {
   readonly markers: readonly LensRoadMarker[];
 }
 
-type Point = { readonly x: number; readonly y: number };
+interface Point { readonly x: number; readonly y: number }
 
 /** Road stroke width at unit magnification; scaled by the node's lens `z`. */
 const ROAD_WIDTH = 5;
@@ -257,11 +257,11 @@ export class ConceptLensMapComponent {
   readonly fogGhosts = input<readonly FogGhost[]>([]);
 
   /** A node was tapped — the parent should focus it + open its detail. */
-  readonly select = output<string>();
+  readonly nodeSelected = output<string>();
   /** "Make this my root" pressed for the current focus. */
   readonly makeRoot = output<void>();
   /** The re-focus animation resolved (or snapped) — redraw dependent overlays. */
-  readonly settled = output<void>();
+  readonly layoutSettled = output<void>();
   /** A fog ghost was tapped — emits the FOCAL conceptId (focus it + open drawer). */
   readonly fogTap = output<string>();
 
@@ -522,7 +522,7 @@ export class ConceptLensMapComponent {
     //
     // Anchoring instead expands the offset by the ancestor's own scale, so the
     // whole cluster grows with its landmass and keeps clear of it.
-    type Anchor = { readonly id: string; readonly bx: number; readonly by: number; readonly x: number; readonly y: number; readonly s: number };
+    interface Anchor { readonly id: string; readonly bx: number; readonly by: number; readonly x: number; readonly y: number; readonly s: number }
     const NO_ANCHOR: Anchor | null = null;
     const anchorCache = new Map<string, Anchor | null>();
     const anchorOf = (id: string): Anchor | null => {
@@ -1040,7 +1040,7 @@ export class ConceptLensMapComponent {
           this.tweenFrom.set(null);
           this.renderCenter.set(target);
           this.cachePositions();
-          this.settled.emit();
+          this.layoutSettled.emit();
         } else {
           this.animateTo(target);
         }
@@ -1078,7 +1078,7 @@ export class ConceptLensMapComponent {
         this.raf = null;
         this.tweenFrom.set(null);
         this.cachePositions();
-        this.settled.emit();
+        this.layoutSettled.emit();
       }
     };
     this.raf = requestAnimationFrame(step);
@@ -1101,7 +1101,7 @@ export class ConceptLensMapComponent {
 
   onSelect(id: string): void {
     if (this.loading()) return;
-    this.select.emit(id);
+    this.nodeSelected.emit(id);
   }
 
   onNodeKeydown(ev: KeyboardEvent, id: string): void {

@@ -45,7 +45,7 @@ describe('bookings.model', () => {
   });
 
   describe('statusBadgeVariant', () => {
-    const cases: ReadonlyArray<[BookingStatus, string]> = [
+    const cases: readonly [BookingStatus, string][] = [
       ['pending', 'badge-warning'],
       ['confirmed', 'badge-success'],
       ['attended', 'badge-info'],

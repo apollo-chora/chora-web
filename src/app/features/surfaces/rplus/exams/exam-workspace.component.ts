@@ -493,7 +493,7 @@ export class ExamWorkspaceComponent {
   onTabKeydown(event: KeyboardEvent, index: number): void {
     const tabs = this.tabList();
     if (tabs.length === 0) return;
-    let next = index;
+    let next: number;
     switch (event.key) {
       case 'ArrowRight':
         next = (index + 1) % tabs.length;

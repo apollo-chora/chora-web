@@ -267,7 +267,11 @@ export class GrowthEdgeReviewComponent implements OnInit {
   toggleStruggle(conceptKey: string): void {
     this.addedStruggles.update((set) => {
       const next = new Set(set);
-      next.has(conceptKey) ? next.delete(conceptKey) : next.add(conceptKey);
+      if (next.has(conceptKey)) {
+        next.delete(conceptKey);
+      } else {
+        next.add(conceptKey);
+      }
       return next;
     });
   }
@@ -279,7 +283,11 @@ export class GrowthEdgeReviewComponent implements OnInit {
   toggleOutput(kind: WeaknessOutputKind): void {
     this.selectedOutputs.update((set) => {
       const next = new Set(set);
-      next.has(kind) ? next.delete(kind) : next.add(kind);
+      if (next.has(kind)) {
+        next.delete(kind);
+      } else {
+        next.add(kind);
+      }
       return next;
     });
   }

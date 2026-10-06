@@ -140,7 +140,7 @@ function resolveSection(bundle: JsonValue, dotted: string): JsonValue {
   let node: JsonValue = bundle;
   for (const seg of dotted.split('.')) {
     if (node === null || typeof node !== 'object' || Array.isArray(node)) return {};
-    node = (node as { [k: string]: JsonValue })[seg];
+    node = (node as Record<string, JsonValue>)[seg];
     if (node === undefined) return {};
   }
   return node ?? {};

@@ -36,12 +36,12 @@ interface BackendApplicationDetailStub {
   invoice_id?: string;
   rejected_reason?: string;
   withdrawn_reason?: string;
-  history?: Array<{ from: string; to: string; at: string; reason?: string }>;
-  funding_lines?: Array<{
+  history?: { from: string; to: string; at: string; reason?: string }[];
+  funding_lines?: {
     source: string;
     amount_sgd_cents: number;
     reference?: string;
-  }>;
+  }[];
 }
 
 function backendStub(

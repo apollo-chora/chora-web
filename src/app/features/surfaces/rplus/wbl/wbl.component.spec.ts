@@ -732,7 +732,7 @@ describe('WblComponent — create error-message extraction', () => {
   function submitAndFail(body: unknown, status: number, statusText: string): void {
     element.querySelector<HTMLButtonElement>('[data-testid="wbl-composer-submit"]')!.click();
     fixture.detectChanges();
-    httpMock.expectOne(PLACEMENT_PATH).flush(body as Object | null, { status, statusText });
+    httpMock.expectOne(PLACEMENT_PATH).flush(body as object | null, { status, statusText });
     fixture.detectChanges();
   }
 

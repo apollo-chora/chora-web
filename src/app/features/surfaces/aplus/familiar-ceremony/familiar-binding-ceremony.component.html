@@ -4,12 +4,14 @@
      Open state is parent-owned (`open`); dismissable (Esc / backdrop / close)
      via the `closed` output. Focus is trapped + restored (see the component). -->
 @if (open()) {
-  <div class="binding-ceremony__overlay" (keydown)="onKeydown($event)">
+  <div class="binding-ceremony__overlay" tabindex="-1" (keydown)="onKeydown($event)">
     <div
       class="binding-ceremony__scrim"
       aria-hidden="true"
       data-testid="familiar-ceremony-backdrop"
-      (click)="close()"></div>
+      tabindex="-1"
+      (click)="close()"
+      (keydown.escape)="close()"></div>
 
     <div
       #dialogPanel

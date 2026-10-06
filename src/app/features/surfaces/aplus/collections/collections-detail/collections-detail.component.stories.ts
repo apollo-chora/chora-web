@@ -90,7 +90,7 @@ function makeStubService(
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 @Component({
-  selector: 'sb-collections-detail-wrapper',
+  selector: 'chora-collections-detail-story-wrapper',
   imports: [CollectionsDetailComponent],
   template: `<chora-aplus-collections-detail [collectionId]="collectionId" />`,
 })

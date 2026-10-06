@@ -80,7 +80,7 @@ export class AddonChangeTierComponent {
   // Detail-loaded state
   // ---------------------------------------------------------------------------
 
-  readonly tiers = signal<ReadonlyArray<AddOnPricingTier>>([]);
+  readonly tiers = signal<readonly AddOnPricingTier[]>([]);
   readonly currentTier = signal<string>('');
   readonly detailLoading = signal<boolean>(true);
   readonly detailLoadError = signal<boolean>(false);

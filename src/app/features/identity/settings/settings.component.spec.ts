@@ -22,7 +22,7 @@ describe('SettingsComponent', () => {
     user: mockUser.asReadonly(),
     // ngOnInit calls auth.refreshProfile() (CHO-1818) to pull a fresh /api/me;
     // stub it so the component instantiates in tests.
-    refreshProfile: () => {},
+    refreshProfile: () => { /* noop */ },
   };
 
   const mockTenantCtx = {
@@ -102,7 +102,7 @@ async function buildWith(
     imports: [SettingsComponent],
     providers: [
       provideRouter([]),
-      { provide: AuthService, useValue: { user: user.asReadonly(), refreshProfile: () => {} } },
+      { provide: AuthService, useValue: { user: user.asReadonly(), refreshProfile: () => { /* noop */ } } },
       {
         provide: TenantContextService,
         useValue: { currentTenant: tenant.asReadonly() },

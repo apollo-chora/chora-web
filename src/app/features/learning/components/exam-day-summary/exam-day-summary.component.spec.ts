@@ -69,10 +69,10 @@ describe('ExamDayConfidenceSummaryComponent', () => {
   // currently-uncovered conditional arms of the component + template.
   // ---------------------------------------------------------------------------
 
-  type ScenarioOpts = {
+  interface ScenarioOpts {
     examId: string | null;
     response?: Observable<unknown>;
-  };
+  }
 
   async function buildScenario(opts: ScenarioOpts): Promise<{
     fixture: ComponentFixture<ExamDayConfidenceSummaryComponent>;
@@ -138,7 +138,7 @@ describe('ExamDayConfidenceSummaryComponent', () => {
       // A never-emitting observable keeps loading() true.
       const { fixture, component, element } = await buildScenario({
         examId: 'exam-1',
-        response: new Observable<never>(() => {}),
+        response: new Observable<never>(() => { /* noop */ }),
       });
       fixture.detectChanges();
 

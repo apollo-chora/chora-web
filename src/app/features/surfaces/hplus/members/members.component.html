@@ -118,7 +118,7 @@
                         [value]="editingName()?.draft ?? ''"
                         maxlength="128"
                         autocomplete="off"
-                        autofocus
+                       
                         (input)="onEditNameInput($event)"
                         (keydown.enter)="saveEditName(m); $event.preventDefault()"
                         (keydown.escape)="cancelEditName(); $event.preventDefault()" />

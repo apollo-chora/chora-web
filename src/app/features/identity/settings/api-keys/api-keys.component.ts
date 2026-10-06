@@ -38,7 +38,7 @@ interface PlatformApiKey {
   last_used_at: string | null;
 }
 
-interface ApiKeyListResponse {
+export interface ApiKeyListResponse {
   data: PlatformApiKey[];
 }
 

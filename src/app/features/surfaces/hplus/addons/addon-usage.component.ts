@@ -49,7 +49,7 @@ type PeriodPreset = '7d' | '30d' | '90d';
 type Metric = 'seats' | 'quota' | 'api_calls';
 
 const PERIOD_DAYS: Record<PeriodPreset, number> = { '7d': 7, '30d': 30, '90d': 90 };
-const PERIODS: ReadonlyArray<PeriodPreset> = ['7d', '30d', '90d'];
+const PERIODS: readonly PeriodPreset[] = ['7d', '30d', '90d'];
 
 const CHART_WIDTH = 720;
 const CHART_HEIGHT = 200;
@@ -110,14 +110,14 @@ export class AddonUsageComponent {
 
   readonly topConsumers = computed(() => this.usage()?.top_consumers ?? []);
 
-  readonly buckets = computed<ReadonlyArray<AddOnUsageBucket>>(
+  readonly buckets = computed<readonly AddOnUsageBucket[]>(
     () => this.usage()?.time_series ?? [],
   );
 
   readonly hasBuckets = computed(() => this.buckets().length > 0);
 
   /** Chart projection — scale the chosen metric across the SVG canvas. */
-  readonly chartPoints = computed<ReadonlyArray<ChartPoint>>(() => {
+  readonly chartPoints = computed<readonly ChartPoint[]>(() => {
     const buckets = this.buckets();
     if (buckets.length === 0) return [];
     const m = this.metric();

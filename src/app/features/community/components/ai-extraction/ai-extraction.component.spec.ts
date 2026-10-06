@@ -484,7 +484,7 @@ describe('AiExtractionComponent', () => {
       const req = httpMock.expectOne(BULK_URL);
       expect(req.request.method).toBe('POST');
       const body = req.request.body as {
-        atoms: Array<{ title: string }>;
+        atoms: { title: string }[];
       };
       expect(body.atoms.length).toBe(2);
       expect(body.atoms.map((a) => a.title)).toEqual([

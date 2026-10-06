@@ -435,7 +435,7 @@ describe('CourseCurriculumComponent', () => {
   // HttpTestingController stays clean (afterEach verify() per house style).
 
   describe('actionLabelKey() — full switch coverage', () => {
-    const cases: ReadonlyArray<[CourseContentItem['kind'], string]> = [
+    const cases: readonly [CourseContentItem['kind'], string][] = [
       ['atom', 'aplus.course_curriculum.action_atom'],
       ['video', 'aplus.course_curriculum.action_video'],
       ['youtube', 'aplus.course_curriculum.action_youtube'],
@@ -457,7 +457,7 @@ describe('CourseCurriculumComponent', () => {
   });
 
   describe('icon() — every kind branch', () => {
-    const cases: ReadonlyArray<[CourseContentItem['kind'], string]> = [
+    const cases: readonly [CourseContentItem['kind'], string][] = [
       ['atom', 'atom'],
       ['video', 'circle-play'],
       ['youtube', 'brands fa-youtube'],
@@ -480,7 +480,7 @@ describe('CourseCurriculumComponent', () => {
 
   describe('isExternalLink() — both OR operands + outcomes', () => {
     // TRUE via isUrlRef() short-circuit (left operand truthy).
-    const urlKinds: ReadonlyArray<CourseContentItem['kind']> = [
+    const urlKinds: readonly CourseContentItem['kind'][] = [
       'video',
       'youtube',
       'document',
@@ -507,7 +507,7 @@ describe('CourseCurriculumComponent', () => {
     });
 
     // FALSE outcome: both operands false (UUID-ref, non-live kinds).
-    const internalKinds: ReadonlyArray<CourseContentItem['kind']> = [
+    const internalKinds: readonly CourseContentItem['kind'][] = [
       'atom',
       'assessment',
     ];

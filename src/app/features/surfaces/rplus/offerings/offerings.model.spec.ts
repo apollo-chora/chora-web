@@ -75,7 +75,7 @@ describe('mapExamSittingToOffering', () => {
   });
 
   it('projects every SittingStatus onto a real OfferingState so the state badge renders', () => {
-    const cases: ReadonlyArray<readonly [SittingStatus, OfferingState]> = [
+    const cases: readonly (readonly [SittingStatus, OfferingState])[] = [
       ['Scheduled', 'LAUNCHED'],
       ['Open for registration', 'LAUNCHED'],
       ['Full', 'LAUNCHED'],

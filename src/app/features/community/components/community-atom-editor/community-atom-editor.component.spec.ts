@@ -14,7 +14,7 @@ const ATOMS_URL = `${environment.bffBaseUrl}/api/v1/community/atoms`;
 function inputEvent(value: string): Event {
   const target = document.createElement('input');
   target.value = value;
-  return { target, preventDefault: () => {}, stopPropagation: () => {} } as unknown as Event;
+  return { target, preventDefault: () => { /* noop */ }, stopPropagation: () => { /* noop */ } } as unknown as Event;
 }
 
 function selectEvent(value: string): Event {
@@ -236,7 +236,7 @@ describe('CommunityAtomEditorComponent', () => {
       component.tagInput.set('history');
       const evt = {
         key: ',',
-        preventDefault: () => {},
+        preventDefault: () => { /* noop */ },
       } as unknown as KeyboardEvent;
       component.onTagInputKeydown(evt);
       expect(component.tags()).toEqual(['history']);
@@ -246,7 +246,7 @@ describe('CommunityAtomEditorComponent', () => {
       component.tagInput.set('ignore');
       const evt = {
         key: 'a',
-        preventDefault: () => {},
+        preventDefault: () => { /* noop */ },
       } as unknown as KeyboardEvent;
       component.onTagInputKeydown(evt);
       expect(component.tags()).toEqual([]);
@@ -323,8 +323,8 @@ describe('CommunityAtomEditorComponent', () => {
 
     it('onDragOver sets isDragOver true', () => {
       const evt = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
+        preventDefault: () => { /* noop */ },
+        stopPropagation: () => { /* noop */ },
       } as unknown as DragEvent;
       component.onDragOver(evt);
       expect(component.isDragOver()).toBe(true);
@@ -333,8 +333,8 @@ describe('CommunityAtomEditorComponent', () => {
     it('onDragLeave sets isDragOver false', () => {
       component.isDragOver.set(true);
       const evt = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
+        preventDefault: () => { /* noop */ },
+        stopPropagation: () => { /* noop */ },
       } as unknown as DragEvent;
       component.onDragLeave(evt);
       expect(component.isDragOver()).toBe(false);
@@ -344,8 +344,8 @@ describe('CommunityAtomEditorComponent', () => {
       component.isDragOver.set(true);
       const list = { 0: fakeFile('drop.png'), length: 1 } as unknown as FileList;
       const evt = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
+        preventDefault: () => { /* noop */ },
+        stopPropagation: () => { /* noop */ },
         dataTransfer: { files: list },
       } as unknown as DragEvent;
       component.onDrop(evt);
@@ -357,8 +357,8 @@ describe('CommunityAtomEditorComponent', () => {
       component.isDragOver.set(true);
       const empty = { length: 0 } as unknown as FileList;
       const evt = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
+        preventDefault: () => { /* noop */ },
+        stopPropagation: () => { /* noop */ },
         dataTransfer: { files: empty },
       } as unknown as DragEvent;
       component.onDrop(evt);
@@ -522,8 +522,8 @@ describe('CommunityAtomEditorComponent', () => {
     it('adds no files when dataTransfer is null', () => {
       component.isDragOver.set(true);
       const evt = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
+        preventDefault: () => { /* noop */ },
+        stopPropagation: () => { /* noop */ },
         dataTransfer: null,
       } as unknown as DragEvent;
       component.onDrop(evt);

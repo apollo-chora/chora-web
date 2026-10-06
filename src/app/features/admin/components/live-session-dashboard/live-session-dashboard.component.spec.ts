@@ -99,7 +99,7 @@ interface Built {
   bff: ReturnType<typeof makeBffMock>;
 }
 
-function setup(sessionId: string = 'sess-001'): Built {
+function setup(sessionId = 'sess-001'): Built {
   const bff = makeBffMock();
   TestBed.configureTestingModule({
     imports: [LiveSessionDashboardComponent, TranslateModule.forRoot()],

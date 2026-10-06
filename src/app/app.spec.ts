@@ -1,5 +1,6 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { App } from './app';
 
@@ -42,4 +43,25 @@ describe('App', () => {
     );
     expect(confirmDialog).toBeTruthy();
   });
+
+  it('should omit the skip-to-content link on pre-auth screens', async () => {
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [App],
+      providers: [
+        provideRouter([{ path: 'login', component: BlankComponent }]),
+        provideHttpClient(),
+      ],
+    }).compileComponents();
+
+    await TestBed.inject(Router).navigateByUrl('/login');
+
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.skip-to-content')).toBeNull();
+  });
 });
+
+@Component({ selector: 'chora-test-blank', template: '' })
+class BlankComponent {}

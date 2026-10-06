@@ -6,6 +6,11 @@ import { of } from 'rxjs';
 
 import { WalletComponent } from './wallet.component';
 import { MeManaService } from '../../../../core/services/me-mana.service';
+import type {
+  MeManaCheckoutState,
+  MeManaLoadState,
+  UserMana,
+} from '../../../../core/services/me-mana.model';
 import { TranslateService } from '../../../../core/services/translate.service';
 import { BffClientService } from '../../../../core/services/bff-client.service';
 import { TransactionRealtimeService } from '../../../../shared/components/transaction-history/transaction-realtime.service';
@@ -39,13 +44,13 @@ function fakeBff() {
 }
 
 function fakeMana() {
-  const loadState = signal<any>({
+  const loadState = signal<MeManaLoadState>({
     status: 'success',
     mana: { balance_units: 0, lifetime_earned: 0, lifetime_spent: 0, subsidy_breakdown: [] },
   });
-  const checkoutState = signal<any>({ status: 'idle' });
+  const checkoutState = signal<MeManaCheckoutState>({ status: 'idle' });
   const balanceUnits = signal<number>(0);
-  const mana = signal<any>({
+  const mana = signal<UserMana | null>({
     balance_units: 0,
     lifetime_earned: 0,
     lifetime_spent: 0,
@@ -314,7 +319,7 @@ describe('WalletComponent', () => {
     const mana = fakeMana();
     mana.balanceUnits.set(100);
     // The poller calls load(); simulate the webhook credit landing.
-    (mana.load as any).mockImplementation(() => {
+    mana.load.mockImplementation(() => {
       mana.balanceUnits.set(600);
     });
     TestBed.configureTestingModule({
@@ -342,7 +347,7 @@ describe('WalletComponent', () => {
 
     const state = fixture.componentInstance.confirm();
     expect(state.status).toBe('credited');
-    expect((state as any).newUnits).toBe(600);
+    expect(state).toMatchObject({ newUnits: 600 });
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('[data-testid="wallet-credited"]')).toBeTruthy();
     // Pre-top-up marker cleared on success.
@@ -381,7 +386,7 @@ describe('WalletComponent', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('[data-testid="wallet-processing"]')).toBeTruthy();
     // load() = 1 (ngOnInit eager load) + 10 (one per poll attempt, MAX=10).
-    expect((mana.load as any).mock.calls.length).toBe(11);
+    expect(mana.load.mock.calls.length).toBe(11);
     // Pre-top-up marker cleared on timeout too.
     expect(sessionStorage.getItem('chora.mana.preTopup')).toBeNull();
     sessionStorage.removeItem('chora.mana.preTopup');
@@ -391,7 +396,7 @@ describe('WalletComponent', () => {
     sessionStorage.removeItem('chora.mana.preTopup');
     const mana = fakeMana();
     mana.balanceUnits.set(0);
-    (mana.load as any).mockImplementation(() => {
+    mana.load.mockImplementation(() => {
       // Any positive balance beats the default baseline of 0 → credited.
       mana.balanceUnits.set(50);
     });
@@ -416,7 +421,7 @@ describe('WalletComponent', () => {
 
     const state = fixture.componentInstance.confirm();
     expect(state.status).toBe('credited');
-    expect((state as any).newUnits).toBe(50);
+    expect(state).toMatchObject({ newUnits: 50 });
     flush();
   }));
 
@@ -440,14 +445,14 @@ describe('WalletComponent', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.confirm().status).toBe('confirming');
 
-    const loadCallsBefore = (mana.load as any).mock.calls.length;
+    const loadCallsBefore = mana.load.mock.calls.length;
     fixture.destroy(); // triggers destroyRef.onDestroy → destroyed=true + clearTimeout
 
     // Any still-pending timer must NOT mutate state once destroyed.
     flush();
     expect(fixture.componentInstance.confirm().status).toBe('confirming');
     // No further load() calls fired after destroy.
-    expect((mana.load as any).mock.calls.length).toBe(loadCallsBefore);
+    expect(mana.load.mock.calls.length).toBe(loadCallsBefore);
     sessionStorage.removeItem('chora.mana.preTopup');
   }));
 

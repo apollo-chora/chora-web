@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { ApiKeysComponent } from './api-keys.component';
+import { ApiKeysComponent, ApiKeyListResponse } from './api-keys.component';
 import { BffClientService } from '../../../../core/services/bff-client.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { ConfirmDialogService } from '../../../../shared/components/confirm-dialog/confirm-dialog.service';
@@ -165,7 +165,7 @@ describe('ApiKeysComponent', () => {
     });
 
     it('should default to empty array when response.data is missing', () => {
-      mockBff.get.mockReturnValueOnce(of({} as any));
+      mockBff.get.mockReturnValueOnce(of({} as unknown as ApiKeyListResponse));
       const fx = TestBed.createComponent(ApiKeysComponent);
       fx.detectChanges();
       expect(fx.componentInstance.keys()).toEqual([]);

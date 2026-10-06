@@ -481,10 +481,10 @@ describe('IdpFederationComponent', () => {
       );
     });
 
-    const CARD_NOTES: ReadonlyArray<{
+    const CARD_NOTES: readonly {
       id: 'microsoft' | 'google' | 'singpass' | 'saml';
       key: string;
-    }> = [
+    }[] = [
       { id: 'microsoft', key: 'hplus.idp.microsoftNote' },
       { id: 'google', key: 'hplus.idp.googleNote' },
       // Singpass already had `singpassNote` — extended in-place so the

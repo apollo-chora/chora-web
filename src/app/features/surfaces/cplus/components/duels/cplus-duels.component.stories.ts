@@ -76,7 +76,7 @@ const meta: Meta<CplusDuelsComponent> = {
     viewport: { defaultViewport: 'tabletLandscape' },
   },
   decorators: [
-    (story) => ({
+    (_story) => ({
       applicationConfig: {
         providers: [
           provideHttpClient(),

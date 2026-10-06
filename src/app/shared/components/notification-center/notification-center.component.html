@@ -44,8 +44,12 @@
           [class.notification-center__item--unread]="!notification.is_read"
           [class.notification-center__item--pinned]="notification.is_pinned"
           [class.notification-center__item--expired]="isExpired(notification)"
+          role="button"
+          tabindex="0"
           [attr.aria-label]="notification.title"
           (click)="onItemClick(notification)"
+          (keydown.enter)="onItemClick(notification)"
+          (keydown.space)="onItemClick(notification); $event.preventDefault()"
           data-testid="notification-item">
           <!-- Priority indicator -->
           @if (priorityIndicator(notification.priority)) {

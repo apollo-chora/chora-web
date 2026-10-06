@@ -44,8 +44,8 @@ function makeStubService(state: SearchState): Partial<SearchService> {
     atomCount: () => atoms().length,
     courseCount: () => courses().length,
     collectionCount: () => collections().length,
-    search: () => {},
-    retry: () => {},
+    search: () => { /* noop */ },
+    retry: () => { /* noop */ },
   } as unknown as Partial<SearchService>;
 }
 
@@ -112,7 +112,7 @@ const SAMPLE_COLLECTIONS = [
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 @Component({
-  selector: 'sb-search-wrapper',
+  selector: 'chora-search-story-wrapper',
   imports: [SearchComponent],
   template: `<chora-aplus-search />`,
 })

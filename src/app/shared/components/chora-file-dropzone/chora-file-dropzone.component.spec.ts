@@ -19,7 +19,7 @@ function pdf(name = 'a.pdf', bytes = 1024): File {
 /** Fake DragEvent carrying files (jsdom has no real DataTransfer constructor). */
 function dropEvent(files: File[]): DragEvent {
   return {
-    preventDefault() {},
+    preventDefault() { /* noop */ },
     dataTransfer: { files },
   } as unknown as DragEvent;
 }
@@ -52,7 +52,7 @@ describe('ChoraFileDropzoneComponent', () => {
   });
 
   it('toggles the dragging visual state on dragover / dragleave', () => {
-    component.onDragOver({ preventDefault() {} } as unknown as DragEvent);
+    component.onDragOver({ preventDefault() { /* noop */ } } as unknown as DragEvent);
     expect(component.isDragging()).toBe(true);
     fixture.detectChanges();
     expect(
@@ -61,14 +61,14 @@ describe('ChoraFileDropzoneComponent', () => {
         ?.className,
     ).toContain('dragging');
 
-    component.onDragLeave({ preventDefault() {} } as unknown as DragEvent);
+    component.onDragLeave({ preventDefault() { /* noop */ } } as unknown as DragEvent);
     expect(component.isDragging()).toBe(false);
   });
 
   it('emits filesAdded with the dropped files and clears dragging on drop', () => {
     let emitted: File[] | undefined;
     component.filesAdded.subscribe((f) => (emitted = f));
-    component.onDragOver({ preventDefault() {} } as unknown as DragEvent);
+    component.onDragOver({ preventDefault() { /* noop */ } } as unknown as DragEvent);
     component.onDrop(dropEvent([pdf('dropped.pdf')]));
     expect(emitted?.map((f) => f.name)).toEqual(['dropped.pdf']);
     expect(component.isDragging()).toBe(false);
@@ -91,7 +91,7 @@ describe('ChoraFileDropzoneComponent', () => {
   it('does not emit on a drop carrying no files', () => {
     let count = 0;
     component.filesAdded.subscribe(() => (count += 1));
-    component.onDrop({ preventDefault() {} } as unknown as DragEvent);
+    component.onDrop({ preventDefault() { /* noop */ } } as unknown as DragEvent);
     expect(count).toBe(0);
   });
 
@@ -194,7 +194,7 @@ describe('ChoraFileDropzoneComponent', () => {
   it('stays inert on dragover when disabled (no dragging state)', () => {
     fixture.componentRef.setInput('disabled', true);
     fixture.detectChanges();
-    component.onDragOver({ preventDefault() {} } as unknown as DragEvent);
+    component.onDragOver({ preventDefault() { /* noop */ } } as unknown as DragEvent);
     expect(component.isDragging()).toBe(false);
   });
 

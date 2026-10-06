@@ -488,7 +488,7 @@ describe('MergeRequestComponent', () => {
 
     it('removeFile drops a file by index and revokes its preview', () => {
       vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:to-revoke');
-      const revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+      const revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => { /* noop */ });
       const img = makeFile('pic.png', 'image/png', 500);
       const input = document.createElement('input');
       Object.defineProperty(input, 'files', { value: [img], configurable: true });
@@ -713,7 +713,7 @@ describe('MergeRequestComponent', () => {
   describe('ngOnDestroy', () => {
     it('revokes previews and resets service state', () => {
       vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:destroy');
-      const revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+      const revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => { /* noop */ });
       const img = makeFile('pic.png', 'image/png', 100);
       const input = document.createElement('input');
       Object.defineProperty(input, 'files', { value: [img], configurable: true });

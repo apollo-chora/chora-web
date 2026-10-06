@@ -45,7 +45,7 @@ export interface InvoiceRow {
 }
 
 export interface ListInvoicesResponse {
-  readonly items: ReadonlyArray<InvoiceRow>;
+  readonly items: readonly InvoiceRow[];
   readonly next_cursor: string | null;
 }
 
@@ -57,7 +57,7 @@ export interface ListInvoicesQuery {
 export type ListInvoicesResult =
   | {
       readonly kind: 'success';
-      readonly items: ReadonlyArray<InvoiceRow>;
+      readonly items: readonly InvoiceRow[];
       readonly nextCursor: string | null;
     }
   | { readonly kind: 'unauthenticated' }

@@ -26,9 +26,7 @@
 import type { Routes } from '@angular/router';
 
 /** Surface prefix to the route table mounted under it in `app.routes.ts`. */
-export interface SurfaceRouteTables {
-  readonly [surfacePrefix: string]: Routes;
-}
+export type SurfaceRouteTables = Readonly<Record<string, Routes>>;
 
 /** Split a path into its non-empty segments. */
 function segments(path: string): readonly string[] {

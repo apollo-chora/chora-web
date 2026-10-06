@@ -45,17 +45,17 @@ interface BackendApplicationDetail {
   readonly invoice_id?: string;
   readonly rejected_reason?: string;
   readonly withdrawn_reason?: string;
-  readonly history?: ReadonlyArray<{
+  readonly history?: readonly {
     readonly from: string;
     readonly to: string;
     readonly at: string;
     readonly reason?: string;
-  }>;
-  readonly funding_lines?: ReadonlyArray<{
+  }[];
+  readonly funding_lines?: readonly {
     readonly source: string;
     readonly amount_sgd_cents: number;
     readonly reference?: string;
-  }>;
+  }[];
 }
 
 @Injectable({ providedIn: 'root' })

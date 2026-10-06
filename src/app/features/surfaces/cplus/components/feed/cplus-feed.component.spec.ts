@@ -581,8 +581,8 @@ describe('CplusFeedComponent', () => {
         this.observed.push(el);
       }
 
-      unobserve(): void {}
-      disconnect(): void {}
+      unobserve(): void { /* noop */ }
+      disconnect(): void { /* noop */ }
     }
 
     beforeEach(() => {

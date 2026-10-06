@@ -539,8 +539,8 @@ describe('StageCompletionComponent — document upload', () => {
     const { component, httpMock } = loadUploadStage();
     const ok = makeFile('dropped.pdf', 300);
     const dropEvent = {
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { /* noop */ },
+      stopPropagation: () => { /* noop */ },
       dataTransfer: { files: [ok] },
     } as unknown as DragEvent;
     component.onDrop(dropEvent);
@@ -555,8 +555,8 @@ describe('StageCompletionComponent — document upload', () => {
   it('onDrop with no files leaves upload idle', () => {
     const { component, httpMock } = loadUploadStage();
     const dropEvent = {
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { /* noop */ },
+      stopPropagation: () => { /* noop */ },
       dataTransfer: { files: [] },
     } as unknown as DragEvent;
     component.onDrop(dropEvent);
@@ -566,7 +566,7 @@ describe('StageCompletionComponent — document upload', () => {
 
   it('onDragOver sets dragOver, onDragLeave clears it', () => {
     const { component, httpMock } = loadUploadStage();
-    const evt = { preventDefault: () => {}, stopPropagation: () => {} } as unknown as DragEvent;
+    const evt = { preventDefault: () => { /* noop */ }, stopPropagation: () => { /* noop */ } } as unknown as DragEvent;
     component.onDragOver(evt);
     expect(component.dragOver()).toBe(true);
     component.onDragLeave(evt);
@@ -581,9 +581,9 @@ describe('StageCompletionComponent — document upload', () => {
       nativeElement: { click: () => clicked++ },
     } as unknown as typeof component.fileInputRef;
 
-    component.onKeyActivateUpload({ key: 'Enter', preventDefault: () => {} } as KeyboardEvent);
-    component.onKeyActivateUpload({ key: ' ', preventDefault: () => {} } as KeyboardEvent);
-    component.onKeyActivateUpload({ key: 'a', preventDefault: () => {} } as KeyboardEvent);
+    component.onKeyActivateUpload({ key: 'Enter', preventDefault: () => { /* noop */ } } as KeyboardEvent);
+    component.onKeyActivateUpload({ key: ' ', preventDefault: () => { /* noop */ } } as KeyboardEvent);
+    component.onKeyActivateUpload({ key: 'a', preventDefault: () => { /* noop */ } } as KeyboardEvent);
     expect(clicked).toBe(2);
     httpMock.verify();
   });
@@ -593,8 +593,8 @@ describe('StageCompletionComponent — document upload', () => {
     // No detail loaded; onDrop drives uploadFile which should early-return.
     const ok = makeFile('x.pdf', 100);
     component.onDrop({
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { /* noop */ },
+      stopPropagation: () => { /* noop */ },
       dataTransfer: { files: [ok] },
     } as unknown as DragEvent);
     expect(component.uploading()).toBe(false);
@@ -898,7 +898,7 @@ describe('StageCompletionComponent — uncovered branch arms', () => {
     const { component, httpMock } = buildWithRoute({ pipelineId: null, stageId: null });
     // fileInputRef is a ViewChild that is never resolved here (no upload section rendered).
     expect(() =>
-      component.onKeyActivateUpload({ key: 'Enter', preventDefault: () => {} } as KeyboardEvent),
+      component.onKeyActivateUpload({ key: 'Enter', preventDefault: () => { /* noop */ } } as KeyboardEvent),
     ).not.toThrow();
     httpMock.verify();
   });
@@ -915,8 +915,8 @@ describe('StageCompletionComponent — uncovered branch arms', () => {
   it('onDrop with null dataTransfer leaves upload idle', () => {
     const { component, httpMock } = buildWithRoute({ pipelineId: null, stageId: null });
     component.onDrop({
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { /* noop */ },
+      stopPropagation: () => { /* noop */ },
       dataTransfer: null,
     } as unknown as DragEvent);
     expect(component.uploading()).toBe(false);

@@ -31,7 +31,7 @@ export interface IdpProviderRow {
 
 /** GET list response envelope. `items` is ALWAYS present (possibly empty). */
 export interface IdpProviderListResponse {
-  readonly items: ReadonlyArray<IdpProviderRow>;
+  readonly items: readonly IdpProviderRow[];
 }
 
 /** POST upsert payload. */
@@ -54,7 +54,7 @@ export const idpProviderDeletePath = (providerType: ProviderType): string =>
  * Component stays out of HTTP minutiae and switches on `kind`.
  */
 export type IdpListResult =
-  | { readonly kind: 'success'; readonly rows: ReadonlyArray<IdpProviderRow> }
+  | { readonly kind: 'success'; readonly rows: readonly IdpProviderRow[] }
   | { readonly kind: 'unauthenticated' }
   | { readonly kind: 'server-error' }
   | { readonly kind: 'network-error' };

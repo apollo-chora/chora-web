@@ -67,7 +67,7 @@ export class BillingComponent {
 
   // ── Invoices (live) ─────────────────────────────────────────────────
 
-  readonly invoices = signal<ReadonlyArray<InvoiceRow>>([]);
+  readonly invoices = signal<readonly InvoiceRow[]>([]);
   readonly invoicesLoading = signal(true);
   /** Discriminated `kind` from ListInvoicesResult on failure. */
   readonly invoicesError = signal<ListInvoicesResult['kind'] | null>(null);
@@ -86,7 +86,7 @@ export class BillingComponent {
    * dunning banner — any row with past_due=true makes the banner
    * appear; all clean (or empty addons) hides it.
    */
-  readonly addons = signal<ReadonlyArray<AdminAddonRow>>([]);
+  readonly addons = signal<readonly AdminAddonRow[]>([]);
   readonly dunning = computed(() =>
     this.addons().some((a) => a.past_due === true),
   );
@@ -98,7 +98,7 @@ export class BillingComponent {
    * are inert, and pre-CHO-1776 BE responses can omit `monthly_cost`
    * (forward-compat). The hardcoded $49/$39/$287 SGD mock is gone.
    */
-  readonly breakdownLines = computed<ReadonlyArray<BreakdownLine>>(() =>
+  readonly breakdownLines = computed<readonly BreakdownLine[]>(() =>
     this.addons()
       .filter((a) => a.status === 'ACTIVE' && a.monthly_cost != null)
       .map((a) => ({

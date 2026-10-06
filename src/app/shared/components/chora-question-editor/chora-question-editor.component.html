@@ -2,16 +2,16 @@
   <!-- Question prompt / stem -->
   <label class="chora-question-editor__field-label">
     {{ 'shared.question_editor.prompt_label' | translate }}
+    <textarea
+      class="chora-question-editor__prompt"
+      rows="2"
+      [value]="question().prompt"
+      (input)="setPrompt($any($event.target).value)"
+      [attr.data-testid]="testId('prompt')"
+      [attr.aria-label]="'shared.question_editor.prompt_label' | translate"
+      [attr.placeholder]="'shared.question_editor.prompt_placeholder' | translate"
+    ></textarea>
   </label>
-  <textarea
-    class="chora-question-editor__prompt"
-    rows="2"
-    [value]="question().prompt"
-    (input)="setPrompt($any($event.target).value)"
-    [attr.data-testid]="testId('prompt')"
-    [attr.aria-label]="'shared.question_editor.prompt_label' | translate"
-    [attr.placeholder]="'shared.question_editor.prompt_placeholder' | translate"
-  ></textarea>
 
   <!-- Stem-media slot — hosts project the question/stem illustration (and its
        regenerate control) here so it renders directly below the stem and ABOVE
@@ -100,18 +100,18 @@
   } @else {
     <label class="chora-question-editor__field-label">
       {{ 'shared.question_editor.model_answer_label' | translate }}
+      <textarea
+        class="chora-question-editor__model-answer"
+        rows="3"
+        [value]="question().model_answer"
+        (input)="setModelAnswer($any($event.target).value)"
+        [attr.data-testid]="testId('model-answer')"
+        [attr.aria-label]="'shared.question_editor.model_answer_label' | translate"
+        [attr.placeholder]="
+          'shared.question_editor.model_answer_placeholder' | translate
+        "
+      ></textarea>
     </label>
-    <textarea
-      class="chora-question-editor__model-answer"
-      rows="3"
-      [value]="question().model_answer"
-      (input)="setModelAnswer($any($event.target).value)"
-      [attr.data-testid]="testId('model-answer')"
-      [attr.aria-label]="'shared.question_editor.model_answer_label' | translate"
-      [attr.placeholder]="
-        'shared.question_editor.model_answer_placeholder' | translate
-      "
-    ></textarea>
   }
 
   <!-- Answer-media slot — hosts project the model-answer illustration (and its

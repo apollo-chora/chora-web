@@ -81,7 +81,7 @@ export interface AdminAddonRow {
 
 /** GET list response envelope. `items` is ALWAYS present (possibly empty). */
 export interface AdminAddonsListResponse {
-  readonly items: ReadonlyArray<AdminAddonRow>;
+  readonly items: readonly AdminAddonRow[];
 }
 
 /**
@@ -99,7 +99,7 @@ export type AdminAddonStatus =
 
 /** Discriminated result the service surfaces to the dashboard component. */
 export type AdminAddonsListResult =
-  | { readonly kind: 'success'; readonly rows: ReadonlyArray<AdminAddonRow> }
+  | { readonly kind: 'success'; readonly rows: readonly AdminAddonRow[] }
   | { readonly kind: 'unauthenticated' }
   | { readonly kind: 'server-error' }
   | { readonly kind: 'network-error' };
@@ -161,7 +161,7 @@ export type DeactivateReason =
   | 'other';
 
 /** Ordered list for the dropdown — first option is the safe default. */
-export const DEACTIVATE_REASONS: ReadonlyArray<DeactivateReason> = [
+export const DEACTIVATE_REASONS: readonly DeactivateReason[] = [
   'no_longer_needed',
   'cost',
   'consolidation',
@@ -269,8 +269,8 @@ export interface AddOnUsage {
   readonly quota_limit?: number | null;
   readonly quota_consumed?: number;
   readonly quota_consumed_pct?: number | null;
-  readonly time_series?: ReadonlyArray<AddOnUsageBucket>;
-  readonly top_consumers?: ReadonlyArray<AddOnUsageTopConsumer>;
+  readonly time_series?: readonly AddOnUsageBucket[];
+  readonly top_consumers?: readonly AddOnUsageTopConsumer[];
 }
 
 /** Discriminated result the service surfaces to the usage screen. */
@@ -306,7 +306,7 @@ export function addonItemPath(addonPlanId: string): string {
  */
 export type ProrationMode = 'create_prorations' | 'none' | 'always_invoice';
 
-export const PRORATION_MODES: ReadonlyArray<ProrationMode> = [
+export const PRORATION_MODES: readonly ProrationMode[] = [
   'create_prorations',
   'none',
   'always_invoice',
@@ -455,7 +455,7 @@ export interface AddOnCompliance {
   readonly pdpa?: boolean;
   readonly ccpa?: boolean;
   readonly imda?: boolean;
-  readonly data_residency_regions?: ReadonlyArray<string>;
+  readonly data_residency_regions?: readonly string[];
 }
 
 /** AddOnPricingTier — mirrors openapi `AddOnPricingTier`. */
@@ -509,10 +509,10 @@ export interface AddOnDetail {
   readonly display_name: string;
   readonly category: string;
   readonly description?: string;
-  readonly entitlements?: ReadonlyArray<AddOnEntitlement>;
-  readonly integrations?: ReadonlyArray<AddOnIntegration>;
+  readonly entitlements?: readonly AddOnEntitlement[];
+  readonly integrations?: readonly AddOnIntegration[];
   readonly compliance?: AddOnCompliance;
-  readonly pricing_tiers?: ReadonlyArray<AddOnPricingTier>;
+  readonly pricing_tiers?: readonly AddOnPricingTier[];
   /**
    * Tenant-specific subscription snapshot. Present only on the
    * tenant-scoped GET when the tenant has an active subscription;
@@ -591,7 +591,7 @@ export interface MarketplaceAddonDetail extends AddOnDetail {
 
 /** List response envelope — paginated `AddOnDetail[]`. */
 export interface MarketplaceAddonListResponse {
-  readonly items: ReadonlyArray<AddOnDetail>;
+  readonly items: readonly AddOnDetail[];
   readonly next_cursor?: string | null;
 }
 
@@ -599,7 +599,7 @@ export interface MarketplaceAddonListResponse {
 export type MarketplaceListResult =
   | {
       readonly kind: 'success';
-      readonly items: ReadonlyArray<AddOnDetail>;
+      readonly items: readonly AddOnDetail[];
       readonly nextCursor: string | null;
     }
   | { readonly kind: 'unauthenticated' }

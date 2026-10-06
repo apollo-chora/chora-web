@@ -440,7 +440,7 @@ export class CplusDuelsComponent implements OnInit, OnDestroy {
         break;
       }
       case 'blitz_start': {
-        const questions = (p['questions'] as Array<Record<string, unknown>>) ?? [];
+        const questions = (p['questions'] as Record<string, unknown>[]) ?? [];
         this.blitzQuestions.set(questions.map(q => ({
           round_no: Number(q['round_no'] ?? 0),
           atom_id: String(q['atom_id'] ?? ''),

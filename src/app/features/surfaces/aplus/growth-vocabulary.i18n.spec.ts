@@ -36,7 +36,7 @@ import zh from '../../../../../public/assets/i18n/zh-CN.json';
 
 type Bundle = Record<string, unknown>;
 
-const BUNDLES: ReadonlyArray<readonly [string, Bundle]> = [
+const BUNDLES: readonly (readonly [string, Bundle])[] = [
   ['en', en as Bundle],
   ['zh-CN', zh as Bundle],
   ['ms-MY', ms as Bundle],

@@ -95,7 +95,7 @@ class StubCollectionsService {
     return of(buildCollection());
   }
 
-  updateCalls: Array<{ id: string; patch: PatchCollectionRequest }> = [];
+  updateCalls: { id: string; patch: PatchCollectionRequest }[] = [];
   update(id: string, patch: PatchCollectionRequest): Observable<Collection> {
     this.updateCalls.push({ id, patch });
     return of(buildCollection());

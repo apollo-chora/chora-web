@@ -405,11 +405,14 @@
       aria-modal="true"
       [attr.aria-labelledby]="detailTitleId"
       tabindex="-1"
-      (click)="onDetailBackdrop($event)">
+      (click)="onDetailBackdrop($event)"
+      (keydown.escape)="onDetailBackdrop($event)">
       <div
         class="scheduling__detail glass-panel"
         data-testid="scheduling-detail-panel"
-        (click)="$event.stopPropagation()">
+        tabindex="-1"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()">
         <header class="scheduling__detail-head">
           <h2
             [id]="detailTitleId"

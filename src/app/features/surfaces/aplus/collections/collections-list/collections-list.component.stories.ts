@@ -88,7 +88,7 @@ function makeStubService(state: CollectionListState): Partial<CollectionsService
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 @Component({
-  selector: 'sb-collections-list-wrapper',
+  selector: 'chora-collections-list-story-wrapper',
   imports: [CollectionsListComponent],
   template: `<chora-aplus-collections-list />`,
 })

@@ -174,8 +174,16 @@
 }
 
 @if (selectedAuthor(); as author) {
-  <div class="cplus-feed__profile-overlay" (click)="closeAuthor()">
-    <div class="cplus-feed__profile-card" (click)="$event.stopPropagation()">
+  <div
+    class="cplus-feed__profile-overlay"
+    tabindex="-1"
+    (click)="closeAuthor()"
+    (keydown.escape)="closeAuthor()">
+    <div
+      class="cplus-feed__profile-card"
+      tabindex="-1"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()">
       <chora-cplus-person-card
         [gcid]="author.gcid"
         [displayName]="author.displayName"

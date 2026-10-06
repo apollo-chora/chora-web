@@ -555,7 +555,7 @@ describe('ConceptLensMapComponent', () => {
     // and it would silently shift the index-to-pair mapping below.
     expect(paths.length).toBe(edges.length);
 
-    const pairs: Array<[string, string]> = [['root', 'mid'], ['root', 'aunt'], ['mid', 'leaf']];
+    const pairs: [string, string][] = [['root', 'mid'], ['root', 'aunt'], ['mid', 'leaf']];
     paths.forEach((el, i) => {
       const d = el.getAttribute('d') ?? '';
       const m = d.match(/M ([-\d.]+) ([-\d.]+) Q [-\d.]+ [-\d.]+ ([-\d.]+) ([-\d.]+)/);
@@ -628,7 +628,7 @@ describe('ConceptLensMapComponent', () => {
   it('emits select with the tapped concept id', () => {
     mount();
     let picked: string | undefined;
-    component.select.subscribe((id) => (picked = id));
+    component.nodeSelected.subscribe((id) => (picked = id));
     clickNode('num');
     expect(picked).toBe('num');
   });
@@ -636,7 +636,7 @@ describe('ConceptLensMapComponent', () => {
   it('selects on Enter/Space (keyboard a11y)', () => {
     mount();
     let picked: string | undefined;
-    component.select.subscribe((id) => (picked = id));
+    component.nodeSelected.subscribe((id) => (picked = id));
     node('den')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     expect(picked).toBe('den');
   });
@@ -646,7 +646,7 @@ describe('ConceptLensMapComponent', () => {
     fixture.componentRef.setInput('loading', true);
     fixture.detectChanges();
     let picked = false;
-    component.select.subscribe(() => (picked = true));
+    component.nodeSelected.subscribe(() => (picked = true));
     component.onSelect('num');
     expect(picked).toBe(false);
     expect(
@@ -750,7 +750,7 @@ describe('ConceptLensMapComponent', () => {
     expect(scaleOf(node('mid'))).toBeLessThan(PARENT_SCALE);
   });
 
-  it('emits settled after the lens re-focus resolves (snap under reduced motion)', () => {
+  it('emits layoutSettled after the lens re-focus resolves (snap under reduced motion)', () => {
     // jsdom has no matchMedia → reduced-motion → the lens snaps and settles
     // synchronously, so this is deterministic.
     let settled = 0;
@@ -758,7 +758,7 @@ describe('ConceptLensMapComponent', () => {
     fixture.componentRef.setInput('edges', EDGES);
     fixture.componentRef.setInput('focusId', 'root');
     fixture.componentRef.setInput('rootId', 'root');
-    component.settled.subscribe(() => (settled += 1));
+    component.layoutSettled.subscribe(() => (settled += 1));
     fixture.detectChanges(); // initial → snap + settle
     expect(settled).toBeGreaterThanOrEqual(1);
 

@@ -445,7 +445,7 @@ describe('ExamWorkspaceComponent', () => {
 
   it('runSittingAction ignores a second call while one is in flight', async () => {
     const service = makeServiceMock();
-    service.sittingAction = vi.fn(() => new Observable(() => {})); // never resolves
+    service.sittingAction = vi.fn(() => new Observable(() => { /* noop */ })); // never resolves
     const { fixture } = await setup(adminRbac, service, 'proctors');
     const comp = fixture.componentInstance;
     comp.runSittingAction('s1', 'begin');
@@ -679,7 +679,7 @@ describe('ExamWorkspaceComponent', () => {
 
   it('re-entrancy: a second row action while one is in flight is ignored', async () => {
     const service = makeServiceMock();
-    service.verifyCandidate = vi.fn(() => new Observable(() => {})); // never resolves
+    service.verifyCandidate = vi.fn(() => new Observable(() => { /* noop */ })); // never resolves
     const { fixture } = await setup(adminRbac, service, 'candidates');
     const comp = fixture.componentInstance;
     comp.verifyCandidate('g-new');
@@ -691,7 +691,7 @@ describe('ExamWorkspaceComponent', () => {
 
   it('re-entrancy: verifyKyc + submitKycReject are ignored while a KYC op is in flight', async () => {
     const service = makeServiceMock();
-    service.verifyKyc = vi.fn(() => new Observable(() => {})); // in flight forever
+    service.verifyKyc = vi.fn(() => new Observable(() => { /* noop */ })); // in flight forever
     const { fixture } = await setup(adminRbac, service, 'candidates');
     const comp = fixture.componentInstance;
     comp.verifyKyc('g-new');
