@@ -1,9 +1,10 @@
 /**
  * MeManaService — canonical Mana balance fetcher for the authenticated user.
  *
- * Wraps two BFF endpoints (per `learner-economy.yaml`):
- *   GET  /api/v1/me/mana         — fetch the current balance + subsidy breakdown
- *   POST /api/v1/me/mana/topup   — Stripe-backed mana purchase (idempotent)
+ * Wraps three BFF endpoints (per `learner-economy.yaml`):
+ *   GET  /api/v1/me/mana            — fetch the current balance + subsidy breakdown
+ *   POST /api/v1/me/mana/topup      — Stripe-backed mana purchase (idempotent)
+ *   POST /api/v1/me/mana/demo-grant — demo-mode free grant, bypasses payment
  *
  * Consumers:
  *   - A+ atom-authoring AI assists (`features/surfaces/aplus/atom-authoring/`)
@@ -18,7 +19,10 @@
  * distinct `insufficient` state so the consumer can open the top-up
  * modal directly off the typed shape.
  *
- * Both `load()` and `topup()` are idempotent for retry CTAs.
+ * `load()`, `topup()` and `grantDemoMana()` are all idempotent for retry
+ * CTAs. `grantDemoMana()` is a DEDICATED demo operation — it does NOT
+ * repurpose the retired Stripe `topup()` route, and it re-fetches the
+ * authoritative balance on success rather than patching it optimistically.
  */
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { catchError, map, of, take } from 'rxjs';
@@ -29,9 +33,11 @@ import { RealtimeChannelService } from '../realtime/realtime-channel.service';
 import type {
   InsufficientManaErrorResponse,
   InsufficientManaUpsell,
+  ManaDemoGrantResponse,
   ManaTopupRequest,
   ManaTopupResponse,
   MeManaCheckoutState,
+  MeManaDemoGrantState,
   MeManaLoadState,
   MeManaTopupState,
   UserMana,
@@ -69,6 +75,10 @@ export class MeManaService {
   // ── Top-up state (POST /api/v1/me/mana/topup) ──────────────────────
   private readonly _topupState = signal<MeManaTopupState>({ status: 'idle' });
   readonly topupState = this._topupState.asReadonly();
+
+  // ── Demo-grant state (POST /api/v1/me/mana/demo-grant) ──────────────
+  private readonly _demoGrantState = signal<MeManaDemoGrantState>({ status: 'idle' });
+  readonly demoGrantState = this._demoGrantState.asReadonly();
 
   // ── Checkout state (POST /api/v1/checkout/user-mana → Stripe redirect) ──
   private readonly _checkoutState = signal<MeManaCheckoutState>({ status: 'idle' });
@@ -151,6 +161,62 @@ export class MeManaService {
           this.applyOptimisticCredit(s.result.units_credited);
         }
       });
+  }
+
+  /**
+   * Demo-mode free top-up — `POST /api/v1/me/mana/demo-grant` (no body).
+   *
+   * A DEDICATED demo operation, deliberately NOT a repurposing of the retired
+   * Stripe `topup()`: there is no payment intent, no `amount_cents`, no
+   * `payment_method_id` — the BE mints a ledger-backed grant off the session
+   * alone. Each call mints a FRESH UUID Idempotency-Key, so a retried click
+   * replays the original grant instead of crediting twice.
+   *
+   * On success the balance is re-fetched from the BE (`load()`) rather than
+   * patched optimistically: the grant is additive + idempotent on the ledger,
+   * so the authoritative `GET /api/v1/me/mana` is the only number worth
+   * rendering. `load()` is stale-while-revalidate, so the hero keeps showing
+   * the last-known balance until the refresh lands.
+   */
+  grantDemoMana(): void {
+    this._demoGrantState.set({ status: 'submitting' });
+    const headers = new HttpHeaders({ 'Idempotency-Key': this.newIdempotencyKey() });
+    this.bff
+      .post<ManaDemoGrantResponse>('/api/v1/me/mana/demo-grant', null, { headers })
+      .pipe(
+        take(1),
+        map(
+          (result): MeManaDemoGrantState => ({
+            status: 'success',
+            result,
+          }),
+        ),
+        catchError((err: unknown) => of<MeManaDemoGrantState>(this.toDemoGrantErrorState(err))),
+      )
+      .subscribe((s) => {
+        this._demoGrantState.set(s);
+        if (s.status === 'success') {
+          this.load();
+        }
+      });
+  }
+
+  /**
+   * Mint a per-call UUID Idempotency-Key. `crypto.randomUUID` is the norm
+   * (atom-authoring.service.ts:391, familiar-chat.service.ts:34); the
+   * fallback covers a non-secure context where Web Crypto is unavailable.
+   * Protected so unit tests can spy it.
+   */
+  protected newIdempotencyKey(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return `idem-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  /** Reset the demo-grant state — call from the wallet card on dismiss. */
+  clearDemoGrantState(): void {
+    this._demoGrantState.set({ status: 'idle' });
   }
 
   /**
@@ -311,6 +377,33 @@ export class MeManaService {
       }
     }
     return 'core.mana.topup_error_generic';
+  }
+
+  private toDemoGrantErrorState(err: unknown): MeManaDemoGrantState {
+    return { status: 'error', error: this.demoGrantErrorKey(err) };
+  }
+
+  /**
+   * Demo-grant error keys live under `aplus.wallet.*` rather than
+   * `core.mana.*` because they are rendered ONLY by the wallet card, which
+   * already owns its display strings that way (`aplus.wallet.balance_error`).
+   * `core.mana` is English-only in the bundle, so keying there would raise
+   * every locale's missing-key count and trip the i18n ratchet.
+   */
+  private demoGrantErrorKey(err: unknown): string {
+    const e = err as { status?: number };
+    if (typeof e?.status === 'number') {
+      // 404 = demo mode not enabled for this tenant / not deployed. The FE
+      // flag is PRESENTATION LOGIC ONLY, so this is the expected prod path.
+      if (e.status === 404) return 'aplus.wallet.demo_grant_error_unavailable';
+      if (e.status === 429) return 'aplus.wallet.demo_grant_error_quota';
+      if (e.status === 400) return 'aplus.wallet.demo_grant_error_missing_key';
+      if (e.status >= 500) return 'aplus.wallet.demo_grant_error_upstream';
+      if (e.status === 401 || e.status === 403) {
+        return 'aplus.wallet.demo_grant_error_unauthorised';
+      }
+    }
+    return 'aplus.wallet.demo_grant_error_generic';
   }
 }
 

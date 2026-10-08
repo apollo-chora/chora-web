@@ -234,6 +234,55 @@
   color: var(--chora-color-text-muted);
 }
 
+/* ── Demo free top-up (demo mode only) ─────────────────────────────────── */
+.wallet__demo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: var(--chora-space-md, 16px);
+  padding-top: var(--chora-space-md, 16px);
+  border-top: 1px solid var(--chora-color-border, #e2e8f0);
+}
+
+.wallet__demo-btn {
+  padding: 8px 16px;
+  border: 1px dashed var(--primary, #1976d2);
+  border-radius: var(--chora-radius-md, 8px);
+  background: transparent;
+  color: var(--primary, #1976d2);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--chora-transition-fast, 0.15s ease-in-out);
+
+  &:hover:not(:disabled) {
+    background: var(--glass-bg, rgba(255, 255, 255, 0.5));
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.wallet__demo-granting {
+  color: var(--chora-color-text-muted);
+  font-size: 0.85rem;
+}
+
+.wallet__demo-error {
+  margin: 0;
+  color: var(--danger, #ef4444);
+  font-size: 0.85rem;
+}
+
+.wallet__demo-success {
+  margin: 0;
+  color: var(--success, #10b981);
+  font-size: 0.85rem;
+}
+
 /* ── ③ Transaction history → unified timeline (ADR-205 / CHO-1948) ──────── */
 .wallet__history-hint {
   margin: 0 0 var(--chora-space-md, 16px);

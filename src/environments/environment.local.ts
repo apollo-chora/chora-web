@@ -32,6 +32,9 @@ export const environment: {
   // /not-found and its lazy chunk never loads. Distinct from the entitlement-
   // based `FeatureFlagService` (per-tenant add-ons). Empty here so devs preview.
   readonly gatedAreas: readonly string[];
+  // Demo-mode free top-up — see environment.ts. ON locally so the demo grant
+  // is exercisable against the local gateway; the BE still gates it.
+  demoManaTopup: boolean;
 } = {
   production: false,
   // Local BFF — chora-gateway running on :8093 (prod-shaped path: JWT
@@ -40,6 +43,7 @@ export const environment: {
   wsBaseUrl: 'ws://localhost:8093',
   supportEmail: 'support@chora.site',
   realtimeEnabled: false,
+  demoManaTopup: true,
   // WS-10 — EMPTY locally so devs can preview in-progress areas (campus /
   // parent / choraverse / growth-edge-review + the O+ admin tools
   // developer / investigation / economy / moderation) that are gated OFF in

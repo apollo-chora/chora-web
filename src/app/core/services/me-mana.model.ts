@@ -2,8 +2,9 @@
  * Mana wallet model — canonical shape for the per-user Mana balance.
  *
  * Source of truth: `chora-contracts/openapi/learner-economy.yaml` →
- *   GET  /api/v1/me/mana         → UserMana (200)
- *   POST /api/v1/me/mana/topup   → ManaTopupResponse (201) | InsufficientManaErrorResponse (402)
+ *   GET  /api/v1/me/mana            → UserMana (200)
+ *   POST /api/v1/me/mana/topup      → ManaTopupResponse (201) | InsufficientManaErrorResponse (402)
+ *   POST /api/v1/me/mana/demo-grant → ManaDemoGrantResponse (200) — demo mode only
  *
  * Wired by `MeManaService` (this folder) and consumed by:
  *   - A+ atom-authoring AI assists (this CR) — optimistic mana gate
@@ -179,6 +180,31 @@ export type MeManaTopupState =
       readonly upsell: InsufficientManaUpsell;
       readonly message: string;
     }
+  | { readonly status: 'error'; readonly error: string };
+
+// ── Demo free top-up (POST /api/v1/me/mana/demo-grant) ───────────────────
+
+/**
+ * POST /api/v1/me/mana/demo-grant 200 response.
+ *
+ * Demo-mode only: a free, ledger-backed mana grant that bypasses the Stripe
+ * settlement path entirely — no `amount_cents`, no `payment_method_id`, no
+ * Checkout Session. `replayed` is true when the Idempotency-Key matched an
+ * earlier grant, so the BE replays the original result instead of crediting
+ * twice; the FE must not read that as a fresh credit.
+ */
+export interface ManaDemoGrantResponse {
+  readonly granted_units: number;
+  readonly balance_units: number;
+  readonly replayed: boolean;
+  readonly reason?: string;
+}
+
+/** Demo free top-up flow state for the POST /api/v1/me/mana/demo-grant action. */
+export type MeManaDemoGrantState =
+  | { readonly status: 'idle' }
+  | { readonly status: 'submitting' }
+  | { readonly status: 'success'; readonly result: ManaDemoGrantResponse }
   | { readonly status: 'error'; readonly error: string };
 
 // ── Mana-action cost catalogue (ADR-142 §4) ────────────────────────────

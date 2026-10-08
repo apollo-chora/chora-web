@@ -22,12 +22,21 @@ export const environment: {
   // /not-found and its lazy chunk never loads. Distinct from the entitlement-
   // based `FeatureFlagService` (per-tenant add-ons).
   readonly gatedAreas: readonly string[];
+  // Demo-mode free top-up (MeManaService.grantDemoMana → POST
+  // /api/v1/me/mana/demo-grant). PRESENTATION LOGIC ONLY — it decides whether
+  // the "Free top-up (demo)" button is DRAWN, never whether a grant is
+  // allowed. The BE is the sole authority: it gates on its own explicit
+  // enable flags (not CHORA_ENV alone) and answers 404 when demo mode is off,
+  // which the wallet renders as "demo unavailable". Off in every prod config.
+  demoManaTopup: boolean;
 } = {
   production: false,
   bffBaseUrl: 'https://api.chora.site',
   wsBaseUrl: 'wss://api.chora.site',
   supportEmail: 'support@chora.site',
   realtimeEnabled: true,
+  // Dev default ON so the demo is exercisable against the deployed gateway.
+  demoManaTopup: true,
   // WS-10 gated-OFF top-level areas — kept non-routable until finished +
   // translated. See the type above; enforced by `featureReadyGuard`.
   // 'developer' / 'investigation' / 'economy' / 'moderation' = O+ admin tools

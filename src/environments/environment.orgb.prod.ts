@@ -17,12 +17,15 @@ export const environment: {
   // /not-found and its lazy chunk never loads. Distinct from the entitlement-
   // based `FeatureFlagService` (per-tenant add-ons).
   readonly gatedAreas: readonly string[];
+  // Demo-mode free top-up — see environment.ts. OFF in prod.
+  demoManaTopup: boolean;
 } = {
   production: true,
   bffBaseUrl: 'https://api.iac.chora.site',
   wsBaseUrl: 'wss://api.iac.chora.site',
   supportEmail: 'support@iac.chora.site',
   realtimeEnabled: true,
+  demoManaTopup: false,
   // WS-10 gated-OFF top-level areas — kept non-routable until finished +
   // translated. See the type above; enforced by `featureReadyGuard`.
   // 'developer' / 'investigation' / 'economy' / 'moderation' = O+ admin tools

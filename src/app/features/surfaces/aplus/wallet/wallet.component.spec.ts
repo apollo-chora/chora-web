@@ -8,12 +8,14 @@ import { WalletComponent } from './wallet.component';
 import { MeManaService } from '../../../../core/services/me-mana.service';
 import type {
   MeManaCheckoutState,
+  MeManaDemoGrantState,
   MeManaLoadState,
   UserMana,
 } from '../../../../core/services/me-mana.model';
 import { TranslateService } from '../../../../core/services/translate.service';
 import { BffClientService } from '../../../../core/services/bff-client.service';
 import { TransactionRealtimeService } from '../../../../shared/components/transaction-history/transaction-realtime.service';
+import { environment } from '../../../../../environments/environment';
 
 // The inline <chora-transaction-history> child (CHO-2238) owns its own fetch;
 // mock at the BffClient seam (the H+ transactions spec pattern) — synchronous
@@ -49,6 +51,7 @@ function fakeMana() {
     mana: { balance_units: 0, lifetime_earned: 0, lifetime_spent: 0, subsidy_breakdown: [] },
   });
   const checkoutState = signal<MeManaCheckoutState>({ status: 'idle' });
+  const demoGrantState = signal<MeManaDemoGrantState>({ status: 'idle' });
   const balanceUnits = signal<number>(0);
   const mana = signal<UserMana | null>({
     balance_units: 0,
@@ -59,10 +62,12 @@ function fakeMana() {
   return {
     loadState,
     checkoutState,
+    demoGrantState,
     balanceUnits,
     mana,
     load: vi.fn(),
     checkoutMana: vi.fn(),
+    grantDemoMana: vi.fn(),
   };
 }
 
@@ -480,5 +485,87 @@ describe('WalletComponent', () => {
     expect(el.querySelector('[data-testid="wallet-ledger-list"]')).toBeNull();
     expect(el.querySelector('[data-testid="wallet-ledger-filters"]')).toBeNull();
     expect(el.querySelector('[data-testid="wallet-ledger-export-csv"]')).toBeNull();
+  });
+
+  // ── Demo free top-up (demo mode) ──────────────────────────────────────
+  // The flag is PRESENTATION LOGIC ONLY: it decides whether the button is
+  // DRAWN, never whether a grant is allowed — the BE answers 404 when demo
+  // mode is off, which is asserted below as the rendered error.
+  describe('demo free top-up', () => {
+    const original = environment.demoManaTopup;
+
+    afterEach(() => {
+      (environment as { demoManaTopup: boolean }).demoManaTopup = original;
+    });
+
+    function demoBtn(el: HTMLElement): HTMLButtonElement {
+      return el.querySelector<HTMLButtonElement>('[data-testid="wallet-demo-grant-btn"]')!;
+    }
+
+    it('renders the demo button when the demo flag is on', () => {
+      (environment as { demoManaTopup: boolean }).demoManaTopup = true;
+      const { fixture } = setup();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="wallet-demo-grant"]')).toBeTruthy();
+      // Translate pipe returns the raw i18n key in tests.
+      expect(demoBtn(el)?.textContent).toContain('aplus.wallet.demo_grant_cta');
+    });
+
+    it('does NOT render the demo button when the demo flag is off', () => {
+      (environment as { demoManaTopup: boolean }).demoManaTopup = false;
+      const { fixture } = setup();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="wallet-demo-grant"]')).toBeNull();
+      expect(el.querySelector('[data-testid="wallet-demo-grant-btn"]')).toBeNull();
+    });
+
+    it('clicking the demo button calls grantDemoMana', () => {
+      (environment as { demoManaTopup: boolean }).demoManaTopup = true;
+      const { fixture, mana } = setup();
+      demoBtn(fixture.nativeElement as HTMLElement).click();
+      expect(mana.grantDemoMana).toHaveBeenCalledTimes(1);
+    });
+
+    it('disables the demo button + shows a granting note while the grant is in flight', () => {
+      (environment as { demoManaTopup: boolean }).demoManaTopup = true;
+      const { fixture, mana } = setup();
+      mana.demoGrantState.set({ status: 'submitting' });
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(demoBtn(el).disabled).toBe(true);
+      expect(el.querySelector('[data-testid="wallet-demo-granting"]')).toBeTruthy();
+    });
+
+    it('surfaces a 404 / 429 as a clear, readable message', () => {
+      (environment as { demoManaTopup: boolean }).demoManaTopup = true;
+      const { fixture, mana } = setup();
+      mana.demoGrantState.set({
+        status: 'error',
+        error: 'aplus.wallet.demo_grant_error_quota',
+      });
+      fixture.detectChanges();
+      const err = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="wallet-demo-grant-error"]',
+      );
+      expect(err).toBeTruthy();
+      expect(err?.getAttribute('role')).toBe('alert');
+      expect(err?.textContent).toContain('demo_grant_error_quota');
+    });
+
+    it('shows the granted result after a successful demo top-up', () => {
+      (environment as { demoManaTopup: boolean }).demoManaTopup = true;
+      const { fixture, mana } = setup();
+      mana.demoGrantState.set({
+        status: 'success',
+        result: { granted_units: 100_000, balance_units: 100_240, replayed: false },
+      });
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="wallet-demo-grant-success"]')).toBeTruthy();
+      // The service re-fetches on success, so the hero number is the post-grant
+      // balance; the success note confirms the grant landed.
+      expect(fixture.componentInstance.demoGrantSuccess()?.balance_units).toBe(100_240);
+      expect(fixture.componentInstance.demoGrantError()).toBeNull();
+    });
   });
 });

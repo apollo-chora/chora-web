@@ -47,6 +47,7 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { TransactionHistoryComponent } from '../../../../shared/components/transaction-history/transaction-history.component';
 import { MeManaService } from '../../../../core/services/me-mana.service';
 import { MANA_PACKS, type ManaPack } from '../../../../core/services/me-mana.model';
+import { environment } from '../../../../../environments/environment';
 
 /** Post-top-up confirmation poll: every 3s, up to ~10 attempts (~30s). */
 const TOPUP_POLL_INTERVAL_MS = 3_000;
@@ -80,6 +81,15 @@ export class WalletComponent implements OnInit {
   readonly checkoutState = this.mana.checkoutState;
   readonly balanceUnits = this.mana.balanceUnits;
   readonly wallet = this.mana.mana;
+  readonly demoGrantState = this.mana.demoGrantState;
+
+  /**
+   * Demo-mode free top-up. PRESENTATION LOGIC ONLY — this decides whether the
+   * button is DRAWN, never whether a grant is allowed. The BE is the sole
+   * authority and answers 404 when demo mode is off, which surfaces below as
+   * "demo unavailable". Off in every prod environment config.
+   */
+  readonly demoManaTopup = environment.demoManaTopup;
 
   readonly subsidies = computed(() => this.wallet()?.subsidy_breakdown ?? []);
 
@@ -127,6 +137,18 @@ export class WalletComponent implements OnInit {
     return s.status === 'error' ? s.error : null;
   });
 
+  readonly isDemoGranting = computed(
+    () => this.demoGrantState().status === 'submitting',
+  );
+  readonly demoGrantError = computed(() => {
+    const s = this.demoGrantState();
+    return s.status === 'error' ? s.error : null;
+  });
+  readonly demoGrantSuccess = computed(() => {
+    const s = this.demoGrantState();
+    return s.status === 'success' ? s.result : null;
+  });
+
   private pollTimer?: ReturnType<typeof setTimeout>;
   private destroyed = false;
 
@@ -144,6 +166,15 @@ export class WalletComponent implements OnInit {
   /** Proactive top-up CTA — mint a Stripe Checkout Session for the pack. */
   topUp(sku: string): void {
     this.mana.checkoutMana(sku);
+  }
+
+  /**
+   * Demo-mode free top-up CTA — a ledger-backed grant that bypasses payment.
+   * The service refreshes the authoritative balance on success, so the hero
+   * number above IS the post-grant balance.
+   */
+  grantDemoMana(): void {
+    this.mana.grantDemoMana();
   }
 
   /** Format a price in cents to a display string (e.g. 799 → "$7.99"). */

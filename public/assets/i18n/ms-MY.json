@@ -302,7 +302,16 @@
       "credited": "Berjaya ditambah nilai! Baki baharu anda ditunjukkan di atas.",
       "processing": "Pembayaran diterima — baki anda akan dikemas kini di sini sebentar lagi.",
       "breakdown_show": "Tunjuk perincian baki",
-      "breakdown_hide": "Sembunyikan perincian baki"
+      "breakdown_hide": "Sembunyikan perincian baki",
+      "demo_grant_cta": "Tambah nilai percuma (demo)",
+      "demo_grant_granting": "Memberi mana percuma…",
+      "demo_grant_success": "Tambah nilai demo diberikan — baki baharu anda di atas.",
+      "demo_grant_error_unavailable": "Tambah nilai demo tidak tersedia sekarang.",
+      "demo_grant_error_quota": "Anda telah menggunakan semua tambah nilai demo. Sila cuba lagi kemudian.",
+      "demo_grant_error_missing_key": "Tambah nilai demo tidak boleh dimulakan. Sila cuba lagi.",
+      "demo_grant_error_unauthorised": "Sesi anda telah tamat. Sila log masuk semula.",
+      "demo_grant_error_upstream": "Perkhidmatan mana tidak tersedia buat sementara. Sila cuba lagi sebentar lagi.",
+      "demo_grant_error_generic": "Tambah nilai demo gagal. Sila cuba lagi."
     },
     "familiar": {
       "resonant_concept_named": "Tertumpu pada {{title}} pada Peta Pengetahuan anda.",

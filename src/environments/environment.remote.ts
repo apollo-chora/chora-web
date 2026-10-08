@@ -10,6 +10,8 @@ export const environment: {
   readonly supportEmail: string;
   realtimeEnabled: boolean;
   readonly gatedAreas: readonly string[];
+  // Demo-mode free top-up — see environment.ts. OFF: this is a prod build.
+  demoManaTopup: boolean;
 } = {
   production: true,
   // Relative — same origin as the served SPA; nginx proxies /api/ + /ws/.
@@ -17,6 +19,7 @@ export const environment: {
   wsBaseUrl: '',
   supportEmail: 'support@chora.site',
   realtimeEnabled: true,
+  demoManaTopup: false,
   gatedAreas: [
     'parent',
     'choraverse',

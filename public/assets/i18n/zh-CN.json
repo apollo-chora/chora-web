@@ -302,7 +302,16 @@
       "credited": "充值成功！您的新余额已显示在上方。",
       "processing": "已收到付款——您的余额稍后将在此处更新。",
       "breakdown_show": "显示余额明细",
-      "breakdown_hide": "隐藏余额明细"
+      "breakdown_hide": "隐藏余额明细",
+      "demo_grant_cta": "免费充值（演示）",
+      "demo_grant_granting": "正在赠送免费法力…",
+      "demo_grant_success": "演示充值已发放——新余额见上方。",
+      "demo_grant_error_unavailable": "演示充值当前不可用。",
+      "demo_grant_error_quota": "您已用完所有演示充值次数，请稍后再试。",
+      "demo_grant_error_missing_key": "演示充值无法启动，请重试。",
+      "demo_grant_error_unauthorised": "会话已过期，请重新登录。",
+      "demo_grant_error_upstream": "法力服务暂时不可用，请稍后再试。",
+      "demo_grant_error_generic": "演示充值失败，请重试。"
     },
     "familiar": {
       "resonant_concept_named": "专注于你知识图谱中的「{{title}}」。",

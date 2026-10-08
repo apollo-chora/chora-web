@@ -8386,7 +8386,16 @@
       "credited": "Topped up! Your new balance is shown above.",
       "processing": "Payment received. Your balance will update here shortly.",
       "breakdown_show": "Show balance breakdown",
-      "breakdown_hide": "Hide balance breakdown"
+      "breakdown_hide": "Hide balance breakdown",
+      "demo_grant_cta": "Free top-up (demo)",
+      "demo_grant_granting": "Granting free mana…",
+      "demo_grant_success": "Demo top-up granted — your new balance is shown above.",
+      "demo_grant_error_unavailable": "Demo top-up isn't available right now.",
+      "demo_grant_error_quota": "You've used all your demo top-ups. Please try again later.",
+      "demo_grant_error_missing_key": "Demo top-up couldn't start. Please try again.",
+      "demo_grant_error_unauthorised": "Your session has expired. Sign in again to continue.",
+      "demo_grant_error_upstream": "Our mana service is temporarily unavailable. Please try again shortly.",
+      "demo_grant_error_generic": "Demo top-up failed. Please try again."
     },
     "familiar_source_revelation": {
       "eyebrow_active": "A preview of what's ahead",

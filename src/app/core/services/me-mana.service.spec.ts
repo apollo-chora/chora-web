@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import {
   provideHttpClientTesting,
   HttpTestingController,
+  type TestRequest,
 } from '@angular/common/http/testing';
 
 import { MeManaService, appendQueryParam } from './me-mana.service';
@@ -16,6 +17,7 @@ import {
 } from './me-mana.model';
 import type {
   InsufficientManaErrorResponse,
+  ManaDemoGrantResponse,
   ManaTopupRequest,
   ManaTopupResponse,
   UserMana,
@@ -511,6 +513,204 @@ describe('recommendedManaPackSku()', () => {
       'mana_pack_5000',
       'mana_pack_20000',
     ]);
+  });
+});
+
+describe('MeManaService — grantDemoMana()', () => {
+  let service: MeManaService;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    ({ service, httpMock } = setup());
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+  function buildDemoGrant(overrides: Partial<ManaDemoGrantResponse> = {}): ManaDemoGrantResponse {
+    return {
+      granted_units: 100_000,
+      balance_units: 100_240,
+      replayed: false,
+      reason: 'demo_seed',
+      ...overrides,
+    };
+  }
+
+  /**
+   * Flush a successful demo-grant 200 AND the balance refresh it triggers.
+   * A success is not one round-trip: the service re-fetches the authoritative
+   * balance, so a test that flushes only the POST leaves a GET open and
+   * `httpMock.verify()` in afterEach fails.
+   *
+   * Returns the flushed TestRequest — `expectOne` SPLICES the match out of the
+   * backend's open list, so a second `expectOne` for the same request finds
+   * nothing and assertions must run off this handle.
+   */
+  function flushGrantThenRefresh(): TestRequest {
+    const req = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    req.flush(buildDemoGrant());
+    httpMock
+      .expectOne((r) => r.method === 'GET' && r.url.includes('/api/v1/me/mana'))
+      .flush(buildMana({ balance_units: 100_240 }));
+    return req;
+  }
+
+  it('POSTs /api/v1/me/mana/demo-grant with a UUID Idempotency-Key and no body', () => {
+    service.grantDemoMana();
+    const req = flushGrantThenRefresh();
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toBeNull();
+    expect(req.request.headers.get('Idempotency-Key')).toMatch(UUID_RE);
+  });
+
+  it('transitions idle → submitting → success with the wire shape', () => {
+    expect(service.demoGrantState().status).toBe('idle');
+    service.grantDemoMana();
+    expect(service.demoGrantState().status).toBe('submitting');
+    flushGrantThenRefresh();
+    const s = service.demoGrantState();
+    expect(s.status).toBe('success');
+    if (s.status === 'success') {
+      expect(s.result.granted_units).toBe(100_000);
+      expect(s.result.balance_units).toBe(100_240);
+      expect(s.result.replayed).toBe(false);
+    }
+  });
+
+  it('refreshes the authoritative balance on success (no optimistic patch)', () => {
+    service.grantDemoMana();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'))
+      .flush(buildDemoGrant());
+    expect(service.demoGrantState().status).toBe('success');
+
+    // The grant is additive + idempotent on the ledger, so the BE's GET is the
+    // only number worth rendering — the service re-fetches rather than
+    // trusting the 200 body as the new balance.
+    httpMock
+      .expectOne((r) => r.method === 'GET' && r.url.includes('/api/v1/me/mana'))
+      .flush(buildMana({ balance_units: 100_240 }));
+    expect(service.balanceUnits()).toBe(100_240);
+  });
+
+  it('does NOT refresh the balance when the grant fails', () => {
+    service.grantDemoMana();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'))
+      .flush(null, { status: 404, statusText: 'Not Found' });
+    expect(service.demoGrantState().status).toBe('error');
+    httpMock.expectNone((r) => r.method === 'GET');
+  });
+
+  it('mints a FRESH Idempotency-Key per call (a retry replays, never double-credits)', () => {
+    service.grantDemoMana();
+    const first = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    const firstKey = first.request.headers.get('Idempotency-Key');
+    first.flush(buildDemoGrant());
+    httpMock
+      .expectOne((r) => r.method === 'GET' && r.url.includes('/api/v1/me/mana'))
+      .flush(buildMana({ balance_units: 100_240 }));
+
+    service.grantDemoMana();
+    const second = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    expect(second.request.headers.get('Idempotency-Key')).not.toBe(firstKey);
+    second.flush(buildDemoGrant());
+    httpMock
+      .expectOne((r) => r.method === 'GET' && r.url.includes('/api/v1/me/mana'))
+      .flush(buildMana({ balance_units: 100_240 }));
+  });
+
+  it('maps 404 to demo_grant_error_unavailable (demo mode off for this tenant)', () => {
+    service.grantDemoMana();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'))
+      .flush(null, { status: 404, statusText: 'Not Found' });
+    const s = service.demoGrantState();
+    expect(s.status).toBe('error');
+    if (s.status === 'error') {
+      expect(s.error).toBe('aplus.wallet.demo_grant_error_unavailable');
+    }
+  });
+
+  it('maps 429 to demo_grant_error_quota', () => {
+    service.grantDemoMana();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'))
+      .flush(null, { status: 429, statusText: 'Too Many Requests' });
+    const s = service.demoGrantState();
+    expect(s.status).toBe('error');
+    if (s.status === 'error') {
+      expect(s.error).toBe('aplus.wallet.demo_grant_error_quota');
+    }
+  });
+
+  it('maps 400 to demo_grant_error_missing_key', () => {
+    service.grantDemoMana();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'))
+      .flush(null, { status: 400, statusText: 'Bad Request' });
+    const s = service.demoGrantState();
+    expect(s.status).toBe('error');
+    if (s.status === 'error') {
+      expect(s.error).toBe('aplus.wallet.demo_grant_error_missing_key');
+    }
+  });
+
+  it('maps 401/403 to demo_grant_error_unauthorised', () => {
+    service.grantDemoMana();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'))
+      .flush(null, { status: 403, statusText: 'Forbidden' });
+    const s = service.demoGrantState();
+    expect(s.status).toBe('error');
+    if (s.status === 'error') {
+      expect(s.error).toBe('aplus.wallet.demo_grant_error_unauthorised');
+    }
+  });
+
+  it('maps 5xx to demo_grant_error_upstream', () => {
+    service.grantDemoMana();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'))
+      .flush(null, { status: 502, statusText: 'Bad Gateway' });
+    const s = service.demoGrantState();
+    expect(s.status).toBe('error');
+    if (s.status === 'error') {
+      expect(s.error).toBe('aplus.wallet.demo_grant_error_upstream');
+    }
+  });
+
+  it('maps a network error (no status) to demo_grant_error_generic', () => {
+    service.grantDemoMana();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'))
+      .error(new ProgressEvent('Network error'));
+    const s = service.demoGrantState();
+    expect(s.status).toBe('error');
+    if (s.status === 'error') {
+      expect(s.error).toBe('aplus.wallet.demo_grant_error_generic');
+    }
+  });
+
+  it('clearDemoGrantState() resets to idle', () => {
+    service.grantDemoMana();
+    flushGrantThenRefresh();
+    expect(service.demoGrantState().status).toBe('success');
+
+    service.clearDemoGrantState();
+    expect(service.demoGrantState().status).toBe('idle');
+  });
+
+  it('newIdempotencyKey() yields a UUID-shaped token', () => {
+    const key = (
+      service as unknown as { newIdempotencyKey(): string }
+    ).newIdempotencyKey();
+    expect(key).toMatch(UUID_RE);
   });
 });
 

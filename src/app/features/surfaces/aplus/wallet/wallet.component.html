@@ -93,6 +93,37 @@
     @if (isCheckingOut()) {
       <p class="wallet__redirecting" role="status">{{ 'aplus.wallet.redirecting' | translate }}</p>
     }
+
+    <!-- Demo-mode free top-up — a ledger-backed grant that bypasses payment.
+         Rendered ONLY when the demo flag is on; the flag is presentation logic
+         and the BE still answers 404 when demo mode is off. -->
+    @if (demoManaTopup) {
+      <div class="wallet__demo" data-testid="wallet-demo-grant">
+        <button
+          type="button"
+          class="wallet__demo-btn"
+          [disabled]="isDemoGranting()"
+          (click)="grantDemoMana()"
+          data-testid="wallet-demo-grant-btn"
+        >
+          {{ 'aplus.wallet.demo_grant_cta' | translate }}
+        </button>
+
+        @if (isDemoGranting()) {
+          <span class="wallet__demo-granting" role="status" data-testid="wallet-demo-granting">
+            {{ 'aplus.wallet.demo_grant_granting' | translate }}
+          </span>
+        } @else if (demoGrantError(); as err) {
+          <p class="wallet__demo-error" role="alert" data-testid="wallet-demo-grant-error">
+            {{ err | translate }}
+          </p>
+        } @else if (demoGrantSuccess()) {
+          <p class="wallet__demo-success" role="status" data-testid="wallet-demo-grant-success">
+            {{ 'aplus.wallet.demo_grant_success' | translate }}
+          </p>
+        }
+      </div>
+    }
   </section>
 
   <!-- ③ Transaction history — the unified timeline INLINE (CHO-2238 one

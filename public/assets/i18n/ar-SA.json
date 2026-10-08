@@ -118,7 +118,16 @@
       "credited": "تم الشحن! رصيدك الجديد معروض في الأعلى.",
       "processing": "تم استلام الدفعة — سيُحدَّث رصيدك هنا قريبًا.",
       "breakdown_show": "عرض تفصيل الرصيد",
-      "breakdown_hide": "إخفاء تفصيل الرصيد"
+      "breakdown_hide": "إخفاء تفصيل الرصيد",
+      "demo_grant_cta": "شحن مجاني (تجريبي)",
+      "demo_grant_granting": "جارٍ منح مانا مجانية…",
+      "demo_grant_success": "تم منح الشحن التجريبي — رصيدك الجديد موضح أعلاه.",
+      "demo_grant_error_unavailable": "الشحن التجريبي غير متاح حاليًا.",
+      "demo_grant_error_quota": "لقد استخدمت جميع شحناتك التجريبية. يرجى المحاولة لاحقًا.",
+      "demo_grant_error_missing_key": "تعذّر بدء الشحن التجريبي. يرجى المحاولة مجددًا.",
+      "demo_grant_error_unauthorised": "انتهت جلستك. يرجى تسجيل الدخول مجددًا.",
+      "demo_grant_error_upstream": "خدمة المانا غير متاحة مؤقتًا. يرجى المحاولة بعد قليل.",
+      "demo_grant_error_generic": "فشل الشحن التجريبي. يرجى المحاولة مجددًا."
     },
     "familiar": {
       "resonant_concept_named": "مُركّز على {{title}} في خريطة معرفتك.",
