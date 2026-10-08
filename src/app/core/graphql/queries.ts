@@ -31,18 +31,6 @@ export const QUERY_MY_STREAK = `
   }
 `;
 
-/** Current learner XP summary only */
-export const QUERY_MY_XP = `
-  query MyXP {
-    myXP {
-      totalXp
-      level
-      xpToNextLevel
-      comboMultiplier
-    }
-  }
-`;
-
 /** Today's DailyDose card stack */
 export const QUERY_MY_DAILY_DOSE = `
   query DailyDose {

@@ -40,30 +40,6 @@ export interface GqlStreakData {
   lastActivityAt: string;
 }
 
-export interface GqlXpSummary {
-  totalXp: number;
-  level: number;
-  xpToNextLevel: number;
-  comboMultiplier: number;
-}
-
-export interface GqlPathProgress {
-  pathId: string;
-  pathTitle: string;
-  completionPct: number;
-  stepsCompleted: number;
-  stepsTotal: number;
-}
-
-export interface GqlDashboardData {
-  streak: GqlStreakData;
-  xp: GqlXpSummary;
-  level: number;
-  dailyDoseStatus: string;
-  activeGoalsCount: number;
-  pathProgress: GqlPathProgress[];
-}
-
 // ---------------------------------------------------------------------------
 // Engagement — DailyDose (GraphQL wire format)
 // ---------------------------------------------------------------------------

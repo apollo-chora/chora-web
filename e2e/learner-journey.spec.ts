@@ -148,25 +148,6 @@ async function mockFullJourney(page: import('@playwright/test').Page): Promise<v
       return;
     }
 
-    // XP query
-    if (query.includes('myXP')) {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: {
-            myXP: {
-              totalXp: 2450,
-              level: 8,
-              xpToNextLevel: 550,
-              comboMultiplier: 2,
-            },
-          },
-        }),
-      });
-      return;
-    }
-
     // Notifications query
     if (query.includes('myNotifications')) {
       await route.fulfill({

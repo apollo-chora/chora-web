@@ -428,7 +428,7 @@ describe('DashboardService', () => {
   });
 
   // -----------------------------------------------------------------------
-  // loadStreak / loadXp / loadDailyDose (GraphQL via /api/v1/graphql POST)
+  // loadStreak / loadDailyDose (GraphQL via /api/v1/graphql POST)
   // -----------------------------------------------------------------------
 
   const graphqlUrl = `${baseUrl}/api/v1/graphql`;
@@ -472,46 +472,6 @@ describe('DashboardService', () => {
     httpMock
       .expectOne(graphqlUrl)
       .flush('err', { status: 500, statusText: 'Server Error' });
-
-    expect(result).toBeNull();
-  });
-
-  it('loadXp posts GraphQL and maps XP summary', () => {
-    let result: unknown = 'unset';
-    service.loadXp().subscribe((r) => (result = r));
-    httpMock.expectOne(graphqlUrl).flush({
-      data: {
-        myXP: {
-          totalXp: 3300,
-          level: 8,
-          xpToNextLevel: 200,
-          comboMultiplier: 3,
-        },
-      },
-    });
-
-    expect(result).toEqual({
-      total_xp: 3300,
-      level: 8,
-      xp_to_next_level: 200,
-      combo_multiplier: 3,
-    });
-  });
-
-  it('loadXp returns null when myXP is absent', () => {
-    let result: unknown = 'unset';
-    service.loadXp().subscribe((r) => (result = r));
-    httpMock.expectOne(graphqlUrl).flush({ data: { myXP: null } });
-
-    expect(result).toBeNull();
-  });
-
-  it('loadXp returns null on GraphQL error', () => {
-    let result: unknown = 'unset';
-    service.loadXp().subscribe((r) => (result = r));
-    httpMock
-      .expectOne(graphqlUrl)
-      .error(new ProgressEvent('error'));
 
     expect(result).toBeNull();
   });

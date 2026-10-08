@@ -2,13 +2,12 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Observable, map, tap, catchError, of } from 'rxjs';
 import { BffClientService } from '../../../core/services/bff-client.service';
 import { GraphQLService } from '../../../core/services/graphql.service';
-import { QUERY_MY_STREAK, QUERY_MY_XP, QUERY_MY_DAILY_DOSE } from '../../../core/graphql/queries';
-import type { GqlStreakData, GqlXpSummary, GqlDailyDoseSession } from '../../../core/graphql/types';
+import { QUERY_MY_STREAK, QUERY_MY_DAILY_DOSE } from '../../../core/graphql/queries';
+import type { GqlStreakData, GqlDailyDoseSession } from '../../../core/graphql/types';
 import type {
   DashboardData,
   DashboardState,
   StreakData,
-  XpSummaryData,
   ExamReadiness,
   ExamReadinessState,
   GoalChallenge,
@@ -29,15 +28,6 @@ function mapStreakData(gql: GqlStreakData): StreakData {
     status: gql.status as StreakData['status'],
     longest_streak: gql.longestStreak,
     last_activity_at: gql.lastActivityAt,
-  };
-}
-
-function mapXpSummary(gql: GqlXpSummary): XpSummaryData {
-  return {
-    total_xp: gql.totalXp,
-    level: gql.level,
-    xp_to_next_level: gql.xpToNextLevel,
-    combo_multiplier: gql.comboMultiplier,
   };
 }
 
@@ -138,19 +128,12 @@ export class DashboardService {
   }
 
   // ---------------------------------------------------------------------------
-  // Individual GraphQL queries for streak and XP (lighter-weight)
+  // Individual GraphQL queries for streak and daily dose (lighter-weight)
   // ---------------------------------------------------------------------------
 
   loadStreak(): Observable<StreakData | null> {
     return this.gql.query<{ myStreak: GqlStreakData }>(QUERY_MY_STREAK).pipe(
       map((data) => data?.myStreak ? mapStreakData(data.myStreak) : null),
-      catchError(() => of(null)),
-    );
-  }
-
-  loadXp(): Observable<XpSummaryData | null> {
-    return this.gql.query<{ myXP: GqlXpSummary }>(QUERY_MY_XP).pipe(
-      map((data) => data?.myXP ? mapXpSummary(data.myXP) : null),
       catchError(() => of(null)),
     );
   }
