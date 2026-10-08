@@ -156,8 +156,8 @@ export class DashboardService {
   }
 
   loadDailyDose(): Observable<GqlDailyDoseSession | null> {
-    return this.gql.query<{ myDailyDose: GqlDailyDoseSession }>(QUERY_MY_DAILY_DOSE).pipe(
-      map((data) => data?.myDailyDose ?? null),
+    return this.gql.query<{ dailyDose: GqlDailyDoseSession }>(QUERY_MY_DAILY_DOSE).pipe(
+      map((data) => data?.dailyDose ?? null),
       catchError(() => of(null)),
     );
   }

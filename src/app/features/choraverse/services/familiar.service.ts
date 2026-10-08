@@ -9,7 +9,7 @@ import { FamiliarProfile, FamiliarSpecies, PersonalityTraits, FamiliarSkin, Fami
 /**
  * FamiliarService — manages Familiar companion state via BFF.
  *
- * Learner-facing reads (myFamiliar, myFamiliarStats) use GraphQL (ADR-025).
+ * Learner-facing reads (myCompanion, myFamiliarStats) use GraphQL (ADR-025).
  * Mutations (summon, purchase skin) use REST via BffClientService.
  *
  * @see .claude/skills/coding-angular/SKILL.md (HTTP & API Client Patterns)
@@ -124,8 +124,8 @@ export class FamiliarService {
   loadProfile(): Observable<FamiliarProfile | null> {
     this.state.set({ status: 'loading' });
 
-    return this.gql.query<{ myFamiliar: GqlFamiliar | null }>(QUERY_MY_FAMILIAR).pipe(
-      map((data) => data?.myFamiliar ? mapFamiliarProfile(data.myFamiliar) : null),
+    return this.gql.query<{ myCompanion: GqlFamiliar | null }>(QUERY_MY_FAMILIAR).pipe(
+      map((data) => data?.myCompanion ? mapFamiliarProfile(data.myCompanion) : null),
       tap((profile) => {
         if (profile) {
           this.state.set({ status: 'success', profile });

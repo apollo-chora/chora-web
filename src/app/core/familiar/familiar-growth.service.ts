@@ -99,7 +99,7 @@ interface FamiliarCosmeticWire {
  * Wire row from chora-consumption `/v1/me/familiars` (camelCase via the
  * chora-gateway `classify()` snake→camel pass). Mirrors
  * `services/chora-consumption/.../familiar_instance_handlers.go` +
- * `chora-contracts/openapi/consumption-familiar.yaml`.
+ * `chora-contracts/openapi/consumption-companion.yaml`.
  */
 interface FamiliarInstanceWire {
   /**

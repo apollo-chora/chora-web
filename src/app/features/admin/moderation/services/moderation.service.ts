@@ -1,7 +1,7 @@
 /**
  * ModerationService — REST adapter for the content moderation dashboard.
  *
- * Source of truth: chora-contracts/openapi/governance.yaml
+ * Source of truth: chora-contracts/openapi/governance-admin.yaml
  * All HTTP calls go through BffClientService.
  */
 import { Injectable } from '@angular/core';

@@ -1,6 +1,6 @@
 /**
  * Admin atom service — REST CRUD for LearningAtom management.
- * Source of truth: chora-contracts/openapi/atomic.yaml
+ * Source of truth: chora-contracts/openapi/creation-admin.yaml
  *
  * Admin CRUD uses REST (OpenAPI). Learner-facing reads use GraphQL (ADR-025).
  * All HTTP calls go through BffClientService (chora-gateway).

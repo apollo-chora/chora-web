@@ -2,7 +2,7 @@
  * Survey domain models for post-course feedback, survey templates,
  * questions, responses, and analytics.
  *
- * Source of truth: chora-contracts/openapi/survey.yaml
+ * Source of truth: chora-contracts/openapi/delivery-admin.yaml
  * Backend returns snake_case JSON — these interfaces match directly.
  */
 

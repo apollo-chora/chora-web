@@ -1,6 +1,6 @@
 /**
  * Error types matching IAM OpenAPI ErrorResponse envelope.
- * Source of truth: chora-contracts/openapi/iam.yaml §ErrorResponse
+ * Source of truth: chora-contracts/openapi/identity-admin.yaml §ErrorResponse
  */
 import { HttpErrorResponse } from '@angular/common/http';
 

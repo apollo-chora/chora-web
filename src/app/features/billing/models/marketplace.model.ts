@@ -1,7 +1,7 @@
 /**
  * Marketplace domain models for catalog, campaigns, revenue, and referrals.
  *
- * Source of truth: chora-contracts/openapi/billing.yaml
+ * Source of truth: chora-contracts/openapi/payments-admin.yaml
  * Backend returns snake_case JSON — these interfaces match directly.
  */
 

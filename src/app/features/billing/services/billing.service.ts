@@ -2,7 +2,7 @@
  * BillingService — REST adapter for billing, subscriptions, invoices,
  * promo codes, and usage tracking.
  *
- * Source of truth: chora-contracts/openapi/billing.yaml
+ * Source of truth: chora-contracts/openapi/payments-admin.yaml
  * All HTTP calls go through BffClientService.
  */
 import { Injectable, inject, signal, computed } from '@angular/core';

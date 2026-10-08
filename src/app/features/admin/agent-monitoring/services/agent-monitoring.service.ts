@@ -1,7 +1,7 @@
 /**
  * AgentMonitoringService — REST adapter for AI agent health and metrics.
  *
- * Source of truth: chora-contracts/openapi/familiar.yaml
+ * Source of truth: chora-contracts/openapi/consumption-companion.yaml
  * All HTTP calls go through BffClientService.
  */
 import { Injectable, inject, signal, computed } from '@angular/core';

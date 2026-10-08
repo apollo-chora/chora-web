@@ -1,7 +1,7 @@
 /**
  * Governance admin models for restrictions, appeals, KYC, and moderation.
  *
- * Source of truth: chora-contracts/openapi/governance.yaml
+ * Source of truth: chora-contracts/openapi/governance-admin.yaml
  * All interfaces match backend snake_case JSON directly.
  */
 

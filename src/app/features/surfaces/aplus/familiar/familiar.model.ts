@@ -21,7 +21,7 @@
  *   - `services/chora-consumption/internal/adapter/http/
  *      familiar_instance_handlers.go` (`instanceResp` + `growthStateResp`
  *      + `cosmeticResp`)
- *   - `chora-contracts/openapi/consumption-familiar.yaml`
+ *   - `chora-contracts/openapi/consumption-companion.yaml`
  *      (`FamiliarInstanceResponse` + `GrowthState` + `Cosmetic`).
  *
  * Contract note: the per-instance GET returns the BASE identity shape;

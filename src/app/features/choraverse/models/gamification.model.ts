@@ -1,7 +1,7 @@
 /**
  * Gamification models — Reward Store, Coin Economy, Knowledge Bounties.
  *
- * Aligns with chora-contracts/openapi/gamification.yaml schemas.
+ * Aligns with chora-contracts/openapi/choraverse.yaml schemas.
  * DigitalSkins are EARNED rewards — NEVER purchasable.
  *
  * @see PLAN.md §3.42 (Gamification)

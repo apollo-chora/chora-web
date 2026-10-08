@@ -2,7 +2,7 @@
  * AdmissionAdminService — REST adapter for pipeline template management,
  * application review, and decision recording.
  *
- * Source of truth: chora-contracts/openapi/admission.yaml
+ * Source of truth: chora-contracts/openapi/course-application.yaml
  * All HTTP calls go through BffClientService.
  */
 import { Injectable, inject, signal } from '@angular/core';

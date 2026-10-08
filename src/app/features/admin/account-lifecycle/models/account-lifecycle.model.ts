@@ -1,7 +1,7 @@
 /**
  * Account lifecycle models for the Admin Account Management Dashboard.
  *
- * Source of truth: chora-contracts/openapi/iam.yaml
+ * Source of truth: chora-contracts/openapi/identity-admin.yaml
  * These interfaces model account states, lifecycle events,
  * and admin actions for the account management dashboard.
  */

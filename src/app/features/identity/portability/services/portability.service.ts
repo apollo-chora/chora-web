@@ -1,7 +1,7 @@
 /**
  * PortabilityService — REST adapter for GCID merge, portable data, and migration.
  *
- * Source of truth: chora-contracts/openapi/iam.yaml
+ * Source of truth: chora-contracts/openapi/identity-admin.yaml
  * All HTTP calls go through BffClientService.
  */
 import { Injectable, inject, signal, computed } from '@angular/core';

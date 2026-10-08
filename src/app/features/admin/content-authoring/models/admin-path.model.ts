@@ -1,6 +1,6 @@
 /**
  * Admin-facing TypeScript interfaces for LockedPath CRUD.
- * Source of truth: chora-contracts/openapi/atomic.yaml §LockedPath
+ * Source of truth: chora-contracts/openapi/creation-admin.yaml §LockedPath
  *
  * LockedPath is a collection aggregate that QUERIES atoms — it does NOT own them.
  * Steps represent an ordered sequence with optional prerequisite enforcement.

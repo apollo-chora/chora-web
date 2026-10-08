@@ -2,7 +2,7 @@
  * Admission pipeline models — admin-facing interfaces for pipeline templates,
  * stages, applications, and decisions.
  *
- * Source of truth: chora-contracts/openapi/admission.yaml
+ * Source of truth: chora-contracts/openapi/course-application.yaml
  */
 
 // ---------------------------------------------------------------------------

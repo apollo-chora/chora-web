@@ -2,7 +2,7 @@
  * CommunityService — REST adapter for community atom submissions, peer reviews,
  * curation queue, voting, comments, and contributor profiles.
  *
- * Source of truth: chora-contracts/openapi/community.yaml
+ * Source of truth: chora-contracts/openapi/sharing-admin.yaml
  * All HTTP calls go through BffClientService.
  */
 import { Injectable, inject, signal, computed } from '@angular/core';

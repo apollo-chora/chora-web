@@ -2,7 +2,7 @@
  * Community domain models for atom submissions, peer reviews, curation,
  * voting, comments, and contributor profiles.
  *
- * Source of truth: chora-contracts/openapi/community.yaml
+ * Source of truth: chora-contracts/openapi/sharing-admin.yaml
  * Backend returns snake_case JSON — these interfaces match directly.
  */
 

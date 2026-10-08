@@ -1,6 +1,6 @@
 /**
  * TypeScript interfaces for trainer-led training sessions.
- * Source of truth: chora-contracts/openapi/training-admin.yaml
+ * Source of truth: chora-contracts/openapi/delivery-admin.yaml
  *
  * Learner-facing reads use REST: GET /api/v1/training/sessions
  * Enrollment uses REST: POST/DELETE /api/v1/training/sessions/{id}/enroll

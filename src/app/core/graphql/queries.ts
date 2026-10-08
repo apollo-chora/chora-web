@@ -8,21 +8,6 @@
  */
 
 // ---------------------------------------------------------------------------
-// Shared Fragments
-// ---------------------------------------------------------------------------
-
-const TOPIC_NODE_FIELDS = `
-  id
-  tenantId
-  name
-  parentId
-  sortOrder
-  atomCount
-  createdAt
-  updatedAt
-`;
-
-// ---------------------------------------------------------------------------
 // Topic Queries
 // ---------------------------------------------------------------------------
 // NB: QUERY_TOPIC_TREE + QUERY_KNOWLEDGE_GRAPH (both issuing the resolver-less
@@ -30,51 +15,9 @@ const TOPIC_NODE_FIELDS = `
 // retired `/discovery` graph-discovery UI. The live per-user Knowledge Graph
 // at `/a/map` (ADR-204 §6.3) does not use these.
 
-/** Single topic node with one level of children */
-export const QUERY_TOPIC_NODE = `
-  query TopicNode($id: ID!) {
-    topicNode(id: $id) {
-      ${TOPIC_NODE_FIELDS}
-      children {
-        ${TOPIC_NODE_FIELDS}
-      }
-    }
-  }
-`;
-
 // ---------------------------------------------------------------------------
 // Engagement — Dashboard Queries
 // ---------------------------------------------------------------------------
-
-/** Learner dashboard summary (streak, XP, daily dose status, path progress) */
-export const QUERY_MY_DASHBOARD = `
-  query MyDashboard {
-    myDashboard {
-      streak {
-        currentDays
-        status
-        longestStreak
-        lastActivityAt
-      }
-      xp {
-        totalXp
-        level
-        xpToNextLevel
-        comboMultiplier
-      }
-      level
-      dailyDoseStatus
-      activeGoalsCount
-      pathProgress {
-        pathId
-        pathTitle
-        completionPct
-        stepsCompleted
-        stepsTotal
-      }
-    }
-  }
-`;
 
 /** Current learner streak only */
 export const QUERY_MY_STREAK = `
@@ -102,8 +45,8 @@ export const QUERY_MY_XP = `
 
 /** Today's DailyDose card stack */
 export const QUERY_MY_DAILY_DOSE = `
-  query MyDailyDose {
-    myDailyDose {
+  query DailyDose {
+    dailyDose {
       cards {
         atom {
           id
@@ -133,8 +76,8 @@ export const QUERY_MY_DAILY_DOSE = `
 
 /** Current learner's Familiar companion */
 export const QUERY_MY_FAMILIAR = `
-  query MyFamiliar {
-    myFamiliar {
+  query MyCompanion {
+    myCompanion {
       id
       gcid
       name

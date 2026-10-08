@@ -1,7 +1,7 @@
 /**
  * RbacAdminService — REST adapter for tenant RBAC management.
  *
- * Source of truth: chora-contracts/openapi/iam.yaml
+ * Source of truth: chora-contracts/openapi/identity-admin.yaml
  * All HTTP calls go through BffClientService.
  *
  * Endpoints:

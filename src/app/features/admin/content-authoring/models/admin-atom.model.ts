@@ -1,6 +1,6 @@
 /**
  * Admin-facing TypeScript interfaces for LearningAtom CRUD.
- * Source of truth: chora-contracts/openapi/atomic.yaml
+ * Source of truth: chora-contracts/openapi/creation-admin.yaml
  *
  * These models are used by the admin content-authoring module.
  * The learner-facing models live in features/atomic/models/atom.models.ts
@@ -8,7 +8,7 @@
  */
 
 // ---------------------------------------------------------------------------
-// Enums (match OpenAPI atomic.yaml AtomType / AtomStatus / ValidationRuleType)
+// Enums (match OpenAPI creation-admin.yaml AtomType / AtomStatus / ValidationRuleType)
 // ---------------------------------------------------------------------------
 
 export type AdminAtomType =
@@ -147,7 +147,7 @@ export interface HotspotArea {
 }
 
 // ---------------------------------------------------------------------------
-// Request / Response DTOs (match OpenAPI atomic.yaml)
+// Request / Response DTOs (match OpenAPI creation-admin.yaml)
 // ---------------------------------------------------------------------------
 
 export interface CreateAtomRequest {

@@ -6,7 +6,7 @@
  * DigitalSkins are EARNED rewards — NEVER purchasable.
  *
  * @see docs/design/ux_familiar_companion.md (SkinCustomization)
- * @see chora-contracts/openapi/gamification.yaml
+ * @see chora-contracts/openapi/choraverse.yaml
  * @see CHO-1345
  */
 import {

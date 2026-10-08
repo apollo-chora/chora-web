@@ -7,7 +7,7 @@
  * REST poll (30s) when the channel is not connected (flag off / BE down).
  * The poll is gated per-tick on auth + channel-state + tab visibility.
  *
- * Source of truth: chora-contracts/openapi/communication.yaml
+ * Source of truth: chora-contracts/openapi/notifications-admin.yaml
  */
 import { Injectable, inject, signal, computed, DestroyRef, OnDestroy } from '@angular/core';
 import { HttpParams } from '@angular/common/http';

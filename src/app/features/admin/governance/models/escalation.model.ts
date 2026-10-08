@@ -2,7 +2,7 @@
  * Escalation and governance tier models for restriction tracking,
  * appeal timelines, KYC learner verification, and warning state.
  *
- * Source of truth: chora-contracts/openapi/governance.yaml
+ * Source of truth: chora-contracts/openapi/governance-admin.yaml
  * All interfaces match backend snake_case JSON directly.
  */
 

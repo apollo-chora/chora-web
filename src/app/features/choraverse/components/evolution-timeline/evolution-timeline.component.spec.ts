@@ -106,7 +106,7 @@ describe('EvolutionTimelineComponent', () => {
     let cmp: EvolutionTimelineComponent;
     let el: HTMLElement;
 
-    /** GraphQL myFamiliar payload (GqlFamiliar shape) at the given level. */
+    /** GraphQL myCompanion payload (GqlFamiliar shape) at the given level. */
     function gqlFamiliar(level: number): GqlFamiliar {
       return {
         id: 'fam-1',
@@ -140,10 +140,10 @@ describe('EvolutionTimelineComponent', () => {
 
     /** Creates a fresh component (firing ngOnInit -> loadProfile POST) and
      *  flushes EVERY pending GraphQL request (the outer beforeEach component's
-     *  loadProfile plus this one's) with the supplied myFamiliar payload, then
+     *  loadProfile plus this one's) with the supplied myCompanion payload, then
      *  triggers change detection. Flushing all avoids an expectOne ambiguity
      *  because the outer suite-level beforeEach already created a component. */
-    function createAndFlush(myFamiliar: unknown): void {
+    function createAndFlush(myCompanion: unknown): void {
       cmpFixture = TestBed.createComponent(EvolutionTimelineComponent);
       cmp = cmpFixture.componentInstance;
       el = cmpFixture.nativeElement as HTMLElement;
@@ -156,7 +156,7 @@ describe('EvolutionTimelineComponent', () => {
       expect(reqs.length).toBeGreaterThan(0);
       for (const req of reqs) {
         expect(req.request.method).toBe('POST');
-        req.flush({ data: { myFamiliar } });
+        req.flush({ data: { myCompanion } });
       }
       // Second detectChanges renders the now-resolved state.
       cmpFixture.detectChanges();
@@ -278,7 +278,7 @@ describe('EvolutionTimelineComponent', () => {
 
     // --- template: not_summoned -------------------------------------------
 
-    it('renders the not_summoned empty state when myFamiliar is null', () => {
+    it('renders the not_summoned empty state when myCompanion is null', () => {
       createAndFlush(null);
       expect(svc.state().status).toBe('not_summoned');
       expect(el.querySelector('[data-testid="evolution-empty"]')).toBeTruthy();

@@ -1,7 +1,7 @@
 /**
  * Tenant lifecycle models — setup wizard, go-live readiness, and offboarding.
  *
- * Source of truth: chora-contracts/openapi/tenancy.yaml
+ * Source of truth: chora-contracts/openapi/tenancy-admin.yaml
  */
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /**
  * Admin assessment service — REST CRUD for AssessmentSession management.
- * Source of truth: chora-contracts/openapi/atomic.yaml §assessments
+ * Source of truth: chora-contracts/openapi/creation-admin.yaml §assessments
  *
  * AssessmentSession is a collection aggregate that queries atoms, does NOT own them.
  * All HTTP calls go through BffClientService (chora-gateway).

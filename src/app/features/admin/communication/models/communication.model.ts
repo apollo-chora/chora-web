@@ -1,7 +1,7 @@
 /**
  * Communication models — notification preferences, trigger rules, email templates.
  *
- * Source of truth: chora-contracts/openapi/communication.yaml
+ * Source of truth: chora-contracts/openapi/notifications-admin.yaml
  */
 
 // ---------------------------------------------------------------------------

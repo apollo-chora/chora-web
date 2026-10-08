@@ -1,12 +1,12 @@
 /**
  * Admin-facing TypeScript interfaces for AssessmentSession CRUD.
- * Source of truth: chora-contracts/openapi/atomic.yaml §AssessmentSession
+ * Source of truth: chora-contracts/openapi/creation-admin.yaml §AssessmentSession
  *
  * AssessmentSession is a collection aggregate that QUERIES atoms — it does NOT own them.
  */
 
 // ---------------------------------------------------------------------------
-// Enums (match OpenAPI atomic.yaml)
+// Enums (match OpenAPI creation-admin.yaml)
 // ---------------------------------------------------------------------------
 
 export type SessionType =

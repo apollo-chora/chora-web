@@ -1,7 +1,7 @@
 /**
  * Billing domain models for subscription management, invoices, promo codes, and usage.
  *
- * Source of truth: chora-contracts/openapi/billing.yaml
+ * Source of truth: chora-contracts/openapi/payments-admin.yaml
  * Backend returns snake_case JSON — these interfaces match directly.
  */
 

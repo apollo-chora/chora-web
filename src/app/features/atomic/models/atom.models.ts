@@ -1,6 +1,6 @@
 /**
  * TypeScript interfaces matching Atomic Content Engine contracts.
- * Source of truth: chora-contracts/openapi/atomic.yaml + chora-contracts/graphql/atomic.graphql
+ * Source of truth: chora-contracts/openapi/creation-admin.yaml + chora-contracts/graphql/creation.graphql
  *
  * Learner-facing reads use GraphQL via POST /api/v1/graphql (ADR-025).
  * Admin CRUD uses REST (OpenAPI).

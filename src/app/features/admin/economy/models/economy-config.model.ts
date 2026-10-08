@@ -1,6 +1,6 @@
 /**
  * Admin-facing TypeScript interfaces for EconomyConfig management.
- * Source of truth: chora-contracts/openapi/gamification.yaml
+ * Source of truth: chora-contracts/openapi/choraverse.yaml
  * Jira: CHO-357, CHO-358
  */
 

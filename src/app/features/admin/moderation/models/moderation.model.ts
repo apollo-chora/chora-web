@@ -1,7 +1,7 @@
 /**
  * Content Moderation models for the moderation dashboard.
  *
- * Source of truth: chora-contracts/openapi/governance.yaml
+ * Source of truth: chora-contracts/openapi/governance-admin.yaml
  * All interfaces match backend snake_case JSON directly.
  */
 

@@ -1,6 +1,6 @@
 /**
  * Identity Portability models — GCID merge, portable data, tenant migration.
- * Source of truth: chora-contracts/openapi/iam.yaml
+ * Source of truth: chora-contracts/openapi/identity-admin.yaml
  *
  * BFF endpoints:
  *   POST /api/v1/gcid/merge

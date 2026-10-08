@@ -1,7 +1,7 @@
 /**
  * Learner-facing notification models.
  *
- * Source of truth: chora-contracts/openapi/communication.yaml
+ * Source of truth: chora-contracts/openapi/notifications-admin.yaml
  */
 
 export type NotificationPriority = 'critical' | 'high' | 'normal' | 'low';

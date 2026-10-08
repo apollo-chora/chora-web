@@ -13,7 +13,7 @@ import { environment } from '../../../../environments/environment';
 function buildFamiliarResponse() {
   return {
     data: {
-      myFamiliar: {
+      myCompanion: {
         id: 'fam-001',
         gcid: 'gcid-learner',
         name: 'Spark',
@@ -124,12 +124,12 @@ describe('FamiliarService', () => {
   // -----------------------------------------------------------------------
 
   describe('loadProfile', () => {
-    it('sends GraphQL query for myFamiliar', () => {
+    it('sends GraphQL query for myCompanion', () => {
       service.loadProfile().subscribe();
 
       const req = httpMock.expectOne(graphqlUrl);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body.query).toContain('myFamiliar');
+      expect(req.request.body.query).toContain('myCompanion');
 
       req.flush(buildFamiliarResponse());
     });
@@ -154,7 +154,7 @@ describe('FamiliarService', () => {
     it('sets not_summoned when familiar is null', () => {
       service.loadProfile().subscribe();
       httpMock.expectOne(graphqlUrl).flush({
-        data: { myFamiliar: null },
+        data: { myCompanion: null },
       });
 
       expect(service.state().status).toBe('not_summoned');
@@ -285,12 +285,12 @@ describe('FamiliarService', () => {
       expect(emitted!.currentSkinId).toBeNull();
     });
 
-    it('emits null and stays not_summoned when myFamiliar is null', () => {
+    it('emits null and stays not_summoned when myCompanion is null', () => {
       let emitted: FamiliarProfile | null = 'pending' as unknown as FamiliarProfile | null;
       service.loadProfile().subscribe((p) => {
         emitted = p;
       });
-      httpMock.expectOne(graphqlUrl).flush({ data: { myFamiliar: null } });
+      httpMock.expectOne(graphqlUrl).flush({ data: { myCompanion: null } });
 
       expect(emitted).toBeNull();
       expect(service.state().status).toBe('not_summoned');

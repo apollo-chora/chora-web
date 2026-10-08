@@ -1,7 +1,7 @@
 /**
  * RBAC admin models for the User Access Matrix.
  *
- * Source of truth: chora-contracts/openapi/iam.yaml
+ * Source of truth: chora-contracts/openapi/identity-admin.yaml
  * These interfaces model the 11 RBAC roles and their capabilities
  * for tenant-scoped user role management.
  */

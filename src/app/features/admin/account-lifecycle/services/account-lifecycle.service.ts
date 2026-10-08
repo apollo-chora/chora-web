@@ -2,7 +2,7 @@
  * AccountLifecycleService — REST adapter for admin account management +
  * the account-closure saga triggers (CHO-1719, ADR-181 D5).
  *
- * Source of truth: chora-contracts/openapi/iam.yaml (admin account CRUD) +
+ * Source of truth: chora-contracts/openapi/identity-admin.yaml (admin account CRUD) +
  * chora-contracts/openapi/auth-gateway.yaml v1.1 (Closure tag).
  * All HTTP calls go through BffClientService.
  *

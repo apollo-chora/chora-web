@@ -2,7 +2,7 @@
  * Admission learner models — learner-facing interfaces for application
  * overview, stage progress, decisions, and document uploads.
  *
- * Source of truth: chora-contracts/openapi/admission.yaml
+ * Source of truth: chora-contracts/openapi/course-application.yaml
  */
 
 // ---------------------------------------------------------------------------

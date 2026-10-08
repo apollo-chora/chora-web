@@ -1,6 +1,6 @@
 /**
  * TypeScript interfaces matching IAM OpenAPI schemas.
- * Source of truth: chora-contracts/openapi/iam.yaml
+ * Source of truth: chora-contracts/openapi/auth-gateway.yaml
  */
 
 export type AccountState = 'active' | 'suspended' | 'pending_deletion' | 'deleted' | 'merged';

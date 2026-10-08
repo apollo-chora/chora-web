@@ -1,7 +1,7 @@
 /**
  * Account lifecycle service — REST calls for account deletion, reactivation,
  * and data export (GDPR Art. 17 & Art. 20).
- * Source of truth: chora-contracts/openapi/iam.yaml
+ * Source of truth: chora-contracts/openapi/identity-admin.yaml
  *
  * Admin CRUD uses REST (OpenAPI). All HTTP calls go through BffClientService.
  */

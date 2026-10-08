@@ -525,15 +525,15 @@ describe('DashboardService', () => {
       xpEarned: 120,
       completedCount: 3,
     };
-    httpMock.expectOne(graphqlUrl).flush({ data: { myDailyDose: session } });
+    httpMock.expectOne(graphqlUrl).flush({ data: { dailyDose: session } });
 
     expect(result).toEqual(session);
   });
 
-  it('loadDailyDose returns null when myDailyDose is absent', () => {
+  it('loadDailyDose returns null when dailyDose is absent', () => {
     let result: unknown = 'unset';
     service.loadDailyDose().subscribe((r) => (result = r));
-    httpMock.expectOne(graphqlUrl).flush({ data: { myDailyDose: null } });
+    httpMock.expectOne(graphqlUrl).flush({ data: { dailyDose: null } });
 
     expect(result).toBeNull();
   });

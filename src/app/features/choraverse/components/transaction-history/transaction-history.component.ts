@@ -3,7 +3,7 @@
  *
  * Displays earned/spent/refunded transactions with type badges and amount prefixes.
  *
- * @see chora-contracts/openapi/gamification.yaml (CoinTransaction)
+ * @see chora-contracts/openapi/choraverse.yaml (CoinTransaction)
  */
 import {
   Component,

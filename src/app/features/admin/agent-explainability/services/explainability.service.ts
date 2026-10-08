@@ -1,7 +1,7 @@
 /**
  * ExplainabilityService — REST adapter for the governance investigation agent.
  *
- * Source of truth: chora-contracts/openapi/governance.yaml
+ * Source of truth: chora-contracts/openapi/governance-admin.yaml
  * All HTTP calls go through BffClientService.
  */
 import { Injectable, inject, signal, computed } from '@angular/core';

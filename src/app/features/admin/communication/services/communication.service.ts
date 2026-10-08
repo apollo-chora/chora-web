@@ -2,7 +2,7 @@
  * CommunicationService — REST adapter for notification preferences,
  * trigger rules, and email templates.
  *
- * Source of truth: chora-contracts/openapi/communication.yaml
+ * Source of truth: chora-contracts/openapi/notifications-admin.yaml
  * All HTTP calls go through BffClientService.
  */
 import { Injectable, inject, signal } from '@angular/core';

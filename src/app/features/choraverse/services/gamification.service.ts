@@ -16,7 +16,7 @@ import type {
 /**
  * GamificationService — manages reward store, coin economy, and bounty state via BFF.
  *
- * @see chora-contracts/openapi/gamification.yaml
+ * @see chora-contracts/openapi/choraverse.yaml
  */
 @Injectable({ providedIn: 'root' })
 export class GamificationService {

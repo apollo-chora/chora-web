@@ -1,6 +1,6 @@
 /**
  * Admin-facing TypeScript interfaces for TopicNode management.
- * Source of truth: chora-contracts/openapi/atomic.yaml §TopicNode
+ * Source of truth: chora-contracts/openapi/creation-admin.yaml §TopicNode
  */
 
 // ---------------------------------------------------------------------------

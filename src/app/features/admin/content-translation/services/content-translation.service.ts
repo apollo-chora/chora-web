@@ -1,7 +1,7 @@
 /**
  * ContentTranslationService — REST adapter for the CMS translation agent.
  *
- * Source of truth: chora-contracts/openapi/cms.yaml
+ * Source of truth: chora-contracts/openapi/ai-kernel-admin.yaml
  * All HTTP calls go through BffClientService.
  */
 import { Injectable, inject, signal, computed } from '@angular/core';

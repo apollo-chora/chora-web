@@ -1,6 +1,6 @@
 /**
  * Admin locked path service — REST CRUD for LockedPath management.
- * Source of truth: chora-contracts/openapi/atomic.yaml §locked-paths
+ * Source of truth: chora-contracts/openapi/creation-admin.yaml §locked-paths
  *
  * LockedPath is a collection aggregate that queries atoms, does NOT own them.
  * All HTTP calls go through BffClientService (chora-gateway).

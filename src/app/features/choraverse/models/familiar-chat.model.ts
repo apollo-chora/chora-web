@@ -2,7 +2,7 @@
  * Familiar chat models — chat messages, persona snapshots, memory entries.
  *
  * @see PLAN.md §3.43 (Familiar & Choraverse)
- * @see chora-contracts/openapi/familiar.yaml
+ * @see chora-contracts/openapi/consumption-companion-chat.yaml
  */
 
 import type { Citation, FamiliarSpecies } from './familiar.model';
