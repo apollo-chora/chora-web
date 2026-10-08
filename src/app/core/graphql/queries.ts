@@ -92,20 +92,3 @@ export const QUERY_MY_FAMILIAR = `
     }
   }
 `;
-
-/** Familiar interaction stats */
-export const QUERY_MY_FAMILIAR_STATS = `
-  query MyFamiliarStats {
-    myFamiliarStats {
-      familiarId
-      totalInteractions
-      encouragementsGiven
-      questsCompleted
-      streakAssists
-      moodHistory {
-        mood
-        recordedAt
-      }
-    }
-  }
-`;

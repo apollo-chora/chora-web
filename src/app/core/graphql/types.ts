@@ -113,20 +113,6 @@ export interface GqlFamiliar {
   updatedAt: string;
 }
 
-export interface GqlFamiliarStats {
-  familiarId: string;
-  totalInteractions: number;
-  encouragementsGiven: number;
-  questsCompleted: number;
-  streakAssists: number;
-  moodHistory: GqlMoodEntry[];
-}
-
-export interface GqlMoodEntry {
-  mood: string;
-  recordedAt: string;
-}
-
 // ---------------------------------------------------------------------------
 // Knowledge Graph — Topic Tree with Retention (GraphQL wire format)
 // ---------------------------------------------------------------------------

@@ -2,14 +2,14 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Observable, map, tap, catchError, of } from 'rxjs';
 import { GraphQLService } from '../../../core/services/graphql.service';
 import { BffClientService } from '../../../core/services/bff-client.service';
-import { QUERY_MY_FAMILIAR, QUERY_MY_FAMILIAR_STATS } from '../../../core/graphql/queries';
-import type { GqlFamiliar, GqlFamiliarStats } from '../../../core/graphql/types';
+import { QUERY_MY_FAMILIAR } from '../../../core/graphql/queries';
+import type { GqlFamiliar } from '../../../core/graphql/types';
 import { FamiliarProfile, FamiliarSpecies, PersonalityTraits, FamiliarSkin, FamiliarChatMessage, FamiliarState, EvolutionMilestone, SummoningState } from '../models/familiar.model';
 
 /**
  * FamiliarService — manages Familiar companion state via BFF.
  *
- * Learner-facing reads (myCompanion, myFamiliarStats) use GraphQL (ADR-025).
+ * Learner-facing reads (myCompanion) use GraphQL (ADR-025).
  * Mutations (summon, purchase skin) use REST via BffClientService.
  *
  * @see .claude/skills/coding-angular/SKILL.md (HTTP & API Client Patterns)
@@ -42,39 +42,6 @@ function mapFamiliarProfile(gql: GqlFamiliar): FamiliarProfile {
 }
 
 // ---------------------------------------------------------------------------
-// Familiar stats types (snake_case domain format)
-// ---------------------------------------------------------------------------
-
-export interface FamiliarStatsData {
-  familiar_id: string;
-  total_interactions: number;
-  encouragements_given: number;
-  quests_completed: number;
-  streak_assists: number;
-  mood_history: { mood: string; recorded_at: string }[];
-}
-
-export type FamiliarStatsState =
-  | { status: 'idle' }
-  | { status: 'loading' }
-  | { status: 'success'; stats: FamiliarStatsData }
-  | { status: 'error'; error: { code: string; message: string } };
-
-function mapFamiliarStats(gql: GqlFamiliarStats): FamiliarStatsData {
-  return {
-    familiar_id: gql.familiarId,
-    total_interactions: gql.totalInteractions,
-    encouragements_given: gql.encouragementsGiven,
-    quests_completed: gql.questsCompleted,
-    streak_assists: gql.streakAssists,
-    mood_history: gql.moodHistory.map((m) => ({
-      mood: m.mood,
-      recorded_at: m.recordedAt,
-    })),
-  };
-}
-
-// ---------------------------------------------------------------------------
 // Service
 // ---------------------------------------------------------------------------
 
@@ -85,10 +52,6 @@ export class FamiliarService {
 
   /** Familiar profile state — discriminated union */
   readonly state = signal<FamiliarState>({ status: 'loading' });
-
-  /** Familiar stats state */
-  private readonly _statsState = signal<FamiliarStatsState>({ status: 'idle' });
-  readonly statsState = this._statsState.asReadonly();
 
   /** Chat message history */
   readonly messages = signal<FamiliarChatMessage[]>([]);
@@ -111,12 +74,6 @@ export class FamiliarService {
     return s.status === 'success' ? s.profile.evolutionLevel : 0;
   });
 
-  /** Derived: familiar stats (convenience accessor) */
-  readonly stats = computed(() => {
-    const s = this._statsState();
-    return s.status === 'success' ? s.stats : null;
-  });
-
   // ---------------------------------------------------------------------------
   // Load familiar profile via GraphQL
   // ---------------------------------------------------------------------------
@@ -137,30 +94,6 @@ export class FamiliarService {
         this.state.set({
           status: 'error',
           error: { code: 'FAMILIAR_LOAD_FAILED', message: err.message },
-        });
-        return of(null);
-      }),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Load familiar stats via GraphQL
-  // ---------------------------------------------------------------------------
-
-  loadStats(): Observable<FamiliarStatsData | null> {
-    this._statsState.set({ status: 'loading' });
-
-    return this.gql.query<{ myFamiliarStats: GqlFamiliarStats | null }>(QUERY_MY_FAMILIAR_STATS).pipe(
-      map((data) => data?.myFamiliarStats ? mapFamiliarStats(data.myFamiliarStats) : null),
-      tap((statsData) => {
-        if (statsData) {
-          this._statsState.set({ status: 'success', stats: statsData });
-        }
-      }),
-      catchError((err: Error) => {
-        this._statsState.set({
-          status: 'error',
-          error: { code: 'FAMILIAR_STATS_LOAD_FAILED', message: err.message },
         });
         return of(null);
       }),
@@ -231,7 +164,6 @@ export class FamiliarService {
 
   resetState(): void {
     this.state.set({ status: 'loading' });
-    this._statsState.set({ status: 'idle' });
     this.summoningState.set({ status: 'idle' });
     this.justSummoned.set(false);
     this.messages.set([]);

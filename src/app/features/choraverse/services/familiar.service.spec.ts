@@ -30,24 +30,6 @@ function buildFamiliarResponse() {
   };
 }
 
-function buildFamiliarStatsResponse() {
-  return {
-    data: {
-      myFamiliarStats: {
-        familiarId: 'fam-001',
-        totalInteractions: 150,
-        encouragementsGiven: 45,
-        questsCompleted: 12,
-        streakAssists: 7,
-        moodHistory: [
-          { mood: 'happy', recordedAt: '2026-03-16T10:00:00Z' },
-          { mood: 'excited', recordedAt: '2026-03-15T10:00:00Z' },
-        ],
-      },
-    },
-  };
-}
-
 /** REST mutation response (FamiliarProfile domain shape, returned by BFF). */
 function buildFamiliarProfile(overrides: Partial<FamiliarProfile> = {}): FamiliarProfile {
   return {
@@ -114,11 +96,6 @@ describe('FamiliarService', () => {
     expect(service.evolutionLevel()).toBe(0);
   });
 
-  it('starts with idle stats state', () => {
-    expect(service.statsState().status).toBe('idle');
-    expect(service.stats()).toBeNull();
-  });
-
   // -----------------------------------------------------------------------
   // loadProfile
   // -----------------------------------------------------------------------
@@ -176,86 +153,6 @@ describe('FamiliarService', () => {
       httpMock.expectOne(graphqlUrl).error(new ProgressEvent('error'));
 
       expect(service.state().status).toBe('error');
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  // loadStats
-  // -----------------------------------------------------------------------
-
-  describe('loadStats', () => {
-    it('sends GraphQL query for myFamiliarStats', () => {
-      service.loadStats().subscribe();
-
-      const req = httpMock.expectOne(graphqlUrl);
-      expect(req.request.body.query).toContain('myFamiliarStats');
-
-      req.flush(buildFamiliarStatsResponse());
-    });
-
-    it('maps familiar stats on success', () => {
-      service.loadStats().subscribe();
-      httpMock.expectOne(graphqlUrl).flush(buildFamiliarStatsResponse());
-
-      expect(service.statsState().status).toBe('success');
-      const stats = service.stats();
-      expect(stats).toBeTruthy();
-      expect(stats?.familiar_id).toBe('fam-001');
-      expect(stats?.total_interactions).toBe(150);
-      expect(stats?.encouragements_given).toBe(45);
-      expect(stats?.quests_completed).toBe(12);
-      expect(stats?.streak_assists).toBe(7);
-      expect(stats?.mood_history).toHaveLength(2);
-      expect(stats?.mood_history[0].mood).toBe('happy');
-      expect(stats?.mood_history[0].recorded_at).toBe('2026-03-16T10:00:00Z');
-    });
-
-    it('sets error state on failure', () => {
-      service.loadStats().subscribe();
-      httpMock.expectOne(graphqlUrl).flush({
-        data: null,
-        errors: [{ message: 'Stats not available' }],
-      });
-
-      expect(service.statsState().status).toBe('error');
-    });
-
-    it('sets error state on network failure', () => {
-      service.loadStats().subscribe();
-      httpMock.expectOne(graphqlUrl).error(new ProgressEvent('error'));
-
-      expect(service.statsState().status).toBe('error');
-    });
-
-    it('keeps stats null and does not enter success when myFamiliarStats is null', () => {
-      service.loadStats().subscribe();
-      httpMock.expectOne(graphqlUrl).flush({
-        data: { myFamiliarStats: null },
-      });
-
-      // null stats short-circuits the success branch — state stays loading
-      expect(service.statsState().status).toBe('loading');
-      expect(service.stats()).toBeNull();
-    });
-
-    it('maps an empty mood_history array', () => {
-      service.loadStats().subscribe();
-      httpMock.expectOne(graphqlUrl).flush({
-        data: {
-          myFamiliarStats: {
-            familiarId: 'fam-002',
-            totalInteractions: 0,
-            encouragementsGiven: 0,
-            questsCompleted: 0,
-            streakAssists: 0,
-            moodHistory: [],
-          },
-        },
-      });
-
-      expect(service.statsState().status).toBe('success');
-      expect(service.stats()?.familiar_id).toBe('fam-002');
-      expect(service.stats()?.mood_history).toEqual([]);
     });
   });
 
@@ -483,16 +380,11 @@ describe('FamiliarService', () => {
       service.loadProfile().subscribe();
       httpMock.expectOne(graphqlUrl).flush(buildFamiliarResponse());
 
-      service.loadStats().subscribe();
-      httpMock.expectOne(graphqlUrl).flush(buildFamiliarStatsResponse());
-
       expect(service.isSummoned()).toBe(true);
-      expect(service.stats()).toBeTruthy();
 
       service.resetState();
 
       expect(service.state().status).toBe('loading');
-      expect(service.statsState().status).toBe('idle');
       expect(service.messages()).toEqual([]);
       expect(service.skins()).toEqual([]);
       expect(service.milestones()).toEqual([]);
