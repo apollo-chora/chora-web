@@ -607,7 +607,7 @@ describe('MeManaService — grantDemoMana()', () => {
     httpMock.expectNone((r) => r.method === 'GET');
   });
 
-  it('mints a FRESH Idempotency-Key per call (a retry replays, never double-credits)', () => {
+  it('mints a NEW Idempotency-Key for a new deliberate grant after one succeeded', () => {
     service.grantDemoMana();
     const first = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
     const firstKey = first.request.headers.get('Idempotency-Key');
@@ -623,6 +623,100 @@ describe('MeManaService — grantDemoMana()', () => {
     httpMock
       .expectOne((r) => r.method === 'GET' && r.url.includes('/api/v1/me/mana'))
       .flush(buildMana({ balance_units: 100_240 }));
+  });
+
+  it('REUSES the attempt key when the retry follows a lost response', () => {
+    const keySpy = vi.spyOn(
+      service as unknown as { newIdempotencyKey(): string },
+      'newIdempotencyKey',
+    );
+
+    // The request reaches the BE but the response never arrives — the grant
+    // may already have landed, so a fresh key here would credit a SECOND time.
+    service.grantDemoMana();
+    const first = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    const attemptKey = first.request.headers.get('Idempotency-Key');
+    expect(attemptKey).toMatch(UUID_RE);
+    first.error(new ProgressEvent('Network error'));
+    expect(service.demoGrantState().status).toBe('error');
+
+    // Retry of the SAME attempt — same key, so the BE replays the original.
+    service.grantDemoMana();
+    const retry = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    expect(retry.request.headers.get('Idempotency-Key')).toBe(attemptKey);
+    retry.flush(buildDemoGrant({ replayed: true }));
+    httpMock
+      .expectOne((r) => r.method === 'GET' && r.url.includes('/api/v1/me/mana'))
+      .flush(buildMana({ balance_units: 100_240 }));
+
+    // One attempt, one key — minted on the first click, not per call.
+    expect(keySpy).toHaveBeenCalledTimes(1);
+    const s = service.demoGrantState();
+    expect(s.status).toBe('success');
+    if (s.status === 'success') {
+      expect(s.result.replayed).toBe(true);
+    }
+  });
+
+  it('reuses the attempt key after a retryable 5xx too', () => {
+    service.grantDemoMana();
+    const first = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    const attemptKey = first.request.headers.get('Idempotency-Key');
+    first.flush(null, { status: 502, statusText: 'Bad Gateway' });
+
+    service.grantDemoMana();
+    const retry = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    expect(retry.request.headers.get('Idempotency-Key')).toBe(attemptKey);
+    retry.flush(null, { status: 502, statusText: 'Bad Gateway' });
+
+    // Still the same attempt — a third click must not rotate the key either.
+    service.grantDemoMana();
+    const third = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    expect(third.request.headers.get('Idempotency-Key')).toBe(attemptKey);
+    third.flush(buildDemoGrant({ replayed: true }));
+    httpMock
+      .expectOne((r) => r.method === 'GET' && r.url.includes('/api/v1/me/mana'))
+      .flush(buildMana({ balance_units: 100_240 }));
+  });
+
+  it('retains the attempt key across clearDemoGrantState() (dismiss is not a new grant)', () => {
+    service.grantDemoMana();
+    const first = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    const attemptKey = first.request.headers.get('Idempotency-Key');
+    first.flush(null, { status: 502, statusText: 'Bad Gateway' });
+
+    service.clearDemoGrantState();
+    expect(service.demoGrantState().status).toBe('idle');
+
+    service.grantDemoMana();
+    const retry = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    expect(retry.request.headers.get('Idempotency-Key')).toBe(attemptKey);
+    retry.flush(buildDemoGrant({ replayed: true }));
+    httpMock
+      .expectOne((r) => r.method === 'GET' && r.url.includes('/api/v1/me/mana'))
+      .flush(buildMana({ balance_units: 100_240 }));
+  });
+
+  it('IGNORES concurrent clicks while a grant is pending (no second request, no key rotation)', () => {
+    service.grantDemoMana();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    const attemptKey = req.request.headers.get('Idempotency-Key');
+    expect(service.demoGrantState().status).toBe('submitting');
+
+    // Two more clicks while the first request is still in flight.
+    service.grantDemoMana();
+    service.grantDemoMana();
+
+    // Nothing new on the wire, and the pending attempt is untouched.
+    httpMock.expectNone((r) => r.url.endsWith('/api/v1/me/mana/demo-grant'));
+    expect(service.demoGrantState().status).toBe('submitting');
+    expect(req.request.headers.get('Idempotency-Key')).toBe(attemptKey);
+
+    req.flush(buildDemoGrant());
+    httpMock
+      .expectOne((r) => r.method === 'GET' && r.url.includes('/api/v1/me/mana'))
+      .flush(buildMana({ balance_units: 100_240 }));
+    expect(service.demoGrantState().status).toBe('success');
   });
 
   it('maps 404 to demo_grant_error_unavailable (demo mode off for this tenant)', () => {

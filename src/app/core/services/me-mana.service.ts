@@ -19,10 +19,12 @@
  * distinct `insufficient` state so the consumer can open the top-up
  * modal directly off the typed shape.
  *
- * `load()`, `topup()` and `grantDemoMana()` are all idempotent for retry
- * CTAs. `grantDemoMana()` is a DEDICATED demo operation — it does NOT
- * repurpose the retired Stripe `topup()` route, and it re-fetches the
- * authoritative balance on success rather than patching it optimistically.
+ * `load()` and `topup()` are idempotent for retry CTAs. `grantDemoMana()` is
+ * a DEDICATED demo operation — it does NOT repurpose the retired Stripe
+ * `topup()` route, and it re-fetches the authoritative balance on success
+ * rather than patching it optimistically. Its Idempotency-Key is scoped to
+ * the ATTEMPT (`demoGrantKey`): minted when a grant attempt begins, reused by
+ * a retry of that attempt, replaced only after an attempt succeeded.
  */
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { catchError, map, of, take } from 'rxjs';
@@ -79,6 +81,13 @@ export class MeManaService {
   // ── Demo-grant state (POST /api/v1/me/mana/demo-grant) ──────────────
   private readonly _demoGrantState = signal<MeManaDemoGrantState>({ status: 'idle' });
   readonly demoGrantState = this._demoGrantState.asReadonly();
+  /**
+   * Idempotency key of the demo-grant ATTEMPT — minted when an attempt
+   * begins, reused by every retry of that attempt, and cleared only once an
+   * attempt succeeds (so the next click is a new, deliberate grant).
+   * `null` = no attempt to retry.
+   */
+  private demoGrantKey: string | null = null;
 
   // ── Checkout state (POST /api/v1/checkout/user-mana → Stripe redirect) ──
   private readonly _checkoutState = signal<MeManaCheckoutState>({ status: 'idle' });
@@ -169,8 +178,14 @@ export class MeManaService {
    * A DEDICATED demo operation, deliberately NOT a repurposing of the retired
    * Stripe `topup()`: there is no payment intent, no `amount_cents`, no
    * `payment_method_id` — the BE mints a ledger-backed grant off the session
-   * alone. Each call mints a FRESH UUID Idempotency-Key, so a retried click
-   * replays the original grant instead of crediting twice.
+   * alone.
+   *
+   * Idempotency is scoped to the ATTEMPT, not the call: the key is minted when
+   * an attempt begins and reused by every retry of that attempt, so a retry
+   * after a lost response REPLAYS the original grant instead of minting a
+   * second one. A click while a request is pending is ignored (the key is not
+   * rotated mid-attempt), and the key is replaced only after an attempt
+   * succeeded — a new deliberate grant.
    *
    * On success the balance is re-fetched from the BE (`load()`) rather than
    * patched optimistically: the grant is additive + idempotent on the ledger,
@@ -179,8 +194,15 @@ export class MeManaService {
    * the last-known balance until the refresh lands.
    */
   grantDemoMana(): void {
+    // Concurrent-click guard — a click while a grant is pending is dropped
+    // rather than racing a second grant under a second key. The wallet button
+    // is disabled on the same condition; this is the backstop for any other
+    // caller.
+    if (this._demoGrantState().status === 'submitting') return;
+    const key = this.demoGrantKey ?? this.newIdempotencyKey();
+    this.demoGrantKey = key;
     this._demoGrantState.set({ status: 'submitting' });
-    const headers = new HttpHeaders({ 'Idempotency-Key': this.newIdempotencyKey() });
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
     this.bff
       .post<ManaDemoGrantResponse>('/api/v1/me/mana/demo-grant', null, { headers })
       .pipe(
@@ -196,6 +218,10 @@ export class MeManaService {
       .subscribe((s) => {
         this._demoGrantState.set(s);
         if (s.status === 'success') {
+          // Attempt concluded: the next click is a NEW grant and must not
+          // replay this one. On failure the key is RETAINED so the retry
+          // replays instead of double-crediting.
+          this.demoGrantKey = null;
           this.load();
         }
       });
@@ -214,7 +240,12 @@ export class MeManaService {
     return `idem-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
-  /** Reset the demo-grant state — call from the wallet card on dismiss. */
+  /**
+   * Reset the demo-grant state — call from the wallet card on dismiss. The
+   * attempt key is deliberately RETAINED: a click after a dismissed error is
+   * still a retry of the same attempt, and reusing the key can only replay a
+   * grant that may already have landed, never mint a second one.
+   */
   clearDemoGrantState(): void {
     this._demoGrantState.set({ status: 'idle' });
   }
