@@ -26,8 +26,16 @@ export const environment: {
   demoManaTopup: boolean;
 } = {
   production: true,
-  bffBaseUrl: 'https://api.chora.site',
-  wsBaseUrl: 'wss://api.chora.site',
+  // SAME-ORIGIN API base. chora-web's nginx reverse-proxies /api/* to the
+  // gateway precisely so "the browser only ever talks to one origin (no CORS,
+  // no mixed content)" (nginx.conf:4-5). An absolute base here defeats that:
+  // on this deployment `api.chora.site` resolves to a different, 503-ing host,
+  // so login failed with a status-0 network error. An empty base makes every
+  // bff-client call relative, which is what the proxy is built for.
+  bffBaseUrl: '',
+  // Empty → the realtime channel falls back to the location-derived ws origin
+  // (see live-classroom-play.service.spec.ts). Same reasoning as above.
+  wsBaseUrl: '',
   supportEmail: 'support@chora.site',
   realtimeEnabled: true,
   demoManaTopup: true,
