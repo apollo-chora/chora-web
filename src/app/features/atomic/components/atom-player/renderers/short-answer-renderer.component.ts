@@ -1,10 +1,19 @@
 import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { ChoraQuestionImageComponent } from '../../../../../shared/components/chora-question-image/chora-question-image.component';
 
 @Component({
   selector: 'chora-short-answer-renderer',
+  imports: [ChoraQuestionImageComponent],
   template: `
     <div class="short-answer-renderer" data-testid="short-answer-renderer">
       <p class="short-answer-renderer__stem" data-testid="short-answer-stem">{{ stem() }}</p>
+
+      @if (questionImageUrl(); as url) {
+        <chora-question-image
+          [src]="url"
+          alt="Generated question illustration"
+          testIdPrefix="short-answer-question-image" />
+      }
 
       <label class="short-answer-renderer__field">
         <textarea
@@ -69,6 +78,9 @@ export class ShortAnswerRendererComponent {
   readonly stem = () =>
     (this.content()['stem'] as string) ?? (this.content()['question'] as string) ?? '';
   readonly maxLength = () => (this.content()['max_length'] as number | undefined) ?? null;
+
+  readonly questionImageUrl = (): string =>
+    (this.content()['image_url'] as string) ?? '';
 
   onInput(event: Event): void {
     const text = (event.target as HTMLTextAreaElement).value;
