@@ -899,6 +899,63 @@ describe('AuthService', () => {
         vi.useRealTimers();
       }
     });
+
+    it('keeps a newer credential when a concurrent rotation already replaced the failed token', async () => {
+      localStorage.setItem('chora_refresh_token', 'token-old');
+      const clearSpy = vi.spyOn(service, 'clearAuth');
+      const resultP = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+      });
+      // The winning tab stores its replacement before this tab's failed
+      // refresh is handled — clearAuth must NOT delete the newer credential.
+      localStorage.setItem('chora_refresh_token', 'token-new');
+      const req = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+      req.flush(
+        { error: { code: 'AUTH_REFRESH_REVOKED', message: 'consumed' } },
+        { status: 401, statusText: 'Unauthorized' },
+      );
+
+      expect(await resultP).toBe(false);
+      expect(clearSpy).not.toHaveBeenCalled();
+      expect(localStorage.getItem('chora_refresh_token')).toBe('token-new');
+    });
+
+    it('logout waits for an in-flight refresh and revokes the replacement', async () => {
+      localStorage.setItem('chora_refresh_token', 'token-old');
+      const navigateSpy = vi.spyOn(router, 'navigate');
+      // Drive the REAL silentRefresh: the refresh HTTP request stays pending
+      // while logout runs, so refreshInFlight is set and logout must wait.
+      const resultP = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+      });
+      const refreshReq = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+
+      service.logout();
+      // The refresh is still in flight → logout has not revoked yet.
+      expect(httpMock.match((r) => r.url.includes('/api/v1/auth/logout')).length).toBe(0);
+
+      // The refresh completes, storing a replacement; logout then revokes it.
+      refreshReq.flush({
+        access_token: createJwt({
+          sub: 'g1', gcid: 'g1', email: 't@e', tenant_id: 't1', roles: [],
+          exp: Math.floor(Date.now() / 1000) + 3600,
+        }),
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'token-replacement',
+        refresh_expires_in: 604800,
+        gcid: 'g1',
+      });
+      httpMock.expectOne(isLegacyTenantList).flush({ data: [] });
+      httpMock.expectOne(isTenantMe).flush({});
+      httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [] });
+
+      const logoutReq = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/logout'));
+      expect(logoutReq.request.body).toEqual({ refresh_token: 'token-replacement' });
+      logoutReq.flush({ revoked: true });
+      expect(await resultP).toBe(true);
+      expect(navigateSpy).toHaveBeenCalledWith(['/login']);
+    });
   });
 
   // ──────────────────────────────────────────────────────────────────

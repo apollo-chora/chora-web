@@ -289,4 +289,38 @@ describe('authInterceptor', () => {
     expect(betaRetry.request.headers.has('Authorization')).toBe(false);
     betaRetry.flush({});
   });
+
+  // A waiting request must observe the refresh RESULT, not just "done": when
+  // the refresh FAILS it propagates the 401 instead of retrying without a token.
+  it('should not retry waiting requests without a token when refresh fails', () => {
+    authService.setUser(
+      { gcid: 'g1', tenantId: 't1', roles: [], capabilities: [], displayName: 'Test', email: 'test@example.com' },
+      'old-token',
+    );
+    const refreshGate = new Subject<boolean>();
+    vi.spyOn(authService, 'silentRefresh').mockReturnValue(refreshGate.asObservable());
+    const clearSpy = vi.spyOn(authService, 'clearAuth');
+
+    let oneStatus = 0;
+    let twoStatus = 0;
+    // Two requests 401; the first starts the refresh, the second waits.
+    http.get(`${GW}/api/v1/one`).subscribe({ error: (e) => (oneStatus = e.status) });
+    http.get(`${GW}/api/v1/two`).subscribe({ error: (e) => (twoStatus = e.status) });
+    httpMock
+      .match(`${GW}/api/v1/one`)
+      .forEach((r) => r.flush(null, { status: 401, statusText: 'Unauthorized' }));
+    httpMock
+      .match(`${GW}/api/v1/two`)
+      .forEach((r) => r.flush(null, { status: 401, statusText: 'Unauthorized' }));
+
+    // The refresh fails.
+    refreshGate.next(false);
+    refreshGate.complete();
+
+    // Auth is cleared and BOTH requests surface 401 — neither retried without a
+    // bearer token (which would have caused a second 401 loop).
+    expect(clearSpy).toHaveBeenCalled();
+    expect(oneStatus).toBe(401);
+    expect(twoStatus).toBe(401);
+  });
 });

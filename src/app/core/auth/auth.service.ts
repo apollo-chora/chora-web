@@ -176,7 +176,13 @@ export class AuthService {
             return of(true);
           }),
           catchError(() => {
-            this.clearAuth();
+            // Another tab may have already rotated this token and stored a
+            // newer credential. Only clear the local session if the FAILED
+            // token is still the stored one — never delete a newer credential
+            // written by a concurrent rotation (that would strand the other tab).
+            if (this.storedRefreshToken() === stored) {
+              this.clearAuth();
+            }
             return of(false);
           }),
           shareReplay({ bufferSize: 1, refCount: false }),
@@ -314,19 +320,30 @@ export class AuthService {
   }
 
   logout(): void {
-    // Send the refresh token so the gateway can revoke the durable half of
-    // the session; clearAuth drops the local copy either way.
-    const refreshToken = this.storedRefreshToken();
-    this.bff.post('/api/v1/auth/logout', refreshToken ? { refresh_token: refreshToken } : {}).subscribe({
-      complete: () => {
-        this.clearAuth();
-        this.router.navigate(['/login']);
-      },
-      error: () => {
-        this.clearAuth();
-        this.router.navigate(['/login']);
-      },
-    });
+    // Revoke the durable half of the session. Wait for any in-flight refresh
+    // first so we revoke the LATEST credential — a concurrent rotation may have
+    // stored a replacement after we first read the token, and revoking only
+    // the stale one would leave the replacement live on the gateway.
+    const revokeLatest = () => {
+      const refreshToken = this.storedRefreshToken();
+      this.bff
+        .post('/api/v1/auth/logout', refreshToken ? { refresh_token: refreshToken } : {})
+        .subscribe({
+          complete: () => {
+            this.clearAuth();
+            this.router.navigate(['/login']);
+          },
+          error: () => {
+            this.clearAuth();
+            this.router.navigate(['/login']);
+          },
+        });
+    };
+    if (this.refreshInFlight) {
+      this.refreshInFlight.subscribe({ complete: revokeLatest, error: revokeLatest });
+    } else {
+      revokeLatest();
+    }
   }
 
   private mapMembershipsToTenantContext(
