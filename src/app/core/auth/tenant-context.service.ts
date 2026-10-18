@@ -74,9 +74,9 @@ export class TenantContextService {
   /**
    * Read-only accessor for the persisted active tenant id (null when
    * nothing has been stored or storage is unavailable). Retained for the
-   * mint request's `active_tenant_id` hint; a cold load no longer
-   * re-mints (no refresh tokens in this milestone), so the value is
-   * informational until a re-authentication happens.
+   * mint request's `active_tenant_id` hint; a cold load re-mints via the
+   * persisted refresh token, so the value survives until a sign-out clears
+   * it.
    */
   readPersistedActiveTenantId(): string | null {
     try {

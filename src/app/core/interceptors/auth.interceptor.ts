@@ -8,15 +8,22 @@ import { environment } from '../../../environments/environment';
 // The session mint is anonymous (it IS the auth-establishing call) and the
 // webauthn/gcid routes manage their own challenge semantics, so none of
 // them receive the Bearer header or take part in the 401-refresh dance.
+// The refresh route is excluded for the same reason PLUS recursion: it is
+// called BY the 401 handler — a 401 on the refresh call itself (expired or
+// revoked record) must clear the session, not re-enter the dance.
 const AUTH_ENDPOINTS = [
   '/api/v1/auth/webauthn/',
   '/api/v1/auth/session/mint',
+  '/api/v1/auth/session/refresh',
   '/api/v1/auth/logout',
   '/api/v1/gcid',
 ];
 
 let isRefreshing = false;
-const refreshSubject = new BehaviorSubject<boolean>(false);
+// null = no refresh in flight / no result yet; true = last refresh succeeded;
+// false = last refresh failed. Waiting requests observe the RESULT (not just
+// "done"), so they retry only on success and propagate auth failure otherwise.
+const refreshSubject = new BehaviorSubject<boolean | null>(null);
 
 function isAuthEndpoint(url: string): boolean {
   return AUTH_ENDPOINTS.some((ep) => url.includes(ep));
@@ -73,12 +80,12 @@ function handle401(
 ): Observable<import('@angular/common/http').HttpEvent<unknown>> {
   if (!isRefreshing) {
     isRefreshing = true;
-    refreshSubject.next(false);
+    refreshSubject.next(null);
 
     return authService.silentRefresh().pipe(
       switchMap((success) => {
         isRefreshing = false;
-        refreshSubject.next(true);
+        refreshSubject.next(success);
 
         if (success) {
           const token = authService.getToken();
@@ -89,7 +96,7 @@ function handle401(
       }),
       catchError((err) => {
         isRefreshing = false;
-        refreshSubject.next(true);
+        refreshSubject.next(false);
         authService.clearAuth();
         return throwError(() => err);
       }),
@@ -97,9 +104,12 @@ function handle401(
   }
 
   return refreshSubject.pipe(
-    filter((ready) => ready),
+    filter((result) => result !== null),
     take(1),
-    switchMap(() => {
+    switchMap((success) => {
+      if (!success) {
+        return throwError(() => new HttpErrorResponse({ status: 401 }));
+      }
       const token = authService.getToken();
       return next(token ? addBearerToken(req, token) : req);
     }),

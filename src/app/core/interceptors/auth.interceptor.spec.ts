@@ -78,6 +78,27 @@ describe('authInterceptor', () => {
     req.flush({});
   });
 
+  it('should not re-enter the refresh dance when the refresh call itself 401s', () => {
+    // The interceptor CALLS /api/v1/auth/session/refresh from handle401 — a
+    // 401 there (expired/revored record) must surface as an error, not
+    // recurse into another silentRefresh attempt.
+    const refreshSpy = vi.spyOn(authService, 'silentRefresh');
+    let receivedStatus = 0;
+    http.post(`${GW}/api/v1/auth/session/refresh`, { refresh_token: 'dead' }).subscribe({
+      error: (err) => (receivedStatus = err.status),
+    });
+
+    const req = httpMock.expectOne(`${GW}/api/v1/auth/session/refresh`);
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    req.flush(
+      { error: { code: 'AUTH_REFRESH_EXPIRED', message: 'refresh token expired' } },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+
+    expect(receivedStatus).toBe(401);
+    expect(refreshSpy).not.toHaveBeenCalled();
+  });
+
   it('should NOT attach Bearer to non-gateway static-asset requests', () => {
     // i18n JSON + other static assets are served from the GCS CDN
     // (chora.site/assets/*), not the gateway. Attaching a Bearer there
@@ -267,5 +288,39 @@ describe('authInterceptor', () => {
     const betaRetry = httpMock.expectOne(`${GW}/api/v1/beta`);
     expect(betaRetry.request.headers.has('Authorization')).toBe(false);
     betaRetry.flush({});
+  });
+
+  // A waiting request must observe the refresh RESULT, not just "done": when
+  // the refresh FAILS it propagates the 401 instead of retrying without a token.
+  it('should not retry waiting requests without a token when refresh fails', () => {
+    authService.setUser(
+      { gcid: 'g1', tenantId: 't1', roles: [], capabilities: [], displayName: 'Test', email: 'test@example.com' },
+      'old-token',
+    );
+    const refreshGate = new Subject<boolean>();
+    vi.spyOn(authService, 'silentRefresh').mockReturnValue(refreshGate.asObservable());
+    const clearSpy = vi.spyOn(authService, 'clearAuth');
+
+    let oneStatus = 0;
+    let twoStatus = 0;
+    // Two requests 401; the first starts the refresh, the second waits.
+    http.get(`${GW}/api/v1/one`).subscribe({ error: (e) => (oneStatus = e.status) });
+    http.get(`${GW}/api/v1/two`).subscribe({ error: (e) => (twoStatus = e.status) });
+    httpMock
+      .match(`${GW}/api/v1/one`)
+      .forEach((r) => r.flush(null, { status: 401, statusText: 'Unauthorized' }));
+    httpMock
+      .match(`${GW}/api/v1/two`)
+      .forEach((r) => r.flush(null, { status: 401, statusText: 'Unauthorized' }));
+
+    // The refresh fails.
+    refreshGate.next(false);
+    refreshGate.complete();
+
+    // Auth is cleared and BOTH requests surface 401 — neither retried without a
+    // bearer token (which would have caused a second 401 loop).
+    expect(clearSpy).toHaveBeenCalled();
+    expect(oneStatus).toBe(401);
+    expect(twoStatus).toBe(401);
   });
 });

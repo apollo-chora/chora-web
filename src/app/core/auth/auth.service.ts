@@ -1,12 +1,25 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
+import { catchError, finalize, shareReplay, switchMap } from 'rxjs/operators';
 import { BffClientService } from '../services/bff-client.service';
 import { FeatureFlagService } from '../services/feature-flag.service';
 import type { FeatureFlagsResponse } from '../services/feature-flags.model';
 import { TenantContextService, TenantContext } from './tenant-context.service';
 import { AuthTokenResponse, ResolveTenantMembership } from './auth.models';
 import { capabilitiesForRoles } from './role-capabilities';
+
+/** localStorage key for the durable refresh token. */
+const REFRESH_TOKEN_STORAGE_KEY = 'chora_refresh_token';
+
+/**
+ * Renew the access JWT when it is at most this many seconds from expiry, so
+ * a live tab never sees the silent 401 logout at the TTL boundary.
+ */
+const PROACTIVE_REFRESH_WINDOW_SECONDS = 120;
+
+/** How often the proactive renewal check ticks. */
+const PROACTIVE_REFRESH_INTERVAL_MS = 30_000;
 
 export interface AuthUser {
   gcid: string;
@@ -60,9 +73,27 @@ export class AuthService {
   private readonly _user = signal<AuthUser | null>(null);
   private readonly _token = signal<string | null>(null);
 
+  /** In-flight refresh request, shared by every concurrent caller. */
+  private refreshInFlight: Observable<boolean> | null = null;
+
+  /**
+   * Authentication generation. Incremented on every clearAuth (logout or a
+   * failed refresh) so an in-flight refresh that started before the reset can
+   * be recognised and rejected instead of overwriting the newer session.
+   */
+  private authEpoch = 0;
+
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
   readonly gcid = computed(() => this._user()?.gcid ?? null);
+
+  constructor() {
+    // Proactive renewal: re-mint the access JWT before it expires so an
+    // idle-then-active tab is never bounced to /login at the TTL boundary.
+    if (typeof setInterval === 'function') {
+      setInterval(() => this.proactiveRefresh(), PROACTIVE_REFRESH_INTERVAL_MS);
+    }
+  }
 
   setUser(user: AuthUser, token: string): void {
     this._user.set(user);
@@ -70,8 +101,13 @@ export class AuthService {
   }
 
   clearAuth(): void {
+    // Bump the generation first so any in-flight refresh that started before
+    // this reset is rejected when it lands (it must not resurrect a logged-out
+    // session or overwrite a newer login).
+    this.authEpoch++;
     this._user.set(null);
     this._token.set(null);
+    this.clearStoredRefreshToken();
     // Drop the persisted active tenant id so the next signed-in user on this
     // browser doesn't inherit the previous user's pre-redirect tenant.
     this.tenantContext.clearPersistedActiveTenantId();
@@ -116,22 +152,105 @@ export class AuthService {
    * Bootstrap auth on app start (and recover from a 401 via the
    * `authInterceptor`'s `handle401` path).
    *
-   * The session JWT is held in memory only — the gateway mints no refresh
-   * tokens in this milestone, so there is nothing to silently restore.
-   * Always resolves `false`; callers fall through to the unauth path.
+   * With a persisted refresh token this re-mints the access JWT without a
+   * password, so a reload (or a cold tab restore) keeps the session. With
+   * no stored token it resolves `false` and callers fall through to the
+   * unauth path.
    */
   initialize(): Observable<boolean> {
     return this.silentRefresh();
   }
 
   /**
-   * No-op in the username/password world: the Chora session exists only in
-   * memory for the lifetime of the page load. There is no persisted
-   * credential to re-mint from and no refresh token to exchange, so a
-   * cold load (or a 401) always lands the user back on /login.
+   * Exchange the persisted refresh token for a rotated session pair.
+   * Resolves `true` when the gateway minted a fresh access JWT; `false`
+   * when there is no stored token or the gateway rejected it (expired /
+   * revoked) — in which case the local session is cleared.
+   *
+   * Concurrent callers share one in-flight request; the gateway rotates
+   * the refresh token on every call, so parallel refreshes collapse into
+   * a single mint instead of a revoke race.
    */
   silentRefresh(): Observable<boolean> {
-    return of(false);
+    const stored = this.storedRefreshToken();
+    if (!stored) {
+      return of(false);
+    }
+    if (this.refreshInFlight) {
+      return this.refreshInFlight;
+    }
+    const epoch = this.authEpoch;
+    const req = this.bff
+      .post<AuthTokenResponse>('/api/v1/auth/session/refresh', {
+        refresh_token: stored,
+      })
+      .pipe(
+        switchMap((resp) => {
+          // Reject a refresh that belongs to a previous auth generation (a
+          // logout or a new login happened while it was in flight) so it
+          // cannot overwrite the newer session.
+          if (this.authEpoch !== epoch) {
+            return of(false);
+          }
+          if (this.storedRefreshToken() !== stored) {
+            return of(false);
+          }
+          this.handleAuthResponse(resp);
+          return of(true);
+        }),
+        catchError(() => {
+          // Another tab may have already rotated this token and stored a
+          // newer credential. Only clear the local session if the FAILED
+          // token is still the stored one — never delete a newer credential
+          // written by a concurrent rotation (that would strand the other tab).
+          if (this.storedRefreshToken() === stored) {
+            this.clearAuth();
+          }
+          return of(false);
+        }),
+        // Single-flight: cleanup belongs to the shared source, not each
+        // subscriber, and only clears if it is still the current request.
+        finalize(() => {
+          if (this.refreshInFlight === req) {
+            this.refreshInFlight = null;
+          }
+        }),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+    this.refreshInFlight = req;
+    return req;
+  }
+
+  /** Re-mint when the live access JWT is close to expiry (see constructor). */
+  private proactiveRefresh(): void {
+    const token = this._token();
+    if (!token) {
+      return;
+    }
+    const claims = this.decodeJwtClaims(token);
+    if (!claims) {
+      return;
+    }
+    const secondsLeft = claims.exp - Math.floor(Date.now() / 1000);
+    if (secondsLeft > 0 && secondsLeft <= PROACTIVE_REFRESH_WINDOW_SECONDS) {
+      this.silentRefresh().subscribe();
+    }
+  }
+
+  private storedRefreshToken(): string | null {
+    try {
+      return localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  private clearStoredRefreshToken(): void {
+    try {
+      localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    } catch {
+      // storage unavailable (private mode, SSR) — nothing to clear
+    }
   }
 
   handleAuthResponse(response: AuthTokenResponse): void {
@@ -156,6 +275,16 @@ export class AuthService {
 
     this._user.set(user);
     this._token.set(response.access_token);
+    // Persist the durable half of the session so a reload can re-mint the
+    // access JWT via /api/v1/auth/session/refresh. The gateway rotates it
+    // on every refresh, so the stored value is always the latest pair.
+    if (response.refresh_token) {
+      try {
+        localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, response.refresh_token);
+      } catch {
+        // storage unavailable — session stays memory-only, still works
+      }
+    }
 
     if (claims.tenant_id) {
       this.tenantContext.setCurrentTenant({
@@ -198,8 +327,9 @@ export class AuthService {
    * Re-mint a Chora session scoped to `tenantId`.
    *
    * NOT SUPPORTED in this milestone and fails loudly: the gateway's mint
-   * endpoint takes username/password only (no tenant-switch route, no
-   * refresh token), and the JWT's `tenant_id` claim is authoritative —
+   * endpoint takes username/password only (no tenant-switch route — the
+   * refresh token re-mints the SAME session, it cannot retarget a tenant),
+   * and the JWT's `tenant_id` claim is authoritative —
    * the frontend must not invent or override a tenant. Switching tenants
    * therefore requires signing out and signing in again; the
    * tenant-switcher UI hides itself when it cannot offer a real switch.
@@ -209,23 +339,38 @@ export class AuthService {
       () =>
         new Error(
           `Tenant switch to ${tenantId} is not available: the gateway mints ` +
-            'sessions from username/password only (no tenant-switch route, no ' +
-            'refresh token). Sign out and sign in again to change tenants.',
+            'sessions from username/password only (no tenant-switch route; ' +
+            'the refresh token re-mints the same session, it cannot retarget ' +
+            'a tenant). Sign out and sign in again to change tenants.',
         ),
     );
   }
 
   logout(): void {
-    this.bff.post('/api/v1/auth/logout', {}).subscribe({
-      complete: () => {
-        this.clearAuth();
-        this.router.navigate(['/login']);
-      },
-      error: () => {
-        this.clearAuth();
-        this.router.navigate(['/login']);
-      },
-    });
+    // Revoke the durable half of the session. Wait for any in-flight refresh
+    // first so we revoke the LATEST credential — a concurrent rotation may have
+    // stored a replacement after we first read the token, and revoking only
+    // the stale one would leave the replacement live on the gateway.
+    const revokeLatest = () => {
+      const refreshToken = this.storedRefreshToken();
+      this.bff
+        .post('/api/v1/auth/logout', refreshToken ? { refresh_token: refreshToken } : {})
+        .subscribe({
+          complete: () => {
+            this.clearAuth();
+            this.router.navigate(['/login']);
+          },
+          error: () => {
+            this.clearAuth();
+            this.router.navigate(['/login']);
+          },
+        });
+    };
+    if (this.refreshInFlight) {
+      this.refreshInFlight.subscribe({ complete: revokeLatest, error: revokeLatest });
+    } else {
+      revokeLatest();
+    }
   }
 
   private mapMembershipsToTenantContext(
