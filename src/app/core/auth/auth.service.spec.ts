@@ -920,6 +920,30 @@ describe('AuthService', () => {
       expect(localStorage.getItem('chora_refresh_token')).toBe('token-new');
     });
 
+    it('does not overwrite a newer credential stored by a concurrent tab rotation', async () => {
+      localStorage.setItem('chora_refresh_token', 'token-a');
+      const resultP = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+      });
+      const req = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+      // The other tab rotates token-a -> token-b before this tab's response lands.
+      localStorage.setItem('chora_refresh_token', 'token-b');
+      req.flush({
+        access_token: createJwt({
+          sub: 'g1', gcid: 'g1', email: 't@e', tenant_id: 't1', roles: [],
+          exp: Math.floor(Date.now() / 1000) + 3600,
+        }),
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'token-a-next',
+        refresh_expires_in: 604800,
+        gcid: 'g1',
+      });
+      expect(await resultP).toBe(false);
+      // The newer credential (token-b) survives.
+      expect(localStorage.getItem('chora_refresh_token')).toBe('token-b');
+    });
+
     it('logout waits for an in-flight refresh and revokes the replacement', async () => {
       localStorage.setItem('chora_refresh_token', 'token-old');
       const navigateSpy = vi.spyOn(router, 'navigate');

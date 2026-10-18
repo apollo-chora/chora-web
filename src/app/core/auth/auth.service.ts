@@ -192,6 +192,9 @@ export class AuthService {
           if (this.authEpoch !== epoch) {
             return of(false);
           }
+          if (this.storedRefreshToken() !== stored) {
+            return of(false);
+          }
           this.handleAuthResponse(resp);
           return of(true);
         }),
