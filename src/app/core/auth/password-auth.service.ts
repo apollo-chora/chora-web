@@ -9,7 +9,8 @@ import { AuthTokenResponse } from './auth.models';
  * Frozen contract (chora-gateway `POST /api/v1/auth/session/mint`):
  *
  *   Request:  { "username": "...", "password": "..." }
- *   200:      { access_token, token_type:"Bearer", expires_in, gcid, memberships }
+ *   200:      { access_token, token_type:"Bearer", expires_in,
+ *              refresh_token, refresh_expires_in, gcid, memberships }
  *   401:      { error: { code: "INVALID_CREDENTIALS", message } }
  *
  * The returned `access_token` IS the Chora session JWT — feed it to
@@ -17,8 +18,9 @@ import { AuthTokenResponse } from './auth.models';
  * JWT's `tenant_id` and `roles` claims are authoritative; this service never
  * invents or overrides a tenant.
  *
- * There are no refresh tokens in this milestone: the session lives in memory
- * only, and a 401 clears the local session and returns the user to /login.
+ * The `refresh_token` is the durable half of the session: `AuthService`
+ * persists it so a reload or the 1h access-token expiry can re-mint without
+ * a password.
  */
 @Injectable({ providedIn: 'root' })
 export class PasswordAuthService {
@@ -51,11 +53,11 @@ export class PasswordAuthService {
   }
 
   /**
-   * No-op: the session JWT is held in memory only and dropped by
-   * `AuthService.clearAuth()`. There is no client-side credential store to
-   * clear (the BFF `/api/v1/auth/logout` call happens in `AuthService.logout`).
+   * Clears the client-side session. The refresh token lives in
+   * `AuthService`'s storage (dropped by `AuthService.clearAuth()`); the
+   * gateway's `/api/v1/auth/logout` call happens in `AuthService.logout`.
    */
   async signOut(): Promise<void> {
-    /* nothing client-side to clear */
+    /* nothing client-side to clear here — see AuthService */
   }
 }

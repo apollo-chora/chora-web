@@ -8,9 +8,13 @@ import { environment } from '../../../environments/environment';
 // The session mint is anonymous (it IS the auth-establishing call) and the
 // webauthn/gcid routes manage their own challenge semantics, so none of
 // them receive the Bearer header or take part in the 401-refresh dance.
+// The refresh route is excluded for the same reason PLUS recursion: it is
+// called BY the 401 handler — a 401 on the refresh call itself (expired or
+// revoked record) must clear the session, not re-enter the dance.
 const AUTH_ENDPOINTS = [
   '/api/v1/auth/webauthn/',
   '/api/v1/auth/session/mint',
+  '/api/v1/auth/session/refresh',
   '/api/v1/auth/logout',
   '/api/v1/gcid',
 ];

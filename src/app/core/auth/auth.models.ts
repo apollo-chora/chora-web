@@ -40,14 +40,19 @@ export interface AuthTokenResponse {
   access_token: string;
   token_type: 'Bearer';
   expires_in: number;
+  /**
+   * Durable renewal credential for POST /api/v1/auth/session/refresh.
+   * Persisted in localStorage by AuthService so the session survives
+   * reloads; rotated on every refresh (the old value stops working).
+   */
+  refresh_token?: string;
+  refresh_expires_in?: number;
   gcid: string;
   /**
    * Tenant memberships resolved during mint. Present after the Stage-2
    * cutover; absent on legacy responses (FE falls back to the
-   * `/api/v1/tenants` round-trip when this is undefined).
-   *
-   * No refresh token: the gateway mints none in this milestone, so the
-   * session lives in memory only and a 401 returns the user to /login.
+   * `/api/v1/tenants` round-trip when this is undefined). Also absent on
+   * refresh responses — the SPA keeps its already-seeded tenant context.
    */
   memberships?: ResolveTenantMembership[];
 }

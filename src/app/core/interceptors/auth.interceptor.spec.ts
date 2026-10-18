@@ -78,6 +78,27 @@ describe('authInterceptor', () => {
     req.flush({});
   });
 
+  it('should not re-enter the refresh dance when the refresh call itself 401s', () => {
+    // The interceptor CALLS /api/v1/auth/session/refresh from handle401 — a
+    // 401 there (expired/revored record) must surface as an error, not
+    // recurse into another silentRefresh attempt.
+    const refreshSpy = vi.spyOn(authService, 'silentRefresh');
+    let receivedStatus = 0;
+    http.post(`${GW}/api/v1/auth/session/refresh`, { refresh_token: 'dead' }).subscribe({
+      error: (err) => (receivedStatus = err.status),
+    });
+
+    const req = httpMock.expectOne(`${GW}/api/v1/auth/session/refresh`);
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    req.flush(
+      { error: { code: 'AUTH_REFRESH_EXPIRED', message: 'refresh token expired' } },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+
+    expect(receivedStatus).toBe(401);
+    expect(refreshSpy).not.toHaveBeenCalled();
+  });
+
   it('should NOT attach Bearer to non-gateway static-asset requests', () => {
     // i18n JSON + other static assets are served from the GCS CDN
     // (chora.site/assets/*), not the gateway. Attaching a Bearer there

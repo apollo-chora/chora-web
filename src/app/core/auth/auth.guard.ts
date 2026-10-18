@@ -8,10 +8,10 @@ import { TenantContextService } from './tenant-context.service';
 /**
  * Auth guard — blocks unauthenticated users.
  *
- * The session JWT lives in memory only (the gateway mints no refresh
- * tokens in this milestone), so a cold load is always unauthenticated:
- * `silentRefresh()` resolves `false` and the guard sends the user to
- * `/login` with a returnUrl.
+ * A cold load restores the session from the persisted refresh token via
+ * `silentRefresh()`; only when that fails (no stored token, or the
+ * 7-day refresh TTL lapsed) does the guard send the user to `/login`
+ * with a returnUrl.
  *
  * Tenant routing for authenticated users (precedence order):
  *  1. Zero tenant memberships (empty `tenantId`) → `/welcome/no-organisation`,
@@ -34,9 +34,8 @@ export const authGuard: CanActivateFn = async (_route, state) => {
     return resolveAuthedUser(auth, router, tenantContext);
   }
 
-  // Not yet authenticated in-memory. Attempt a silent re-mint before
-  // deciding — a no-op today (no persisted credential, no refresh token),
-  // kept so the guard keeps working if the milestone ever adds one.
+  // Not yet authenticated in-memory. Attempt a silent re-mint from the
+  // persisted refresh token before deciding.
   await firstValueFrom(auth.silentRefresh());
 
   if (auth.isAuthenticated()) {

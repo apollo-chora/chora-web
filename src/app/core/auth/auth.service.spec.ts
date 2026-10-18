@@ -705,20 +705,199 @@ describe('AuthService', () => {
     });
   });
 
-  describe('silent refresh (username/password milestone)', () => {
+  describe('silent refresh', () => {
     it('resolves false without any HTTP call (no persisted session exists)', async () => {
       const resultP = new Promise<boolean>((resolve) => {
         service.silentRefresh().subscribe((r) => resolve(r));
       });
 
       expect(await resultP).toBe(false);
-      httpMock.verify(); // no /session/mint, no /token/refresh
+      httpMock.verify(); // no /session/mint, no /session/refresh
     });
 
-    it('clearAuth drops the persisted tenant so the next user starts fresh', () => {
-      localStorage.setItem('chora_active_tenant_id', 'tenant-previous-user');
+    it('exchanges a stored refresh token for a rotated pair and persists it', async () => {
+      localStorage.setItem('chora_refresh_token', 'refresh-old');
+      const newAccess = createJwt({
+        sub: 'gcid-123',
+        gcid: 'gcid-123',
+        email: 'user@chora.app',
+        display_name: 'Test User',
+        tenant_id: 'tenant-1',
+        roles: ['admin'],
+        exp: Date.now() / 1000 + 3600,
+      });
+      const resultP = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+      });
+
+      const req = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+      expect(req.request.body).toEqual({ refresh_token: 'refresh-old' });
+      req.flush({
+        access_token: newAccess,
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'refresh-new',
+        refresh_expires_in: 604800,
+        gcid: 'gcid-123',
+      });
+
+      expect(await resultP).toBe(true);
+      expect(service.isAuthenticated()).toBe(true);
+      expect(service.getToken()).toBe(newAccess);
+      // Rotation: the stored token is the NEW one; the old one is dead.
+      expect(localStorage.getItem('chora_refresh_token')).toBe('refresh-new');
+      // Flush handleAuthResponse side effects (legacy tenants list, tenants/me,
+      // feature-flags) — the refresh response carries no memberships[].
+      httpMock.expectOne(isLegacyTenantList).flush({ data: [] });
+      httpMock.expectOne(isTenantMe).flush({});
+      httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [] });
+    });
+
+    it('concurrent callers share a single refresh request', async () => {
+      localStorage.setItem('chora_refresh_token', 'refresh-1');
+      let resolveFirst: (v: boolean) => void = () => {};
+      const resultP = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+        resolveFirst = resolve;
+      });
+      const secondP = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+      });
+
+      // Exactly one HTTP call for both subscribers.
+      const req = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+      req.flush({
+        access_token: createJwt({
+          sub: 'g', gcid: 'g', email: 'e', tenant_id: 't', roles: [],
+          exp: Date.now() / 1000 + 3600,
+        }),
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'refresh-2',
+        refresh_expires_in: 604800,
+        gcid: 'g',
+      });
+      expect(await resultP).toBe(true);
+      expect(await secondP).toBe(true);
+      resolveFirst(true);
+      httpMock.expectOne(isLegacyTenantList).flush({ data: [] });
+      httpMock.expectOne(isTenantMe).flush({});
+      httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [] });
+      httpMock.verify();
+    });
+
+    it('clears the local session when the gateway rejects the token (401)', async () => {
+      localStorage.setItem('chora_refresh_token', 'refresh-dead');
+      const resultP = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+      });
+
+      const req = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+      req.flush(
+        { error: { code: 'AUTH_REFRESH_EXPIRED', message: 'refresh token expired' } },
+        { status: 401, statusText: 'Unauthorized' },
+      );
+
+      expect(await resultP).toBe(false);
+      expect(service.isAuthenticated()).toBe(false);
+      expect(localStorage.getItem('chora_refresh_token')).toBeNull();
+    });
+
+    it('handleAuthResponse persists the minted refresh token', () => {
+      service.handleAuthResponse({
+        access_token: createJwt({
+          sub: 'gcid-123', gcid: 'gcid-123', email: 'user@chora.app',
+          display_name: 'Test User', tenant_id: 'tenant-1', roles: ['admin'],
+          exp: Date.now() / 1000 + 3600,
+        }),
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'refresh-mint',
+        refresh_expires_in: 604800,
+        gcid: 'gcid-123',
+      });
+
+      expect(localStorage.getItem('chora_refresh_token')).toBe('refresh-mint');
+      // Flush handleAuthResponse side effects (legacy tenants list,
+      // tenants/me, feature-flags).
+      httpMock.expectOne(isLegacyTenantList).flush({ data: [] });
+      httpMock.expectOne(isTenantMe).flush({});
+      httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [] });
+    });
+
+    it('clearAuth drops the persisted refresh token', () => {
+      localStorage.setItem('chora_refresh_token', 'refresh-x');
       service.clearAuth();
-      expect(localStorage.getItem('chora_active_tenant_id')).toBeNull();
+      expect(localStorage.getItem('chora_refresh_token')).toBeNull();
+    });
+
+    it('initialize restores the session from a stored refresh token', async () => {
+      localStorage.setItem('chora_refresh_token', 'refresh-stored');
+      const restored = createJwt({
+        sub: 'gcid-123', gcid: 'gcid-123', email: 'user@chora.app',
+        display_name: 'Test User', tenant_id: 'tenant-1', roles: ['admin'],
+        exp: Date.now() / 1000 + 3600,
+      });
+      const resultP = new Promise<boolean>((resolve) => {
+        service.initialize().subscribe((r) => resolve(r));
+      });
+
+      const req = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+      req.flush({
+        access_token: restored,
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'refresh-stored-2',
+        refresh_expires_in: 604800,
+        gcid: 'gcid-123',
+      });
+
+      expect(await resultP).toBe(true);
+      expect(service.isAuthenticated()).toBe(true);
+      // Flush handleAuthResponse side effects (legacy tenants list, tenants/me,
+      // feature-flags) — the refresh response carries no memberships[].
+      httpMock.expectOne(isLegacyTenantList).flush({ data: [] });
+      httpMock.expectOne(isTenantMe).flush({});
+      httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [] });
+    });
+
+    it('proactive refresh fires when the live access token nears expiry', async () => {
+      localStorage.setItem('chora_refresh_token', 'refresh-proactive');
+      service.setUser(
+        { gcid: 'g1', tenantId: 't1', roles: [], capabilities: [], displayName: 'T', email: 't@e' },
+        createJwt({
+          sub: 'g1', gcid: 'g1', email: 't@e', tenant_id: 't1', roles: [],
+          exp: Math.floor(Date.now() / 1000) + 60,
+        }),
+      );
+
+      vi.useFakeTimers();
+      try {
+        const resultP = new Promise<boolean>((resolve) => {
+          service.silentRefresh().subscribe((r) => resolve(r));
+        });
+        await vi.advanceTimersByTimeAsync(31_000);
+        const req = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+        req.flush({
+          access_token: createJwt({
+            sub: 'g1', gcid: 'g1', email: 't@e', tenant_id: 't1', roles: [],
+            exp: Math.floor(Date.now() / 1000) + 3600,
+          }),
+          token_type: 'Bearer',
+          expires_in: 3600,
+          refresh_token: 'refresh-proactive-2',
+          refresh_expires_in: 604800,
+          gcid: 'g1',
+        });
+        expect(await resultP).toBe(true);
+        // Flush handleAuthResponse side effects (legacy tenants list,
+        // tenants/me, feature-flags).
+        httpMock.expectOne(isLegacyTenantList).flush({ data: [] });
+        httpMock.expectOne(isTenantMe).flush({});
+        httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [] });
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
