@@ -76,6 +76,13 @@ export class AuthService {
   /** In-flight refresh request, shared by every concurrent caller. */
   private refreshInFlight: Observable<boolean> | null = null;
 
+  /**
+   * Authentication generation. Incremented on every clearAuth (logout or a
+   * failed refresh) so an in-flight refresh that started before the reset can
+   * be recognised and rejected instead of overwriting the newer session.
+   */
+  private authEpoch = 0;
+
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
   readonly gcid = computed(() => this._user()?.gcid ?? null);
@@ -94,6 +101,10 @@ export class AuthService {
   }
 
   clearAuth(): void {
+    // Bump the generation first so any in-flight refresh that started before
+    // this reset is rejected when it lands (it must not resurrect a logged-out
+    // session or overwrite a newer login).
+    this.authEpoch++;
     this._user.set(null);
     this._token.set(null);
     this.clearStoredRefreshToken();
@@ -165,33 +176,46 @@ export class AuthService {
     if (!stored) {
       return of(false);
     }
-    if (!this.refreshInFlight) {
-      this.refreshInFlight = this.bff
-        .post<AuthTokenResponse>('/api/v1/auth/session/refresh', {
-          refresh_token: stored,
-        })
-        .pipe(
-          switchMap((resp) => {
-            this.handleAuthResponse(resp);
-            return of(true);
-          }),
-          catchError(() => {
-            // Another tab may have already rotated this token and stored a
-            // newer credential. Only clear the local session if the FAILED
-            // token is still the stored one — never delete a newer credential
-            // written by a concurrent rotation (that would strand the other tab).
-            if (this.storedRefreshToken() === stored) {
-              this.clearAuth();
-            }
-            return of(false);
-          }),
-          shareReplay({ bufferSize: 1, refCount: false }),
-          finalize(() => {
-            this.refreshInFlight = null;
-          }),
-        );
+    if (this.refreshInFlight) {
+      return this.refreshInFlight;
     }
-    return this.refreshInFlight;
+    const epoch = this.authEpoch;
+    const req = this.bff
+      .post<AuthTokenResponse>('/api/v1/auth/session/refresh', {
+        refresh_token: stored,
+      })
+      .pipe(
+        switchMap((resp) => {
+          // Reject a refresh that belongs to a previous auth generation (a
+          // logout or a new login happened while it was in flight) so it
+          // cannot overwrite the newer session.
+          if (this.authEpoch !== epoch) {
+            return of(false);
+          }
+          this.handleAuthResponse(resp);
+          return of(true);
+        }),
+        catchError(() => {
+          // Another tab may have already rotated this token and stored a
+          // newer credential. Only clear the local session if the FAILED
+          // token is still the stored one — never delete a newer credential
+          // written by a concurrent rotation (that would strand the other tab).
+          if (this.storedRefreshToken() === stored) {
+            this.clearAuth();
+          }
+          return of(false);
+        }),
+        // Single-flight: cleanup belongs to the shared source, not each
+        // subscriber, and only clears if it is still the current request.
+        finalize(() => {
+          if (this.refreshInFlight === req) {
+            this.refreshInFlight = null;
+          }
+        }),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+    this.refreshInFlight = req;
+    return req;
   }
 
   /** Re-mint when the live access JWT is close to expiry (see constructor). */

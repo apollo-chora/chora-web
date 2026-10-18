@@ -956,6 +956,74 @@ describe('AuthService', () => {
       expect(await resultP).toBe(true);
       expect(navigateSpy).toHaveBeenCalledWith(['/login']);
     });
+
+    it('rejects a refresh from a previous auth generation (logout/login raced it)', async () => {
+      localStorage.setItem('chora_refresh_token', 'token-gen-1');
+      const resultP = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+      });
+      const req = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+      // A logout (or new login) happens while the refresh is in flight.
+      service.clearAuth();
+      req.flush({
+        access_token: createJwt({
+          sub: 'g1', gcid: 'g1', email: 't@e', tenant_id: 't1', roles: [],
+          exp: Math.floor(Date.now() / 1000) + 3600,
+        }),
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'token-gen-2',
+        refresh_expires_in: 604800,
+        gcid: 'g1',
+      });
+      expect(await resultP).toBe(false);
+      // The stale refresh did not resurrect the logged-out session.
+      expect(service.isAuthenticated()).toBe(false);
+    });
+
+    it('clears the in-flight flag once the shared refresh request settles', async () => {
+      localStorage.setItem('chora_refresh_token', 'token-x');
+      const resultP = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+      });
+      const req = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+      req.flush({
+        access_token: createJwt({
+          sub: 'g1', gcid: 'g1', email: 't@e', tenant_id: 't1', roles: [],
+          exp: Math.floor(Date.now() / 1000) + 3600,
+        }),
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'token-y',
+        refresh_expires_in: 604800,
+        gcid: 'g1',
+      });
+      expect(await resultP).toBe(true);
+      httpMock.expectOne(isLegacyTenantList).flush({ data: [] });
+      httpMock.expectOne(isTenantMe).flush({});
+      httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [] });
+      // A new caller after settlement starts a fresh request (flag was cleared).
+      localStorage.setItem('chora_refresh_token', 'token-z');
+      const p2 = new Promise<boolean>((resolve) => {
+        service.silentRefresh().subscribe((r) => resolve(r));
+      });
+      const req2 = httpMock.expectOne((r) => r.url.includes('/api/v1/auth/session/refresh'));
+      req2.flush({
+        access_token: createJwt({
+          sub: 'g1', gcid: 'g1', email: 't@e', tenant_id: 't1', roles: [],
+          exp: Math.floor(Date.now() / 1000) + 3600,
+        }),
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'token-w',
+        refresh_expires_in: 604800,
+        gcid: 'g1',
+      });
+      expect(await p2).toBe(true);
+      httpMock.expectOne(isLegacyTenantList).flush({ data: [] });
+      httpMock.expectOne(isTenantMe).flush({});
+      httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [] });
+    });
   });
 
   // ──────────────────────────────────────────────────────────────────
