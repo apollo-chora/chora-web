@@ -51,10 +51,11 @@ export interface AuthTokenResponse {
   /**
    * Tenant memberships resolved during mint. Present after the Stage-2
    * cutover; absent on legacy responses (FE falls back to the
-   * `/api/v1/tenants` round-trip when this is undefined). Also absent on
-   * refresh responses — the SPA keeps its already-seeded tenant context.
+   * `/api/v1/tenants` round-trip when this is null). A refresh omits them —
+   * the gateway marshals a nil slice as `null` — and the SPA must keep its
+   * already-seeded tenant context rather than treat `null` as present.
    */
-  memberships?: ResolveTenantMembership[];
+  memberships?: ResolveTenantMembership[] | null;
 }
 
 export interface WebAuthnRegisterBeginRequest {

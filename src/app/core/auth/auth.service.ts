@@ -297,9 +297,17 @@ export class AuthService {
 
     // Stage-2 cutover: the mint response now carries `memberships[]`
     // inline. When present, seed TenantContextService directly and skip
-    // the legacy `/api/v1/tenants` round-trip. The round-trip remains a
-    // fallback for legacy / refresh responses that omit `memberships`.
-    if (response.memberships !== undefined) {
+    // the legacy `/api/v1/tenants` round-trip.
+    //
+    // Three shapes, because a Go nil slice marshals as JSON `null`:
+    //   array  → seed from it (mint, and refresh once the gateway populates it)
+    //   null   → a refresh that omitted memberships; KEEP the already-seeded
+    //            context. Calling `.map` on null threw and left the surface rail
+    //            empty, and the `/api/v1/tenants` round-trip returns contexts
+    //            with no `surfaces` at all — either way the guard fails closed to
+    //            A+ and the user loses every surface above it.
+    //   undefined → a legacy response that never carried memberships; round-trip.
+    if (response.memberships != null) {
       const memberships = this.mapMembershipsToTenantContext(response.memberships);
       this.tenantContext.setAvailableTenants(memberships);
       // Re-seed the ACTIVE tenant from its membership so the context
@@ -310,7 +318,7 @@ export class AuthService {
       if (activeMembership) {
         this.tenantContext.setCurrentTenant(activeMembership);
       }
-    } else {
+    } else if (response.memberships === undefined) {
       this.loadAvailableTenants();
     }
 

@@ -427,6 +427,38 @@ describe('AuthService', () => {
       httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [], total: 0 });
       httpMock.expectOne(isTenantMe).flush({});
     });
+
+    it('keeps the seeded context when a refresh sends memberships: null', () => {
+      const token = createJwt({
+        sub: 'gcid-refresh',
+        email: 'refresh@chora.app',
+        display_name: 'Refresh',
+        tenant_id: 'tenant-refresh',
+        roles: [],
+        exp: Date.now() / 1000 + 3600,
+      });
+      const setAvailSpy = vi.spyOn(tenantContext, 'setAvailableTenants');
+
+      service.handleAuthResponse({
+        access_token: token,
+        token_type: 'Bearer',
+        expires_in: 3600,
+        gcid: 'gcid-refresh',
+        memberships: null,
+      });
+
+      // A Go nil slice marshals as JSON `null`. It must be treated as "the
+      // refresh omitted memberships" and NOT mapped: `.map` on null threw, and
+      // the surface rail reads memberships[].surfaces — so the throw left the
+      // app with no surfaces and the guard failed closed to A+.
+      expect(setAvailSpy).not.toHaveBeenCalled();
+      // Nor does the legacy round-trip fire: `/api/v1/tenants` returns contexts
+      // with no `surfaces`, so it would drop them too.
+      httpMock.expectNone(isLegacyTenantList);
+      // Branding hydration + feature flags fire unconditionally; settle them.
+      httpMock.expectOne(isTenantMe).flush({});
+      httpMock.expectOne((r) => r.url.includes('/feature-flags')).flush({ items: [], total: 0 });
+    });
   });
 
   describe('mintWithActiveTenant', () => {
